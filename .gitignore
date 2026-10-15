@@ -1,0 +1,20 @@
+@"
+# .NET generated files
+**/bin/
+**/obj/
+**/.vs/
+
+# Frontend dependencies and build output
+**/node_modules/
+**/dist/
+
+# Environment files and secrets
+.env
+.env.*
+!.env.example
+
+# IDE and operating system files
+.vscode/
+.DS_Store
+Thumbs.db
+"@ | Set-Content -Path ".gitignore"

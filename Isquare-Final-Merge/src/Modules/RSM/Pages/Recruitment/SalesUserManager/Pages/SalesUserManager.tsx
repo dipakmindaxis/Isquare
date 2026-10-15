@@ -1,0 +1,128 @@
+import React, { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
+import { Plus } from "lucide-react";
+
+import SalesUserManagerTable from "../Components/SalesUserManagerTable";
+import SalesUserManagerForm from "../Components/SalesUserManagerForm";
+import EditSalesUserManagerModal from "../Components/EditSalesUserManagerModal";
+
+import {
+  deleteSalesUserManager,
+  getAllSalesUserManagers,
+} from "../Services/SalesUserManagerService";
+
+import type { SalesUserManager as SalesUserManagerType } from "../Types/SalesUserManager";
+
+const SalesUserManager: React.FC = () => {
+  const [data, setData] = useState<SalesUserManagerType[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<SalesUserManagerType | null>(
+    null
+  );
+
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const fetchSalesUserManagers = useCallback(async () => {
+    setIsLoading(true);
+
+    try {
+      const responseData = await getAllSalesUserManagers();
+      setData(responseData);
+    } catch (error) {
+      console.error("Error fetching sales user managers:", error);
+      toast.error("Failed to load sales user managers.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSalesUserManagers();
+  }, [fetchSalesUserManagers]);
+
+  const handleEdit = (item: SalesUserManagerType) => {
+    setSelectedItem(item);
+    setIsEditModalOpen(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+    setSelectedItem(null);
+  };
+
+  const handleDelete = async (item: SalesUserManagerType) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${item.userName}"?`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await deleteSalesUserManager(item.id);
+      toast.success("Sales user manager deleted successfully.");
+
+      if (selectedItem?.id === item.id) {
+        setSelectedItem(null);
+      }
+
+      await fetchSalesUserManagers();
+    } catch (error) {
+      console.error("Error deleting sales user manager:", error);
+      toast.error("Failed to delete sales user manager.");
+    }
+  };
+
+  return (
+    <div className="min-h-full bg-[#f5f6f8] p-6">
+      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h5 className="text-[#154068]">MASTER TABLE</h5>
+
+          <h1 className="text-2xl font-semibold text-[#154068]">
+            Users / Sales Managers
+          </h1>
+
+          <p className="mt-1 text-sm text-gray-500">
+            Sales ownership and assignment list.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setIsAddModalOpen(true)}
+            className="flex items-center gap-2 rounded-lg bg-[#154068] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0d3357] transition-colors"
+          >
+            <Plus size={18} />
+            Add Value
+          </button>
+        </div>
+      </div>
+
+      <SalesUserManagerTable
+        salesUserManagers={data}
+        isLoading={isLoading}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
+
+      <SalesUserManagerForm
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSuccess={fetchSalesUserManagers}
+      />
+
+      <EditSalesUserManagerModal
+        isOpen={isEditModalOpen}
+        salesUserManager={selectedItem}
+        onClose={handleCloseEditModal}
+        onSuccess={fetchSalesUserManagers}
+      />
+    </div>
+  );
+};
+
+export default SalesUserManager;

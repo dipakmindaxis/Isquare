@@ -1,0 +1,125 @@
+import React, { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
+import { Plus } from "lucide-react";
+
+import ContactTypeForm from "../Components/ContactTypeForm";
+import ContactTypeTable from "../Components/ContactTypeTable";
+import EditContactTypeModal from "../Components/EditContactTypeModal";
+
+import {
+    deleteContactType,
+    getAllContactTypes,
+} from "../Services/ContactTypeService";
+
+import type { ContactType } from "../Types/ContactType";
+
+const ContactTypes: React.FC = () => {
+    const [contactTypes, setContactTypes] = useState<ContactType[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const [selectedContactType, setSelectedContactType] =
+        useState<ContactType | null>(null);
+
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+    const fetchContactTypes = useCallback(async () => {
+        setIsLoading(true);
+
+        try {
+            const data = await getAllContactTypes();
+            setContactTypes(data);
+        } catch (error) {
+            console.error("Error fetching contact types:", error);
+            toast.error("Failed to load contact types.");
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchContactTypes();
+    }, [fetchContactTypes]);
+
+    const handleEdit = (contactType: ContactType) => {
+        setSelectedContactType(contactType);
+        setIsEditModalOpen(true);
+    };
+
+    const handleCloseEditModal = () => {
+        setIsEditModalOpen(false);
+        setSelectedContactType(null);
+    };
+
+    const handleDelete = async (contactType: ContactType) => {
+        const confirmed = window.confirm(
+            `Are you sure you want to delete "${contactType.value}"?`
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+            await deleteContactType(contactType.contactTypeId);
+            toast.success("Contact type deleted successfully.");
+            await fetchContactTypes();
+        } catch (error) {
+            console.error("Error deleting contact type:", error);
+            toast.error("Failed to delete contact type.");
+        }
+    };
+
+    return (
+        <div className="min-h-full bg-[#f5f6f8] p-6">
+            <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                    <h5 className="text-[#154068]">
+                        MASTER TABLE
+                    </h5>
+
+                    <h1 className="text-2xl font-semibold text-[#154068]">
+                        Contact Types
+                    </h1>
+
+                    <p className="mt-1 text-sm text-gray-500">
+                        Defines the role / department of a customer contact.
+                    </p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    <button
+                        type="button"
+                        onClick={() => setIsAddModalOpen(true)}
+                        className="flex items-center gap-2 rounded-lg bg-[#154068] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0d3357] transition-colors"
+                    >
+                        <Plus size={18} />
+                        Add Contact Type
+                    </button>
+                </div>
+            </div>
+
+            <ContactTypeTable
+                contactTypes={contactTypes}
+                isLoading={isLoading}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+            />
+
+            <ContactTypeForm
+                isOpen={isAddModalOpen}
+                onClose={() => setIsAddModalOpen(false)}
+                onSuccess={fetchContactTypes}
+            />
+
+            <EditContactTypeModal
+                isOpen={isEditModalOpen}
+                contactType={selectedContactType}
+                onClose={handleCloseEditModal}
+                onSuccess={fetchContactTypes}
+            />
+        </div>
+    );
+};
+
+export default ContactTypes;
