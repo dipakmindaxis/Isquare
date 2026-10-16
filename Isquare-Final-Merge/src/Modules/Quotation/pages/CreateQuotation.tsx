@@ -79,6 +79,9 @@ export const CreateQuotation: React.FC = () => {
   }, [id]);
 
   useEffect(() => {
+    if (window.location.search) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
     quotationService
       .getAll()
       .then(setRecentQuotations)
@@ -249,6 +252,14 @@ export const CreateQuotation: React.FC = () => {
         paymentTerms={paymentTerms}
         onSave={handleSave}
         onCancel={() => navigate("/rsm/quotations")}
+        onRefreshCustomers={async () => {
+          try {
+            const custs = await masterDataService.getCustomers();
+            setCustomers(custs);
+          } catch (e) {
+            console.warn("Failed to refresh customers:", e);
+          }
+        }}
         {...(isEditMode ? { onRequestApproval: handleRequestApproval } : {})}
         isEditMode={isEditMode}
       />

@@ -51,6 +51,7 @@ export const QuotationItemsTable: React.FC<QuotationItemsTableProps> = ({
               <tr className="bg-[#154068] text-white text-[11px] font-bold uppercase tracking-wider">
                 <th className="p-3">Select / Code / Brand</th>
                 <th className="p-3">Technical Specification</th>
+                <th className="p-3 w-20 text-center">Image</th>
                 <th className="p-3 w-24">Qty / Unit</th>
                 <th className="p-3 w-28 text-right">Rate (₹)</th>
                 <th className="p-3 w-20 text-center">Disc (%)</th>
@@ -62,7 +63,7 @@ export const QuotationItemsTable: React.FC<QuotationItemsTableProps> = ({
             <tbody className="divide-y divide-gray-100">
               {items.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-gray-400">
+                  <td colSpan={9} className="p-8 text-center text-gray-400">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <PackagePlus size={32} className="text-gray-300" />
                       <p className="text-xs font-medium">No products added to this quotation yet.</p>
