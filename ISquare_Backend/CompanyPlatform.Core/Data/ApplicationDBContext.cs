@@ -227,6 +227,7 @@ namespace CompanyPlatform.Core.Data
         public DbSet<SalesOrderItem> SalesOrderItems { get; set; }
 
         public DbSet<Companiess> Companiess { get; set; }
+        public DbSet<Contact> Contacts { get; set; }
 
         // Audit
         public DbSet<AuditLog>

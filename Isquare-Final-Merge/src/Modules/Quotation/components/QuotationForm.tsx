@@ -35,6 +35,7 @@ interface QuotationFormProps {
   onSave: (quotationData: Quotation) => Promise<void>;
   onCancel: () => void;
   onRequestApproval?: (quotationId: number, reason: string) => Promise<void>;
+  onRefreshCustomers?: () => Promise<void>;
   isEditMode?: boolean;
 }
 
@@ -46,6 +47,7 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
   onSave,
   onCancel,
   onRequestApproval,
+  onRefreshCustomers,
   isEditMode = false,
 }) => {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -56,8 +58,22 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
   const [quotationNumber] = useState<string>(
     initialQuotation?.quotationNumber || ""
   );
-  const [customerId, setCustomerId] = useState<number>(
-    initialQuotation?.customerId || (customers[0]?.customerId ?? 0)
+  const [customerId, setCustomerId] = useState<number>(() => {
+    if (initialQuotation?.customerId) return initialQuotation.customerId;
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const qCompId = searchParams.get("companyId");
+      if (qCompId && Number(qCompId) > 0) return Number(qCompId);
+    } catch {
+      // ignore
+    }
+    return customers[0]?.customerId ?? 0;
+  });
+  const [contactId, setContactId] = useState<number | null>(
+    initialQuotation?.contactPersonId || null
+  );
+  const [contactPerson, setContactPerson] = useState<string>(
+    initialQuotation?.contactPerson || ""
   );
   const [enquiryRef, setEnquiryRef] = useState<string>(
     initialQuotation?.enquiryRef || `ENQ-2026-${Math.floor(100 + Math.random() * 900)}`
@@ -120,6 +136,23 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
   );
   const [charges, setCharges] = useState<QuotationCharge[]>(
     initialQuotation?.charges ?? []
+  );
+  const [freightType, setFreightType] = useState<string>(
+    (initialQuotation as any)?.freightType ||
+      (initialQuotation?.freightCharges === 0 && initialQuotation?.quotationId
+        ? "Inclusive"
+        : "Custom value")
+  );
+  const [installationType, setInstallationType] = useState<string>(
+    (initialQuotation as any)?.installationType ||
+      (initialQuotation?.installationCharges === 0 &&
+      initialQuotation?.quotationId
+        ? "At your scope"
+        : "Custom value")
+  );
+  const [otherChargesDescription, setOtherChargesDescription] = useState<string>(
+    (initialQuotation as any)?.otherChargesDescription ||
+      "Standard Packaging & Handling"
   );
 
   // Commercial terms state
@@ -282,6 +315,8 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
         isDeleted: false,
         items: items,
         charges: charges,
+        contactPersonId: contactId,
+        contactPerson: contactPerson || (selectedCustomer as any)?.contactPerson || null,
       };
 
       await onSave(fullQuotationData);
@@ -322,6 +357,8 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
     isDeleted: false,
     items: items,
     charges: charges,
+    contactPersonId: contactId,
+    contactPerson: contactPerson || (selectedCustomer as any)?.contactPerson || null,
   };
 
   return (
@@ -381,6 +418,7 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
             <QuotationInformation
               quotationNumber={quotationNumber}
               customerId={customerId}
+              contactId={contactId}
               enquiryRef={enquiryRef}
               quotationDate={quotationDate}
               revisionNumber={revisionNumber}
@@ -388,11 +426,14 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
               customers={customers}
               onChange={(f) => {
                 if (f.customerId !== undefined) setCustomerId(f.customerId);
+                if (f.contactId !== undefined) setContactId(f.contactId);
+                if (f.contactPerson !== undefined) setContactPerson(f.contactPerson || "");
                 if (f.enquiryRef !== undefined) setEnquiryRef(f.enquiryRef);
                 if (f.quotationDate !== undefined) setQuotationDate(f.quotationDate);
                 if (f.status !== undefined) setStatus(f.status);
                 if (f.revisionNumber !== undefined) setRevisionNumber(f.revisionNumber);
               }}
+              onRefreshCustomers={onRefreshCustomers}
             />
           </section>
 
@@ -428,11 +469,17 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
               installationCharges={installationCharges}
               otherCharges={otherCharges}
               charges={charges}
+              freightType={freightType}
+              installationType={installationType}
+              otherChargesDescription={otherChargesDescription}
               onChange={(f) => {
                 if (f.freightCharges !== undefined) setFreightCharges(f.freightCharges);
                 if (f.installationCharges !== undefined) setInstallationCharges(f.installationCharges);
                 if (f.otherCharges !== undefined) setOtherCharges(f.otherCharges);
                 if (f.charges !== undefined) setCharges(f.charges);
+                if (f.freightType !== undefined) setFreightType(f.freightType);
+                if (f.installationType !== undefined) setInstallationType(f.installationType);
+                if (f.otherChargesDescription !== undefined) setOtherChargesDescription(f.otherChargesDescription);
               }}
             />
           </section>

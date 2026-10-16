@@ -1,5 +1,5 @@
 import React from "react";
-import { Trash2, CornerDownRight } from "lucide-react";
+import { Trash2, CornerDownRight, Package } from "lucide-react";
 import type { QuotationItem } from "../models/quotationModels";
 import {
   calculateItemTotals,
@@ -120,6 +120,13 @@ export const QuotationAccessoryRow: React.FC<QuotationAccessoryRowProps> = ({
           disabled={disabled}
           className="w-full text-xs py-1 px-2 bg-white border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none resize-none"
         />
+      </td>
+
+      {/* Accessory Image / Icon */}
+      <td className="p-3 align-top text-center w-20">
+        <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 mx-auto mt-1">
+          <Package size={14} className="text-slate-400" />
+        </div>
       </td>
 
       {/* Quantity & Unit */}

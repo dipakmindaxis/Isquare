@@ -1,8 +1,11 @@
 const BASE_URL = "https://localhost:7296/api";
 // const BASE_URL = "https://sama9890-001-site1.jtempurl.com/api";
+const BASE_URL = "https://localhost:44363/api";
+//const BASE_URL = "https://localhost:7296/api";
+//const BASE_URL = "https://sama9890-001-site1.jtempurl.com/api";
 // const BASE_URL = "https://vishalkakde-001-site1.etempurl.com/api";
 
-export interface ApiEndpoints  {
+export interface ApiEndpoints {
   BaseUrl: string;
   Login: string;
   Register: string;
@@ -39,6 +42,8 @@ export interface ApiEndpoints  {
   SetEmployeeReporting: string;
   Notifications: string;
   MarkAllNotificationsRead: string;
+  Contact: string;
+  Contacts: string;
   [key: string]: string;
 }
 
@@ -82,6 +87,8 @@ export const API_ENDPOINTS: ApiEndpoints = {
   MarkAllNotificationsRead: `${BASE_URL}/notifications/mark-all-read`,
   BdeUsers: `${BASE_URL}/bdeuser`,
   BdeUser: `${BASE_URL}/bdeuser`,
+  Contact: `${BASE_URL}/Contact`,
+  Contacts: `${BASE_URL}/Contact`,
   ContactTypes: `${BASE_URL}/contacttype`,
   ContactType: `${BASE_URL}/contacttype`,
   ClientType: `${BASE_URL}/contacttype`,
