@@ -26,7 +26,6 @@ export const QuotationTerms: React.FC<QuotationTermsProps> = ({
   deliveryPeriod = "2-3 Weeks",
   paymentTermId,
   paymentTermsList = [],
-  warranty = "1 Year Standard",
   validity = "30 Days",
   validUntil,
   termsAndConditions = "",
@@ -48,7 +47,7 @@ export const QuotationTerms: React.FC<QuotationTermsProps> = ({
               Delivery &amp; Commercial Terms
             </h4>
             <p className="text-xs text-gray-500">
-              Commercial conditions, payment schedule, warranty commitment and proposal validity
+              Commercial conditions, payment schedule and proposal validity
             </p>
           </div>
 
@@ -65,7 +64,7 @@ export const QuotationTerms: React.FC<QuotationTermsProps> = ({
           )}
         </div>
 
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
           {/* Delivery Period */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
@@ -103,21 +102,6 @@ export const QuotationTerms: React.FC<QuotationTermsProps> = ({
                 </option>
               ))}
             </select>
-          </div>
-
-          {/* Warranty */}
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
-              Warranty Commitment
-            </label>
-            <input
-              type="text"
-              placeholder="e.g. 1 Year Standard"
-              value={warranty || ""}
-              onChange={(e) => onChange({ warranty: e.target.value })}
-              disabled={disabled}
-              className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-3 text-sm text-gray-800 transition focus:border-[#00234a] focus:outline-none focus:ring-2 focus:ring-[#00234a]/15"
-            />
           </div>
 
           {/* Quotation Validity & Valid Until */}

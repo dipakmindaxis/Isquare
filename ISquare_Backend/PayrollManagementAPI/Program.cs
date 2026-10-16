@@ -348,6 +348,8 @@ builder.Services.AddScoped<ISalesOrderItemService, SalesOrderItemService>();
 builder.Services.AddScoped<ISalesOrderService,SalesOrderService>();
 builder.Services.AddScoped<ICompaniessService, CompaniessService>();
 
+builder.Services.AddScoped<IContactService,CompanyPlatform.Core.Services.Contact.ContactService>();
+
 builder.Services.AddSignalR();
 
 //builder.Services.AddScoped<IcustomerTypeService, CustomerTypeService>();

@@ -27,6 +27,8 @@ export interface Quotation {
   isDeleted: boolean;
   items?: QuotationItem[];
   charges?: QuotationCharge[];
+  contactPersonId?: number | null;
+  contactPerson?: string | null;
 }
 
 export interface QuotationItem {

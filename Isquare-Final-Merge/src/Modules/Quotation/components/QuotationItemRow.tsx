@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useMemo } from "react";
 import { Trash2, Plus, Sparkles } from "lucide-react";
 import type { QuotationItem, Product } from "../models/quotationModels";
 import QuotationAccessoryRow from "./QuotationAccessoryRow";
@@ -24,6 +24,46 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
   onRemove,
   disabled = false,
 }) => {
+  const [imageError, setImageError] = useState(false);
+
+  // Match selected product from availableProducts
+  const selectedProduct = useMemo(() => {
+    return availableProducts.find(
+      (p) =>
+        (item.productId && p.productId === item.productId) ||
+        (item.itemCode && p.itemCode && p.itemCode === item.itemCode) ||
+        (item.itemName &&
+          p.productName &&
+          p.productName.toLowerCase() === item.itemName.toLowerCase())
+    );
+  }, [availableProducts, item.productId, item.itemCode, item.itemName]);
+
+  const productImageUrl =
+    (item as any).imageUrl ||
+    (item as any).image ||
+    (selectedProduct as any)?.imageUrl ||
+    (selectedProduct as any)?.image ||
+    (selectedProduct as any)?.productImage ||
+    null;
+
+  const placeholderText = useMemo(() => {
+    const name = item.itemName || selectedProduct?.productName || "";
+    if (!name) return "Product";
+
+    if (/iphone/i.test(name)) return "iPhone";
+    if (/controller/i.test(name)) return "Controller";
+    if (/spindle/i.test(name)) return "Spindle";
+    if (/sensor/i.test(name)) return "Sensor";
+    if (/motor/i.test(name)) return "Motor";
+    if (/cable/i.test(name)) return "Cable";
+
+    const words = name.trim().split(/\s+/);
+    if (words.length > 0 && words[0].length <= 10) {
+      return words[0];
+    }
+    return item.brand || "Product";
+  }, [item.itemName, item.brand, selectedProduct]);
+
   const calc = calculateItemTotals(
     item.quantity,
     item.rate,
@@ -50,6 +90,12 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
     const prod = availableProducts.find((p) => String(p.productId) === selectedId);
     if (prod) {
       const uomMatch = STANDARD_UOMS.find((u) => u.id === prod.unitOfMeasurementId);
+      const prodImg =
+        (prod as any).imageUrl ||
+        (prod as any).image ||
+        (prod as any).productImage ||
+        null;
+      setImageError(false);
       onUpdate({
         ...item,
         productId: prod.productId,
@@ -61,6 +107,7 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
         gstRate: prod.gstRate ?? 18,
         unitOfMeasurementId: prod.unitOfMeasurementId || 1,
         unitName: uomMatch?.name || "Nos",
+        ...(prodImg ? { imageUrl: prodImg } : {}),
       });
     }
   };
@@ -204,6 +251,24 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
             disabled={disabled}
             className="w-full text-xs py-1.5 px-2 bg-white border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none resize-none"
           />
+        </td>
+
+        {/* Product Image Thumbnail matching Screenshot 2 & 3 */}
+        <td className="p-3 align-top text-center w-20">
+          <div className="w-12 h-12 rounded-2xl bg-slate-100 border border-slate-200/90 flex items-center justify-center p-1 text-center shadow-2xs overflow-hidden mx-auto mt-1">
+            {productImageUrl && !imageError ? (
+              <img
+                src={productImageUrl}
+                alt={item.itemName || "Product"}
+                className="w-full h-full object-contain"
+                onError={() => setImageError(true)}
+              />
+            ) : (
+              <span className="text-[11px] font-semibold text-slate-800 tracking-tight select-none">
+                {placeholderText}
+              </span>
+            )}
+          </div>
         </td>
 
         {/* Quantity & Unit */}
