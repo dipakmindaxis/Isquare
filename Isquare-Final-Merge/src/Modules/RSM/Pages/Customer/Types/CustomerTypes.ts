@@ -108,6 +108,7 @@ export interface CustomerCreatePayload {
   directorId?: number | null;
   bdeUserId?: number | null;
   salesCoordinatorId?: number | null;
+  salesCoordinatorName?: string | null;
   customerOwnerId?: number | null;
 
   // Addresses

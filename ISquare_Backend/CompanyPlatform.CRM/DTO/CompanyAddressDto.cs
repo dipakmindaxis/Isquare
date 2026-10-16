@@ -27,9 +27,8 @@ namespace CompanyPlatform.CRM.DTO
         [Required]
         public int CityId { get; set; }
 
-        [Required]
         [StringLength(10)]
-        public string Pincode { get; set; }
+        public string? Pincode { get; set; } = "000000";
 
         public bool IsPrimary { get; set; }
 

@@ -204,7 +204,15 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
         gstin: formData.gstin?.trim() || undefined,
         cin: formData.cin?.trim() || undefined,
         msmeNumber: formData.msmeNumber?.trim() || undefined,
+        salesCoordinatorName: formData.salesCoordinatorName?.trim() || undefined,
         remarks: formData.remarks?.trim() || undefined,
+        addresses: (formData.addresses || []).map((addr) => ({
+          ...addr,
+          countryId: addr.countryId ? Number(addr.countryId) : 1,
+          stateId: addr.stateId ? Number(addr.stateId) : 1,
+          cityId: addr.cityId ? Number(addr.cityId) : 1,
+          pincode: addr.pincode?.trim() || "000000",
+        })),
       };
 
       await updateCustomer(customerId, payload);
@@ -298,16 +306,22 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Customer Code
-                      </label>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-xs font-medium text-gray-700">
+                          Customer Code
+                        </label>
+                        <span className="text-[10px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded font-medium">
+                          Read-only
+                        </span>
+                      </div>
                       <input
                         type="text"
                         name="customerCode"
                         value={formData.customerCode || ""}
-                        onChange={handleInputChange}
-                        placeholder="e.g. CUST-001"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        readOnly
+                        disabled
+                        placeholder="e.g. CUST001"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-100 text-gray-600 cursor-not-allowed focus:outline-none select-none font-medium"
                       />
                     </div>
 
@@ -618,11 +632,18 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
                           className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                         >
                           <option value="">Select Director</option>
-                          {(Array.isArray(employees) ? employees : []).map((emp) => (
-                            <option key={emp.id} value={emp.id}>
-                              {emp.fullName} {emp.designation ? `(${emp.designation})` : ""}
-                            </option>
-                          ))}
+                          {(Array.isArray(employees) ? employees : []).map((emp) => {
+                            const displayName =
+                              emp.fullName ||
+                              [emp.firstName, emp.lastName].filter(Boolean).join(" ") ||
+                              `Employee #${emp.id}`;
+                            return (
+                              <option key={emp.id} value={emp.id}>
+                                {displayName}
+                                {emp.designation ? ` (${emp.designation})` : ""}
+                              </option>
+                            );
+                          })}
                         </select>
                       </div>
 
@@ -649,19 +670,14 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
                         <label className="block text-xs font-medium text-gray-700 mb-1">
                           Sales Coordinator
                         </label>
-                        <select
-                          name="salesCoordinatorId"
-                          value={formData.salesCoordinatorId ?? ""}
+                        <input
+                          type="text"
+                          name="salesCoordinatorName"
+                          value={formData.salesCoordinatorName || ""}
                           onChange={handleInputChange}
+                          placeholder="Enter Sales Coordinator name"
                           className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        >
-                          <option value="">Select Sales Coordinator</option>
-                          {(Array.isArray(employees) ? employees : []).map((emp) => (
-                            <option key={emp.id} value={emp.id}>
-                              {emp.fullName}
-                            </option>
-                          ))}
-                        </select>
+                        />
                       </div>
 
                       <div>

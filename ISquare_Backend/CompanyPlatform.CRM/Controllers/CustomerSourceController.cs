@@ -21,6 +21,7 @@ namespace CompanyPlatform.CRM.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public async Task<IActionResult> GetAll()
         {
             _logger.LogInformation("Fetching all Customer Source records.");

@@ -9,6 +9,7 @@ namespace CompanyPlatform.CRM.Services.Customer
     {
         Task<IEnumerable<CustomerDto>> GetAllCustomersAsync();
         Task<CustomerDto?> GetCustomerByIdAsync(int id);
+        Task<string> GetNextCustomerCodeAsync();
         Task<CustomerDto> CreateCustomerAsync(CustomerCreateDto customerDto);
         Task<bool> UpdateCustomerAsync(int id, CustomerUpdateDto customerDto);
         Task<bool> DeleteCustomerAsync(int id);

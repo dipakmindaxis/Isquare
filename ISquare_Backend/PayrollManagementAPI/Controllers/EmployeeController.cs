@@ -109,6 +109,7 @@ namespace PayrollManagementAPI.Controllers
         }
 
         [HttpGet("selection-list")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetSelectionList()
         {
             var employees = await _employeeService.GetEmployeeSelectionListAsync();

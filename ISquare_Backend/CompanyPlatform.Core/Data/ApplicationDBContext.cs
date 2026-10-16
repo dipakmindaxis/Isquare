@@ -460,6 +460,16 @@ namespace CompanyPlatform.Core.Data
                 .HasForeignKey(c => c.CustomerOwnerId)
                 .OnDelete(DeleteBehavior.NoAction);
 
+            builder.Entity<CompanyPlatform.Core.Models.CRM.Company.Company>()
+                .Property(c => c.CompanyCode)
+                .HasMaxLength(50)
+                .IsRequired();
+
+            builder.Entity<CompanyPlatform.Core.Models.CRM.Company.Company>()
+                .HasIndex(c => c.CompanyCode)
+                .IsUnique()
+                .HasFilter("[IsDeleted] = 0");
+
             // ??? Call Module ?????????????????????????????????????????
             builder.Entity<Call>()
                 .HasOne(c => c.Company).WithMany()

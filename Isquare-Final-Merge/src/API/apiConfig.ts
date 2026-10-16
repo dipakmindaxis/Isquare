@@ -1,6 +1,5 @@
-//const BASE_URL = "https://localhost:44363/api";
-//const BASE_URL = "https://localhost:7296/api";
-const BASE_URL = "https://sama9890-001-site1.jtempurl.com/api";
+const BASE_URL = "https://localhost:7296/api";
+// const BASE_URL = "https://sama9890-001-site1.jtempurl.com/api";
 // const BASE_URL = "https://vishalkakde-001-site1.etempurl.com/api";
 
 export interface ApiEndpoints  {
@@ -75,8 +74,8 @@ export const API_ENDPOINTS: ApiEndpoints = {
   LeaveTypes: `${BASE_URL}/leavetypes`,
   EmployeeSelectionList: `${BASE_URL}/payroll-employees/selection-list`,
   ExpenseType: `${BASE_URL}/expensetypes`,
-  Country: `${BASE_URL}/countries`,
-  State: `${BASE_URL}/states`,
+  Country: `${BASE_URL}/country`,
+  State: `${BASE_URL}/state`,
   Company: `${BASE_URL}/companies`,
   SetEmployeeReporting: `${BASE_URL}/payroll-employees/set-reporting`,
   Notifications: `${BASE_URL}/notifications`,
@@ -91,8 +90,8 @@ export const API_ENDPOINTS: ApiEndpoints = {
   SalesUserManager: `${BASE_URL}/salesusermanager`,
   CustomerCategory: `${BASE_URL}/customer-category`,
   CustomerType: `${BASE_URL}/customer-type`,
-  City: `${BASE_URL}/cities`,
-  Cities: `${BASE_URL}/cities`,
+  City: `${BASE_URL}/city`,
+  Cities: `${BASE_URL}/city`,
   Customer: `${BASE_URL}/customer`,
   Customers: `${BASE_URL}/customer`,
   SalesAttachments: `${BASE_URL}/SalesAttachments`,

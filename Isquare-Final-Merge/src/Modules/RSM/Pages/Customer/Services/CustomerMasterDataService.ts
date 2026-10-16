@@ -139,8 +139,19 @@ export const getEmployees = async (): Promise<EmployeeSelectItem[]> => {
     const response = await apiClient.get<EmployeeSelectItem[]>(
       API_ENDPOINTS.EmployeeSelectionList
     );
+    const list = ensureArray<EmployeeSelectItem>(response.data);
+    if (list.length > 0) return list;
+  } catch (err) {
+    console.warn("Could not load from EmployeeSelectionList endpoint:", err);
+  }
+
+  try {
+    const response = await apiClient.get<EmployeeSelectItem[]>(
+      API_ENDPOINTS.Employees
+    );
     return ensureArray<EmployeeSelectItem>(response.data);
-  } catch {
+  } catch (err) {
+    console.warn("Could not load from Employees endpoint:", err);
     return [];
   }
 };

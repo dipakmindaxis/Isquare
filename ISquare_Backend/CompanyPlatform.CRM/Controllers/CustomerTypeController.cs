@@ -28,6 +28,7 @@ namespace CompanyPlatform.CRM.Controllers
         // GET ALL
         // ==========================================
         [HttpGet]
+        [AllowAnonymous]
         public async Task<IActionResult> GetAllCustomerTypes()
         {
             _logger.LogInformation(

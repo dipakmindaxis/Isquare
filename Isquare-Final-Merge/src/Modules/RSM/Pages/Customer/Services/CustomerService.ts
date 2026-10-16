@@ -25,6 +25,24 @@ export const getAllCustomers = async (): Promise<Customer[]> => {
 
 export const getCustomers = getAllCustomers;
 
+export const getNextCustomerCode = async (): Promise<string> => {
+  try {
+    const response = await apiClient.get<{ customerCode: string } | string>(
+      `${API_ENDPOINTS.Customer}/next-code`
+    );
+    if (typeof response.data === "string") {
+      return response.data;
+    }
+    if (response.data && response.data.customerCode) {
+      return response.data.customerCode;
+    }
+    return "";
+  } catch (error) {
+    console.error("Failed to fetch next customer code:", error);
+    return "";
+  }
+};
+
 export const getCustomerById = async (id: number): Promise<Customer> => {
   const response = await apiClient.get<Customer>(
     `${API_ENDPOINTS.Customer}/${id}`

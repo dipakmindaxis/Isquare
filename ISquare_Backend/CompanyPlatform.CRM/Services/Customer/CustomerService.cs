@@ -76,45 +76,72 @@ namespace CompanyPlatform.CRM.Services.Customer
             _logger = logger;
         }
 
-        private async Task<string> GenerateNextCustomerCodeAsync()
+        public async Task<string> GetNextCustomerCodeAsync()
         {
             await _codeLock.WaitAsync();
             try
             {
-                var companies = await _repository.GetAll();
-                int maxNumber = 100;
-
-                foreach (var c in companies)
-                {
-                    if (string.IsNullOrWhiteSpace(c.CompanyCode))
-                        continue;
-
-                    var code = c.CompanyCode.Trim();
-                    if (code.StartsWith("CUST-", StringComparison.OrdinalIgnoreCase))
-                    {
-                        var numPart = code.Substring(5);
-                        if (int.TryParse(numPart, out int numVal) && numVal > maxNumber)
-                        {
-                            maxNumber = numVal;
-                        }
-                    }
-                    else if (code.StartsWith("CMP#", StringComparison.OrdinalIgnoreCase))
-                    {
-                        var numPart = code.Substring(4);
-                        if (int.TryParse(numPart, out int numVal) && numVal > maxNumber)
-                        {
-                            maxNumber = numVal;
-                        }
-                    }
-                }
-
-                int nextNumber = maxNumber + 1;
-                return $"CUST-{nextNumber}";
+                return await GenerateNextCustomerCodeInternalAsync();
             }
             finally
             {
                 _codeLock.Release();
             }
+        }
+
+        private async Task<string> GenerateNextCustomerCodeInternalAsync()
+        {
+            var companies = (await _repository.GetAll()).ToList();
+            int maxNumber = 0;
+            var existingCodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var c in companies)
+            {
+                if (string.IsNullOrWhiteSpace(c.CompanyCode))
+                    continue;
+
+                var code = c.CompanyCode.Trim();
+                existingCodes.Add(code);
+
+                // Match patterns like CUST001, CUST-001, CMP#001, etc.
+                var match = System.Text.RegularExpressions.Regex.Match(
+                    code,
+                    @"^(?:CUST-?|CMP#?)(\d+)$",
+                    System.Text.RegularExpressions.RegexOptions.IgnoreCase
+                );
+
+                if (match.Success && int.TryParse(match.Groups[1].Value, out int numVal))
+                {
+                    if (numVal > maxNumber)
+                    {
+                        maxNumber = numVal;
+                    }
+                }
+                else
+                {
+                    // Fallback: check if the string contains any digits
+                    var digitsMatch = System.Text.RegularExpressions.Regex.Match(code, @"\d+");
+                    if (digitsMatch.Success && int.TryParse(digitsMatch.Value, out int fallbackNum))
+                    {
+                        if (fallbackNum > maxNumber)
+                        {
+                            maxNumber = fallbackNum;
+                        }
+                    }
+                }
+            }
+
+            int nextNumber = maxNumber + 1;
+            string candidateCode = $"CUST{nextNumber:D3}";
+
+            // Ensure candidate code does not collide with any existing code
+            while (existingCodes.Contains(candidateCode))
+            {
+                nextNumber++;
+                candidateCode = $"CUST{nextNumber:D3}";
+            }
+
+            return candidateCode;
         }
 
         public async Task<IEnumerable<CustomerDto>> GetAllCustomersAsync()
@@ -167,9 +194,25 @@ namespace CompanyPlatform.CRM.Services.Customer
         {
             _logger.LogInformation("Creating Customer: {CustomerName}", dto.CustomerName);
 
-            string code = !string.IsNullOrWhiteSpace(dto.CustomerCode) 
-                ? dto.CustomerCode.Trim() 
-                : await GenerateNextCustomerCodeAsync();
+            await _codeLock.WaitAsync();
+            try
+            {
+                var companies = (await _repository.GetAll()).ToList();
+                var existingCodes = new HashSet<string>(
+                    companies.Where(c => !string.IsNullOrWhiteSpace(c.CompanyCode))
+                             .Select(c => c.CompanyCode.Trim()),
+                    StringComparer.OrdinalIgnoreCase
+                );
+
+                string code;
+                if (!string.IsNullOrWhiteSpace(dto.CustomerCode) && !existingCodes.Contains(dto.CustomerCode.Trim()))
+                {
+                    code = dto.CustomerCode.Trim();
+                }
+                else
+                {
+                    code = await GenerateNextCustomerCodeInternalAsync();
+                }
 
             var entity = new CompanyModel
             {
@@ -180,11 +223,11 @@ namespace CompanyPlatform.CRM.Services.Customer
                 CompanyGroup = dto.CompanyGroup,
                 PlantCode = dto.PlantCode,
 
-                IndustryId = dto.IndustryId,
-                CompanyStatusId = dto.CustomerStatusId,
-                CustomerSourceId = dto.CustomerSourceId,
-                CustomerAreaId = dto.CustomerAreaId,
-                PaymentTermsId = dto.PaymentTermsId ?? dto.PaymentTermId,
+                IndustryId = dto.IndustryId > 0 ? dto.IndustryId : null,
+                CompanyStatusId = dto.CustomerStatusId > 0 ? dto.CustomerStatusId : null,
+                CustomerSourceId = dto.CustomerSourceId > 0 ? dto.CustomerSourceId : null,
+                CustomerAreaId = dto.CustomerAreaId > 0 ? dto.CustomerAreaId : null,
+                PaymentTermsId = (dto.PaymentTermsId ?? dto.PaymentTermId) > 0 ? (dto.PaymentTermsId ?? dto.PaymentTermId) : null,
 
                 PAN = dto.PAN,
                 TAN = dto.TAN,
@@ -192,10 +235,11 @@ namespace CompanyPlatform.CRM.Services.Customer
                 CIN = dto.CIN,
                 MSMENumber = dto.MSMENumber,
 
-                DirectorId = dto.DirectorId,
-                BDEUserId = dto.BDEUserId,
-                SalesCoordinatorId = dto.SalesCoordinatorId,
-                CustomerOwnerId = dto.CustomerOwnerId,
+                DirectorId = dto.DirectorId > 0 ? dto.DirectorId : null,
+                BDEUserId = dto.BDEUserId > 0 ? dto.BDEUserId : null,
+                SalesCoordinatorId = dto.SalesCoordinatorId > 0 ? dto.SalesCoordinatorId : null,
+                SalesCoordinatorName = dto.SalesCoordinatorName,
+                CustomerOwnerId = dto.CustomerOwnerId > 0 ? dto.CustomerOwnerId : null,
 
                 RegistrationDate = dto.RegistrationDate,
                 VisitedDate = dto.VisitedDate,
@@ -212,7 +256,7 @@ namespace CompanyPlatform.CRM.Services.Customer
                 entity.CountryId = pri.CountryId > 0 ? pri.CountryId : null;
                 entity.StateId = pri.StateId > 0 ? pri.StateId : null;
                 entity.CityId = pri.CityId > 0 ? pri.CityId : null;
-                entity.Pincode = pri.Pincode;
+                entity.Pincode = string.IsNullOrWhiteSpace(pri.Pincode) ? "000000" : pri.Pincode.Trim();
             }
 
             await _repository.Create(entity);
@@ -220,6 +264,7 @@ namespace CompanyPlatform.CRM.Services.Customer
             dto.CustomerId = entity.CompanyId;
             dto.CompanyId = entity.CompanyId;
             dto.CustomerCode = entity.CompanyCode;
+            dto.SalesCoordinatorName = entity.SalesCoordinatorName;
             dto.IsActive = entity.IsActive;
             dto.IsDeleted = entity.IsDeleted;
 
@@ -236,7 +281,7 @@ namespace CompanyPlatform.CRM.Services.Customer
                         CountryId = addr.CountryId > 0 ? addr.CountryId : 1,
                         StateId = addr.StateId > 0 ? addr.StateId : 1,
                         CityId = addr.CityId > 0 ? addr.CityId : 1,
-                        Pincode = addr.Pincode ?? string.Empty,
+                        Pincode = string.IsNullOrWhiteSpace(addr.Pincode) ? "000000" : addr.Pincode.Trim(),
                         IsPrimary = addr.IsPrimary,
                         IsActive = true,
                         IsDeleted = false,
@@ -250,6 +295,11 @@ namespace CompanyPlatform.CRM.Services.Customer
             }
 
             return dto;
+            }
+            finally
+            {
+                _codeLock.Release();
+            }
         }
 
         public async Task<bool> UpdateCustomerAsync(int id, CustomerUpdateDto dto)
@@ -276,11 +326,7 @@ namespace CompanyPlatform.CRM.Services.Customer
                     }
                 }
             }
-
-            if (!string.IsNullOrWhiteSpace(dto.CustomerCode))
-            {
-                entity.CompanyCode = dto.CustomerCode;
-            }
+            // Ensure Customer Code remains unchanged when an existing customer is edited
 
             entity.CustomerName = dto.CustomerName;
             entity.CompanyName = !string.IsNullOrWhiteSpace(dto.CompanyName) ? dto.CompanyName : dto.CustomerName;
@@ -288,11 +334,11 @@ namespace CompanyPlatform.CRM.Services.Customer
             entity.CompanyGroup = dto.CompanyGroup;
             entity.PlantCode = dto.PlantCode;
 
-            entity.IndustryId = dto.IndustryId;
-            entity.CompanyStatusId = dto.CustomerStatusId;
-            entity.CustomerSourceId = dto.CustomerSourceId;
-            entity.CustomerAreaId = dto.CustomerAreaId;
-            entity.PaymentTermsId = dto.PaymentTermsId ?? dto.PaymentTermId;
+            entity.IndustryId = dto.IndustryId > 0 ? dto.IndustryId : null;
+            entity.CompanyStatusId = dto.CustomerStatusId > 0 ? dto.CustomerStatusId : null;
+            entity.CustomerSourceId = dto.CustomerSourceId > 0 ? dto.CustomerSourceId : null;
+            entity.CustomerAreaId = dto.CustomerAreaId > 0 ? dto.CustomerAreaId : null;
+            entity.PaymentTermsId = (dto.PaymentTermsId ?? dto.PaymentTermId) > 0 ? (dto.PaymentTermsId ?? dto.PaymentTermId) : null;
 
             entity.PAN = dto.PAN;
             entity.TAN = dto.TAN;
@@ -300,10 +346,11 @@ namespace CompanyPlatform.CRM.Services.Customer
             entity.CIN = dto.CIN;
             entity.MSMENumber = dto.MSMENumber;
 
-            entity.DirectorId = dto.DirectorId;
-            entity.BDEUserId = dto.BDEUserId;
-            entity.SalesCoordinatorId = dto.SalesCoordinatorId;
-            entity.CustomerOwnerId = dto.CustomerOwnerId;
+            entity.DirectorId = dto.DirectorId > 0 ? dto.DirectorId : null;
+            entity.BDEUserId = dto.BDEUserId > 0 ? dto.BDEUserId : null;
+            entity.SalesCoordinatorId = dto.SalesCoordinatorId > 0 ? dto.SalesCoordinatorId : null;
+            entity.SalesCoordinatorName = dto.SalesCoordinatorName;
+            entity.CustomerOwnerId = dto.CustomerOwnerId > 0 ? dto.CustomerOwnerId : null;
 
             if (dto.Addresses != null && dto.Addresses.Any())
             {
@@ -517,7 +564,7 @@ namespace CompanyPlatform.CRM.Services.Customer
                 BDEUserName = bde?.Value,
 
                 SalesCoordinatorId = c.SalesCoordinatorId,
-                SalesCoordinatorName = salesCoord != null ? $"{salesCoord.FirstName} {salesCoord.LastName}".Trim() : null,
+                SalesCoordinatorName = !string.IsNullOrWhiteSpace(c.SalesCoordinatorName) ? c.SalesCoordinatorName : (salesCoord != null ? $"{salesCoord.FirstName} {salesCoord.LastName}".Trim() : null),
 
                 CustomerOwnerId = c.CustomerOwnerId,
                 CustomerOwnerName = customerOwnerName,
@@ -652,6 +699,7 @@ namespace CompanyPlatform.CRM.Services.Customer
                 DirectorId = companyDto.DirectorId,
                 BDEUserId = companyDto.BDEUserId,
                 SalesCoordinatorId = companyDto.SalesCoordinatorId,
+                SalesCoordinatorName = companyDto.SalesCoordinatorName,
                 CustomerOwnerId = companyDto.CustomerOwnerId,
                 Addresses = companyDto.Addresses,
                 RegistrationDate = companyDto.RegistrationDate,
