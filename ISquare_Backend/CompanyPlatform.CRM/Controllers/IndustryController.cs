@@ -26,6 +26,7 @@ namespace CompanyPlatform.CRM.Controllers
 
         // GET: api/industry
         [HttpGet]
+        [AllowAnonymous]
         public async Task<IActionResult> GetAll()
         {
             _logger.LogInformation(

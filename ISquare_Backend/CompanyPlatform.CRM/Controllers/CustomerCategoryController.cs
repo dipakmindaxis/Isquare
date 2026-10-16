@@ -31,6 +31,7 @@ namespace CompanyPlatform.CRM.Controllers
 
         // GET: api/customer-category
         [HttpGet]
+        [AllowAnonymous]
         public async Task<IActionResult> GetAll()
         {
             _logger.LogInformation(

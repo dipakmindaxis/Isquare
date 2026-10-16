@@ -20,7 +20,7 @@ import type {
   CountryItem,
   AddressTypeItem,
 } from "./Types/CustomerTypes";
-import { createCustomer } from "./Services/CustomerService";
+import { createCustomer, getNextCustomerCode } from "./Services/CustomerService";
 import {
   getIndustries,
   getCustomerStatuses,
@@ -61,6 +61,7 @@ interface CustomerFormState {
   directorId: number | "";
   bdeUserId: number | "";
   salesCoordinatorId: number | "";
+  salesCoordinatorName: string;
   customerOwnerId: number | "";
   addresses: CustomerAddress[];
   registrationDate: string;
@@ -89,6 +90,7 @@ const INITIAL_FORM_STATE: CustomerFormState = {
   directorId: "",
   bdeUserId: "",
   salesCoordinatorId: "",
+  salesCoordinatorName: "",
   customerOwnerId: "",
   addresses: [],
   registrationDate: "",
@@ -134,6 +136,8 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
     useState<CustomerFormState>(INITIAL_FORM_STATE);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFetchingCode, setIsFetchingCode] = useState(false);
+  const cachedNextCodeRef = React.useRef<string>("");
 
   // Master dropdown data lists
   const [industries, setIndustries] = useState<IndustryItem[]>([]);
@@ -161,6 +165,14 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setFormData(INITIAL_FORM_STATE);
+      cachedNextCodeRef.current = "";
+
+      // Pre-fetch next sequential customer code from backend
+      getNextCustomerCode().then((code) => {
+        if (code) {
+          cachedNextCodeRef.current = code;
+        }
+      });
 
       const loadDropdownData = async () => {
         setIsLoading(true);
@@ -210,6 +222,51 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
     if (type === "checkbox") {
       const checked = (e.target as HTMLInputElement).checked;
       setFormData((prev) => ({ ...prev, [name]: checked }));
+    } else if (name === "customerName") {
+      const trimmedVal = value.trim();
+      if (trimmedVal.length > 0) {
+        if (!formData.customerCode) {
+          if (cachedNextCodeRef.current) {
+            setFormData((prev) => ({
+              ...prev,
+              customerName: value,
+              customerCode: cachedNextCodeRef.current,
+            }));
+            return;
+          } else {
+            setIsFetchingCode(true);
+            getNextCustomerCode()
+              .then((code) => {
+                const assignedCode = code || "CUST001";
+                cachedNextCodeRef.current = assignedCode;
+                setFormData((prev) => ({
+                  ...prev,
+                  customerName: value,
+                  customerCode: prev.customerCode || assignedCode,
+                }));
+              })
+              .catch(() => {
+                setFormData((prev) => ({
+                  ...prev,
+                  customerName: value,
+                  customerCode: prev.customerCode || "CUST001",
+                }));
+              })
+              .finally(() => {
+                setIsFetchingCode(false);
+              });
+          }
+        }
+      } else {
+        // If customer name is cleared, clear auto-generated code
+        setFormData((prev) => ({
+          ...prev,
+          customerName: value,
+          customerCode: "",
+        }));
+        return;
+      }
+      setFormData((prev) => ({ ...prev, customerName: value }));
     } else if (
       [
         "industryId",
@@ -254,11 +311,7 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
     if (formData.addresses && formData.addresses.length > 0) {
       for (let i = 0; i < formData.addresses.length; i++) {
         const addr = formData.addresses[i];
-        const hasContent =
-          Boolean(addr.address?.trim()) ||
-          Boolean(addr.pincode?.trim()) ||
-          (Boolean(addr.stateId) && Number(addr.stateId) > 0) ||
-          (Boolean(addr.cityId) && Number(addr.cityId) > 0);
+        const hasContent = Boolean(addr.address?.trim());
 
         if (!hasContent) {
           continue; // skip completely empty address card
@@ -267,17 +320,13 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
           toast.error(`Address #${i + 1}: Full Address is required.`);
           return;
         }
-        if (!addr.pincode?.trim()) {
-          toast.error(`Address #${i + 1}: Pincode is required.`);
-          return;
-        }
         validAddresses.push({
           addressType: addr.addressType?.trim() || "Billing",
           address: addr.address.trim(),
           countryId: addr.countryId ? Number(addr.countryId) : 1,
           stateId: addr.stateId ? Number(addr.stateId) : 1,
           cityId: addr.cityId ? Number(addr.cityId) : 1,
-          pincode: addr.pincode.trim(),
+          pincode: addr.pincode?.trim() || "000000",
           isPrimary:
             addr.isPrimary !== undefined
               ? !!addr.isPrimary
@@ -289,9 +338,14 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
 
     setIsSubmitting(true);
     try {
+      let finalCode = formData.customerCode?.trim() || "";
+      if (!finalCode) {
+        finalCode = cachedNextCodeRef.current || "";
+      }
+
       const payload: CustomerCreatePayload = {
         // Section 1: Basic Details
-        customerCode: formData.customerCode?.trim() || "",
+        customerCode: finalCode,
         customerName: formData.customerName.trim(),
         customerShortName: formData.customerShortName?.trim() || null,
         companyName: formData.companyName?.trim() || null,
@@ -334,6 +388,7 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
           formData.salesCoordinatorId !== ""
             ? Number(formData.salesCoordinatorId)
             : null,
+        salesCoordinatorName: formData.salesCoordinatorName?.trim() || null,
         customerOwnerId:
           formData.customerOwnerId !== ""
             ? Number(formData.customerOwnerId)
@@ -441,17 +496,29 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
                     <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                        Customer Code
-                      </label>
-                      <input
-                        type="text"
-                        name="customerCode"
-                        value={formData.customerCode || ""}
-                        onChange={handleInputChange}
-                        placeholder="e.g. CUST-001"
-                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm bg-white text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#154068]/20 focus:border-[#154068] transition"
-                      />
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="block text-xs font-semibold text-gray-700">
+                          Customer Code
+                        </label>
+                        <span className="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-medium border border-blue-100">
+                          Auto-generated
+                        </span>
+                      </div>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          name="customerCode"
+                          value={formData.customerCode || ""}
+                          readOnly
+                          placeholder={isFetchingCode ? "Generating code..." : "e.g. CUST001"}
+                          className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-700 placeholder:text-gray-400 focus:outline-none cursor-not-allowed select-none font-medium"
+                        />
+                        {isFetchingCode && (
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                            <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     <div className="sm:col-span-2 lg:col-span-2">
@@ -771,12 +838,18 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
                         className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#154068]/20 focus:border-[#154068] transition"
                       >
                         <option value="">Select Director</option>
-                        {(Array.isArray(employees) ? employees : []).map((emp) => (
-                          <option key={emp.id} value={emp.id}>
-                            {emp.fullName}{" "}
-                            {emp.designation ? `(${emp.designation})` : ""}
-                          </option>
-                        ))}
+                        {(Array.isArray(employees) ? employees : []).map((emp) => {
+                          const displayName =
+                            emp.fullName ||
+                            [emp.firstName, emp.lastName].filter(Boolean).join(" ") ||
+                            `Employee #${emp.id}`;
+                          return (
+                            <option key={emp.id} value={emp.id}>
+                              {displayName}
+                              {emp.designation ? ` (${emp.designation})` : ""}
+                            </option>
+                          );
+                        })}
                       </select>
                     </div>
 
@@ -803,19 +876,14 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
                       <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                         Sales Coordinator
                       </label>
-                      <select
-                        name="salesCoordinatorId"
-                        value={formData.salesCoordinatorId ?? ""}
+                      <input
+                        type="text"
+                        name="salesCoordinatorName"
+                        value={formData.salesCoordinatorName || ""}
                         onChange={handleInputChange}
-                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#154068]/20 focus:border-[#154068] transition"
-                      >
-                        <option value="">Select Sales Coordinator</option>
-                        {(Array.isArray(employees) ? employees : []).map((emp) => (
-                          <option key={emp.id} value={emp.id}>
-                            {emp.fullName}
-                          </option>
-                        ))}
-                      </select>
+                        placeholder="Enter Sales Coordinator name"
+                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#154068]/20 focus:border-[#154068] transition"
+                      />
                     </div>
 
                     <div>

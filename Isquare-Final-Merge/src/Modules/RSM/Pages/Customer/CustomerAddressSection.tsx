@@ -1,16 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Plus, Trash2, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import type {
   CustomerAddress,
   CountryItem,
-  StateItem,
-  CityItem,
   AddressTypeItem,
 } from "./Types/CustomerTypes";
-import {
-  getStates,
-  getCities,
-} from "./Services/CustomerMasterDataService";
 import { validateCustomerAddress } from "./Services/CustomerService";
 import { toast } from "sonner";
 
@@ -18,7 +12,7 @@ interface CustomerAddressSectionProps {
   addresses: CustomerAddress[];
   onChange: (addresses: CustomerAddress[]) => void;
   customerId?: number;
-  countries: CountryItem[];
+  countries?: CountryItem[];
   addressTypes: AddressTypeItem[];
   readOnly?: boolean;
 }
@@ -27,55 +21,21 @@ const CustomerAddressSection: React.FC<CustomerAddressSectionProps> = ({
   addresses,
   onChange,
   customerId,
-  countries,
   addressTypes,
   readOnly = false,
 }) => {
-  // Cache for states and cities per address index
-  const [statesByAddress, setStatesByAddress] = useState<{
-    [index: number]: StateItem[];
-  }>({});
-  const [citiesByAddress, setCitiesByAddress] = useState<{
-    [index: number]: CityItem[];
-  }>({});
   const [validatingIndex, setValidatingIndex] = useState<number | null>(null);
   const [validationResults, setValidationResults] = useState<{
     [index: number]: { success: boolean; message: string };
   }>({});
 
-  // When addresses are initialized, load dependent states & cities
-  useEffect(() => {
-    addresses.forEach(async (addr, idx) => {
-      if (addr.countryId) {
-        try {
-          const fetchedStates = await getStates(addr.countryId);
-          setStatesByAddress((prev) =>
-            prev[idx] ? prev : { ...prev, [idx]: fetchedStates }
-          );
-        } catch (e) {
-          console.error("Failed to load states for address " + idx, e);
-        }
-      }
-      if (addr.stateId) {
-        try {
-          const fetchedCities = await getCities(addr.stateId);
-          setCitiesByAddress((prev) =>
-            prev[idx] ? prev : { ...prev, [idx]: fetchedCities }
-          );
-        } catch (e) {
-          console.error("Failed to load cities for address " + idx, e);
-        }
-      }
-    });
-  }, [addresses]);
-
   const handleAddAddress = () => {
     const newAddr: CustomerAddress = {
       addressType: addressTypes[0]?.name || addressTypes[0]?.addressTypeName || "Billing",
       address: "",
-      countryId: countries[0]?.countryId || 1,
-      stateId: 0,
-      cityId: 0,
+      countryId: 1,
+      stateId: 1,
+      cityId: 1,
       pincode: "",
       isPrimary: addresses.length === 0,
       isActive: true,
@@ -88,7 +48,7 @@ const CustomerAddressSection: React.FC<CustomerAddressSectionProps> = ({
     onChange(updated);
   };
 
-  const handleFieldChange = async (
+  const handleFieldChange = (
     index: number,
     field: keyof CustomerAddress,
     value: string | number | boolean
@@ -101,34 +61,6 @@ const CustomerAddressSection: React.FC<CustomerAddressSectionProps> = ({
       updated.forEach((a, i) => {
         a.isPrimary = i === index;
       });
-    }
-
-    // Country changed -> reset state and city
-    if (field === "countryId") {
-      const countryId = Number(value);
-      current.countryId = countryId;
-      current.stateId = 0;
-      current.cityId = 0;
-      try {
-        const fetchedStates = await getStates(countryId);
-        setStatesByAddress((prev) => ({ ...prev, [index]: fetchedStates }));
-        setCitiesByAddress((prev) => ({ ...prev, [index]: [] }));
-      } catch (err) {
-        console.error(err);
-      }
-    }
-
-    // State changed -> reset city
-    if (field === "stateId") {
-      const stateId = Number(value);
-      current.stateId = stateId;
-      current.cityId = 0;
-      try {
-        const fetchedCities = await getCities(stateId);
-        setCitiesByAddress((prev) => ({ ...prev, [index]: fetchedCities }));
-      } catch (err) {
-        console.error(err);
-      }
     }
 
     updated[index] = current;
@@ -264,8 +196,8 @@ const CustomerAddressSection: React.FC<CustomerAddressSectionProps> = ({
                 </div>
               )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
-                <div>
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 text-sm">
+                <div className="sm:col-span-3">
                   <label className="block text-xs font-medium text-gray-700 mb-1">
                     Address Type
                   </label>
@@ -302,7 +234,7 @@ const CustomerAddressSection: React.FC<CustomerAddressSectionProps> = ({
                   )}
                 </div>
 
-                <div className="col-span-1 sm:col-span-2 lg:col-span-3">
+                <div className="sm:col-span-6">
                   <label className="block text-xs font-medium text-gray-700 mb-1">
                     Full Address / Street
                   </label>
@@ -321,85 +253,9 @@ const CustomerAddressSection: React.FC<CustomerAddressSectionProps> = ({
                   )}
                 </div>
 
-                {/* Country */}
-                <div>
+                <div className="sm:col-span-3">
                   <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Country
-                  </label>
-                  {readOnly ? (
-                    <p className="font-medium text-gray-900">{addr.countryName || "-"}</p>
-                  ) : (
-                    <select
-                      value={addr.countryId || ""}
-                      onChange={(e) =>
-                        handleFieldChange(idx, "countryId", Number(e.target.value))
-                      }
-                      className="w-full px-2.5 py-1.5 border border-gray-300 rounded-md text-xs bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    >
-                      <option value="">Select Country</option>
-                      {(Array.isArray(countries) ? countries : []).map((c) => (
-                        <option key={c.countryId} value={c.countryId}>
-                          {c.countryName}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                </div>
-
-                {/* State */}
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                    State
-                  </label>
-                  {readOnly ? (
-                    <p className="font-medium text-gray-900">{addr.stateName || "-"}</p>
-                  ) : (
-                    <select
-                      value={addr.stateId || ""}
-                      onChange={(e) =>
-                        handleFieldChange(idx, "stateId", Number(e.target.value))
-                      }
-                      className="w-full px-2.5 py-1.5 border border-gray-300 rounded-md text-xs bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    >
-                      <option value="">Select State</option>
-                      {(statesByAddress[idx] || []).map((s) => (
-                        <option key={s.stateId} value={s.stateId}>
-                          {s.stateName}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                </div>
-
-                {/* City */}
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                    City
-                  </label>
-                  {readOnly ? (
-                    <p className="font-medium text-gray-900">{addr.cityName || "-"}</p>
-                  ) : (
-                    <select
-                      value={addr.cityId || ""}
-                      onChange={(e) =>
-                        handleFieldChange(idx, "cityId", Number(e.target.value))
-                      }
-                      className="w-full px-2.5 py-1.5 border border-gray-300 rounded-md text-xs bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    >
-                      <option value="">Select City</option>
-                      {(citiesByAddress[idx] || []).map((ci) => (
-                        <option key={ci.cityId} value={ci.cityId}>
-                          {ci.cityName}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                </div>
-
-                {/* Pincode */}
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Pincode
+                    Pin Code
                   </label>
                   {readOnly ? (
                     <p className="font-medium text-gray-900">{addr.pincode || "-"}</p>
@@ -411,6 +267,7 @@ const CustomerAddressSection: React.FC<CustomerAddressSectionProps> = ({
                         handleFieldChange(idx, "pincode", e.target.value)
                       }
                       placeholder="e.g. 411026"
+                      maxLength={10}
                       className="w-full px-2.5 py-1.5 border border-gray-300 rounded-md text-xs bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                     />
                   )}

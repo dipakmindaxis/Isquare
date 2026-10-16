@@ -21,8 +21,8 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public int CompanyId { get; set; }
 
         public int? CompanyTypeId { get; set; }
-
         [Required]
+        [MaxLength(50)]
         public string CompanyCode { get; set; }
 
         [Required]
@@ -83,6 +83,7 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public int? DirectorId { get; set; }
 
         public int? SalesCoordinatorId { get; set; }
+        public string? SalesCoordinatorName { get; set; }
 
         public int? CustomerOwnerId { get; set; }
 

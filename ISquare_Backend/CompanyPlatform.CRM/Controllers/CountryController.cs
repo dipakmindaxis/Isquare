@@ -21,6 +21,7 @@ namespace CompanyPlatform.CRM.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public async Task<IActionResult> GetAllCountries()
         {
             _logger.LogInformation("API endpoint called: GetAllCountries");

@@ -23,6 +23,7 @@ namespace CompanyPlatform.CRM.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public async Task<IActionResult> GetAll()
         {
             try

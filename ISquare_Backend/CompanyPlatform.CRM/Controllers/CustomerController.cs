@@ -20,6 +20,14 @@ namespace CompanyPlatform.CRM.Controllers
             _logger = logger;
         }
 
+        [HttpGet("next-code")]
+        public async Task<IActionResult> GetNextCustomerCode()
+        {
+            _logger.LogInformation("Generating next available Customer Code.");
+            var nextCode = await _customerService.GetNextCustomerCodeAsync();
+            return Ok(new { customerCode = nextCode });
+        }
+
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
