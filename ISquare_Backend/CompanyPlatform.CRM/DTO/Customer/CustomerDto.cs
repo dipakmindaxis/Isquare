@@ -24,20 +24,15 @@ namespace CompanyPlatform.CRM.DTO.Customer
 
         // Section 2: Business Information
         public int? IndustryId { get; set; }
-        public string? IndustryName { get; set; }
 
         public int? CustomerStatusId { get; set; }
-        public string? CustomerStatusName { get; set; }
 
         public int? CustomerSourceId { get; set; }
-        public string? CustomerSourceName { get; set; }
 
         public int? CustomerAreaId { get; set; }
-        public string? CustomerAreaName { get; set; }
 
         public int? PaymentTermsId { get; set; }
         public int? PaymentTermId { get => PaymentTermsId; set => PaymentTermsId = value; }
-        public string? PaymentTermName { get; set; }
 
         // Section 3: Registration & Tax Information
         public string? PAN { get; set; }
