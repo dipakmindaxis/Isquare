@@ -13,6 +13,7 @@ using CompanyPlatform.Core.Models.CRM.SalesCoordinator;
 using CompanyPlatform.Core.Models.HRMS;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection.Emit;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace CompanyPlatform.Core.Data
@@ -237,6 +238,12 @@ namespace CompanyPlatform.Core.Data
         public DbSet<AuditLog>
             AuditLogs
         { get; set; }
+
+        public DbSet<EnquirySource> EnquirySources { get; set; }
+        public DbSet<EnquiryType> EnquiryTypes { get; set; }
+        public DbSet<EnquiryPriority> EnquiryPriorities { get; set; }
+        public DbSet<EnquiryStage> EnquiryStages { get; set; }
+
 
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -581,6 +588,28 @@ namespace CompanyPlatform.Core.Data
                 .WithMany()
                 .HasForeignKey(cp => cp.CreatedBy)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<EnquirySource>()
+               .HasIndex(e => e.EnquirySourceCode)
+               .IsUnique();
+
+            builder.Entity<EnquiryType>()
+               .HasIndex(e => e.EnquiryTypeCode)
+               .IsUnique();
+
+            builder.Entity<EnquiryPriority>()
+             .HasIndex(p => p.EnquiryPriorityCode)
+             .IsUnique();
+
+             builder.Entity<EnquiryPriority>()
+                .HasQueryFilter(p => !p.EnquiryPriorityIsDeleted);
+
+            builder.Entity<EnquiryStage>()
+           .HasIndex(s => s.EnquiryStageCode)
+           .IsUnique();
+
+            builder.Entity<EnquiryStage>()
+                .HasQueryFilter(s => !s.EnquiryStageIsDeleted);
         }
     }
 }

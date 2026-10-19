@@ -1,5 +1,6 @@
 using CompanyPlatform.Core.Data;
 using CompanyPlatform.Core.Models;
+using CompanyPlatform.Core.Models.CRM;
 using CompanyPlatform.Core.Models.CRM.Company;
 using CompanyPlatform.Core.Models.CRM.Employee;
 using CompanyPlatform.Core.PriorityService;
@@ -87,6 +88,7 @@ using CompanyPlatform.CRM.Services.VisitAttachment;
 using CompanyPlatform.CRM.Services.VisitType;
 using CompanyPlatform.CRM.VisitAttachment;
 using CompanyPlatform.CRM.VisitType;
+using CompanyPlatform.Services;
 using CompanyPlatform.Services.TaskAssignment;
 using CompanyPlatform.VMS;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -363,6 +365,11 @@ builder.Services.AddSignalR();
 //builder.Services.AddScoped<IcustomerTypeService, CustomerTypeService>();
 
 builder.Services.AddScoped<IFileService, FileService>();
+builder.Services.AddScoped<IEnquirySourceService, EnquirySourceService>();
+builder.Services.AddScoped<IEnquiryTypeService, EnquiryTypeService>();
+builder.Services.AddScoped<IEnquiryPriorityService, EnquiryPriorityService>();
+builder.Services.AddScoped<IEnquiryStageService, EnquiryStageService>();
+
 
 
 
