@@ -243,7 +243,10 @@ namespace CompanyPlatform.Core.Data
         public DbSet<EnquiryType> EnquiryTypes { get; set; }
         public DbSet<EnquiryPriority> EnquiryPriorities { get; set; }
         public DbSet<EnquiryStage> EnquiryStages { get; set; }
-
+        public DbSet<LostReason> LostReasons { get; set; }
+        public DbSet<EnquiryStatus> EnquiryStatuses { get; set; }
+        public DbSet<ProductCategory> ProductCategories { get; set; }
+        public DbSet<ProductServiceItem> ProductServices { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -610,6 +613,34 @@ namespace CompanyPlatform.Core.Data
 
             builder.Entity<EnquiryStage>()
                 .HasQueryFilter(s => !s.EnquiryStageIsDeleted);
+
+            builder.Entity<LostReason>()
+                .HasIndex(r => r.LostReasonCode)
+                .IsUnique();
+
+            builder.Entity<LostReason>()
+                .HasQueryFilter(r => !r.LostReasonIsDeleted);
+
+            builder.Entity<EnquiryStatus>()
+                .HasIndex(s => s.EnquiryStatusCode)
+                .IsUnique();
+
+            builder.Entity<EnquiryStatus>()
+                .HasQueryFilter(s => !s.EnquiryStatusIsDeleted);
+
+            builder.Entity<ProductCategory>()
+                .HasIndex(p => p.ProductCategoryCode)
+                .IsUnique();
+
+            builder.Entity<ProductCategory>()
+                .HasQueryFilter(p => !p.ProductCategoryIsDeleted);
+
+            builder.Entity<ProductServiceItem>()
+                .HasIndex(p => p.ProductServiceCode)
+                .IsUnique();
+
+            builder.Entity<ProductServiceItem>()
+                .HasQueryFilter(p => !p.ProductServiceIsDeleted);
         }
     }
 }
