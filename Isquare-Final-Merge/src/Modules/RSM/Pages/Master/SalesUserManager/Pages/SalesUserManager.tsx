@@ -83,13 +83,13 @@ const SalesUserManager: React.FC<SalesUserManagerProps> = ({ isTab = false }) =>
     <div className={isTab ? "w-full" : "min-h-full bg-[#f5f6f8] p-6"}>
       <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h5 className="text-[#154068]">MASTER TABLE</h5>
+          <h5 className="text-[#FF7900] text-xs font-semibold uppercase tracking-wider">MASTER TABLE</h5>
 
-          <h1 className="text-2xl font-semibold text-[#154068]">
+          <h1 className="text-2xl font-bold text-gray-900">
             Users / Sales Managers
           </h1>
 
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-xs text-gray-500">
             Sales ownership and assignment list.
           </p>
         </div>
@@ -98,10 +98,10 @@ const SalesUserManager: React.FC<SalesUserManagerProps> = ({ isTab = false }) =>
           <button
             type="button"
             onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center gap-2 rounded-lg bg-[#154068] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0d3357] transition-colors"
+            className="flex items-center gap-2 rounded-lg bg-[#FF7900] px-4 py-2 text-xs font-semibold text-white hover:bg-[#E66D00] transition-colors shadow-md shadow-orange-500/25 cursor-pointer"
           >
-            <Plus size={18} />
-            + Add Sales Manager
+            <Plus size={16} />
+            <span>Add Sales Manager</span>
           </button>
         </div>
       </div>

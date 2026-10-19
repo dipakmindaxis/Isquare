@@ -502,6 +502,7 @@ export const CallsMaster: React.FC = () => {
       {isAddOpen && (
         <AddSalesActivityModal
           isOpen={isAddOpen}
+          isModal={true}
           defaultActivityType="Phone Call"
           onClose={() => setIsAddOpen(false)}
           onSuccess={async () => {

@@ -18,28 +18,28 @@ const ContactTypeTable: React.FC<ContactTypeTableProps> = ({
   onDelete,
 }) => {
   return (
-    <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+    <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-[#154068] text-white">
+        <table className="w-full text-xs">
+          <thead className="bg-[#FF7900] text-white text-xs uppercase tracking-wider border-b border-[#e06800]">
             <tr>
-              <th className="px-6 py-3 text-left font-semibold">
+              <th className="px-6 py-3.5 text-left font-semibold">
                 SR NO
               </th>
 
-              <th className="px-6 py-3 text-left font-semibold">
+              <th className="px-6 py-3.5 text-left font-semibold">
                 VALUE
               </th>
 
-              <th className="px-6 py-3 text-left font-semibold">
+              <th className="px-6 py-3.5 text-left font-semibold">
                 CODE
               </th>
 
-              <th className="px-6 py-3 text-left font-semibold">
+              <th className="px-6 py-3.5 text-left font-semibold">
                 STATUS
               </th>
 
-              <th className="px-6 py-3 text-right font-semibold">
+              <th className="px-6 py-3.5 text-right font-semibold">
                 ACTIONS
               </th>
             </tr>

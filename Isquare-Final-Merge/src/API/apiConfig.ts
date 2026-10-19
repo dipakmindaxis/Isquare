@@ -44,6 +44,10 @@ export interface ApiEndpoints {
   MarkAllNotificationsRead: string;
   Contact: string;
   Contacts: string;
+  Director: string;
+  Directors: string;
+  SalesCoordinator: string;
+  SalesCoordinators: string;
   [key: string]: string;
 }
 
@@ -141,5 +145,9 @@ export const API_ENDPOINTS: ApiEndpoints = {
   CompanyProfiles: `${BASE_URL}/company-profile`,
   Products: `${BASE_URL}/product`,
   Product: `${BASE_URL}/product`,
+  Director: `${BASE_URL}/director`,
+  Directors: `${BASE_URL}/director`,
+  SalesCoordinator: `${BASE_URL}/sales-coordinator`,
+  SalesCoordinators: `${BASE_URL}/sales-coordinator`,
 };
 

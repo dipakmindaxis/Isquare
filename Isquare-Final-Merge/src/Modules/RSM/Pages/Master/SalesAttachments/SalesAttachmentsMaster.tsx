@@ -1,4 +1,4 @@
-﻿import React, {
+import React, {
   useCallback,
   useEffect,
   useMemo,
@@ -257,24 +257,24 @@ export const SalesAttachmentsMaster: React.FC = () => {
         {!showWizard ? (
           <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
             <div>
-              <h2 className="border-b-2 border-[#F37021] pb-2 text-3xl font-bold tracking-[-0.03em] text-[#00234a]">
+              <h2 className="border-b-2 border-[#FF7900] pb-2 text-2xl font-bold tracking-tight text-gray-900">
                 Listing of Sales Attachments
               </h2>
             </div>
             <div className="flex items-center gap-3">
               <button
                 onClick={fetchAttachments}
-                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer"
+                className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-gray-700 shadow-xs transition hover:bg-slate-50 cursor-pointer"
               >
                 <RefreshCw
-                  size={16}
+                  size={14}
                   className={isLoading ? "animate-spin" : ""}
                 />
                 Refresh
               </button>
               <button
                 onClick={() => setShowWizard(true)}
-                className="rounded-xl bg-[#00234a] hover:bg-[#F37021] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_18px_rgba(0,35,74,0.18)] transition cursor-pointer flex items-center gap-2"
+                className="rounded-lg bg-[#FF7900] hover:bg-[#E66D00] px-5 py-2 text-xs font-semibold text-white shadow-md shadow-orange-500/25 transition cursor-pointer flex items-center gap-2"
               >
                 + Create New
               </button>

@@ -488,13 +488,13 @@ export const EditSalesActivityModal: React.FC<EditSalesActivityModalProps> = ({
   const content = (
     <section className="w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.08)] animate-in slide-in-from-top-4 duration-300">
       <div className="flex flex-col overflow-hidden">
-        {/* Customer & Activity Form Header Matching Screenshot 2 */}
-        <div className="flex justify-between items-center bg-[#154068] text-white px-6 py-4 sm:px-8 sm:py-4.5 shrink-0 border-b border-[#0f3458]">
+        {/* Customer & Activity Form Header */}
+        <div className="flex justify-between items-center bg-[#FF7900] text-white px-6 py-4 sm:px-8 sm:py-4.5 shrink-0 border-b border-[#e06800]">
           <div className="pr-4">
             <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white leading-tight">
               Edit Sales Activity
             </h2>
-            <p className="text-xs sm:text-[13px] text-blue-100/90 font-normal mt-0.5">
+            <p className="text-xs sm:text-[13px] text-orange-100 font-normal mt-0.5">
               Update sales activity details across all relevant sections
             </p>
           </div>
@@ -508,8 +508,8 @@ export const EditSalesActivityModal: React.FC<EditSalesActivityModalProps> = ({
           </button>
         </div>
 
-        {/* Tab Navigation Bar Matching Employee Module */}
-        <div className="flex bg-[#0f3458] p-1.5 gap-1 items-center shrink-0 border-b border-[#0b2844]">
+        {/* Tab Navigation Bar */}
+        <div className="flex bg-[#e06800] p-1.5 gap-1 items-center shrink-0 border-b border-[#c85c00]">
           <div className="flex flex-1 gap-1 overflow-x-auto">
             {tabs.map((tab, index) => (
               <button
@@ -518,7 +518,7 @@ export const EditSalesActivityModal: React.FC<EditSalesActivityModalProps> = ({
                 onClick={() => handleTabChange(index)}
                 className={`flex-1 py-3 text-[11px] font-extrabold uppercase tracking-widest rounded-md transition-all duration-300 flex items-center justify-center gap-2 relative cursor-pointer ${
                   activeTab === index
-                    ? "bg-white text-[#154068] shadow-lg scale-[1.02]"
+                    ? "bg-white text-[#FF7900] shadow-lg scale-[1.02]"
                     : "text-white hover:bg-white/10"
                 }`}
               >

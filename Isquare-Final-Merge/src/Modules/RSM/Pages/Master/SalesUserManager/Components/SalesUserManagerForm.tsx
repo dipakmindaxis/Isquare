@@ -131,7 +131,7 @@ const SalesUserManagerForm: React.FC<SalesUserManagerFormProps> = ({
                 onChange={(e) => setCode(e.target.value.toUpperCase())}
                 placeholder="e.g. USERS_001"
                 disabled={isSaving}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 focus:border-[#FF7900] transition"
               />
             </div>
 
@@ -142,12 +142,12 @@ const SalesUserManagerForm: React.FC<SalesUserManagerFormProps> = ({
                 checked={isActive}
                 onChange={(e) => setIsActive(e.target.checked)}
                 disabled={isSaving}
-                className="h-4 w-4"
+                className="h-4 w-4 rounded border-gray-300 text-[#FF7900] focus:ring-[#FF7900] cursor-pointer"
               />
 
               <label
                 htmlFor="salesUserActive"
-                className="text-sm font-medium text-gray-700"
+                className="text-sm font-medium text-gray-700 cursor-pointer"
               >
                 Active
               </label>
@@ -159,7 +159,7 @@ const SalesUserManagerForm: React.FC<SalesUserManagerFormProps> = ({
               type="button"
               onClick={handleResetAndClose}
               disabled={isSaving}
-              className="rounded-lg bg-gray-500 px-5 py-2 text-sm font-semibold text-white hover:bg-gray-600 disabled:opacity-50"
+              className="rounded-lg bg-gray-200 px-5 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-300 disabled:opacity-50 transition cursor-pointer"
             >
               Cancel
             </button>
@@ -167,7 +167,7 @@ const SalesUserManagerForm: React.FC<SalesUserManagerFormProps> = ({
             <button
               type="submit"
               disabled={isSaving}
-              className="flex items-center gap-2 rounded-lg bg-[#154068] px-5 py-2 text-sm font-semibold text-white hover:bg-[#0d3357] disabled:bg-gray-400"
+              className="flex items-center gap-2 rounded-lg bg-[#FF7900] px-5 py-2 text-sm font-semibold text-white hover:bg-[#E66D00] disabled:bg-gray-400 shadow-sm transition cursor-pointer"
             >
               {isSaving && <Loader2 size={16} className="animate-spin" />}
               {isSaving ? "Saving..." : "Add"}

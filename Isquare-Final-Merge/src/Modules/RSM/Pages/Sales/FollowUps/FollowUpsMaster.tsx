@@ -598,6 +598,7 @@ export const FollowUpsMaster: React.FC = () => {
       {isAddOpen && (
         <AddSalesActivityModal
           isOpen={isAddOpen}
+          isModal={true}
           defaultActivityType="Customer Visit"
           onClose={() => setIsAddOpen(false)}
           onSuccess={async () => {

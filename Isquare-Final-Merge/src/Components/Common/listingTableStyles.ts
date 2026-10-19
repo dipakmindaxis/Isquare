@@ -1,7 +1,7 @@
 export const listingTableStyles = {
   headRow: {
     style: {
-      backgroundColor: "#00234a",
+      backgroundColor: "#FF7900",
       minHeight: "52px",
     },
   },
@@ -10,7 +10,7 @@ export const listingTableStyles = {
       color: "#ffffff",
       fontWeight: 600,
       fontSize: "13px",
-      borderRight: "1px solid #2a4a7a",
+      borderRight: "1px solid #e06800",
       paddingLeft: "12px",
     },
   },
