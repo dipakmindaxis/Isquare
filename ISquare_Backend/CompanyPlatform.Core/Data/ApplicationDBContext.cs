@@ -5,9 +5,11 @@ using CompanyPlatform.Core.Models.CRM.Call;
 using CompanyPlatform.Core.Models.CRM.Company;
 using CompanyPlatform.Core.Models.CRM.CustomerArea;
 using CompanyPlatform.Core.Models.CRM.CustomerSource;
+using CompanyPlatform.Core.Models.CRM.Director;
 using CompanyPlatform.Core.Models.CRM.Employee;
 using CompanyPlatform.Core.Models.CRM.Notification;
 using CompanyPlatform.Core.Models.CRM.PaymentTerm;
+using CompanyPlatform.Core.Models.CRM.SalesCoordinator;
 using CompanyPlatform.Core.Models.HRMS;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -40,6 +42,8 @@ namespace CompanyPlatform.Core.Data
         public DbSet<ProformaInvoiceItem> ProformaInvoiceItems { get; set; }
 
         //vi
+        public DbSet<SalesCoordinator> SalesCoordinators{ get; set; }
+        public DbSet<Director> Directors { get; set; }
         public DbSet<SalesAttachment> SalesAttachments { get; set; }
         public DbSet<AddressType> AddressTypes { get; set; }
         public DbSet<PaymentTerm> PaymentTerms { get; set; }

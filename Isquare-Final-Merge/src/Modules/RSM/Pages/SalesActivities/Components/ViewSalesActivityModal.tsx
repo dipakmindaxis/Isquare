@@ -49,10 +49,10 @@ const SectionHeader: React.FC<{
 }> = ({ icon: Icon, title, badge }) => (
   <div className="flex items-center justify-between pb-2 border-b border-gray-200 mb-3 mt-4 first:mt-0">
     <div className="flex items-center gap-2">
-      <div className="bg-[#154068] p-1.5 rounded text-white">
+      <div className="bg-[#FF7900] p-1.5 rounded text-white">
         <Icon size={14} />
       </div>
-      <h3 className="font-bold text-[#154068] uppercase text-xs tracking-wider">
+      <h3 className="font-bold text-[#FF7900] uppercase text-xs tracking-wider">
         {title}
       </h3>
     </div>
@@ -116,7 +116,7 @@ export const ViewSalesActivityModal: React.FC<ViewSalesActivityModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-2 sm:p-4">
       <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-5xl h-[calc(100dvh-16px)] sm:h-auto sm:max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in duration-200 border border-gray-200">
         {/* Header - Matching Customer Profile Header */}
-        <div className="bg-[#154068] p-4 sm:p-6 text-white flex justify-between items-start sm:items-center gap-3 shrink-0">
+        <div className="bg-[#FF7900] p-4 sm:p-6 text-white flex justify-between items-start sm:items-center gap-3 shrink-0">
           <div className="flex items-center gap-3 sm:gap-4 min-w-0">
             <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white font-bold text-lg sm:text-2xl shadow-inner shrink-0">
               {activity.customerName
@@ -415,7 +415,7 @@ export const ViewSalesActivityModal: React.FC<ViewSalesActivityModalProps> = ({
                 onClose();
                 onEdit(activity);
               }}
-              className="px-6 py-2 bg-[#154068] hover:bg-[#0d3357] text-white text-xs font-semibold rounded-lg transition-colors min-h-[36px] flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+              className="px-6 py-2 bg-[#FF7900] hover:bg-[#e06800] text-white text-xs font-semibold rounded-lg transition-colors min-h-[36px] flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
             >
               <Edit size={14} />
               <span>Edit Activity</span>

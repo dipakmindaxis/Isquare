@@ -151,7 +151,7 @@ export const FollowUpIntervals: React.FC = () => {
       {/* Breadcrumb */}
       <div className="text-xs text-gray-500 font-medium">
         CRM / Sales Masters /{" "}
-        <span className="text-[#154068] font-bold">Follow-up Intervals</span>
+        <span className="text-[#FF7900] font-bold">Follow-up Intervals</span>
       </div>
 
       {/* Main Container Card */}
@@ -187,7 +187,7 @@ export const FollowUpIntervals: React.FC = () => {
             <button
               type="button"
               onClick={handleOpenAdd}
-              className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-xs hover:shadow transition cursor-pointer"
+              className="flex items-center gap-1.5 px-4 py-2 bg-[#FF7900] hover:bg-[#E66D00] text-white rounded-lg text-xs font-semibold shadow-md shadow-orange-500/25 transition cursor-pointer"
             >
               <Plus size={14} />
               <span>+ Add New</span>
@@ -223,9 +223,9 @@ export const FollowUpIntervals: React.FC = () => {
 
         {/* Data Table */}
         <div className="border border-gray-200 rounded-xl overflow-hidden">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-200 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+              <tr className="bg-[#FF7900] text-white border-b border-[#e06800] text-xs uppercase tracking-wider">
                 <th className="py-3.5 px-4 w-16">SR NO</th>
                 <th className="py-3.5 px-4">VALUE / NAME</th>
                 <th className="py-3.5 px-4">CODE / KEY</th>
@@ -237,7 +237,7 @@ export const FollowUpIntervals: React.FC = () => {
               {isLoading ? (
                 <tr>
                   <td colSpan={5} className="py-12 text-center text-gray-400">
-                    <Loader2 size={24} className="animate-spin mx-auto mb-2 text-blue-600" />
+                    <Loader2 size={24} className="animate-spin mx-auto mb-2 text-[#FF7900]" />
                     <span>Loading intervals...</span>
                   </td>
                 </tr>

@@ -45,7 +45,7 @@ const ViewAddressTypeModal: React.FC<ViewAddressTypeModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between p-6 pb-4 border-b border-gray-100">
           <div className="flex items-center gap-3.5">
-            <div className="w-11 h-11 bg-slate-100 text-[#00234a] rounded-xl flex items-center justify-center">
+            <div className="w-11 h-11 bg-orange-50 text-[#FF7900] border border-[#FF7900]/20 rounded-xl flex items-center justify-center">
               <Home className="w-5 h-5" />
             </div>
             <div>
@@ -69,7 +69,7 @@ const ViewAddressTypeModal: React.FC<ViewAddressTypeModalProps> = ({
         {/* Content */}
         {isLoading ? (
           <div className="p-12 flex justify-center items-center gap-3 text-gray-500">
-            <Loader2 className="animate-spin text-[#00234a]" size={24} />
+            <Loader2 className="animate-spin text-[#FF7900]" size={24} />
             <span>Loading details...</span>
           </div>
         ) : (
@@ -77,7 +77,7 @@ const ViewAddressTypeModal: React.FC<ViewAddressTypeModalProps> = ({
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-gray-50 p-3.5 rounded-xl border border-gray-100">
                 <div className="flex items-center gap-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
-                  <Hash size={14} className="text-[#00234a]" />
+                  <Hash size={14} className="text-[#FF7900]" />
                   <span>Type Code</span>
                 </div>
                 <p className="text-sm font-bold text-gray-900">
@@ -87,7 +87,7 @@ const ViewAddressTypeModal: React.FC<ViewAddressTypeModalProps> = ({
 
               <div className="bg-gray-50 p-3.5 rounded-xl border border-gray-100">
                 <div className="flex items-center gap-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
-                  <Home size={14} className="text-[#00234a]" />
+                  <Home size={14} className="text-[#FF7900]" />
                   <span>Type Name</span>
                 </div>
                 <p className="text-sm font-bold text-gray-900">
@@ -128,7 +128,7 @@ const ViewAddressTypeModal: React.FC<ViewAddressTypeModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="px-6 py-2 bg-[#00234a] hover:bg-[#001833] text-white rounded-lg text-sm font-medium transition cursor-pointer"
+            className="px-6 py-2 bg-[#FF7900] hover:bg-[#E66D00] text-white rounded-lg text-sm font-medium transition cursor-pointer shadow-sm"
           >
             Close
           </button>

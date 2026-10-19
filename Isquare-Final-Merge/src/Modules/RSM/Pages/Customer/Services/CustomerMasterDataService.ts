@@ -16,13 +16,23 @@ import type {
   CityItem,
   AddressTypeItem,
   EmployeeSelectItem,
+  SalesCoordinatorItem,
+  DirectorItem,
 } from "../Types/CustomerTypes";
 
-const ensureArray = <T>(data: any): T[] => {
+type ApiDataResponse<T> =
+  | T[]
+  | { data?: T[]; result?: T[]; items?: T[] }
+  | null
+  | void;
+
+const ensureArray = <T>(data: ApiDataResponse<T>): T[] => {
   if (Array.isArray(data)) return data;
-  if (data && Array.isArray(data.data)) return data.data;
-  if (data && Array.isArray(data.result)) return data.result;
-  if (data && Array.isArray(data.items)) return data.items;
+  if (data && typeof data === "object") {
+    if (Array.isArray(data.data)) return data.data;
+    if (Array.isArray(data.result)) return data.result;
+    if (Array.isArray(data.items)) return data.items;
+  }
   return [];
 };
 
@@ -117,7 +127,8 @@ export const getBdeUsers = async (): Promise<BdeUserItem[]> => {
     const response = await apiClient.get<BdeUserItem[]>(
       API_ENDPOINTS.BdeUser || API_ENDPOINTS.BdeUsers
     );
-    return ensureArray<BdeUserItem>(response.data);
+    const list = ensureArray<BdeUserItem>(response.data);
+    return list.filter((b) => b.isActive !== false);
   } catch {
     return [];
   }
@@ -199,3 +210,139 @@ export const getAddressTypes = async (): Promise<AddressTypeItem[]> => {
     return [];
   }
 };
+
+interface RawSalesCoordinator {
+  salesCoordinatorId?: number;
+  SalesCoordinatorId?: number;
+  id?: number;
+  Id?: number;
+  salesCoordinatorName?: string;
+  SalesCoordinatorName?: string;
+  name?: string;
+  Name?: string;
+  coordinatorName?: string;
+  salesCoordinatorCode?: string;
+  SalesCoordinatorCode?: string;
+  code?: string;
+  Code?: string;
+  isActive?: boolean;
+  IsActive?: boolean;
+}
+
+const normalizeSalesCoordinator = (item: RawSalesCoordinator): SalesCoordinatorItem => ({
+  salesCoordinatorId:
+    item.salesCoordinatorId ||
+    item.SalesCoordinatorId ||
+    item.id ||
+    item.Id ||
+    0,
+  salesCoordinatorName:
+    item.salesCoordinatorName ||
+    item.SalesCoordinatorName ||
+    item.name ||
+    item.Name ||
+    item.coordinatorName ||
+    "",
+  salesCoordinatorCode:
+    item.salesCoordinatorCode ||
+    item.SalesCoordinatorCode ||
+    item.code ||
+    item.Code ||
+    "",
+  isActive: item.isActive !== false && item.IsActive !== false,
+});
+
+export const getSalesCoordinators = async (): Promise<SalesCoordinatorItem[]> => {
+  try {
+    const activeUrl = `${API_ENDPOINTS.BaseUrl}/sales-coordinator/active`;
+    const response = await apiClient.get<ApiDataResponse<RawSalesCoordinator>>(activeUrl);
+    const list = ensureArray<RawSalesCoordinator>(response.data);
+    if (list.length > 0) {
+      return list.map(normalizeSalesCoordinator);
+    }
+  } catch {
+    // fallback to main endpoint if active endpoint is unavailable
+  }
+
+  try {
+    const fallbackUrl =
+      API_ENDPOINTS.SalesCoordinator ||
+      `${API_ENDPOINTS.BaseUrl}/sales-coordinator`;
+    const response = await apiClient.get<ApiDataResponse<RawSalesCoordinator>>(fallbackUrl);
+    const list = ensureArray<RawSalesCoordinator>(response.data);
+    return list.map(normalizeSalesCoordinator);
+  } catch {
+    return [];
+  }
+};
+
+interface RawDirector {
+  directorId?: number;
+  DirectorId?: number;
+  id?: number;
+  Id?: number;
+  directorName?: string;
+  DirectorName?: string;
+  name?: string;
+  Name?: string;
+  directorCode?: string;
+  DirectorCode?: string;
+  code?: string;
+  Code?: string;
+  isActive?: boolean;
+  IsActive?: boolean;
+  isDeleted?: boolean;
+  IsDeleted?: boolean;
+}
+
+const normalizeDirector = (item: RawDirector): DirectorItem => ({
+  directorId:
+    item.directorId ||
+    item.DirectorId ||
+    item.id ||
+    item.Id ||
+    0,
+  directorName:
+    item.directorName ||
+    item.DirectorName ||
+    item.name ||
+    item.Name ||
+    "",
+  directorCode:
+    item.directorCode ||
+    item.DirectorCode ||
+    item.code ||
+    item.Code ||
+    "",
+  isActive:
+    item.isActive !== false &&
+    item.IsActive !== false &&
+    !item.isDeleted &&
+    !item.IsDeleted,
+});
+
+export const getDirectors = async (): Promise<DirectorItem[]> => {
+  try {
+    const activeUrl = `${API_ENDPOINTS.BaseUrl}/director/active`;
+    const response = await apiClient.get<ApiDataResponse<RawDirector>>(activeUrl);
+    const list = ensureArray<RawDirector>(response.data);
+    if (list.length > 0) {
+      return list.map(normalizeDirector).filter((d) => d.isActive);
+    }
+  } catch {
+    // fallback to main director endpoint if active endpoint is unavailable
+  }
+
+  try {
+    const fallbackUrl =
+      API_ENDPOINTS.Director ||
+      `${API_ENDPOINTS.BaseUrl}/director`;
+    const response = await apiClient.get<ApiDataResponse<RawDirector>>(fallbackUrl);
+    const list = ensureArray<RawDirector>(response.data);
+    return list.map(normalizeDirector).filter((d) => d.isActive);
+  } catch {
+    return [];
+  }
+};
+
+

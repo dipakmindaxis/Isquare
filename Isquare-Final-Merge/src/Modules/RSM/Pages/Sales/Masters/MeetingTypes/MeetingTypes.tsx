@@ -178,7 +178,7 @@ export const MeetingTypes: React.FC = () => {
           <button
             type="button"
             onClick={handleOpenAdd}
-            className="flex items-center gap-2 bg-[#00234a] hover:bg-[#001833] text-white font-medium px-4 py-2 rounded-lg transition shadow-xs cursor-pointer text-xs"
+            className="flex items-center gap-2 bg-[#FF7900] hover:bg-[#E66D00] text-white font-medium px-4 py-2 rounded-lg transition shadow-md shadow-orange-500/25 cursor-pointer text-xs"
           >
             <Plus size={16} />
             <span>Add Meeting Type</span>
@@ -202,7 +202,7 @@ export const MeetingTypes: React.FC = () => {
                 setSearchQuery(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#00234a]/20 focus:border-[#00234a]"
+              className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 focus:border-[#FF7900]"
             />
           </div>
 
@@ -215,7 +215,7 @@ export const MeetingTypes: React.FC = () => {
                   setStatusFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="border border-gray-300 rounded-lg px-3 py-1.5 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-[#00234a]/20"
+                className="border border-gray-300 rounded-lg px-3 py-1.5 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20"
               >
                 <option value="All">All Status</option>
                 <option value="Active">Active</option>
@@ -230,7 +230,7 @@ export const MeetingTypes: React.FC = () => {
       <div className="bg-white rounded-xl shadow-xs border border-gray-200 overflow-hidden">
         {isLoading ? (
           <div className="p-12 text-center text-gray-400 flex flex-col items-center justify-center gap-2">
-            <Loader2 className="w-7 h-7 animate-spin text-[#00234a]" />
+            <Loader2 className="w-7 h-7 animate-spin text-[#FF7900]" />
             <span className="text-xs">Loading meeting types...</span>
           </div>
         ) : filteredItems.length === 0 ? (
@@ -245,7 +245,7 @@ export const MeetingTypes: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="bg-[#154068] text-white border-b border-[#0f2f4d]">
+                <tr className="bg-[#FF7900] text-white border-b border-[#e06800]">
                   <th className="py-3 px-4 font-semibold uppercase tracking-wider text-[11px] w-16 text-center">
                     #
                   </th>
@@ -426,7 +426,7 @@ export const MeetingTypes: React.FC = () => {
                     id="isActiveMeetingCheck"
                     checked={formIsActive}
                     onChange={(e) => setFormIsActive(e.target.checked)}
-                    className="w-4 h-4 text-[#00234a] rounded border-gray-300"
+                    className="w-4 h-4 text-[#FF7900] focus:ring-[#FF7900] rounded border-gray-300 cursor-pointer"
                   />
                   <label
                     htmlFor="isActiveMeetingCheck"
@@ -441,14 +441,14 @@ export const MeetingTypes: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-xs bg-gray-200 hover:bg-gray-300 rounded-lg text-gray-700 font-medium"
+                  className="px-4 py-2 text-xs bg-gray-200 hover:bg-gray-300 rounded-lg text-gray-700 font-medium cursor-pointer transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="px-4 py-2 text-xs bg-[#00234a] hover:bg-[#001833] text-white rounded-lg font-medium transition shadow-xs flex items-center gap-1.5"
+                  className="px-4 py-2 text-xs bg-[#FF7900] hover:bg-[#E66D00] text-white rounded-lg font-medium transition shadow-sm flex items-center gap-1.5 cursor-pointer"
                 >
                   {isSaving && <Loader2 size={13} className="animate-spin" />}
                   <span>{selectedItem ? "Save Changes" : "Create Meeting Type"}</span>

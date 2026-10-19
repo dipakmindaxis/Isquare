@@ -58,7 +58,7 @@ export const DocumentAddressSettingsMaster: React.FC<DocumentAddressSettingsMast
       <div className="bg-white rounded-xl shadow-xs border border-gray-200 p-5 pb-0">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-gray-100">
           <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 bg-[#00234a]/10 text-[#00234a] rounded-xl flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 bg-orange-50 border border-[#FF7900]/30 text-[#FF7900] rounded-xl flex items-center justify-center shrink-0 shadow-xs">
               <Paperclip className="w-6 h-6" />
             </div>
             <div>
@@ -66,7 +66,7 @@ export const DocumentAddressSettingsMaster: React.FC<DocumentAddressSettingsMast
                 <h1 className="text-xl md:text-2xl font-bold text-gray-900">
                   Document & Address Settings
                 </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-[#00234a] border border-blue-100">
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-orange-50 text-[#FF7900] border border-[#FF7900]/20">
                   Unified Master
                 </span>
               </div>
@@ -88,11 +88,11 @@ export const DocumentAddressSettingsMaster: React.FC<DocumentAddressSettingsMast
                 onClick={() => handleSelectTab(tab.id)}
                 className={`flex items-center gap-2.5 px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-all cursor-pointer ${
                   isActive
-                    ? "border-[#F37021] text-[#00234a] font-semibold bg-orange-50/40 rounded-t-lg"
+                    ? "border-[#FF7900] text-[#FF7900] font-semibold bg-orange-50/50 rounded-t-lg"
                     : "border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300"
                 }`}
               >
-                <span className={isActive ? "text-[#F37021]" : "text-gray-400"}>
+                <span className={isActive ? "text-[#FF7900]" : "text-gray-400"}>
                   {tab.icon}
                 </span>
                 <span>{tab.label}</span>

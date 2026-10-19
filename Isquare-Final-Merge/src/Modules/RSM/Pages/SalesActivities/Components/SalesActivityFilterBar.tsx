@@ -58,7 +58,7 @@ export const SalesActivityFilterBar: React.FC<SalesActivityFilterBarProps> = ({
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Search by subject, customer, code, employee, notes..."
-          className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#154068]/20 focus:border-[#154068]"
+          className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 focus:border-[#FF7900]"
         />
       </div>
 
@@ -68,7 +68,7 @@ export const SalesActivityFilterBar: React.FC<SalesActivityFilterBarProps> = ({
         <select
           value={selectedType}
           onChange={(e) => onTypeChange(e.target.value as ActivityType | "All")}
-          className="px-3 py-1.5 border border-gray-200 rounded-lg text-xs text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#154068]/20 focus:border-[#154068]"
+          className="px-3 py-1.5 border border-gray-200 rounded-lg text-xs text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 focus:border-[#FF7900]"
         >
           <option value="All">All Activity Types</option>
           {activityTypes.map((t) => (
@@ -82,7 +82,7 @@ export const SalesActivityFilterBar: React.FC<SalesActivityFilterBarProps> = ({
         <select
           value={selectedCustomerId}
           onChange={(e) => onCustomerChange(e.target.value)}
-          className="px-3 py-1.5 border border-gray-200 rounded-lg text-xs text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#154068]/20 focus:border-[#154068] max-w-[170px] truncate"
+          className="px-3 py-1.5 border border-gray-200 rounded-lg text-xs text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 focus:border-[#FF7900] max-w-[170px] truncate"
         >
           <option value="All">All Customers</option>
           {customers.map((c) => (
@@ -110,7 +110,7 @@ export const SalesActivityFilterBar: React.FC<SalesActivityFilterBarProps> = ({
                 onClick={() => onTabChange(st.id as any)}
                 className={`px-3 py-1 text-xs font-medium rounded-md transition-all text-center cursor-pointer ${
                   activeTab === st.id
-                    ? "bg-white text-[#154068] shadow-sm font-semibold"
+                    ? "bg-white text-[#FF7900] shadow-sm font-semibold"
                     : "text-gray-500 hover:text-gray-900"
                 }`}
               >

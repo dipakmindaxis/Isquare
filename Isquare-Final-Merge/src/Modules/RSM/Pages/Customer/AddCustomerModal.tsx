@@ -2,9 +2,11 @@ import React, { useEffect, useState } from "react";
 import {
   X,
   Loader2,
+  Plus,
 } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
+import Select, { type StylesConfig } from "react-select";
 import type {
   CustomerCreatePayload,
   CustomerAddress,
@@ -15,10 +17,10 @@ import type {
   CustomerAreaItem,
   PaymentTermItem,
   BdeUserItem,
-  SalesUserManagerItem,
-  EmployeeSelectItem,
   CountryItem,
   AddressTypeItem,
+  SalesCoordinatorItem,
+  DirectorItem,
 } from "./Types/CustomerTypes";
 import { createCustomer, getNextCustomerCode } from "./Services/CustomerService";
 import {
@@ -28,12 +30,13 @@ import {
   getCustomerAreas,
   getPaymentTerms,
   getBdeUsers,
-  getSalesManagers,
-  getEmployees,
   getCountries,
   getAddressTypes,
+  getSalesCoordinators,
+  getDirectors,
 } from "./Services/CustomerMasterDataService";
 import CustomerAddressSection from "./CustomerAddressSection";
+import AddSalesCoordinatorModal from "../Master/SalesCoordinator/Components/AddSalesCoordinatorModal";
 
 interface AddCustomerModalProps {
   isOpen: boolean;
@@ -59,10 +62,15 @@ interface CustomerFormState {
   cin: string;
   msmeNumber: string;
   directorId: number | "";
+  directorName: string;
   bdeUserId: number | "";
+  bdeUserName: string;
   salesCoordinatorId: number | "";
   salesCoordinatorName: string;
   customerOwnerId: number | "";
+  customerOwnerName: string;
+  customerOwnerType: "Director" | "BDE" | "";
+  customerOwnerValue: string;
   addresses: CustomerAddress[];
   registrationDate: string;
   visitedDate: string;
@@ -88,10 +96,15 @@ const INITIAL_FORM_STATE: CustomerFormState = {
   cin: "",
   msmeNumber: "",
   directorId: "",
+  directorName: "",
   bdeUserId: "",
+  bdeUserName: "",
   salesCoordinatorId: "",
   salesCoordinatorName: "",
   customerOwnerId: "",
+  customerOwnerName: "",
+  customerOwnerType: "",
+  customerOwnerValue: "",
   addresses: [],
   registrationDate: "",
   visitedDate: "",
@@ -146,10 +159,84 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
   const [areas, setAreas] = useState<CustomerAreaItem[]>([]);
   const [paymentTerms, setPaymentTerms] = useState<PaymentTermItem[]>([]);
   const [bdeUsers, setBdeUsers] = useState<BdeUserItem[]>([]);
-  const [salesManagers, setSalesManagers] = useState<SalesUserManagerItem[]>([]);
-  const [employees, setEmployees] = useState<EmployeeSelectItem[]>([]);
   const [countries, setCountries] = useState<CountryItem[]>([]);
   const [addressTypes, setAddressTypes] = useState<AddressTypeItem[]>([]);
+  const [salesCoordinators, setSalesCoordinators] = useState<SalesCoordinatorItem[]>([]);
+  const [directors, setDirectors] = useState<DirectorItem[]>([]);
+  const [selectedCoordinatorIds, setSelectedCoordinatorIds] = useState<number[]>([]);
+  const [isAddCoordinatorOpen, setIsAddCoordinatorOpen] = useState(false);
+
+  const refreshSalesCoordinators = async () => {
+    const list = await getSalesCoordinators();
+    if (Array.isArray(list)) {
+      setSalesCoordinators(list);
+    }
+  };
+
+  interface CoordinatorSelectOption {
+    value: number;
+    label: string;
+    coordinatorName: string;
+  }
+
+  // Custom styling for react-select matching customer form fields
+  const customerSelectStyles: StylesConfig<CoordinatorSelectOption, true> = {
+    control: (base, state) => ({
+      ...base,
+      minHeight: "42px",
+      borderRadius: "0.5rem",
+      borderColor: state.isFocused ? "#154068" : "#d1d5db",
+      boxShadow: state.isFocused ? "0 0 0 2px rgba(21, 64, 104, 0.2)" : "none",
+      "&:hover": {
+        borderColor: state.isFocused ? "#154068" : "#9ca3af",
+      },
+      backgroundColor: "#ffffff",
+      fontSize: "0.875rem",
+      cursor: "pointer",
+    }),
+    multiValue: (base) => ({
+      ...base,
+      backgroundColor: "#f1f5f9",
+      borderRadius: "0.375rem",
+      border: "1px solid #cbd5e1",
+      padding: "1px 3px",
+    }),
+    multiValueLabel: (base) => ({
+      ...base,
+      color: "#0f172a",
+      fontSize: "0.8125rem",
+      fontWeight: 500,
+    }),
+    multiValueRemove: (base) => ({
+      ...base,
+      color: "#64748b",
+      cursor: "pointer",
+      "&:hover": {
+        backgroundColor: "#e2e8f0",
+        color: "#dc2626",
+      },
+    }),
+    option: (base, state) => ({
+      ...base,
+      backgroundColor: state.isSelected
+        ? "#154068"
+        : state.isFocused
+        ? "#f0f7ff"
+        : "#ffffff",
+      color: state.isSelected ? "#ffffff" : "#1f2937",
+      fontSize: "0.875rem",
+      cursor: "pointer",
+    }),
+    menu: (base) => ({
+      ...base,
+      zIndex: 9999,
+    }),
+    placeholder: (base) => ({
+      ...base,
+      color: "#9ca3af",
+      fontSize: "0.875rem",
+    }),
+  };
 
   // Support ESC key to close modal
   useEffect(() => {
@@ -184,10 +271,10 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
             getCustomerAreas(),
             getPaymentTerms(),
             getBdeUsers(),
-            getSalesManagers(),
-            getEmployees(),
             getCountries(),
             getAddressTypes(),
+            getSalesCoordinators(),
+            getDirectors(),
           ]);
 
           if (results[0].status === "fulfilled" && Array.isArray(results[0].value)) setIndustries(results[0].value);
@@ -196,10 +283,10 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
           if (results[3].status === "fulfilled" && Array.isArray(results[3].value)) setAreas(results[3].value);
           if (results[4].status === "fulfilled" && Array.isArray(results[4].value)) setPaymentTerms(results[4].value);
           if (results[5].status === "fulfilled" && Array.isArray(results[5].value)) setBdeUsers(results[5].value);
-          if (results[6].status === "fulfilled" && Array.isArray(results[6].value)) setSalesManagers(results[6].value);
-          if (results[7].status === "fulfilled" && Array.isArray(results[7].value)) setEmployees(results[7].value);
-          if (results[8].status === "fulfilled" && Array.isArray(results[8].value)) setCountries(results[8].value);
-          if (results[9].status === "fulfilled" && Array.isArray(results[9].value)) setAddressTypes(results[9].value);
+          if (results[6].status === "fulfilled" && Array.isArray(results[6].value)) setCountries(results[6].value);
+          if (results[7].status === "fulfilled" && Array.isArray(results[7].value)) setAddressTypes(results[7].value);
+          if (results[8].status === "fulfilled" && Array.isArray(results[8].value)) setSalesCoordinators(results[8].value);
+          if (results[9].status === "fulfilled" && Array.isArray(results[9].value)) setDirectors(results[9].value);
         } catch (err) {
           console.error("Error loading dropdown data:", err);
         } finally {
@@ -355,21 +442,51 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
         // Section 2: Business Info
         industryId:
           formData.industryId !== "" ? Number(formData.industryId) : null,
+        industryName:
+          formData.industryId !== ""
+            ? industries.find(
+                (i) => i.industryId === Number(formData.industryId)
+              )?.industryName || null
+            : null,
         customerStatusId:
           formData.customerStatusId !== ""
             ? Number(formData.customerStatusId)
+            : null,
+        customerStatusName:
+          formData.customerStatusId !== ""
+            ? statuses.find(
+                (s) => s.customerStatusId === Number(formData.customerStatusId)
+              )?.statusName || null
             : null,
         customerSourceId:
           formData.customerSourceId !== ""
             ? Number(formData.customerSourceId)
             : null,
+        customerSourceName:
+          formData.customerSourceId !== ""
+            ? sources.find(
+                (s) => s.customerSourceId === Number(formData.customerSourceId)
+              )?.sourceName || null
+            : null,
         customerAreaId:
           formData.customerAreaId !== ""
             ? Number(formData.customerAreaId)
             : null,
+        customerAreaName:
+          formData.customerAreaId !== ""
+            ? areas.find(
+                (a) => a.customerAreaId === Number(formData.customerAreaId)
+              )?.areaName || null
+            : null,
         paymentTermsId:
           formData.paymentTermsId !== ""
             ? Number(formData.paymentTermsId)
+            : null,
+        paymentTermName:
+          formData.paymentTermsId !== ""
+            ? paymentTerms.find(
+                (p) => p.paymentTermId === Number(formData.paymentTermsId)
+              )?.paymentTermName || null
             : null,
 
         // Section 3: Registration & Tax Information
@@ -382,17 +499,34 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
         // Section 4: Sales Assignment
         directorId:
           formData.directorId !== "" ? Number(formData.directorId) : null,
+        directorName: formData.directorName?.trim() || null,
         bdeUserId:
           formData.bdeUserId !== "" ? Number(formData.bdeUserId) : null,
+        bdeUserName: formData.bdeUserName?.trim() || null,
         salesCoordinatorId:
-          formData.salesCoordinatorId !== ""
+          selectedCoordinatorIds.length > 0
+            ? Number(selectedCoordinatorIds[0])
+            : formData.salesCoordinatorId !== "" &&
+              formData.salesCoordinatorId !== undefined &&
+              formData.salesCoordinatorId !== null
             ? Number(formData.salesCoordinatorId)
             : null,
-        salesCoordinatorName: formData.salesCoordinatorName?.trim() || null,
+        salesCoordinatorName:
+          formData.salesCoordinatorName?.trim() ||
+          (selectedCoordinatorIds.length > 0
+            ? salesCoordinators
+                .filter((sc) =>
+                  selectedCoordinatorIds.includes(sc.salesCoordinatorId)
+                )
+                .map((sc) => sc.salesCoordinatorName)
+                .join(", ")
+            : null),
         customerOwnerId:
           formData.customerOwnerId !== ""
             ? Number(formData.customerOwnerId)
             : null,
+        customerOwnerName: formData.customerOwnerName?.trim() || null,
+        customerOwnerType: formData.customerOwnerType || null,
 
         // Section 5: Addresses
         addresses: validAddresses,
@@ -827,44 +961,59 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+                    {/* Field 1: Director */}
                     <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                      <label htmlFor="directors" className="block text-xs font-semibold text-gray-700 mb-1.5">
                         Director
                       </label>
                       <select
+                        id="directors"
                         name="directorId"
                         value={formData.directorId ?? ""}
-                        onChange={handleInputChange}
-                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#154068]/20 focus:border-[#154068] transition"
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          const dirId = val ? Number(val) : "";
+                          const found = directors.find((d) => d.directorId === Number(dirId));
+                          setFormData((prev) => ({
+                            ...prev,
+                            directorId: dirId,
+                            directorName: found ? found.directorName : "",
+                          }));
+                        }}
+                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#154068]/20 focus:border-[#154068] transition cursor-pointer"
                       >
                         <option value="">Select Director</option>
-                        {(Array.isArray(employees) ? employees : []).map((emp) => {
-                          const displayName =
-                            emp.fullName ||
-                            [emp.firstName, emp.lastName].filter(Boolean).join(" ") ||
-                            `Employee #${emp.id}`;
-                          return (
-                            <option key={emp.id} value={emp.id}>
-                              {displayName}
-                              {emp.designation ? ` (${emp.designation})` : ""}
-                            </option>
-                          );
-                        })}
+                        {directors.map((dir) => (
+                          <option key={dir.directorId} value={dir.directorId}>
+                            {dir.directorName} {dir.directorCode ? `(${dir.directorCode})` : ""}
+                          </option>
+                        ))}
                       </select>
                     </div>
 
+                    {/* Field 2: BDE */}
                     <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                      <label htmlFor="bde" className="block text-xs font-semibold text-gray-700 mb-1.5">
                         BDE (Business Development Executive)
                       </label>
                       <select
+                        id="bde"
                         name="bdeUserId"
                         value={formData.bdeUserId ?? ""}
-                        onChange={handleInputChange}
-                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#154068]/20 focus:border-[#154068] transition"
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          const bdeId = val ? Number(val) : "";
+                          const found = bdeUsers.find((b) => b.id === Number(bdeId));
+                          setFormData((prev) => ({
+                            ...prev,
+                            bdeUserId: bdeId,
+                            bdeUserName: found ? found.value : "",
+                          }));
+                        }}
+                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#154068]/20 focus:border-[#154068] transition cursor-pointer"
                       >
                         <option value="">Select BDE User</option>
-                        {(Array.isArray(bdeUsers) ? bdeUsers : []).map((bde) => (
+                        {bdeUsers.map((bde) => (
                           <option key={bde.id} value={bde.id}>
                             {bde.value} {bde.code ? `(${bde.code})` : ""}
                           </option>
@@ -872,43 +1021,124 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
                       </select>
                     </div>
 
+                    {/* Field 3: Sales Coordinators (Multi-select with removable chips) */}
                     <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                        Sales Coordinator
-                      </label>
-                      <input
-                        type="text"
-                        name="salesCoordinatorName"
-                        value={formData.salesCoordinatorName || ""}
-                        onChange={handleInputChange}
-                        placeholder="Enter Sales Coordinator name"
-                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#154068]/20 focus:border-[#154068] transition"
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label htmlFor="sales_coordinators" className="block text-xs font-semibold text-gray-700">
+                          Sales Coordinators
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setIsAddCoordinatorOpen(true)}
+                          className="text-xs font-semibold text-[#FF7900] hover:text-[#e06800] flex items-center gap-1 cursor-pointer transition"
+                        >
+                          <Plus size={13} />
+                          <span>Add New</span>
+                        </button>
+                      </div>
+                      <Select<CoordinatorSelectOption, true>
+                        id="sales_coordinators"
+                        isMulti
+                        isClearable
+                        isSearchable
+                        placeholder="Select or search Sales Coordinator..."
+                        options={salesCoordinators.map((sc) => ({
+                          value: sc.salesCoordinatorId,
+                          label: `${sc.salesCoordinatorName}${
+                            sc.salesCoordinatorCode ? ` (${sc.salesCoordinatorCode})` : ""
+                          }`,
+                          coordinatorName: sc.salesCoordinatorName,
+                        }))}
+                        value={salesCoordinators
+                          .filter((sc) =>
+                            selectedCoordinatorIds.includes(sc.salesCoordinatorId)
+                          )
+                          .map((sc) => ({
+                            value: sc.salesCoordinatorId,
+                            label: `${sc.salesCoordinatorName}${
+                              sc.salesCoordinatorCode
+                                ? ` (${sc.salesCoordinatorCode})`
+                                : ""
+                            }`,
+                            coordinatorName: sc.salesCoordinatorName,
+                          }))}
+                        onChange={(selected) => {
+                          const items = (selected || []) as readonly CoordinatorSelectOption[];
+                          const ids = items.map((i) => i.value);
+                          const names = items.map((i) => i.coordinatorName).join(", ");
+                          setSelectedCoordinatorIds(ids);
+                          setFormData((prev) => ({
+                            ...prev,
+                            salesCoordinatorId: ids.length > 0 ? ids[0] : "",
+                            salesCoordinatorName: names,
+                          }));
+                        }}
+                        styles={customerSelectStyles}
                       />
                     </div>
 
+                    {/* Field 4: Customer Owner (Grouped into Directors and BDEs) */}
                     <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                      <label htmlFor="customer_owner" className="block text-xs font-semibold text-gray-700 mb-1.5">
                         Customer Owner
                       </label>
                       <select
-                        name="customerOwnerId"
-                        value={formData.customerOwnerId ?? ""}
-                        onChange={handleInputChange}
-                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#154068]/20 focus:border-[#154068] transition"
+                        id="customer_owner"
+                        name="customerOwnerValue"
+                        value={formData.customerOwnerValue ?? ""}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (!val) {
+                            setFormData((prev) => ({
+                              ...prev,
+                              customerOwnerValue: "",
+                              customerOwnerId: "",
+                              customerOwnerName: "",
+                              customerOwnerType: "",
+                            }));
+                            return;
+                          }
+                          const [type, idStr] = val.split(":");
+                          const id = Number(idStr);
+                          let ownerName = "";
+                          if (type === "Director") {
+                            const found = directors.find((d) => d.directorId === id);
+                            ownerName = found ? found.directorName : "";
+                          } else if (type === "BDE") {
+                            const found = bdeUsers.find((b) => b.id === id);
+                            ownerName = found ? found.value : "";
+                          }
+                          setFormData((prev) => ({
+                            ...prev,
+                            customerOwnerValue: val,
+                            customerOwnerId: id,
+                            customerOwnerName: ownerName,
+                            customerOwnerType: type as "Director" | "BDE",
+                          }));
+                        }}
+                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#154068]/20 focus:border-[#154068] transition cursor-pointer"
                       >
                         <option value="">Select Customer Owner</option>
-                        {Array.isArray(salesManagers) && salesManagers.length > 0
-                          ? salesManagers.map((mgr) => (
-                              <option key={mgr.id} value={mgr.id}>
-                                {mgr.userName}{" "}
-                                {mgr.code ? `(${mgr.code})` : ""}
-                              </option>
-                            ))
-                          : (Array.isArray(employees) ? employees : []).map((emp) => (
-                              <option key={emp.id} value={emp.id}>
-                                {emp.fullName}
-                              </option>
-                            ))}
+                        <optgroup label="Directors">
+                          {directors.map((dir) => (
+                            <option
+                              key={`Director:${dir.directorId}`}
+                              value={`Director:${dir.directorId}`}
+                            >
+                              {dir.directorName} {dir.directorCode ? `(${dir.directorCode})` : ""} - Director
+                            </option>
+                          ))}
+                        </optgroup>
+                        <optgroup label="BDEs">
+                          {bdeUsers.map((bde) => (
+                            <option
+                              key={`BDE:${bde.id}`}
+                              value={`BDE:${bde.id}`}
+                            >
+                              {bde.value} {bde.code ? `(${bde.code})` : ""} - BDE
+                            </option>
+                          ))}
+                        </optgroup>
                       </select>
                     </div>
                   </div>
@@ -1036,6 +1266,12 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
           </div>
         </form>
       </div>
+
+      <AddSalesCoordinatorModal
+        isOpen={isAddCoordinatorOpen}
+        onClose={() => setIsAddCoordinatorOpen(false)}
+        onSuccess={refreshSalesCoordinators}
+      />
     </section>
   );
 };

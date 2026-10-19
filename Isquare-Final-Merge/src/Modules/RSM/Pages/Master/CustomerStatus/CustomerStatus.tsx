@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Plus,
-  Loader2,
   Search,
   ChevronLeft,
   ChevronRight,
   UserCheck,
+  CheckCircle2,
+  XCircle,
+  FileSpreadsheet,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -19,6 +22,8 @@ import ViewCustomerStatusModal from "./Components/ViewCustomerStatusModal";
 import ConfirmationModal from "../../../../../Components/Common/ConfirmationModal";
 import { actionButtonStyles } from "../../../../../Components/Common/buttonStyles";
 import { FaEye, FaEdit, FaTrash } from "react-icons/fa";
+import LogoLoader from "../../../../../Components/Common/LogoLoader";
+import { exportToExcel } from "../../../../../Utils/exportToExcel";
 
 interface CustomerStatusProps {
   isTab?: boolean;
@@ -37,6 +42,7 @@ const CustomerStatus: React.FC<CustomerStatusProps> = ({ isTab = false }) => {
 
   // Search & Pagination
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("All");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [itemsPerPage, setItemsPerPage] = useState<number>(10);
 
@@ -57,26 +63,41 @@ const CustomerStatus: React.FC<CustomerStatusProps> = ({ isTab = false }) => {
   }, [fetchItems]);
 
   const filteredItems = useMemo((): CustomerStatusType[] => {
-    return customerStatuses.filter(
-      (item) =>
+    return customerStatuses.filter((item) => {
+      const matchesSearch =
         (item.statusCode &&
           item.statusCode.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (item.statusName &&
           item.statusName.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (item.description &&
-          item.description.toLowerCase().includes(searchQuery.toLowerCase()))
-    );
-  }, [customerStatuses, searchQuery]);
+          item.description.toLowerCase().includes(searchQuery.toLowerCase()));
+
+      const matchesStatus =
+        statusFilter === "All" ||
+        (statusFilter === "Active" && item.isActive) ||
+        (statusFilter === "Inactive" && !item.isActive);
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [customerStatuses, searchQuery, statusFilter]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, itemsPerPage]);
+  }, [searchQuery, statusFilter, itemsPerPage]);
 
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
   const paginatedItems = useMemo((): CustomerStatusType[] => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return filteredItems.slice(startIndex, startIndex + itemsPerPage);
   }, [filteredItems, currentPage, itemsPerPage]);
+
+  // Statistics
+  const stats = useMemo(() => {
+    const total = customerStatuses.length;
+    const active = customerStatuses.filter((s) => s.isActive).length;
+    const inactive = total - active;
+    return { total, active, inactive };
+  }, [customerStatuses]);
 
   const handleViewClick = (item: CustomerStatusType): void => {
     setSelectedItem(item);
@@ -107,92 +128,199 @@ const CustomerStatus: React.FC<CustomerStatusProps> = ({ isTab = false }) => {
     }
   };
 
+  const handleExportExcel = () => {
+    if (filteredItems.length === 0) {
+      toast.warning("No data available to export.");
+      return;
+    }
+
+    const exportData = filteredItems.map((item, index) => ({
+      "Sr. No.": index + 1,
+      "Status Code": item.statusCode || "-",
+      "Status Name": item.statusName || "-",
+      Description: item.description || "-",
+      Status: item.isActive ? "Active" : "Inactive",
+    }));
+
+    exportToExcel(
+      exportData,
+      `CustomerStatuses_${new Date().toISOString().slice(0, 10)}`,
+      "CustomerStatuses"
+    );
+  };
+
   return (
-    <div className={isTab ? "w-full space-y-4" : "p-4 md:p-6 bg-gray-50 min-h-full"}>
-      {/* Top Header Card with Action Button */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white rounded-xl shadow-xs border border-gray-200 p-5 mb-6">
-        <div className="flex items-center gap-3.5">
-          <div className="w-11 h-11 bg-slate-100 text-[#00234a] rounded-xl flex items-center justify-center">
-            <UserCheck className="w-5 h-5" />
+    <div className={isTab ? "w-full space-y-4" : "p-4 md:p-6 bg-gray-50 min-h-full space-y-5"}>
+      {/* Top Header Card */}
+      <div className="bg-white rounded-xl shadow-xs border border-gray-200 p-5">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 bg-orange-50 border border-[#FF7900]/30 rounded-xl flex items-center justify-center shrink-0 text-[#FF7900]">
+              <UserCheck className="w-6 h-6" />
+            </div>
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold text-gray-900">Customer Status</h1>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl font-bold text-gray-900">Customer Status</h1>
-            <p className="text-gray-500 mt-0.5 text-xs">
-              Manage customer statuses, descriptions, and active states.
-            </p>
+
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <button
+              onClick={fetchItems}
+              disabled={isLoading}
+              className="flex items-center gap-2 px-3.5 py-2.5 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 rounded-lg text-sm font-medium transition cursor-pointer shadow-xs disabled:opacity-50"
+              title="Refresh records"
+            >
+              <RefreshCw className={`w-4 h-4 text-gray-600 ${isLoading ? "animate-spin" : ""}`} />
+              <span className="hidden sm:inline">Refresh</span>
+            </button>
+
+            <button
+              onClick={handleExportExcel}
+              className="flex items-center gap-2 px-3.5 py-2.5 bg-white hover:bg-gray-50 text-emerald-700 border border-emerald-300 rounded-lg text-sm font-medium transition cursor-pointer shadow-xs"
+              title="Export to Excel"
+            >
+              <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+              <span className="hidden sm:inline">Export</span>
+            </button>
+
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="flex items-center gap-2 bg-[#FF7900] hover:bg-[#E66D00] text-white font-medium px-5 py-2.5 rounded-lg transition shadow-md shadow-orange-500/25 cursor-pointer text-sm"
+            >
+              <Plus size={18} />
+              <span>Add Customer Status</span>
+            </button>
           </div>
         </div>
 
-        <div>
-          <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center gap-2 bg-[#00234a] hover:bg-[#001833] text-white font-medium px-5 py-2.5 rounded-lg transition shadow-xs cursor-pointer text-sm"
-          >
-            <Plus size={18} />
-            <span>Add Customer Status</span>
-          </button>
+        {/* Quick Stats Strip */}
+        <div className="grid grid-cols-3 gap-3 pt-5 mt-5 border-t border-gray-100">
+          <div className="flex items-center gap-3 bg-gray-50/80 p-3 rounded-lg border border-gray-100">
+            <div className="w-9 h-9 rounded-lg bg-blue-100 text-[#00234a] flex items-center justify-center shrink-0">
+              <UserCheck className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="text-xs font-medium text-gray-500">Total Statuses</p>
+              <p className="text-base font-bold text-gray-900">{stats.total}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 bg-gray-50/80 p-3 rounded-lg border border-gray-100">
+            <div className="w-9 h-9 rounded-lg bg-green-100 text-green-700 flex items-center justify-center shrink-0">
+              <CheckCircle2 className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="text-xs font-medium text-gray-500">Active</p>
+              <p className="text-base font-bold text-green-700">{stats.active}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 bg-gray-50/80 p-3 rounded-lg border border-gray-100">
+            <div className="w-9 h-9 rounded-lg bg-red-100 text-red-700 flex items-center justify-center shrink-0">
+              <XCircle className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="text-xs font-medium text-gray-500">Inactive</p>
+              <p className="text-base font-bold text-red-600">{stats.inactive}</p>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Search Bar */}
-      <div className="flex items-center justify-between gap-4 mb-4">
+      {/* Search & Filter Bar */}
+      <div className="bg-white rounded-xl shadow-xs border border-gray-200 p-4 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3">
         <div className="relative w-full md:max-w-md">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
             type="text"
             placeholder="Search by code, name, or description..."
-            className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#00234a] focus:border-[#00234a] transition"
+            className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 focus:border-[#FF7900] transition"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+            Status:
+          </span>
+          <div className="flex bg-gray-100 p-1 rounded-lg">
+            {["All", "Active", "Inactive"].map((status) => (
+              <button
+                key={status}
+                type="button"
+                onClick={() => setStatusFilter(status)}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                  statusFilter === status
+                    ? "bg-white text-[#FF7900] shadow-xs"
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                {status}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-lg shadow-xs overflow-hidden border border-gray-200">
+      {/* Table with Project Logo Orange Header */}
+      <div className="bg-white rounded-xl shadow-xs overflow-hidden border border-gray-200">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-[#00234a] text-white text-xs uppercase tracking-wider">
+            <thead className="bg-[#FF7900] text-white text-xs uppercase tracking-wider border-b border-[#e06800]">
               <tr>
-                <th className="px-6 py-3.5 text-left">Status Code</th>
-                <th className="px-6 py-3.5 text-left">Status Name</th>
-                <th className="px-6 py-3.5 text-left">Description</th>
-                <th className="px-6 py-3.5 text-center">Status</th>
-                <th className="px-6 py-3.5 text-right">Actions</th>
+                <th className="px-6 py-4 text-left font-bold w-20">Sr. No.</th>
+                <th className="px-6 py-4 text-left font-bold">Status Code</th>
+                <th className="px-6 py-4 text-left font-bold">Status Name</th>
+                <th className="px-6 py-4 text-left font-bold">Description</th>
+                <th className="px-6 py-4 text-center font-bold">Status</th>
+                <th className="px-6 py-4 text-right font-bold">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-100">
               {isLoading ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-12 text-gray-500">
-                    <Loader2 className="animate-spin inline-block mr-2 text-[#00234a]" />
-                    Loading customer statuses...
+                  <td colSpan={6} className="text-center py-12 text-gray-500">
+                    <LogoLoader />
                   </td>
                 </tr>
               ) : paginatedItems.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-12 text-gray-500">
-                    No customer statuses found.
+                  <td colSpan={6} className="text-center py-12 text-gray-500">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <UserCheck className="w-8 h-8 text-gray-300" />
+                      <p className="text-sm font-medium">No customer statuses found.</p>
+                      {searchQuery && (
+                        <p className="text-xs text-gray-400">
+                          Try adjusting your search criteria
+                        </p>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ) : (
-                paginatedItems.map((item) => (
+                paginatedItems.map((item, index) => (
                   <tr
                     key={item.customerStatusId}
-                    className="hover:bg-gray-50/80 transition"
+                    className="hover:bg-orange-50/20 transition-colors"
                   >
-                    <td className="px-6 py-4 font-semibold text-gray-900">
-                      {item.statusCode}
+                    <td className="px-6 py-4 text-gray-500 font-medium">
+                      {(currentPage - 1) * itemsPerPage + index + 1}
                     </td>
-                    <td className="px-6 py-4 text-gray-800">
+                    <td className="px-6 py-4 font-bold text-gray-900">
+                      <span className="px-2.5 py-1 rounded-md bg-gray-100 text-gray-800 text-xs font-semibold">
+                        {item.statusCode || "-"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-gray-900 font-semibold">
                       {item.statusName}
                     </td>
                     <td className="px-6 py-4 text-gray-600">
-                      {item.description || "-"}
+                      {item.description || "—"}
                     </td>
                     <td className="px-6 py-4 text-center">
                       <span
-                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
                           item.isActive
                             ? "bg-green-50 text-green-700 border border-green-200"
                             : "bg-red-50 text-red-700 border border-red-200"
@@ -202,27 +330,27 @@ const CustomerStatus: React.FC<CustomerStatusProps> = ({ isTab = false }) => {
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex justify-end gap-3.5">
+                      <div className="flex justify-end gap-3">
                         <button
                           onClick={() => handleViewClick(item)}
                           className={`${actionButtonStyles.base} ${actionButtonStyles.view}`}
-                          title="View"
+                          title="View Details"
                         >
-                          <FaEye size={16} />
+                          <FaEye size={15} />
                         </button>
                         <button
                           onClick={() => handleEditClick(item)}
                           className={`${actionButtonStyles.base} ${actionButtonStyles.edit}`}
-                          title="Edit"
+                          title="Edit Status"
                         >
-                          <FaEdit size={16} />
+                          <FaEdit size={15} />
                         </button>
                         <button
                           onClick={() => handleDeleteRequest(item)}
                           className={`${actionButtonStyles.base} ${actionButtonStyles.delete}`}
-                          title="Delete"
+                          title="Delete Status"
                         >
-                          <FaTrash size={16} />
+                          <FaTrash size={15} />
                         </button>
                       </div>
                     </td>
@@ -236,17 +364,18 @@ const CustomerStatus: React.FC<CustomerStatusProps> = ({ isTab = false }) => {
 
       {/* Pagination */}
       {totalPages > 0 && (
-        <div className="flex items-center justify-between mt-4 text-sm text-gray-600 px-2">
+        <div className="flex items-center justify-between text-sm text-gray-600 px-2 py-1">
           <div className="flex items-center gap-2">
             <span>Rows per page:</span>
             <select
               value={itemsPerPage}
               onChange={(e) => setItemsPerPage(Number(e.target.value))}
-              className="p-1.5 border border-gray-200 rounded-lg bg-white text-sm focus:outline-none"
+              className="p-1.5 border border-gray-200 rounded-lg bg-white text-sm focus:outline-none focus:ring-1 focus:ring-[#FF7900]"
             >
               <option value={5}>5</option>
               <option value={10}>10</option>
               <option value={25}>25</option>
+              <option value={50}>50</option>
             </select>
           </div>
           <div className="flex items-center gap-4">
@@ -255,14 +384,14 @@ const CustomerStatus: React.FC<CustomerStatusProps> = ({ isTab = false }) => {
             </span>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setCurrentPage((p) => p - 1)}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
                 className="p-2 border border-gray-200 rounded-lg disabled:text-gray-300 hover:bg-gray-100 disabled:cursor-not-allowed transition"
               >
                 <ChevronLeft size={16} />
               </button>
               <button
-                onClick={() => setCurrentPage((p) => p + 1)}
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
                 className="p-2 border border-gray-200 rounded-lg disabled:text-gray-300 hover:bg-gray-100 disabled:cursor-not-allowed transition"
               >

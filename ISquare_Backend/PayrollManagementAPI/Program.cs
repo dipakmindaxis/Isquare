@@ -50,6 +50,7 @@ using CompanyPlatform.CRM.Services.CustomerCategory;
 using CompanyPlatform.CRM.Services.CustomerSource;
 using CompanyPlatform.CRM.Services.CustomerStatus;
 using CompanyPlatform.CRM.Services.CustomerType;
+using CompanyPlatform.CRM.Services.Director;
 using CompanyPlatform.CRM.Services.DocumentType;
 using CompanyPlatform.CRM.Services.EmailTemplate;
 using CompanyPlatform.CRM.Services.FollowUp;
@@ -69,8 +70,9 @@ using CompanyPlatform.CRM.Services.PaymentTerm;
 using CompanyPlatform.CRM.Services.Product;
 using CompanyPlatform.CRM.Services.ProformaInvoice;
 using CompanyPlatform.CRM.Services.Quotation;
-using CompanyPlatform.CRM.Services.SalesOrder;
 using CompanyPlatform.CRM.Services.SalesAttachment;
+using CompanyPlatform.CRM.Services.SalesCoordinator;
+using CompanyPlatform.CRM.Services.SalesOrder;
 using CompanyPlatform.CRM.Services.SalesUserManager;
 using CompanyPlatform.CRM.Services.TaskAssignment;
 using CompanyPlatform.CRM.Services.TaskAssignments;
@@ -289,6 +291,8 @@ builder.Services.AddScoped<ICompanyTimelineService, CompanyTimelineService>();
 builder.Services.AddScoped<ICompanyVisitService, CompanyVisitService>();
 
 //vi
+builder.Services.AddScoped<ISalesCoordinatorService,SalesCoordinatorService>();
+builder.Services.AddScoped<IDirectorService, DirectorService>();
 builder.Services.AddScoped<ISalesAttachmentService, SalesAttachmentService>();
 builder.Services.AddScoped<IAddressTypeService, AddressTypeService>();
 builder.Services.AddScoped<IPaymentTermService, PaymentTermService>();

@@ -76,7 +76,7 @@ function ListingLayout<T>({
   return (
     <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
       <div className="flex justify-between items-center mb-5">
-        <h2 className="text-xl font-normal text-gray-900 border-b-2 border-[#143463] pb-1">
+        <h2 className="text-xl font-normal text-gray-900 border-b-2 border-[#FF7900] pb-1">
           {title}
         </h2>
 

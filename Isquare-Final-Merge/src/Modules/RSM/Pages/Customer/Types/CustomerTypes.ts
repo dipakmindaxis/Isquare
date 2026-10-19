@@ -51,12 +51,14 @@ export interface Customer {
   // Sales Assignment
   directorId?: number;
   directorName?: string;
+  directorCode?: string;
   bdeUserId?: number;
   bdeUserName?: string;
   salesCoordinatorId?: number;
   salesCoordinatorName?: string;
   customerOwnerId?: number;
   customerOwnerName?: string;
+  customerOwnerType?: "Director" | "BDE" | string | null;
 
   // Addresses
   addresses?: CustomerAddress[];
@@ -92,10 +94,16 @@ export interface CustomerCreatePayload {
 
   // Business Information
   industryId?: number | null;
+  industryName?: string | null;
   customerStatusId?: number | null;
+  customerStatusName?: string | null;
   customerSourceId?: number | null;
+  customerSourceName?: string | null;
   customerAreaId?: number | null;
+  customerAreaName?: string | null;
   paymentTermsId?: number | null;
+  paymentTermId?: number | null;
+  paymentTermName?: string | null;
 
   // Registration & Tax Information
   pan?: string | null;
@@ -106,10 +114,15 @@ export interface CustomerCreatePayload {
 
   // Sales Assignment
   directorId?: number | null;
+  directorName?: string | null;
+  directorCode?: string | null;
   bdeUserId?: number | null;
+  bdeUserName?: string | null;
   salesCoordinatorId?: number | null;
   salesCoordinatorName?: string | null;
   customerOwnerId?: number | null;
+  customerOwnerName?: string | null;
+  customerOwnerType?: "Director" | "BDE" | string | null;
 
   // Addresses
   addresses?: CustomerAddressPayload[] | CustomerAddress[];
@@ -240,4 +253,18 @@ export interface AddressTypeItem {
   addressTypeName?: string;
   name?: string;
   type?: string;
+}
+
+export interface SalesCoordinatorItem {
+  salesCoordinatorId: number;
+  salesCoordinatorName: string;
+  salesCoordinatorCode?: string;
+  isActive?: boolean;
+}
+
+export interface DirectorItem {
+  directorId: number;
+  directorName: string;
+  directorCode?: string;
+  isActive?: boolean;
 }

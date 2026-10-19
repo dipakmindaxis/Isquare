@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import DataTable, { type TableColumn } from "react-data-table-component";
 import {
   FaPlus,
@@ -12,6 +13,15 @@ import {
   FaUserCheck,
   FaUserTimes,
 } from "react-icons/fa";
+import {
+  Users,
+  UserCheck as LucideUserCheck,
+  Share2,
+  Factory,
+  MapPin,
+  Receipt,
+  RefreshCw,
+} from "lucide-react";
 import { toast } from "sonner";
 import { exportToExcel } from "../../../../Utils/exportToExcel";
 import {
@@ -19,11 +29,83 @@ import {
   deleteCustomer,
   updateCustomer,
 } from "./Services/CustomerService";
-import type { Customer } from "./Types/CustomerTypes";
+import {
+  getIndustries,
+  getCustomerAreas,
+} from "./Services/CustomerMasterDataService";
+import type {
+  Customer,
+  IndustryItem,
+  CustomerAreaItem,
+} from "./Types/CustomerTypes";
 import AddCustomerModal from "./AddCustomerModal";
 import EditCustomerModal from "./EditCustomerModal";
 import ViewCustomerModal from "./ViewCustomerModal";
 import ConfirmationModal from "../../../../Components/Common/ConfirmationModal";
+
+import CustomerStatus from "../Master/CustomerStatus/CustomerStatus";
+import CustomerSource from "../Master/CustomerSource/CustomerSource";
+import Industry from "../Master/Industry/Industry";
+import CustomerArea from "../Master/CustomerArea/CustomerArea";
+import PaymentTerm from "../Master/PaymentTerm/PaymentTerm";
+
+export type CustomerMasterTab =
+  | "customers"
+  | "status"
+  | "source"
+  | "industry"
+  | "area"
+  | "payment-terms";
+
+export interface CustomerMasterProps {
+  initialTab?: CustomerMasterTab;
+}
+
+interface TabConfig {
+  id: CustomerMasterTab;
+  label: string;
+  shortDesc: string;
+  icon: React.ReactElement;
+}
+
+const TABS: TabConfig[] = [
+  {
+    id: "customers",
+    label: "Customers",
+    shortDesc: "Commercial client records, statutory numbers & assigned reps",
+    icon: <Users className="w-4 h-4" />,
+  },
+  {
+    id: "status",
+    label: "Customer Status",
+    shortDesc: "Lifecycle stages, active states & workflow status",
+    icon: <LucideUserCheck className="w-4 h-4" />,
+  },
+  {
+    id: "source",
+    label: "Customer Source",
+    shortDesc: "Lead acquisition channels & referral origins",
+    icon: <Share2 className="w-4 h-4" />,
+  },
+  {
+    id: "industry",
+    label: "Industry",
+    shortDesc: "Business sectors, verticals & domain classifications",
+    icon: <Factory className="w-4 h-4" />,
+  },
+  {
+    id: "area",
+    label: "Customer Area",
+    shortDesc: "Sales territories, regions & delivery zones",
+    icon: <MapPin className="w-4 h-4" />,
+  },
+  {
+    id: "payment-terms",
+    label: "Payment Terms",
+    shortDesc: "Credit periods, billing conditions & payment terms",
+    icon: <Receipt className="w-4 h-4" />,
+  },
+];
 
 const customTableStyles: any = {
   header: {
@@ -33,10 +115,10 @@ const customTableStyles: any = {
   },
   headRow: {
     style: {
-      backgroundColor: "#154068",
+      backgroundColor: "#FF7900",
       borderTopStyle: "solid" as any,
       borderTopWidth: "1px",
-      borderTopColor: "#0f2f4d",
+      borderTopColor: "#e06800",
     },
   },
   headCells: {
@@ -77,8 +159,52 @@ const actionButtonStyles = {
   delete: "bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white",
 };
 
-const CustomerMaster: React.FC = () => {
+const CustomerMaster: React.FC<CustomerMasterProps> = ({
+  initialTab,
+}) => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlTab = searchParams.get("tab") as CustomerMasterTab | null;
+
+  const validTabs = useMemo<CustomerMasterTab[]>(() => [
+    "customers",
+    "status",
+    "source",
+    "industry",
+    "area",
+    "payment-terms",
+  ], []);
+
+  const [activeTab, setActiveTab] = useState<CustomerMasterTab>(() => {
+    if (urlTab && validTabs.includes(urlTab)) return urlTab;
+    if (initialTab && validTabs.includes(initialTab)) return initialTab;
+    return "customers";
+  });
+
+  // Sync if initialTab prop changes externally
+  useEffect(() => {
+    if (initialTab && validTabs.includes(initialTab)) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab, validTabs]);
+
+  // Sync if URL search param changes (e.g. browser back/forward)
+  useEffect(() => {
+    if (urlTab && validTabs.includes(urlTab) && urlTab !== activeTab) {
+      setActiveTab(urlTab);
+    }
+  }, [urlTab, validTabs, activeTab]);
+
+  const handleSelectTab = (tabId: CustomerMasterTab) => {
+    setActiveTab(tabId);
+    setSearchParams({ tab: tabId });
+    if (tabId === "customers") {
+      loadMasterData();
+      fetchCustomers();
+    }
+  };
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [industries, setIndustries] = useState<IndustryItem[]>([]);
+  const [areas, setAreas] = useState<CustomerAreaItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [filterText, setFilterText] = useState<string>("");
   const [selectedStatus, setSelectedStatus] = useState<string>("All");
@@ -101,6 +227,19 @@ const CustomerMaster: React.FC = () => {
   const canEdit = true;
   const canDelete = true;
 
+  const loadMasterData = useCallback(async () => {
+    try {
+      const [indList, areaList] = await Promise.all([
+        getIndustries().catch(() => []),
+        getCustomerAreas().catch(() => []),
+      ]);
+      setIndustries(Array.isArray(indList) ? indList : []);
+      setAreas(Array.isArray(areaList) ? areaList : []);
+    } catch {
+      // ignore
+    }
+  }, []);
+
   const fetchCustomers = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -115,8 +254,81 @@ const CustomerMaster: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    loadMasterData();
     fetchCustomers();
-  }, [fetchCustomers]);
+  }, [loadMasterData, fetchCustomers]);
+
+  const industryMap = useMemo(() => {
+    const map = new Map<number, string>();
+    for (const ind of industries) {
+      map.set(Number(ind.industryId), ind.industryName);
+    }
+    return map;
+  }, [industries]);
+
+  const areaMap = useMemo(() => {
+    const map = new Map<number, string>();
+    for (const ar of areas) {
+      map.set(Number(ar.customerAreaId), ar.areaName);
+    }
+    return map;
+  }, [areas]);
+
+  const getIndustryName = useCallback(
+    (cust: Customer): string => {
+      if (cust.industryName && cust.industryName.trim() && cust.industryName !== "-") {
+        return cust.industryName;
+      }
+      const anyCust = cust as unknown as Record<string, unknown>;
+      if (anyCust.industry) {
+        if (typeof anyCust.industry === "string") return anyCust.industry;
+        if (
+          typeof anyCust.industry === "object" &&
+          anyCust.industry !== null &&
+          "industryName" in anyCust.industry
+        ) {
+          return String(
+            (anyCust.industry as { industryName?: string }).industryName || "-"
+          );
+        }
+      }
+      if (cust.industryId && industryMap.has(Number(cust.industryId))) {
+        return industryMap.get(Number(cust.industryId))!;
+      }
+      return "-";
+    },
+    [industryMap]
+  );
+
+  const getAreaName = useCallback(
+    (cust: Customer): string => {
+      if (
+        cust.customerAreaName &&
+        cust.customerAreaName.trim() &&
+        cust.customerAreaName !== "-"
+      ) {
+        return cust.customerAreaName;
+      }
+      const anyCust = cust as unknown as Record<string, unknown>;
+      if (anyCust.customerArea) {
+        if (typeof anyCust.customerArea === "string") return anyCust.customerArea;
+        if (
+          typeof anyCust.customerArea === "object" &&
+          anyCust.customerArea !== null &&
+          "areaName" in anyCust.customerArea
+        ) {
+          return String(
+            (anyCust.customerArea as { areaName?: string }).areaName || "-"
+          );
+        }
+      }
+      if (cust.customerAreaId && areaMap.has(Number(cust.customerAreaId))) {
+        return areaMap.get(Number(cust.customerAreaId))!;
+      }
+      return "-";
+    },
+    [areaMap]
+  );
 
   const filteredCustomers = useMemo(() => {
     return (Array.isArray(customers) ? customers : []).filter((cust) => {
@@ -126,8 +338,8 @@ const CustomerMaster: React.FC = () => {
       const company = (cust.companyName || "").toLowerCase();
       const gstin = (cust.gstin || "").toLowerCase();
       const pan = (cust.pan || "").toLowerCase();
-      const area = (cust.customerAreaName || "").toLowerCase();
-      const industry = (cust.industryName || "").toLowerCase();
+      const area = getAreaName(cust).toLowerCase();
+      const industry = getIndustryName(cust).toLowerCase();
 
       const matchesSearch =
         name.includes(search) ||
@@ -145,7 +357,7 @@ const CustomerMaster: React.FC = () => {
 
       return matchesSearch && matchesStatus;
     });
-  }, [customers, filterText, selectedStatus]);
+  }, [customers, filterText, selectedStatus, getIndustryName, getAreaName]);
 
   // Statistics
   const stats = useMemo(() => {
@@ -211,10 +423,10 @@ const CustomerMaster: React.FC = () => {
       "Company Name": c.companyName || "-",
       "Company Group": c.companyGroup || "-",
       "Plant Code": c.plantCode || "-",
-      Industry: c.industryName || "-",
+      Industry: getIndustryName(c),
       "Customer Status": c.customerStatusName || "-",
       "Customer Source": c.customerSourceName || "-",
-      "Customer Area": c.customerAreaName || "-",
+      "Customer Area": getAreaName(c),
       "Payment Terms": c.paymentTermName || "-",
       PAN: c.pan || "-",
       TAN: c.tan || "-",
@@ -278,14 +490,14 @@ const CustomerMaster: React.FC = () => {
       cell: (row) => (
         <div className="text-xs py-1">
           <p className="font-semibold text-gray-800">{row.gstin || "-"}</p>
-          <p className="text-gray-500">{row.customerAreaName || "-"}</p>
+          <p className="text-gray-500">{getAreaName(row)}</p>
         </div>
       ),
       grow: 1,
     },
     {
       name: "Industry",
-      selector: (row) => row.industryName || "-",
+      selector: (row) => getIndustryName(row),
       sortable: true,
       width: "130px",
     },
@@ -370,179 +582,216 @@ const CustomerMaster: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#e4e8e1] p-3 sm:p-4 md:p-6 w-full">
-      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 w-full">
-        {!isAddModalOpen && (
-          <>
-        {/* Top Header Card */}
-        <div className="bg-gradient-to-r from-[#FFF5EC] via-[#FFF9F4] to-[#FFF4EB] border border-[#FED7AA]/60 rounded-2xl shadow-sm p-4 sm:p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden">
-          {/* Decorative subtle background waves and dots matching screenshot */}
-          <svg
-            viewBox="0 0 500 100"
-            fill="none"
-            preserveAspectRatio="none"
-            className="absolute right-0 top-0 h-full w-[60%] sm:w-[45%] pointer-events-none opacity-45 z-0"
-          >
-            {/* Grid of dots */}
-            <pattern id="headerDots" x="0" y="0" width="16" height="16" patternUnits="userSpaceOnUse">
-              <circle cx="2" cy="2" r="1.5" fill="#FF8500" fillOpacity="0.4" />
-            </pattern>
-            <rect width="200" height="80" x="40" y="10" fill="url(#headerDots)" />
-            {/* Orange diagonal swooping curve */}
-            <path
-              d="M30 100 C150 70, 260 15, 500 25"
-              stroke="#FF8500"
-              strokeWidth="2"
-              strokeOpacity="0.7"
-              fill="none"
-            />
-          </svg>
-
-          <div className="w-full md:w-auto relative z-10">
-            <div className="flex items-center gap-3.5">
-              <div className="bg-[#FFE8D6] text-[#FF8500] p-3 rounded-2xl shadow-xs shrink-0 flex items-center justify-center w-14 h-14">
-                <FaUsers size={28} />
-              </div>
-              <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-[#082B50] tracking-tight">
+    <div className="p-4 md:p-6 bg-gray-50 min-h-full space-y-6">
+      {/* Unified Master Header Card */}
+      <div className="bg-white rounded-xl shadow-xs border border-gray-200 p-5 pb-0">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-gray-100">
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 bg-orange-50 border border-[#FF7900]/30 text-[#FF7900] rounded-xl flex items-center justify-center shrink-0 shadow-xs">
+              <Users className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl md:text-2xl font-bold text-gray-900">
                   Customer Master
                 </h1>
-                <p className="text-xs sm:text-[13px] text-slate-500 font-medium mt-0.5">
-                  Manage commercial clients, tax identities, and accounts
-                </p>
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-orange-50 text-[#FF7900] border border-[#FF7900]/20">
+                  Unified Master
+                </span>
               </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full md:w-auto relative z-10">
-            <button
-              type="button"
-              onClick={handleExportClick}
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 border border-slate-200/90 rounded-xl text-xs sm:text-sm font-bold text-[#082B50] bg-white hover:bg-slate-50 transition-all shadow-sm active:scale-95 min-h-[40px]"
-            >
-              <FaFileExcel className="text-emerald-600 text-base" />
-              <span>Export</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsAddModalOpen(true)}
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-[#FF8500] hover:bg-[#E66D00] text-white rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-md shadow-orange-500/25 active:scale-95 min-h-[40px]"
-            >
-              <FaPlus size={12} />
-              <span>Add Customer</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Analytics / Stats Bar */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-          <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 sm:gap-4">
-            <div className="p-3 bg-blue-50 text-blue-600 rounded-xl shrink-0">
-              <FaBuilding size={20} />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase text-gray-400 tracking-wider truncate">
-                Total Customers
+              <p className="text-gray-500 mt-1 text-xs md:text-sm">
+                Unified master management for customer directory, industry classifications, lifecycle statuses, lead acquisition sources, geographic areas, and payment terms.
               </p>
-              <p className="text-2xl font-bold text-gray-800">{stats.total}</p>
-            </div>
-          </div>
-          <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 sm:gap-4">
-            <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl shrink-0">
-              <FaUserCheck size={20} />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase text-gray-400 tracking-wider truncate">
-                Active Accounts
-              </p>
-              <p className="text-2xl font-bold text-emerald-600">{stats.active}</p>
-            </div>
-          </div>
-          <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 sm:gap-4 sm:col-span-2 lg:col-span-1">
-            <div className="p-3 bg-rose-50 text-rose-600 rounded-xl shrink-0">
-              <FaUserTimes size={20} />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase text-gray-400 tracking-wider truncate">
-                Inactive Accounts
-              </p>
-              <p className="text-2xl font-bold text-rose-600">{stats.inactive}</p>
-            </div>
-          </div>
-        </div>
-          </>
-        )}
-
-        <AddCustomerModal
-          isOpen={isAddModalOpen}
-          onClose={() => setIsAddModalOpen(false)}
-          onSuccess={fetchCustomers}
-        />
-
-        {/* Filter & Search Bar */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 sm:gap-4">
-          <div className="relative w-full md:w-96">
-            <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none" />
-            <input
-              type="text"
-              value={filterText}
-              onChange={(e) => setFilterText(e.target.value)}
-              placeholder="Search by name, code, company, GSTIN, PAN, area..."
-              className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#FF8500]/20 focus:border-[#FF8500]"
-            />
-          </div>
-
-          <div className="flex items-center justify-between sm:justify-start gap-2 w-full md:w-auto">
-            <span className="text-xs font-semibold text-gray-500 whitespace-nowrap">
-              Status:
-            </span>
-            <div className="flex bg-gray-100 p-1 rounded-lg flex-1 sm:flex-initial">
-              {["All", "Active", "Inactive"].map((st) => (
-                <button
-                  key={st}
-                  type="button"
-                  onClick={() => setSelectedStatus(st)}
-                  className={`flex-1 sm:flex-initial px-3 py-1.5 sm:py-1 text-xs font-medium rounded-md transition-all text-center ${
-                    selectedStatus === st
-                      ? "bg-white text-[#FF8500] shadow-sm font-semibold"
-                      : "text-gray-500 hover:text-gray-900"
-                  }`}
-                >
-                  {st}
-                </button>
-              ))}
             </div>
           </div>
         </div>
 
-        {/* Data Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="overflow-x-auto w-full">
-            <div className="min-w-[850px]">
-              <DataTable
-                columns={columns}
-                data={filteredCustomers}
-                progressPending={isLoading}
-                pagination
-                paginationPerPage={10}
-                paginationRowsPerPageOptions={[10, 25, 50, 100]}
-                customStyles={customTableStyles}
-                highlightOnHover
-                pointerOnHover
-                responsive
-                noDataComponent={
-                  <div className="py-12 text-center text-gray-400">
-                    <FaUsers size={32} className="mx-auto mb-2 opacity-50" />
-                    <p className="text-sm font-medium">No customer records found</p>
-                  </div>
-                }
-              />
-            </div>
-          </div>
+        {/* Tab Navigation */}
+        <div className="flex items-center gap-1 overflow-x-auto scrollbar-none pt-2">
+          {TABS.map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => handleSelectTab(tab.id)}
+                className={`flex items-center gap-2.5 px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-all cursor-pointer ${
+                  isActive
+                    ? "border-[#FF7900] text-[#FF7900] font-semibold bg-orange-50/50 rounded-t-lg"
+                    : "border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300"
+                }`}
+              >
+                <span className={isActive ? "text-[#FF7900]" : "text-gray-400"}>
+                  {tab.icon}
+                </span>
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Modals */}
+      {/* Active Tab View */}
+      <div className="w-full">
+        {activeTab === "customers" && (
+          <div className="space-y-6">
+            {/* Listing Header matching Referral Image */}
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <h2 className="border-b-2 border-[#FF7900] pb-2 text-2xl sm:text-3xl font-bold tracking-tight text-[#00234a]">
+                  Customers
+                </h2>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    loadMasterData();
+                    fetchCustomers();
+                  }}
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer"
+                >
+                  <RefreshCw size={15} className={isLoading ? "animate-spin" : ""} />
+                  <span>Refresh</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleExportClick}
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer"
+                >
+                  <FaFileExcel className="text-emerald-600 text-sm" />
+                  <span>Export</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsAddModalOpen(true)}
+                  className="rounded-xl bg-[#00234a] hover:bg-[#FF7900] px-5 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-[0_10px_18px_rgba(0,35,74,0.18)] transition cursor-pointer flex items-center gap-2"
+                >
+                  <FaPlus size={12} />
+                  <span>+ Create New</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Analytics / Stats Bar */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+              <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 sm:gap-4">
+                <div className="p-3 bg-blue-50 text-blue-600 rounded-xl shrink-0">
+                  <FaBuilding size={20} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase text-gray-400 tracking-wider truncate">
+                    Total Customers
+                  </p>
+                  <p className="text-2xl font-bold text-gray-800">{stats.total}</p>
+                </div>
+              </div>
+              <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 sm:gap-4">
+                <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl shrink-0">
+                  <FaUserCheck size={20} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase text-gray-400 tracking-wider truncate">
+                    Active Accounts
+                  </p>
+                  <p className="text-2xl font-bold text-emerald-600">{stats.active}</p>
+                </div>
+              </div>
+              <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 sm:gap-4 sm:col-span-2 lg:col-span-1">
+                <div className="p-3 bg-rose-50 text-rose-600 rounded-xl shrink-0">
+                  <FaUserTimes size={20} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase text-gray-400 tracking-wider truncate">
+                    Inactive Accounts
+                  </p>
+                  <p className="text-2xl font-bold text-rose-600">{stats.inactive}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Filter & Search Bar */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 sm:gap-4">
+              <div className="relative w-full md:w-96">
+                <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none" />
+                <input
+                  type="text"
+                  value={filterText}
+                  onChange={(e) => setFilterText(e.target.value)}
+                  placeholder="Search by name, code, company, GSTIN, PAN, area..."
+                  className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#FF8500]/20 focus:border-[#FF8500]"
+                />
+              </div>
+
+              <div className="flex items-center justify-between sm:justify-start gap-2 w-full md:w-auto">
+                <span className="text-xs font-semibold text-gray-500 whitespace-nowrap">
+                  Status:
+                </span>
+                <div className="flex bg-gray-100 p-1 rounded-lg flex-1 sm:flex-initial">
+                  {["All", "Active", "Inactive"].map((st) => (
+                    <button
+                      key={st}
+                      type="button"
+                      onClick={() => setSelectedStatus(st)}
+                      className={`flex-1 sm:flex-initial px-3 py-1.5 sm:py-1 text-xs font-medium rounded-md transition-all text-center ${
+                        selectedStatus === st
+                          ? "bg-white text-[#FF8500] shadow-sm font-semibold"
+                          : "text-gray-500 hover:text-gray-900"
+                      }`}
+                    >
+                      {st}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Data Table */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="overflow-x-auto w-full">
+                <div className="min-w-[850px]">
+                  <DataTable
+                    columns={columns}
+                    data={filteredCustomers}
+                    progressPending={isLoading}
+                    pagination
+                    paginationPerPage={10}
+                    paginationRowsPerPageOptions={[10, 25, 50, 100]}
+                    customStyles={customTableStyles}
+                    highlightOnHover
+                    pointerOnHover
+                    responsive
+                    noDataComponent={
+                      <div className="py-12 text-center text-gray-400">
+                        <FaUsers size={32} className="mx-auto mb-2 opacity-50" />
+                        <p className="text-sm font-medium">No customer records found</p>
+                      </div>
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Sub-Master Views for Dropdowns */}
+        {activeTab === "status" && <CustomerStatus isTab={true} />}
+        {activeTab === "source" && <CustomerSource isTab={true} />}
+        {activeTab === "industry" && <Industry isTab={true} />}
+        {activeTab === "area" && <CustomerArea isTab={true} />}
+        {activeTab === "payment-terms" && <PaymentTerm isTab={true} />}
+      </div>
+
+      {/* Customer Modals */}
+      <AddCustomerModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSuccess={() => {
+          loadMasterData();
+          fetchCustomers();
+        }}
+      />
+
       <EditCustomerModal
         isOpen={isEditModalOpen}
         customerId={selectedCustomerId}
@@ -550,7 +799,10 @@ const CustomerMaster: React.FC = () => {
           setIsEditModalOpen(false);
           setSelectedCustomerId(null);
         }}
-        onSuccess={fetchCustomers}
+        onSuccess={() => {
+          loadMasterData();
+          fetchCustomers();
+        }}
       />
 
       <ViewCustomerModal

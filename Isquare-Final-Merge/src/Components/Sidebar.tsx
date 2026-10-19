@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Home,
   Users,
@@ -181,6 +181,16 @@ const rsmMenuConfig: MenuItem[] = [
         to: "/rsm/master/sales-team",
       },
       {
+        icon: <UserCheck />,
+        label: "DIRECTOR",
+        to: "/rsm/director",
+      },
+      {
+        icon: <UserCheck />,
+        label: "SALES COORDINATOR",
+        to: "/rsm/sales-coordinator",
+      },
+      {
         icon: <Clock />,
         label: "FOLLOW-UP & UPDATES",
         to: "/rsm/master/follow-up-contact-updates",
@@ -331,6 +341,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
       {item.to ? (
         <NavLink
           to={item.to}
+          title={item.label}
           className={`flex items-center gap-3 px-3.5 ${verticalPadding} mx-2 rounded-xl transition-all duration-200 group ${
             isActive
               ? "bg-white text-[#FF7900] shadow-sm"
@@ -348,8 +359,8 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
           </span>
           {isOpen && (
             <span
-              className={`sidebar-menu-item leading-none truncate ${
-                isActive ? "text-[#FF7900]" : "text-gray-200 group-hover:text-white"
+              className={`sidebar-menu-item leading-snug truncate ${
+                isActive ? "text-[#FF7900] font-semibold" : "text-gray-200 group-hover:text-white"
               }`}
             >
               {item.label}
@@ -359,7 +370,8 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
       ) : (
         <button
           onClick={toggleHandler}
-          className={`w-full flex items-center justify-between gap-3 px-3.5 ${verticalPadding} pr-4 mx-2 rounded-xl transition-all duration-200 group text-gray-200 hover:bg-white/10 hover:text-white`}
+          title={item.label}
+          className={`w-full flex items-center justify-between gap-3 px-3.5 ${verticalPadding} pr-4 mx-2 rounded-xl transition-all duration-200 group text-gray-200 hover:bg-white/10 hover:text-white cursor-pointer`}
           style={{ paddingLeft: `${level * 16 + 12}px`, width: "calc(100% - 16px)" }}
         >
           <div className="flex items-center gap-3 min-w-0">
@@ -370,7 +382,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
               )}
             </span>
             {isOpen && (
-              <span className="sidebar-menu-item leading-none truncate text-gray-200 group-hover:text-white">
+              <span className="sidebar-menu-item leading-snug truncate text-gray-200 group-hover:text-white">
                 {item.label}
               </span>
             )}
@@ -411,6 +423,61 @@ export const Sidebar = ({ isOpen }: SidebarProps) => {
     setOpenMenuLabel((prev) => (prev === label ? null : label));
   };
 
+  // Flexible / Resizable Sidebar configuration
+  const DEFAULT_WIDTH = 290;
+  const MIN_WIDTH = 230;
+  const MAX_WIDTH = 480;
+
+  const [sidebarWidth, setSidebarWidth] = useState<number>(() => {
+    const saved = localStorage.getItem("isquare_sidebar_width");
+    if (saved) {
+      const parsed = parseInt(saved, 10);
+      if (!isNaN(parsed) && parsed >= MIN_WIDTH && parsed <= MAX_WIDTH) {
+        return parsed;
+      }
+    }
+    return DEFAULT_WIDTH;
+  });
+
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const newWidth = Math.min(Math.max(e.clientX, MIN_WIDTH), MAX_WIDTH);
+      setSidebarWidth(newWidth);
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      localStorage.setItem("isquare_sidebar_width", sidebarWidth.toString());
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+  }, [isDragging, sidebarWidth]);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDoubleClickReset = () => {
+    const targetWidth = sidebarWidth === DEFAULT_WIDTH ? 340 : DEFAULT_WIDTH;
+    setSidebarWidth(targetWidth);
+    localStorage.setItem("isquare_sidebar_width", targetWidth.toString());
+  };
+
   const getVisibleMenu = (menuItems: MenuItem[]): MenuItem[] => {
     return menuItems
       .map((item) => {
@@ -449,18 +516,45 @@ export const Sidebar = ({ isOpen }: SidebarProps) => {
 
   return (
     <div
-      className={`${isOpen ? "w-64" : "w-20"} h-screen bg-[#424242] flex flex-col transition-all duration-300 shadow-xl border-r border-[#383838]`}
-      style={{ fontFamily: "'Poppins', sans-serif" }}
+      className={`relative h-screen bg-[#424242] flex flex-col shadow-xl border-r border-[#383838] shrink-0 ${
+        isDragging ? "transition-none select-none" : "transition-all duration-300"
+      }`}
+      style={{
+        width: isOpen ? `${sidebarWidth}px` : "80px",
+        minWidth: isOpen ? `${sidebarWidth}px` : "80px",
+        maxWidth: isOpen ? `${sidebarWidth}px` : "80px",
+        fontFamily: "'Poppins', sans-serif",
+      }}
     >
+      {/* Draggable Flexible Resize Handle on the right edge */}
+      {isOpen && (
+        <div
+          onMouseDown={handleMouseDown}
+          onDoubleClick={handleDoubleClickReset}
+          title="Drag left/right to resize sidebar (Double click to toggle wide/compact)"
+          className="absolute top-0 -right-1.5 w-3 h-full cursor-col-resize group z-30 flex items-center justify-center transition-colors hover:bg-[#FF7900]/20"
+        >
+          <div
+            className={`w-1 rounded-full transition-all duration-150 ${
+              isDragging
+                ? "bg-[#FF7900] h-full shadow-md"
+                : "bg-transparent group-hover:bg-[#FF7900] group-hover:h-24 h-12"
+            }`}
+          />
+        </div>
+      )}
+
       {/* Logo Section */}
       <div
-        className={`flex items-center ${isOpen ? "pl-6 pr-3 justify-start" : "justify-center"} border-b border-[#FF7900]/60 h-[60px] shrink-0 bg-[#424242] transition-all duration-300`}
+        className={`flex items-center ${
+          isOpen ? "pl-6 pr-3 justify-start" : "justify-center"
+        } border-b border-[#FF7900]/60 h-[60px] shrink-0 bg-[#424242] transition-all duration-300 overflow-hidden`}
       >
         {isOpen ? (
           <ISquareLogo
             size="md"
             theme="white"
-            className="justify-start max-w-[200px]"
+            className="justify-start max-w-[220px]"
           />
         ) : (
           <ISquareIcon size={40} />

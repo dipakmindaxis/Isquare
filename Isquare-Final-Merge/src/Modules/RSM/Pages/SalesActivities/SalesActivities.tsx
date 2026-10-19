@@ -237,7 +237,7 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
           onClick={() => handleSwitchMainView("all")}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
             mainView === "all"
-              ? "bg-[#154068] text-white shadow-sm"
+              ? "bg-[#FF7900] text-white shadow-sm"
               : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
           }`}
         >
@@ -250,7 +250,7 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
           onClick={() => handleSwitchMainView("calls")}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
             mainView === "calls"
-              ? "bg-[#154068] text-white shadow-sm"
+              ? "bg-[#FF7900] text-white shadow-sm"
               : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
           }`}
         >
@@ -263,7 +263,7 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
           onClick={() => handleSwitchMainView("meetings")}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
             mainView === "meetings"
-              ? "bg-[#154068] text-white shadow-sm"
+              ? "bg-[#FF7900] text-white shadow-sm"
               : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
           }`}
         >
@@ -276,7 +276,7 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
           onClick={() => handleSwitchMainView("followups")}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
             mainView === "followups"
-              ? "bg-[#154068] text-white shadow-sm"
+              ? "bg-[#FF7900] text-white shadow-sm"
               : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
           }`}
         >
@@ -292,17 +292,32 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
 
       {mainView === "all" && (
         <>
-          {/* 1. Header Card */}
-          <SalesActivityHeader
-            onAddNew={() => setIsAddOpen(true)}
-            onExport={handleExportClick}
-          />
+          {/* Header Card & Stats Bar - hidden when Add Form is open, matching CustomerMaster */}
+          {!isAddOpen && (
+            <>
+              {/* 1. Header Card */}
+              <SalesActivityHeader
+                onAddNew={() => {
+                  setIsAddOpen(true);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                onExport={handleExportClick}
+              />
 
-          {/* 2. KPI / Summary Cards */}
-          <SalesActivityStatsCards
-            stats={stats}
-            activeTab={activeTab}
-            onSelectTab={handleTabChange}
+              {/* 2. KPI / Summary Cards */}
+              <SalesActivityStatsCards
+                stats={stats}
+                activeTab={activeTab}
+                onSelectTab={handleTabChange}
+              />
+            </>
+          )}
+
+          {/* Add Sales Activity Form Component - Opens at the top like Customer Module */}
+          <AddSalesActivityModal
+            isOpen={isAddOpen}
+            onClose={() => setIsAddOpen(false)}
+            onSuccess={loadData}
           />
 
           {/* 3. Filters & Quick Status Tabs */}
@@ -335,21 +350,17 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
             onView={handleView}
             onEdit={handleEdit}
             onDelete={handleDeleteRequest}
-            onAddNew={() => setIsAddOpen(true)}
+            onAddNew={() => {
+              setIsAddOpen(true);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
           />
 
-          {/* 5. Modals */}
-          {isAddOpen && (
-            <AddSalesActivityModal
-              isOpen={isAddOpen}
-              onClose={() => setIsAddOpen(false)}
-              onSuccess={loadData}
-            />
-          )}
-
+          {/* 5. Edit Modal - Fixed Centered Modal Popup */}
           {isEditOpen && (
             <EditSalesActivityModal
               isOpen={isEditOpen}
+              isModal={true}
               activity={selectedActivity}
               onClose={() => {
                 setIsEditOpen(false);

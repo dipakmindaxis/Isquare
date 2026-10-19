@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X, Hash, UserCheck, FileText, Loader2, Plus } from "lucide-react";
+import { X, Hash, UserCheck, Loader2, Plus, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { createCustomerStatus } from "../Services/CustomerStatusService";
 import type { CustomerStatusCreatePayload } from "../Types/CustomerStatusTypes";
@@ -82,8 +82,8 @@ const AddCustomerStatusModal: React.FC<AddCustomerStatusModalProps> = ({
           {/* Header */}
           <div className="flex items-center justify-between p-6 pb-4 border-b border-gray-100">
             <div className="flex items-center gap-3.5">
-              <div className="w-11 h-11 bg-slate-100 text-[#00234a] rounded-xl flex items-center justify-center">
-                <UserCheck className="w-5 h-5" />
+              <div className="w-11 h-11 bg-orange-50 text-[#FF7900] border border-[#FF7900]/20 rounded-xl flex items-center justify-center">
+                <UserCheck className="w-5 h-5 text-[#FF7900]" />
               </div>
               <div>
                 <h2 className="text-lg font-bold text-gray-900">
@@ -118,8 +118,8 @@ const AddCustomerStatusModal: React.FC<AddCustomerStatusModalProps> = ({
                   name="statusCode"
                   value={formData.statusCode}
                   onChange={handleChange}
-                  placeholder="e.g., ACT, INACT, PEND"
-                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#00234a] focus:border-[#00234a] transition"
+                  placeholder="e.g., ACT, INACT, PROSP"
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 focus:border-[#FF7900] transition"
                   required
                 />
               </div>
@@ -138,8 +138,8 @@ const AddCustomerStatusModal: React.FC<AddCustomerStatusModalProps> = ({
                   name="statusName"
                   value={formData.statusName}
                   onChange={handleChange}
-                  placeholder="e.g., Active, Onboarding, Suspended"
-                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#00234a] focus:border-[#00234a] transition"
+                  placeholder="e.g., Active, Inactive, Prospect"
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 focus:border-[#FF7900] transition"
                   required
                 />
               </div>
@@ -159,7 +159,7 @@ const AddCustomerStatusModal: React.FC<AddCustomerStatusModalProps> = ({
                   onChange={handleChange}
                   rows={3}
                   placeholder="Brief description of the customer status..."
-                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#00234a] focus:border-[#00234a] transition resize-none"
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 focus:border-[#FF7900] transition resize-none"
                 />
               </div>
             </div>
@@ -171,7 +171,7 @@ const AddCustomerStatusModal: React.FC<AddCustomerStatusModalProps> = ({
                   name="isActive"
                   checked={formData.isActive}
                   onChange={handleChange}
-                  className="w-4 h-4 text-[#00234a] rounded border-gray-300 focus:ring-[#00234a] cursor-pointer"
+                  className="w-4 h-4 text-[#FF7900] rounded border-gray-300 focus:ring-[#FF7900] cursor-pointer"
                 />
                 <span className="text-sm font-medium text-gray-700">
                   Active Status
@@ -186,14 +186,14 @@ const AddCustomerStatusModal: React.FC<AddCustomerStatusModalProps> = ({
               type="button"
               onClick={handleClose}
               disabled={isLoading}
-              className="px-6 py-2 rounded-lg text-sm font-medium bg-gray-500 hover:bg-gray-600 text-white transition"
+              className="px-5 py-2 rounded-lg text-sm font-medium bg-gray-500 hover:bg-gray-600 text-white transition cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="flex items-center gap-2 px-6 py-2 bg-[#00234a] hover:bg-[#001833] text-white rounded-lg text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-6 py-2 bg-[#FF7900] hover:bg-[#E66D00] text-white rounded-lg text-sm font-semibold transition shadow-md shadow-orange-500/25 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

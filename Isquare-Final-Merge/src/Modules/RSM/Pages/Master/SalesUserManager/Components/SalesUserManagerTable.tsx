@@ -20,22 +20,22 @@ const SalesUserManagerTable: React.FC<SalesUserManagerTableProps> = ({
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
       <div className="overflow-x-auto">
-        <table className="w-full text-sm text-left">
-          <thead className="bg-[#154068] text-white">
+        <table className="w-full text-xs text-left">
+          <thead className="bg-[#FF7900] text-white text-xs uppercase tracking-wider border-b border-[#e06800]">
             <tr>
-              <th className="px-6 py-3 font-semibold text-left">
+              <th className="px-6 py-3.5 font-semibold text-left">
                 SR NO
               </th>
-              <th className="px-6 py-3 font-semibold text-left">
+              <th className="px-6 py-3.5 font-semibold text-left">
                 NAME
               </th>
-              <th className="px-6 py-3 font-semibold text-left">
+              <th className="px-6 py-3.5 font-semibold text-left">
                 CODE / KEY
               </th>
-              <th className="px-6 py-3 font-semibold text-left">
+              <th className="px-6 py-3.5 font-semibold text-left">
                 STATUS
               </th>
-              <th className="px-6 py-3 font-semibold text-right">
+              <th className="px-6 py-3.5 font-semibold text-right">
                 ACTIONS
               </th>
             </tr>
@@ -51,7 +51,7 @@ const SalesUserManagerTable: React.FC<SalesUserManagerTableProps> = ({
                   <div className="flex items-center justify-center gap-2">
                     <Loader2
                       size={20}
-                      className="animate-spin text-[#154068]"
+                      className="animate-spin text-[#FF7900]"
                     />
                     <span>Loading sales user managers...</span>
                   </div>

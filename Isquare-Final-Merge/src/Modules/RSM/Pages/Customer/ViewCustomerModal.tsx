@@ -15,12 +15,20 @@ import { toast } from "sonner";
 import type {
   Customer,
   CustomerAddress,
+  SalesCoordinatorItem,
+  IndustryItem,
+  CustomerAreaItem,
 } from "./Types/CustomerTypes";
 import {
   getCustomerById,
   getCustomerAddresses,
   validateCustomerAddress,
 } from "./Services/CustomerService";
+import {
+  getSalesCoordinators,
+  getIndustries,
+  getCustomerAreas,
+} from "./Services/CustomerMasterDataService";
 
 interface ViewCustomerModalProps {
   isOpen: boolean;
@@ -63,6 +71,9 @@ const ViewCustomerModal: React.FC<ViewCustomerModalProps> = ({
 }) => {
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [addresses, setAddresses] = useState<CustomerAddress[]>([]);
+  const [coordinators, setCoordinators] = useState<SalesCoordinatorItem[]>([]);
+  const [industries, setIndustries] = useState<IndustryItem[]>([]);
+  const [areas, setAreas] = useState<CustomerAreaItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [validatingAddrId, setValidatingAddrId] = useState<number | null>(null);
   const [validationMsg, setValidationMsg] = useState<{
@@ -74,11 +85,17 @@ const ViewCustomerModal: React.FC<ViewCustomerModalProps> = ({
       const fetchData = async () => {
         setIsLoading(true);
         try {
-          const [custData, addrData] = await Promise.all([
+          const [custData, addrData, coordData, indData, areaData] = await Promise.all([
             getCustomerById(customerId),
             getCustomerAddresses(customerId).catch(() => []),
+            getSalesCoordinators().catch(() => []),
+            getIndustries().catch(() => []),
+            getCustomerAreas().catch(() => []),
           ]);
           setCustomer(custData);
+          setCoordinators(Array.isArray(coordData) ? coordData : []);
+          setIndustries(Array.isArray(indData) ? indData : []);
+          setAreas(Array.isArray(areaData) ? areaData : []);
           setAddresses(
             addrData && addrData.length > 0
               ? addrData
@@ -192,10 +209,38 @@ const ViewCustomerModal: React.FC<ViewCustomerModalProps> = ({
               <div>
                 <SectionHeader icon={Briefcase} title="Business Information" />
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
-                  <DetailItem label="Industry" value={customer.industryName || customer.industryId} />
-                  <DetailItem label="Customer Status" value={customer.customerStatusName || customer.customerStatusId} />
-                  <DetailItem label="Customer Source" value={customer.customerSourceName || customer.customerSourceId} />
-                  <DetailItem label="Customer Area" value={customer.customerAreaName || customer.customerAreaId} />
+                  <DetailItem
+                    label="Industry"
+                    value={
+                      customer.industryName ||
+                      (customer.industryId
+                        ? industries.find(
+                            (i) => i.industryId === Number(customer.industryId)
+                          )?.industryName || customer.industryId
+                        : "-")
+                    }
+                  />
+                  <DetailItem
+                    label="Customer Status"
+                    value={customer.customerStatusName || customer.customerStatusId}
+                  />
+                  <DetailItem
+                    label="Customer Source"
+                    value={customer.customerSourceName || customer.customerSourceId}
+                  />
+                  <DetailItem
+                    label="Customer Area"
+                    value={
+                      customer.customerAreaName ||
+                      (customer.customerAreaId
+                        ? areas.find(
+                            (a) =>
+                              a.customerAreaId ===
+                              Number(customer.customerAreaId)
+                          )?.areaName || customer.customerAreaId
+                        : "-")
+                    }
+                  />
                   <DetailItem label="Payment Terms" value={customer.paymentTermName || customer.paymentTermsId || customer.paymentTermId} />
                 </div>
               </div>
@@ -218,7 +263,19 @@ const ViewCustomerModal: React.FC<ViewCustomerModalProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
                   <DetailItem label="Director" value={customer.directorName || customer.directorId} />
                   <DetailItem label="BDE" value={customer.bdeUserName || customer.bdeUserId} />
-                  <DetailItem label="Sales Coordinator" value={customer.salesCoordinatorName || customer.salesCoordinatorId} />
+                  <DetailItem
+                    label="Sales Coordinator"
+                    value={
+                      customer.salesCoordinatorName ||
+                      (customer.salesCoordinatorId
+                        ? coordinators.find(
+                            (sc) =>
+                              sc.salesCoordinatorId ===
+                              Number(customer.salesCoordinatorId)
+                          )?.salesCoordinatorName || customer.salesCoordinatorId
+                        : "-")
+                    }
+                  />
                   <DetailItem label="Customer Owner" value={customer.customerOwnerName || customer.customerOwnerId} />
                 </div>
               </div>

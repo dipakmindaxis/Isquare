@@ -12,6 +12,8 @@ import MultiLocation from "./Modules/HRMS/Pages/Location/MultiLocation";
 
 import BasicMasters from "./Modules/HRMS/Pages/Masters/BasicMasters/BasicMastersPage";
 import PaymentTerm from "./Modules/RSM/Pages/Master/PaymentTerm/PaymentTerm";
+import Director from "./Modules/RSM/Pages/Master/Director/Director";
+import SalesCoordinator from "./Modules/RSM/Pages/Master/SalesCoordinator/SalesCoordinator";
 import CustomerClassificationMaster from "./Modules/RSM/Pages/Master/CustomerClassification/CustomerClassificationMaster";
 import SalesTeamMaster from "./Modules/RSM/Pages/Master/SalesTeam/SalesTeamMaster";
 import FollowUpContactUpdatesMaster from "./Modules/RSM/Pages/Master/FollowUpContactUpdates/FollowUpContactUpdatesMaster";
@@ -448,6 +450,38 @@ const router = createBrowserRouter([
         path: "master/customers",
         element: <CustomerMaster />,
       },
+      {
+        path: "director",
+        element: <Director />,
+      },
+      {
+        path: "directors",
+        element: <Director />,
+      },
+      {
+        path: "master/director",
+        element: <Director />,
+      },
+      {
+        path: "master/directors",
+        element: <Director />,
+      },
+      {
+        path: "sales-coordinator",
+        element: <SalesCoordinator />,
+      },
+      {
+        path: "sales-coordinators",
+        element: <SalesCoordinator />,
+      },
+      {
+        path: "master/sales-coordinator",
+        element: <SalesCoordinator />,
+      },
+      {
+        path: "master/sales-coordinators",
+        element: <SalesCoordinator />,
+      },
     ],
   },
 
@@ -504,6 +538,14 @@ const router = createBrowserRouter([
       { path: "/customer-source", element: <CustomerClassificationMaster initialTab="source" /> },
       { path: "/customer-area", element: <CustomerClassificationMaster initialTab="area" /> },
       { path: "/address-type", element: <DocumentAddressSettingsMaster initialTab="address-type" /> },
+      { path: "/director", element: <Director /> },
+      { path: "/directors", element: <Director /> },
+      { path: "/master/director", element: <Director /> },
+      { path: "/master/directors", element: <Director /> },
+      { path: "/sales-coordinator", element: <SalesCoordinator /> },
+      { path: "/sales-coordinators", element: <SalesCoordinator /> },
+      { path: "/master/sales-coordinator", element: <SalesCoordinator /> },
+      { path: "/master/sales-coordinators", element: <SalesCoordinator /> },
       { path: "/customers", element: <CustomerMaster /> },
       { path: "/customer", element: <CustomerMaster /> },
       { path: "/rsm/customers", element: <CustomerMaster /> },

@@ -4,7 +4,10 @@ import { UserCheck, UserCog, Users } from "lucide-react";
 import BdeUsers from "../BdeUsers/Pages/BdeUsers";
 import SalesUserManager from "../SalesUserManager/Pages/SalesUserManager";
 
-export type SalesTeamTab = "bde" | "managers";
+import Director from "../Director/Director";
+import SalesCoordinator from "../SalesCoordinator/SalesCoordinator";
+
+export type SalesTeamTab = "bde" | "managers" | "directors" | "coordinators";
 
 interface SalesTeamMasterProps {
   initialTab?: SalesTeamTab;
@@ -30,6 +33,18 @@ const TABS: TabConfig[] = [
     shortDesc: "Sales team management, supervisors & lead managers",
     icon: <UserCog className="w-4 h-4" />,
   },
+  {
+    id: "directors",
+    label: "Directors",
+    shortDesc: "Executive directors & leadership assignments",
+    icon: <UserCheck className="w-4 h-4" />,
+  },
+  {
+    id: "coordinators",
+    label: "Sales Coordinators",
+    shortDesc: "Sales operations & client coordinators",
+    icon: <UserCheck className="w-4 h-4" />,
+  },
 ];
 
 export const SalesTeamMaster: React.FC<SalesTeamMasterProps> = ({
@@ -39,7 +54,10 @@ export const SalesTeamMaster: React.FC<SalesTeamMasterProps> = ({
   const rawTab = (searchParams.get("tab") || initialTab || "bde").toLowerCase() as SalesTeamTab;
 
   const activeTab: SalesTeamTab = useMemo(() => {
-    return rawTab === "managers" ? "managers" : "bde";
+    if (rawTab === "managers") return "managers";
+    if (rawTab === "directors") return "directors";
+    if (rawTab === "coordinators") return "coordinators";
+    return "bde";
   }, [rawTab]);
 
   useEffect(() => {
@@ -58,7 +76,7 @@ export const SalesTeamMaster: React.FC<SalesTeamMasterProps> = ({
       <div className="bg-white rounded-xl shadow-xs border border-gray-200 p-5 pb-0">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-gray-100">
           <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 bg-[#00234a]/10 text-[#00234a] rounded-xl flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 bg-orange-50 border border-[#FF7900]/30 text-[#FF7900] rounded-xl flex items-center justify-center shrink-0 shadow-xs">
               <Users className="w-6 h-6" />
             </div>
             <div>
@@ -66,12 +84,12 @@ export const SalesTeamMaster: React.FC<SalesTeamMasterProps> = ({
                 <h1 className="text-xl md:text-2xl font-bold text-gray-900">
                   Sales Team Master
                 </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-[#00234a] border border-blue-100">
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-orange-50 text-[#FF7900] border border-[#FF7900]/20">
                   Unified Master
                 </span>
               </div>
               <p className="text-gray-500 mt-1 text-xs md:text-sm">
-                Unified administration for Business Development Executives (BDEs) and Sales Managers.
+                Unified administration for Business Development Executives (BDEs), Sales Managers, and Directors.
               </p>
             </div>
           </div>
@@ -88,11 +106,11 @@ export const SalesTeamMaster: React.FC<SalesTeamMasterProps> = ({
                 onClick={() => handleSelectTab(tab.id)}
                 className={`flex items-center gap-2.5 px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-all cursor-pointer ${
                   isActive
-                    ? "border-[#F37021] text-[#00234a] font-semibold bg-orange-50/40 rounded-t-lg"
+                    ? "border-[#FF7900] text-[#FF7900] font-semibold bg-orange-50/50 rounded-t-lg"
                     : "border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300"
                 }`}
               >
-                <span className={isActive ? "text-[#F37021]" : "text-gray-400"}>
+                <span className={isActive ? "text-[#FF7900]" : "text-gray-400"}>
                   {tab.icon}
                 </span>
                 <span>{tab.label}</span>
@@ -106,6 +124,8 @@ export const SalesTeamMaster: React.FC<SalesTeamMasterProps> = ({
       <div className="w-full">
         {activeTab === "bde" && <BdeUsers isTab={true} />}
         {activeTab === "managers" && <SalesUserManager isTab={true} />}
+        {activeTab === "directors" && <Director isTab={true} />}
+        {activeTab === "coordinators" && <SalesCoordinator isTab={true} />}
       </div>
     </div>
   );

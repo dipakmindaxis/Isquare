@@ -8,8 +8,10 @@ import {
   Users,
   MapPin,
   Calendar,
+  Plus,
 } from "lucide-react";
 import { toast } from "sonner";
+import Select, { type StylesConfig } from "react-select";
 import type {
   CustomerUpdatePayload,
   CustomerAddress,
@@ -19,10 +21,10 @@ import type {
   CustomerAreaItem,
   PaymentTermItem,
   BdeUserItem,
-  SalesUserManagerItem,
-  EmployeeSelectItem,
   CountryItem,
   AddressTypeItem,
+  SalesCoordinatorItem,
+  DirectorItem,
 } from "./Types/CustomerTypes";
 import {
   getCustomerById,
@@ -36,12 +38,13 @@ import {
   getCustomerAreas,
   getPaymentTerms,
   getBdeUsers,
-  getSalesManagers,
-  getEmployees,
   getCountries,
   getAddressTypes,
+  getSalesCoordinators,
+  getDirectors,
 } from "./Services/CustomerMasterDataService";
 import CustomerAddressSection from "./CustomerAddressSection";
+import AddSalesCoordinatorModal from "../Master/SalesCoordinator/Components/AddSalesCoordinatorModal";
 
 interface EditCustomerModalProps {
   isOpen: boolean;
@@ -71,10 +74,85 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
   const [areas, setAreas] = useState<CustomerAreaItem[]>([]);
   const [paymentTerms, setPaymentTerms] = useState<PaymentTermItem[]>([]);
   const [bdeUsers, setBdeUsers] = useState<BdeUserItem[]>([]);
-  const [salesManagers, setSalesManagers] = useState<SalesUserManagerItem[]>([]);
-  const [employees, setEmployees] = useState<EmployeeSelectItem[]>([]);
   const [countries, setCountries] = useState<CountryItem[]>([]);
   const [addressTypes, setAddressTypes] = useState<AddressTypeItem[]>([]);
+  const [salesCoordinators, setSalesCoordinators] = useState<SalesCoordinatorItem[]>([]);
+  const [directors, setDirectors] = useState<DirectorItem[]>([]);
+  const [selectedCoordinatorIds, setSelectedCoordinatorIds] = useState<number[]>([]);
+  const [customerOwnerValue, setCustomerOwnerValue] = useState<string>("");
+  const [isAddCoordinatorOpen, setIsAddCoordinatorOpen] = useState(false);
+
+  const refreshSalesCoordinators = async () => {
+    const list = await getSalesCoordinators();
+    if (Array.isArray(list)) {
+      setSalesCoordinators(list);
+    }
+  };
+
+  interface CoordinatorSelectOption {
+    value: number;
+    label: string;
+    coordinatorName: string;
+  }
+
+  // Custom styling for react-select matching customer edit form fields
+  const customerSelectStyles: StylesConfig<CoordinatorSelectOption, true> = {
+    control: (base, state) => ({
+      ...base,
+      minHeight: "38px",
+      borderRadius: "0.375rem",
+      borderColor: state.isFocused ? "#3b82f6" : "#d1d5db",
+      boxShadow: state.isFocused ? "0 0 0 1px #3b82f6" : "none",
+      "&:hover": {
+        borderColor: state.isFocused ? "#3b82f6" : "#9ca3af",
+      },
+      backgroundColor: "#ffffff",
+      fontSize: "0.875rem",
+      cursor: "pointer",
+    }),
+    multiValue: (base) => ({
+      ...base,
+      backgroundColor: "#f1f5f9",
+      borderRadius: "0.375rem",
+      border: "1px solid #cbd5e1",
+      padding: "1px 3px",
+    }),
+    multiValueLabel: (base) => ({
+      ...base,
+      color: "#0f172a",
+      fontSize: "0.8125rem",
+      fontWeight: 500,
+    }),
+    multiValueRemove: (base) => ({
+      ...base,
+      color: "#64748b",
+      cursor: "pointer",
+      "&:hover": {
+        backgroundColor: "#e2e8f0",
+        color: "#dc2626",
+      },
+    }),
+    option: (base, state) => ({
+      ...base,
+      backgroundColor: state.isSelected
+        ? "#2563eb"
+        : state.isFocused
+        ? "#eff6ff"
+        : "#ffffff",
+      color: state.isSelected ? "#ffffff" : "#1f2937",
+      fontSize: "0.875rem",
+      cursor: "pointer",
+    }),
+    menu: (base) => ({
+      ...base,
+      zIndex: 9999,
+    }),
+    placeholder: (base) => ({
+      ...base,
+      color: "#9ca3af",
+      fontSize: "0.875rem",
+    }),
+  };
 
   useEffect(() => {
     if (isOpen && customerId) {
@@ -92,10 +170,10 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
             getCustomerAreas().catch(() => []),
             getPaymentTerms().catch(() => []),
             getBdeUsers().catch(() => []),
-            getSalesManagers().catch(() => []),
-            getEmployees().catch(() => []),
             getCountries().catch(() => []),
             getAddressTypes().catch(() => []),
+            getSalesCoordinators().catch(() => []),
+            getDirectors().catch(() => []),
           ]);
 
           setIndustries(Array.isArray(masterRes[0]) ? (masterRes[0] as IndustryItem[]) : []);
@@ -103,11 +181,87 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
           setSources(Array.isArray(masterRes[2]) ? (masterRes[2] as CustomerSourceItem[]) : []);
           setAreas(Array.isArray(masterRes[3]) ? (masterRes[3] as CustomerAreaItem[]) : []);
           setPaymentTerms(Array.isArray(masterRes[4]) ? (masterRes[4] as PaymentTermItem[]) : []);
-          setBdeUsers(Array.isArray(masterRes[5]) ? (masterRes[5] as BdeUserItem[]) : []);
-          setSalesManagers(Array.isArray(masterRes[6]) ? (masterRes[6] as SalesUserManagerItem[]) : []);
-          setEmployees(Array.isArray(masterRes[7]) ? (masterRes[7] as EmployeeSelectItem[]) : []);
-          setCountries(Array.isArray(masterRes[8]) ? (masterRes[8] as CountryItem[]) : []);
-          setAddressTypes(Array.isArray(masterRes[9]) ? (masterRes[9] as AddressTypeItem[]) : []);
+          const loadedBdes = Array.isArray(masterRes[5]) ? (masterRes[5] as BdeUserItem[]) : [];
+          setBdeUsers(loadedBdes);
+          setCountries(Array.isArray(masterRes[6]) ? (masterRes[6] as CountryItem[]) : []);
+          setAddressTypes(Array.isArray(masterRes[7]) ? (masterRes[7] as AddressTypeItem[]) : []);
+          const loadedCoordinators = Array.isArray(masterRes[8]) ? (masterRes[8] as SalesCoordinatorItem[]) : [];
+          setSalesCoordinators(loadedCoordinators);
+          const loadedDirectors = Array.isArray(masterRes[9]) ? (masterRes[9] as DirectorItem[]) : [];
+          setDirectors(loadedDirectors);
+
+          // Restore multi-selected coordinators
+          const initialCoordinatorIds: number[] = [];
+          if (customerRes.salesCoordinatorName) {
+            const splitNames = customerRes.salesCoordinatorName
+              .split(",")
+              .map((s) => s.trim().toLowerCase())
+              .filter(Boolean);
+            for (const name of splitNames) {
+              const found = loadedCoordinators.find(
+                (sc) => sc.salesCoordinatorName.trim().toLowerCase() === name
+              );
+              if (found && !initialCoordinatorIds.includes(found.salesCoordinatorId)) {
+                initialCoordinatorIds.push(found.salesCoordinatorId);
+              }
+            }
+          }
+          if (
+            customerRes.salesCoordinatorId &&
+            !initialCoordinatorIds.includes(Number(customerRes.salesCoordinatorId))
+          ) {
+            initialCoordinatorIds.unshift(Number(customerRes.salesCoordinatorId));
+          }
+          setSelectedCoordinatorIds(initialCoordinatorIds);
+
+          // Resolve coordinator name from ID if name was not stored
+          let resolvedCoordinatorName = customerRes.salesCoordinatorName || "";
+          if (!resolvedCoordinatorName && initialCoordinatorIds.length > 0) {
+            resolvedCoordinatorName = loadedCoordinators
+              .filter((sc) => initialCoordinatorIds.includes(sc.salesCoordinatorId))
+              .map((sc) => sc.salesCoordinatorName)
+              .join(", ");
+          }
+
+          // Restore Customer Owner
+          let resolvedOwnerVal = "";
+          if (customerRes.customerOwnerType && customerRes.customerOwnerId) {
+            resolvedOwnerVal = `${customerRes.customerOwnerType}:${customerRes.customerOwnerId}`;
+          } else if (customerRes.customerOwnerName) {
+            const matchedDir = loadedDirectors.find(
+              (d) =>
+                d.directorName.trim().toLowerCase() ===
+                customerRes.customerOwnerName?.trim().toLowerCase()
+            );
+            if (matchedDir) {
+              resolvedOwnerVal = `Director:${matchedDir.directorId}`;
+            } else {
+              const matchedBde = loadedBdes.find(
+                (b) =>
+                  b.value.trim().toLowerCase() ===
+                  customerRes.customerOwnerName?.trim().toLowerCase()
+              );
+              if (matchedBde) {
+                resolvedOwnerVal = `BDE:${matchedBde.id}`;
+              }
+            }
+          }
+          if (!resolvedOwnerVal && customerRes.customerOwnerId) {
+            const matchedDir = loadedDirectors.find(
+              (d) => d.directorId === Number(customerRes.customerOwnerId)
+            );
+            if (matchedDir) {
+              resolvedOwnerVal = `Director:${matchedDir.directorId}`;
+            } else {
+              const matchedBde = loadedBdes.find(
+                (b) => b.id === Number(customerRes.customerOwnerId)
+              );
+              if (matchedBde) {
+                resolvedOwnerVal = `BDE:${matchedBde.id}`;
+              }
+            }
+          }
+          setCustomerOwnerValue(resolvedOwnerVal);
 
           const mergedAddresses =
             addressesRes && addressesRes.length > 0
@@ -116,6 +270,12 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
 
           setFormData({
             ...customerRes,
+            paymentTermsId: customerRes.paymentTermsId ?? customerRes.paymentTermId,
+            salesCoordinatorId:
+              initialCoordinatorIds.length > 0
+                ? initialCoordinatorIds[0]
+                : (customerRes.salesCoordinatorId ? Number(customerRes.salesCoordinatorId) : undefined),
+            salesCoordinatorName: resolvedCoordinatorName || customerRes.salesCoordinatorName || "",
             addresses: mergedAddresses,
             registrationDate: customerRes.registrationDate
               ? customerRes.registrationDate.substring(0, 10)
@@ -124,7 +284,7 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
               ? customerRes.visitedDate.substring(0, 10)
               : "",
           });
-        } catch (err: unknown) {
+        } catch (err) {
           console.error("Failed to load customer:", err);
           toast.error("Failed to load customer details.");
           onClose();
@@ -204,7 +364,58 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
         gstin: formData.gstin?.trim() || undefined,
         cin: formData.cin?.trim() || undefined,
         msmeNumber: formData.msmeNumber?.trim() || undefined,
-        salesCoordinatorName: formData.salesCoordinatorName?.trim() || undefined,
+
+        // Business Information
+        industryId: formData.industryId ? Number(formData.industryId) : null,
+        industryName:
+          formData.industryId
+            ? industries.find((i) => i.industryId === Number(formData.industryId))?.industryName || null
+            : null,
+        customerStatusId: formData.customerStatusId ? Number(formData.customerStatusId) : null,
+        customerStatusName:
+          formData.customerStatusId
+            ? statuses.find((s) => s.customerStatusId === Number(formData.customerStatusId))?.statusName || null
+            : null,
+        customerSourceId: formData.customerSourceId ? Number(formData.customerSourceId) : null,
+        customerSourceName:
+          formData.customerSourceId
+            ? sources.find((s) => s.customerSourceId === Number(formData.customerSourceId))?.sourceName || null
+            : null,
+        customerAreaId: formData.customerAreaId ? Number(formData.customerAreaId) : null,
+        customerAreaName:
+          formData.customerAreaId
+            ? areas.find((a) => a.customerAreaId === Number(formData.customerAreaId))?.areaName || null
+            : null,
+        paymentTermsId:
+          formData.paymentTermsId || formData.paymentTermId
+            ? Number(formData.paymentTermsId || formData.paymentTermId)
+            : null,
+        paymentTermName:
+          formData.paymentTermsId || formData.paymentTermId
+            ? paymentTerms.find((p) => p.paymentTermId === Number(formData.paymentTermsId || formData.paymentTermId))?.paymentTermName || null
+            : null,
+
+        // Sales Assignment fields
+        directorId: formData.directorId ? Number(formData.directorId) : null,
+        directorName: formData.directorName?.trim() || null,
+        bdeUserId: formData.bdeUserId ? Number(formData.bdeUserId) : null,
+        bdeUserName: formData.bdeUserName?.trim() || null,
+        salesCoordinatorId:
+          selectedCoordinatorIds.length > 0
+            ? Number(selectedCoordinatorIds[0])
+            : (formData.salesCoordinatorId ? Number(formData.salesCoordinatorId) : null),
+        salesCoordinatorName:
+          formData.salesCoordinatorName?.trim() ||
+          (selectedCoordinatorIds.length > 0
+            ? salesCoordinators
+                .filter((sc) => selectedCoordinatorIds.includes(sc.salesCoordinatorId))
+                .map((sc) => sc.salesCoordinatorName)
+                .join(", ")
+            : null),
+        customerOwnerId: formData.customerOwnerId ? Number(formData.customerOwnerId) : null,
+        customerOwnerName: formData.customerOwnerName?.trim() || null,
+        customerOwnerType: formData.customerOwnerType || null,
+
         remarks: formData.remarks?.trim() || undefined,
         addresses: (formData.addresses || []).map((addr) => ({
           ...addr,
@@ -621,44 +832,59 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
                     </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                      {/* Field 1: Director */}
                       <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                        <label htmlFor="edit_directors" className="block text-xs font-medium text-gray-700 mb-1">
                           Director
                         </label>
                         <select
+                          id="edit_directors"
                           name="directorId"
                           value={formData.directorId ?? ""}
-                          onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            const dirId = val ? Number(val) : 0;
+                            const found = directors.find((d) => d.directorId === dirId);
+                            setFormData((prev) => ({
+                              ...prev,
+                              directorId: dirId,
+                              directorName: found ? found.directorName : "",
+                            }));
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
                         >
                           <option value="">Select Director</option>
-                          {(Array.isArray(employees) ? employees : []).map((emp) => {
-                            const displayName =
-                              emp.fullName ||
-                              [emp.firstName, emp.lastName].filter(Boolean).join(" ") ||
-                              `Employee #${emp.id}`;
-                            return (
-                              <option key={emp.id} value={emp.id}>
-                                {displayName}
-                                {emp.designation ? ` (${emp.designation})` : ""}
-                              </option>
-                            );
-                          })}
+                          {directors.map((dir) => (
+                            <option key={dir.directorId} value={dir.directorId}>
+                              {dir.directorName} {dir.directorCode ? `(${dir.directorCode})` : ""}
+                            </option>
+                          ))}
                         </select>
                       </div>
 
+                      {/* Field 2: BDE */}
                       <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                        <label htmlFor="edit_bde" className="block text-xs font-medium text-gray-700 mb-1">
                           BDE (Business Development Executive)
                         </label>
                         <select
+                          id="edit_bde"
                           name="bdeUserId"
                           value={formData.bdeUserId ?? ""}
-                          onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            const bdeId = val ? Number(val) : 0;
+                            const found = bdeUsers.find((b) => b.id === bdeId);
+                            setFormData((prev) => ({
+                              ...prev,
+                              bdeUserId: bdeId,
+                              bdeUserName: found ? found.value : "",
+                            }));
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
                         >
                           <option value="">Select BDE User</option>
-                          {(Array.isArray(bdeUsers) ? bdeUsers : []).map((bde) => (
+                          {bdeUsers.map((bde) => (
                             <option key={bde.id} value={bde.id}>
                               {bde.value} {bde.code ? `(${bde.code})` : ""}
                             </option>
@@ -666,42 +892,119 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
                         </select>
                       </div>
 
+                      {/* Field 3: Sales Coordinators (Multi-select with removable chips) */}
                       <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
-                          Sales Coordinator
-                        </label>
-                        <input
-                          type="text"
-                          name="salesCoordinatorName"
-                          value={formData.salesCoordinatorName || ""}
-                          onChange={handleInputChange}
-                          placeholder="Enter Sales Coordinator name"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        <div className="flex items-center justify-between mb-1">
+                          <label htmlFor="edit_sales_coordinators" className="block text-xs font-medium text-gray-700">
+                            Sales Coordinators
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => setIsAddCoordinatorOpen(true)}
+                            className="text-xs font-semibold text-[#FF7900] hover:text-[#e06800] flex items-center gap-1 cursor-pointer transition"
+                          >
+                            <Plus size={13} />
+                            <span>Add New</span>
+                          </button>
+                        </div>
+                        <Select<CoordinatorSelectOption, true>
+                          id="edit_sales_coordinators"
+                          isMulti
+                          isClearable
+                          isSearchable
+                          placeholder="Select or search Sales Coordinator..."
+                          options={salesCoordinators.map((sc) => ({
+                            value: sc.salesCoordinatorId,
+                            label: `${sc.salesCoordinatorName}${
+                              sc.salesCoordinatorCode ? ` (${sc.salesCoordinatorCode})` : ""
+                            }`,
+                            coordinatorName: sc.salesCoordinatorName,
+                          }))}
+                          value={salesCoordinators
+                            .filter((sc) => selectedCoordinatorIds.includes(sc.salesCoordinatorId))
+                            .map((sc) => ({
+                              value: sc.salesCoordinatorId,
+                              label: `${sc.salesCoordinatorName}${
+                                sc.salesCoordinatorCode ? ` (${sc.salesCoordinatorCode})` : ""
+                              }`,
+                              coordinatorName: sc.salesCoordinatorName,
+                            }))}
+                          onChange={(selected) => {
+                            const items = (selected || []) as readonly CoordinatorSelectOption[];
+                            const ids = items.map((i) => i.value);
+                            const names = items.map((i) => i.coordinatorName).join(", ");
+                            setSelectedCoordinatorIds(ids);
+                            setFormData((prev) => ({
+                              ...prev,
+                              salesCoordinatorId: ids.length > 0 ? ids[0] : undefined,
+                              salesCoordinatorName: names,
+                            }));
+                          }}
+                          styles={customerSelectStyles}
                         />
                       </div>
 
+                      {/* Field 4: Customer Owner (Grouped into Directors and BDEs) */}
                       <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                        <label htmlFor="edit_customer_owner" className="block text-xs font-medium text-gray-700 mb-1">
                           Customer Owner
                         </label>
                         <select
-                          name="customerOwnerId"
-                          value={formData.customerOwnerId ?? ""}
-                          onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          id="edit_customer_owner"
+                          name="customerOwnerValue"
+                          value={customerOwnerValue}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setCustomerOwnerValue(val);
+                            if (!val) {
+                              setFormData((prev) => ({
+                                ...prev,
+                                customerOwnerId: 0,
+                                customerOwnerName: "",
+                                customerOwnerType: "",
+                              }));
+                              return;
+                            }
+                            const [type, idStr] = val.split(":");
+                            const id = Number(idStr);
+                            let ownerName = "";
+                            if (type === "Director") {
+                              const found = directors.find((d) => d.directorId === id);
+                              ownerName = found ? found.directorName : "";
+                            } else if (type === "BDE") {
+                              const found = bdeUsers.find((b) => b.id === id);
+                              ownerName = found ? found.value : "";
+                            }
+                            setFormData((prev) => ({
+                              ...prev,
+                              customerOwnerId: id,
+                              customerOwnerName: ownerName,
+                              customerOwnerType: type as "Director" | "BDE",
+                            }));
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
                         >
                           <option value="">Select Customer Owner</option>
-                          {Array.isArray(salesManagers) && salesManagers.length > 0
-                            ? salesManagers.map((mgr) => (
-                                <option key={mgr.id} value={mgr.id}>
-                                  {mgr.userName} {mgr.code ? `(${mgr.code})` : ""}
-                                </option>
-                              ))
-                            : (Array.isArray(employees) ? employees : []).map((emp) => (
-                                <option key={emp.id} value={emp.id}>
-                                  {emp.fullName}
-                                </option>
-                              ))}
+                          <optgroup label="Directors">
+                            {directors.map((dir) => (
+                              <option
+                                key={`Director:${dir.directorId}`}
+                                value={`Director:${dir.directorId}`}
+                              >
+                                {dir.directorName} {dir.directorCode ? `(${dir.directorCode})` : ""} - Director
+                              </option>
+                            ))}
+                          </optgroup>
+                          <optgroup label="BDEs">
+                            {bdeUsers.map((bde) => (
+                              <option
+                                key={`BDE:${bde.id}`}
+                                value={`BDE:${bde.id}`}
+                              >
+                                {bde.value} {bde.code ? `(${bde.code})` : ""} - BDE
+                              </option>
+                            ))}
+                          </optgroup>
                         </select>
                       </div>
                     </div>
@@ -853,6 +1156,12 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
           </div>
         </form>
       </div>
+
+      <AddSalesCoordinatorModal
+        isOpen={isAddCoordinatorOpen}
+        onClose={() => setIsAddCoordinatorOpen(false)}
+        onSuccess={refreshSalesCoordinators}
+      />
     </div>
   );
 };

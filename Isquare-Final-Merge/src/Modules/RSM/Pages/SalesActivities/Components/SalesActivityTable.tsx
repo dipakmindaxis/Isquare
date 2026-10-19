@@ -70,7 +70,7 @@ export const SalesActivityTable: React.FC<SalesActivityTableProps> = ({
       <div className="overflow-x-auto w-full">
         <div className="min-w-[850px]">
           <table className="w-full text-sm">
-            <thead className="bg-[#154068] text-white">
+            <thead className="bg-[#FF7900] text-white border-b border-[#e06800]">
               <tr>
                 <th className="px-4 py-3.5 text-left text-[12px] font-bold uppercase tracking-[0.5px]">
                   Sr.
@@ -109,7 +109,7 @@ export const SalesActivityTable: React.FC<SalesActivityTableProps> = ({
                 <tr>
                   <td colSpan={10} className="text-center py-12 text-gray-500">
                     <div className="flex flex-col items-center justify-center gap-2">
-                      <div className="w-7 h-7 border-2 border-[#154068] border-t-transparent rounded-full animate-spin" />
+                      <div className="w-7 h-7 border-2 border-[#FF7900] border-t-transparent rounded-full animate-spin" />
                       <span className="text-xs font-medium text-gray-500">
                         Loading sales activities...
                       </span>

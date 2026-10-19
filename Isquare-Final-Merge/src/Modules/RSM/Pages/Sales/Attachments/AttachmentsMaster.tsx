@@ -218,7 +218,7 @@ export const AttachmentsMaster: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white rounded-xl shadow-xs border border-gray-200 p-5 mb-6">
         <div className="flex items-center gap-3.5">
-          <div className="w-11 h-11 bg-teal-50 text-[#00234a] rounded-xl flex items-center justify-center font-bold">
+          <div className="w-11 h-11 bg-orange-50 border border-[#FF7900]/30 text-[#FF7900] rounded-xl flex items-center justify-center font-bold shadow-xs">
             <Paperclip className="w-5 h-5" />
           </div>
           <div>
@@ -226,7 +226,7 @@ export const AttachmentsMaster: React.FC = () => {
               <h1 className="text-xl font-bold text-gray-900">
                 Sales Attachments Master
               </h1>
-              <span className="text-[11px] font-semibold bg-teal-50 text-teal-700 border border-teal-200 px-2.5 py-0.5 rounded-full">
+              <span className="text-[11px] font-semibold bg-orange-50 text-[#FF7900] border border-[#FF7900]/20 px-2.5 py-0.5 rounded-full">
                 {attachments.length} Stored Documents
               </span>
             </div>
@@ -240,10 +240,10 @@ export const AttachmentsMaster: React.FC = () => {
           <button
             type="button"
             onClick={handleOpenUpload}
-            className="flex items-center gap-2 bg-[#00234a] hover:bg-[#001833] text-white font-medium px-5 py-2.5 rounded-lg transition shadow-xs cursor-pointer text-sm"
+            className="flex items-center gap-2 bg-[#FF7900] hover:bg-[#E66D00] text-white font-medium px-5 py-2.5 rounded-lg transition shadow-md shadow-orange-500/25 cursor-pointer text-sm"
           >
             <Upload size={18} />
-            <span>+ Upload Document</span>
+            <span>Upload Document</span>
           </button>
         </div>
       </div>
@@ -257,7 +257,7 @@ export const AttachmentsMaster: React.FC = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search document name, company, code..."
-            className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#00234a] transition"
+            className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 focus:border-[#FF7900] transition"
           />
         </div>
 
@@ -482,8 +482,8 @@ export const AttachmentsMaster: React.FC = () => {
                   <label className="block font-semibold text-gray-700 mb-1">
                     Select File(s) <span className="text-red-500">*</span>
                   </label>
-                  <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 hover:border-[#00234a] rounded-xl cursor-pointer bg-gray-50 hover:bg-white transition">
-                    <Upload size={22} className="text-gray-400 mb-1" />
+                  <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 hover:border-[#FF7900] rounded-xl cursor-pointer bg-gray-50 hover:bg-orange-50/20 transition">
+                    <Upload size={22} className="text-[#FF7900] mb-1" />
                     <span className="text-xs font-semibold text-gray-700">
                       Click to choose documents or photos
                     </span>
@@ -519,14 +519,14 @@ export const AttachmentsMaster: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsUploadOpen(false)}
-                  className="px-5 py-2 text-sm bg-gray-200 hover:bg-gray-300 rounded-lg text-gray-700 font-medium"
+                  className="px-5 py-2 text-sm bg-gray-200 hover:bg-gray-300 rounded-lg text-gray-700 font-medium cursor-pointer transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="flex items-center gap-2 px-6 py-2 text-sm bg-[#00234a] hover:bg-[#001833] text-white rounded-lg font-medium"
+                  className="flex items-center gap-2 px-6 py-2 text-sm bg-[#FF7900] hover:bg-[#E66D00] text-white rounded-lg font-medium cursor-pointer transition shadow-sm"
                 >
                   {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
                   <span>{isSaving ? "Uploading..." : "Save Upload"}</span>

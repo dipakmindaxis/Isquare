@@ -336,11 +336,11 @@ const LocationMaster: React.FC<{ kind: MasterKind }> = ({ kind }) => {
     <div className="min-h-full bg-gray-50 p-4 md:p-6">
       <div className="mb-5 flex flex-col justify-between gap-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm md:flex-row md:items-center">
         <div className="flex items-center gap-3.5">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-[#00234a]">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-50 border border-[#FF7900]/30 text-[#FF7900]">
             {details.icon}
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight text-[#00234a]">{details.title}</h1>
+            <h1 className="text-xl font-bold tracking-tight text-gray-900">{details.title}</h1>
             <p className="mt-0.5 text-xs text-gray-500">
               {details.description}
             </p>
@@ -352,7 +352,7 @@ const LocationMaster: React.FC<{ kind: MasterKind }> = ({ kind }) => {
             setSelectedRecord(null);
             setDialogMode("add");
           }}
-          className="flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg bg-[#00234a] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#001833]"
+          className="flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg bg-[#FF7900] px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-orange-500/25 transition hover:bg-[#E66D00]"
         >
           <Plus size={18} />
           <span>{details.addLabel}</span>
@@ -367,15 +367,15 @@ const LocationMaster: React.FC<{ kind: MasterKind }> = ({ kind }) => {
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
             placeholder={`Search ${kind} records...`}
-            className="min-h-11 w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-4 text-sm text-gray-800 placeholder-gray-400 transition focus:border-[#00234a] focus:outline-none focus:ring-2 focus:ring-[#00234a]/15"
+            className="min-h-11 w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-4 text-sm text-gray-800 placeholder-gray-400 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20"
           />
         </div>
       </div>
 
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[680px] text-sm">
-            <thead className="bg-[#00234a] text-xs uppercase tracking-wider text-white">
+          <table className="w-full min-w-[680px] text-xs">
+            <thead className="bg-[#FF7900] text-xs uppercase tracking-wider text-white border-b border-[#e06800]">
               <tr>
                 <th className="px-6 py-3.5 text-left">
                   {kind === "country"
@@ -410,7 +410,7 @@ const LocationMaster: React.FC<{ kind: MasterKind }> = ({ kind }) => {
               {isLoading ? (
                 <tr>
                   <td colSpan={emptyColSpan} className="py-12 text-center text-gray-500">
-                    <Loader2 className="mr-2 inline-block animate-spin text-[#00234a]" />
+                    <Loader2 className="mr-2 inline-block animate-spin text-[#FF7900]" />
                     Loading {kind} records...
                   </td>
                 </tr>
@@ -421,7 +421,7 @@ const LocationMaster: React.FC<{ kind: MasterKind }> = ({ kind }) => {
                     <button
                       type="button"
                       onClick={() => void fetchItems()}
-                      className="font-medium text-[#00234a] underline"
+                      className="font-medium text-[#FF7900] underline"
                     >
                       Retry
                     </button>
@@ -719,22 +719,22 @@ const LocationMasterDialog: React.FC<LocationMasterDialogProps> = ({
   const labelClass =
     "mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-700";
   const inputClass =
-    "min-h-11 w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 transition focus:border-[#00234a] focus:outline-none focus:ring-2 focus:ring-[#00234a]/15 disabled:bg-gray-100";
+    "min-h-11 w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 disabled:bg-gray-100";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
       <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-gray-200 bg-white shadow-xl">
         <form onSubmit={(event) => void handleSubmit(event)}>
-          <div className="flex items-center justify-between border-b border-gray-200 bg-[#154068] p-5 text-white sm:p-6">
+          <div className="flex items-center justify-between border-b border-[#e06800] bg-[#FF7900] p-5 text-white sm:p-6">
             <div className="flex items-center gap-3.5">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 text-white">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/20 text-white">
                 {pageDetails[kind].icon}
               </div>
               <div>
                 <h2 className="text-lg font-bold capitalize text-white">
                   {title}
                 </h2>
-                <p className="mt-0.5 text-xs text-white/75">
+                <p className="mt-0.5 text-xs text-white/90">
                   {mode === "view"
                     ? `View ${kind} information`
                     : `Enter ${kind} details`}
@@ -931,7 +931,7 @@ const LocationMasterDialog: React.FC<LocationMasterDialogProps> = ({
                   updateField("isActive", event.target.checked)
                 }
                 disabled={readOnly}
-                className="h-4 w-4 cursor-pointer rounded border-gray-300 text-[#00234a] focus:ring-[#00234a] disabled:cursor-default"
+                className="h-4 w-4 cursor-pointer rounded border-gray-300 text-[#FF7900] focus:ring-[#FF7900] disabled:cursor-default"
               />
               <span className="text-sm font-medium text-gray-700">
                 Active Status
@@ -944,7 +944,7 @@ const LocationMasterDialog: React.FC<LocationMasterDialogProps> = ({
               type="button"
               onClick={onClose}
               disabled={isSaving}
-              className="min-h-11 rounded-lg bg-gray-500 px-6 py-2 text-sm font-semibold text-white transition hover:bg-gray-600"
+              className="min-h-11 rounded-lg bg-gray-200 px-6 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-300 cursor-pointer"
             >
               {readOnly ? "Close" : "Cancel"}
             </button>
@@ -952,7 +952,7 @@ const LocationMasterDialog: React.FC<LocationMasterDialogProps> = ({
               <button
                 type="submit"
                 disabled={isSaving}
-                className="flex min-h-11 items-center gap-2 rounded-lg bg-[#00234a] px-6 py-2 text-sm font-semibold text-white transition hover:bg-[#001833] disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex min-h-11 items-center gap-2 rounded-lg bg-[#FF7900] px-6 py-2 text-sm font-semibold text-white transition hover:bg-[#E66D00] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer shadow-sm"
               >
                 {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
                 <span>
