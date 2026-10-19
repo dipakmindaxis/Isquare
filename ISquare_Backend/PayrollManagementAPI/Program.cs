@@ -365,10 +365,16 @@ builder.Services.AddSignalR();
 //builder.Services.AddScoped<IcustomerTypeService, CustomerTypeService>();
 
 builder.Services.AddScoped<IFileService, FileService>();
+
+//enquiry masters
 builder.Services.AddScoped<IEnquirySourceService, EnquirySourceService>();
 builder.Services.AddScoped<IEnquiryTypeService, EnquiryTypeService>();
 builder.Services.AddScoped<IEnquiryPriorityService, EnquiryPriorityService>();
 builder.Services.AddScoped<IEnquiryStageService, EnquiryStageService>();
+builder.Services.AddScoped<ILostReasonService, LostReasonService>();
+builder.Services.AddScoped<IEnquiryStatusService, EnquiryStatusService>();
+builder.Services.AddScoped<IProductCategoryService, ProductCategoryService>();
+builder.Services.AddScoped<IProductServiceItemService, ProductServiceItemService>();
 
 
 
