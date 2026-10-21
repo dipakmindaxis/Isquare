@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from "react";
-import { Trash2, Plus, Sparkles } from "lucide-react";
+import React, { useState, useMemo, useRef } from "react";
+import { Trash2, Camera } from "lucide-react";
+import { toast } from "sonner";
 import type { QuotationItem, Product } from "../models/quotationModels";
 import QuotationAccessoryRow from "./QuotationAccessoryRow";
 import {
@@ -25,6 +26,7 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
   disabled = false,
 }) => {
   const [imageError, setImageError] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Match selected product from availableProducts
   const selectedProduct = useMemo(() => {
@@ -71,7 +73,7 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
     item.gstRate
   );
 
-  // Compute total for this parent and its accessories
+  // Compute total for this parent and its accessories (if any exist)
   let accessoriesTotal = 0;
   (item.accessories || []).forEach((acc) => {
     const accCalc = calculateItemTotals(
@@ -84,6 +86,64 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
   });
 
   const combinedTotal = calc.lineTotal + accessoriesTotal;
+
+  // 4. HSN Code lookup
+  const hsnCodeValue =
+    (item as any).hsnCode ||
+    (item as any).hsn ||
+    (selectedProduct as any)?.hsnCode ||
+    (selectedProduct as any)?.hsn ||
+    "—";
+
+  // 11. Purchase Rate lookup
+  const rawPurchaseRate =
+    (item as any).purchaseRate ??
+    (item as any).purchasePrice ??
+    (item as any).costPrice ??
+    (selectedProduct as any)?.purchaseRate ??
+    (selectedProduct as any)?.purchasePrice ??
+    (selectedProduct as any)?.costPrice ??
+    null;
+  const purchaseRateDisplay =
+    rawPurchaseRate != null && !isNaN(Number(rawPurchaseRate))
+      ? formatINR(Number(rawPurchaseRate))
+      : "—";
+
+  // 12. Profit % lookup / calculation
+  const rawProfit =
+    (item as any).profitPercentage ??
+    (item as any).profitPercent ??
+    (item as any).profit ??
+    (selectedProduct as any)?.profitPercentage ??
+    (selectedProduct as any)?.profitPercent ??
+    (selectedProduct as any)?.profit ??
+    null;
+
+  let profitDisplay = "—";
+  if (rawProfit != null && !isNaN(Number(rawProfit))) {
+    profitDisplay = `${Number(rawProfit).toFixed(1)}%`;
+  } else if (
+    rawPurchaseRate != null &&
+    Number(rawPurchaseRate) > 0 &&
+    item.rate > 0
+  ) {
+    const margin = (((item.rate - Number(rawPurchaseRate)) / Number(rawPurchaseRate)) * 100).toFixed(1);
+    profitDisplay = `${margin}%`;
+  }
+
+  // 13. Stock lookup
+  const rawStock =
+    (item as any).stockQuantity ??
+    (item as any).stock ??
+    (item as any).availableStock ??
+    (selectedProduct as any)?.stockQuantity ??
+    (selectedProduct as any)?.stock ??
+    (selectedProduct as any)?.availableStock ??
+    null;
+  const stockDisplay =
+    rawStock != null && !isNaN(Number(rawStock))
+      ? String(rawStock)
+      : "—";
 
   const handleProductSelect = (selectedId: string) => {
     if (!selectedId) return;
@@ -112,35 +172,41 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
     }
   };
 
-  const handleAddAccessory = () => {
-    const newAcc: QuotationItem = {
-      quotationItemId: 0,
-      quotationId: item.quotationId || 0,
-      productId: null,
-      parentQuotationItemId: item.quotationItemId || null,
-      isAccessory: true,
-      itemCode: "ACC-01",
-      itemName: "Accessory Item",
-      brand: item.brand || "ISQUARE",
-      specification: "Standard industrial mounting & cable accessory",
-      quantity: 1,
-      unitOfMeasurementId: 1,
-      unitName: "Nos",
-      rate: 1500,
-      discountPercentage: 0,
-      discountAmount: 0,
-      gstRate: 18,
-      taxableAmount: 1500,
-      taxAmount: 270,
-      lineTotal: 1770,
-      displayOrder: (item.accessories?.length || 0) + 1,
-      isActive: true,
-      isDeleted: false,
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image file size should be less than 5MB");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      setImageError(false);
+      onUpdate({
+        ...item,
+        imageUrl: result,
+      } as QuotationItem);
+      toast.success("Product image updated for this quotation item");
     };
-    onUpdate({
-      ...item,
-      accessories: [...(item.accessories || []), newAcc],
-    });
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
+  const handleResetImage = () => {
+    setImageError(false);
+    const updated = { ...item };
+    delete (updated as any).imageUrl;
+    delete (updated as any).image;
+    onUpdate(updated);
+    toast.info("Reverted to original product image");
   };
 
   const handleUpdateAccessory = (index: number, updatedAcc: QuotationItem) => {
@@ -163,7 +229,7 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
   return (
     <>
       <tr className="hover:bg-slate-50/70 border-b border-gray-200 transition text-xs">
-        {/* Product / Code / Brand */}
+        {/* 1. Select / Code / Brand */}
         <td className="p-3 align-top min-w-[240px]">
           <div className="space-y-1.5">
             {/* Predefined product select dropdown */}
@@ -171,7 +237,7 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
               value={item.productId ? String(item.productId) : ""}
               onChange={(e) => handleProductSelect(e.target.value)}
               disabled={disabled}
-              className="w-full text-xs py-1.5 px-2 bg-white border border-gray-300 rounded font-semibold text-gray-800 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+              className="w-full text-xs py-1.5 px-2 bg-white border border-gray-300 rounded font-semibold text-gray-800 focus:ring-1 focus:ring-blue-500 focus:outline-none cursor-pointer"
             >
               <option value="">-- Choose Existing Product or Custom --</option>
               {availableProducts.map((p) => (
@@ -215,31 +281,10 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
               required
               className="w-full text-xs py-1 px-2 bg-white border border-gray-300 rounded font-semibold focus:ring-1 focus:ring-blue-500 focus:outline-none"
             />
-
-            {/* Accessory trigger button */}
-            {!disabled && (
-              <div className="pt-1 flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={handleAddAccessory}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 transition"
-                >
-                  <Plus size={12} />
-                  <span>Add Accessory</span>
-                </button>
-                {item.accessories && item.accessories.length > 0 && (
-                  <span className="text-[11px] font-semibold text-blue-600 flex items-center gap-1">
-                    <Sparkles size={11} />
-                    {item.accessories.length}{" "}
-                    {item.accessories.length === 1 ? "accessory" : "accessories"}
-                  </span>
-                )}
-              </div>
-            )}
           </div>
         </td>
 
-        {/* Technical Specification */}
+        {/* 2. Technical Specification */}
         <td className="p-3 align-top min-w-[200px]">
           <textarea
             placeholder="Technical Specification..."
@@ -253,9 +298,9 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
           />
         </td>
 
-        {/* Product Image Thumbnail matching Screenshot 2 & 3 */}
-        <td className="p-3 align-top text-center w-20">
-          <div className="w-12 h-12 rounded-2xl bg-slate-100 border border-slate-200/90 flex items-center justify-center p-1 text-center shadow-2xs overflow-hidden mx-auto mt-1">
+        {/* 3. Image with Quotation-Specific Change Control */}
+        <td className="p-3 align-top text-center w-24 min-w-[80px]">
+          <div className="w-12 h-12 rounded-2xl bg-slate-100 border border-slate-200/90 flex items-center justify-center p-1 text-center shadow-2xs overflow-hidden mx-auto mt-1 relative group">
             {productImageUrl && !imageError ? (
               <img
                 src={productImageUrl}
@@ -269,10 +314,48 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
               </span>
             )}
           </div>
+
+          {!disabled && (
+            <div className="mt-1 flex flex-col items-center">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageFileChange}
+                className="hidden"
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="text-[10px] font-semibold text-blue-600 hover:text-blue-800 transition inline-flex items-center gap-0.5 cursor-pointer"
+                title="Change image for this quotation row only"
+              >
+                <Camera size={11} />
+                <span>Change</span>
+              </button>
+              {(item as any).imageUrl && (
+                <button
+                  type="button"
+                  onClick={handleResetImage}
+                  className="text-[9px] text-gray-400 hover:text-rose-600 transition mt-0.5 cursor-pointer"
+                  title="Revert to master product image"
+                >
+                  Reset
+                </button>
+              )}
+            </div>
+          )}
         </td>
 
-        {/* Quantity & Unit */}
-        <td className="p-3 align-top w-24">
+        {/* 4. HSN Code */}
+        <td className="p-3 align-top text-center w-24 min-w-[85px]">
+          <div className="py-1.5 px-2 bg-slate-50 border border-slate-200 rounded text-center font-mono text-xs font-semibold text-gray-800">
+            {hsnCodeValue}
+          </div>
+        </td>
+
+        {/* 5. Qty */}
+        <td className="p-3 align-top w-20 min-w-[70px]">
           <input
             type="number"
             min="0.001"
@@ -287,6 +370,10 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
             disabled={disabled}
             className="w-full text-xs py-1.5 px-2 text-center bg-white border border-gray-300 rounded font-bold text-gray-900 focus:ring-1 focus:ring-blue-500 focus:outline-none"
           />
+        </td>
+
+        {/* 6. UOM */}
+        <td className="p-3 align-top w-24 min-w-[80px]">
           <select
             value={item.unitOfMeasurementId || 1}
             onChange={(e) => {
@@ -299,7 +386,7 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
               });
             }}
             disabled={disabled}
-            className="w-full text-[11px] mt-1 py-0.5 px-1 bg-white border border-gray-200 rounded text-gray-600 focus:outline-none"
+            className="w-full text-xs py-1.5 px-2 bg-white border border-gray-300 rounded text-gray-700 font-medium focus:ring-1 focus:ring-blue-500 focus:outline-none cursor-pointer"
           >
             {STANDARD_UOMS.map((uom) => (
               <option key={uom.id} value={uom.id}>
@@ -309,8 +396,8 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
           </select>
         </td>
 
-        {/* Rate (INR) */}
-        <td className="p-3 align-top w-28">
+        {/* 7. Rate (₹) */}
+        <td className="p-3 align-top w-28 min-w-[100px]">
           <input
             type="number"
             min="0"
@@ -327,8 +414,8 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
           />
         </td>
 
-        {/* Discount % */}
-        <td className="p-3 align-top w-20">
+        {/* 8. Disc (%) */}
+        <td className="p-3 align-top w-20 min-w-[70px]">
           <input
             type="number"
             min="0"
@@ -354,8 +441,8 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
           )}
         </td>
 
-        {/* GST % */}
-        <td className="p-3 align-top w-20">
+        {/* 9. GST (%) */}
+        <td className="p-3 align-top w-20 min-w-[70px]">
           <input
             type="number"
             min="0"
@@ -373,8 +460,8 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
           />
         </td>
 
-        {/* Line Total */}
-        <td className="p-3 align-top w-32 text-right">
+        {/* 10. Total (₹) */}
+        <td className="p-3 align-top w-28 min-w-[110px] text-right">
           <div className="text-xs font-bold text-gray-900">
             {formatINR(combinedTotal)}
           </div>
@@ -391,14 +478,35 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
           )}
         </td>
 
-        {/* Actions */}
-        <td className="p-3 align-top w-12 text-center">
+        {/* 11. Purchase Rate */}
+        <td className="p-3 align-top w-28 min-w-[100px] text-right">
+          <div className="py-1.5 px-2 bg-slate-50 border border-slate-200 rounded text-right font-medium text-xs text-gray-800">
+            {purchaseRateDisplay}
+          </div>
+        </td>
+
+        {/* 12. Profit % */}
+        <td className="p-3 align-top w-20 min-w-[75px] text-center">
+          <div className="py-1.5 px-2 bg-slate-50 border border-slate-200 rounded text-center font-medium text-xs text-gray-800">
+            {profitDisplay}
+          </div>
+        </td>
+
+        {/* 13. Stock */}
+        <td className="p-3 align-top w-20 min-w-[70px] text-center">
+          <div className="py-1.5 px-2 bg-slate-50 border border-slate-200 rounded text-center font-medium text-xs text-gray-800">
+            {stockDisplay}
+          </div>
+        </td>
+
+        {/* Actions (Delete Row) */}
+        <td className="p-3 align-top w-12 min-w-[48px] text-center">
           {!disabled && (
             <button
               type="button"
               onClick={onRemove}
-              className="p-1 text-gray-400 hover:text-rose-600 rounded transition"
-              title="Remove item"
+              className="p-1.5 text-gray-400 hover:text-rose-600 rounded transition cursor-pointer"
+              title="Remove product"
             >
               <Trash2 size={16} />
             </button>
@@ -406,7 +514,7 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
         </td>
       </tr>
 
-      {/* Render Linked Accessories */}
+      {/* Render Linked Accessories (Preserved for existing data) */}
       {item.accessories &&
         item.accessories.map((acc, aIdx) => (
           <QuotationAccessoryRow

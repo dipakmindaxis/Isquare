@@ -76,7 +76,7 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
     initialQuotation?.contactPerson || ""
   );
   const [enquiryRef, setEnquiryRef] = useState<string>(
-    initialQuotation?.enquiryRef || `ENQ-2026-${Math.floor(100 + Math.random() * 900)}`
+    initialQuotation?.enquiryRef || ""
   );
   const [quotationDate, setQuotationDate] = useState<string>(
     initialQuotation?.quotationDate || new Date().toISOString()

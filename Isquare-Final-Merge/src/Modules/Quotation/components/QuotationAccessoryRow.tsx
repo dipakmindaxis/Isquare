@@ -122,15 +122,22 @@ export const QuotationAccessoryRow: React.FC<QuotationAccessoryRowProps> = ({
         />
       </td>
 
-      {/* Accessory Image / Icon */}
-      <td className="p-3 align-top text-center w-20">
+      {/* 3. Accessory Image / Icon */}
+      <td className="p-3 align-top text-center w-24 min-w-[80px]">
         <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 mx-auto mt-1">
           <Package size={14} className="text-slate-400" />
         </div>
       </td>
 
-      {/* Quantity & Unit */}
-      <td className="p-3 align-top w-24">
+      {/* 4. HSN Code */}
+      <td className="p-3 align-top text-center w-24 min-w-[85px]">
+        <div className="py-1 px-1.5 bg-slate-50 border border-slate-200 rounded text-center font-mono text-xs text-gray-500">
+          —
+        </div>
+      </td>
+
+      {/* 5. Quantity */}
+      <td className="p-3 align-top w-20 min-w-[70px]">
         <input
           type="number"
           min="0.001"
@@ -143,8 +150,12 @@ export const QuotationAccessoryRow: React.FC<QuotationAccessoryRowProps> = ({
             })
           }
           disabled={disabled}
-          className="w-full text-xs py-1 px-2 text-center bg-white border border-gray-300 rounded font-bold focus:ring-1 focus:ring-blue-500 focus:outline-none"
+          className="w-full text-xs py-1.5 px-2 text-center bg-white border border-gray-300 rounded font-bold focus:ring-1 focus:ring-blue-500 focus:outline-none"
         />
+      </td>
+
+      {/* 6. UOM */}
+      <td className="p-3 align-top w-24 min-w-[80px]">
         <select
           value={accessory.unitOfMeasurementId || 1}
           onChange={(e) => {
@@ -157,7 +168,7 @@ export const QuotationAccessoryRow: React.FC<QuotationAccessoryRowProps> = ({
             });
           }}
           disabled={disabled}
-          className="w-full text-[11px] mt-1 py-0.5 px-1 bg-white border border-gray-200 rounded text-gray-600 focus:outline-none"
+          className="w-full text-xs py-1.5 px-2 bg-white border border-gray-300 rounded text-gray-700 font-medium focus:outline-none"
         >
           {STANDARD_UOMS.map((uom) => (
             <option key={uom.id} value={uom.id}>
@@ -167,8 +178,8 @@ export const QuotationAccessoryRow: React.FC<QuotationAccessoryRowProps> = ({
         </select>
       </td>
 
-      {/* Rate */}
-      <td className="p-3 align-top w-28">
+      {/* 7. Rate */}
+      <td className="p-3 align-top w-28 min-w-[100px]">
         <input
           type="number"
           min="0"
@@ -181,12 +192,12 @@ export const QuotationAccessoryRow: React.FC<QuotationAccessoryRowProps> = ({
             })
           }
           disabled={disabled}
-          className="w-full text-xs py-1 px-2 bg-white border border-gray-300 rounded font-semibold text-right focus:ring-1 focus:ring-blue-500 focus:outline-none"
+          className="w-full text-xs py-1.5 px-2 bg-white border border-gray-300 rounded font-semibold text-right focus:ring-1 focus:ring-blue-500 focus:outline-none"
         />
       </td>
 
-      {/* Discount % */}
-      <td className="p-3 align-top w-20">
+      {/* 8. Discount % */}
+      <td className="p-3 align-top w-20 min-w-[70px]">
         <input
           type="number"
           min="0"
@@ -203,12 +214,12 @@ export const QuotationAccessoryRow: React.FC<QuotationAccessoryRowProps> = ({
             })
           }
           disabled={disabled}
-          className="w-full text-xs py-1 px-2 text-center bg-white border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none"
+          className="w-full text-xs py-1.5 px-2 text-center bg-white border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none"
         />
       </td>
 
-      {/* GST % */}
-      <td className="p-3 align-top w-20">
+      {/* 9. GST % */}
+      <td className="p-3 align-top w-20 min-w-[70px]">
         <input
           type="number"
           min="0"
@@ -222,12 +233,12 @@ export const QuotationAccessoryRow: React.FC<QuotationAccessoryRowProps> = ({
             })
           }
           disabled={disabled}
-          className="w-full text-xs py-1 px-2 text-center bg-white border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none"
+          className="w-full text-xs py-1.5 px-2 text-center bg-white border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none"
         />
       </td>
 
-      {/* Line Total */}
-      <td className="p-3 align-top w-32 text-right">
+      {/* 10. Line Total */}
+      <td className="p-3 align-top w-28 min-w-[110px] text-right">
         <div className="text-xs font-bold text-gray-900">
           {formatINR(calc.lineTotal)}
         </div>
@@ -236,13 +247,34 @@ export const QuotationAccessoryRow: React.FC<QuotationAccessoryRowProps> = ({
         </div>
       </td>
 
-      {/* Actions */}
-      <td className="p-3 align-top w-12 text-center">
+      {/* 11. Purchase Rate */}
+      <td className="p-3 align-top w-28 min-w-[100px] text-right">
+        <div className="py-1 px-1.5 bg-slate-50 border border-slate-200 rounded text-right font-medium text-xs text-gray-400">
+          —
+        </div>
+      </td>
+
+      {/* 12. Profit % */}
+      <td className="p-3 align-top w-20 min-w-[75px] text-center">
+        <div className="py-1 px-1.5 bg-slate-50 border border-slate-200 rounded text-center font-medium text-xs text-gray-400">
+          —
+        </div>
+      </td>
+
+      {/* 13. Stock */}
+      <td className="p-3 align-top w-20 min-w-[70px] text-center">
+        <div className="py-1 px-1.5 bg-slate-50 border border-slate-200 rounded text-center font-medium text-xs text-gray-400">
+          —
+        </div>
+      </td>
+
+      {/* 14. Actions */}
+      <td className="p-3 align-top w-12 min-w-[48px] text-center">
         {!disabled && (
           <button
             type="button"
             onClick={onRemove}
-            className="p-1 text-gray-400 hover:text-rose-600 rounded transition"
+            className="p-1 text-gray-400 hover:text-rose-600 rounded transition cursor-pointer"
             title="Remove accessory"
           >
             <Trash2 size={15} />
