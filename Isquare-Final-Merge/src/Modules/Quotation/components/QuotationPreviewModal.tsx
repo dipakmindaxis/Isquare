@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Printer,
   FileText,
@@ -6,10 +6,20 @@ import {
   CheckCircle,
   RefreshCw,
   ShoppingCart,
+  FileSpreadsheet,
+  Download,
 } from "lucide-react";
+import { toast } from "sonner";
 import type { Quotation, CompanyProfile } from "../models/quotationModels";
 import type { Customer } from "../../RSM/Pages/Customer/Types/CustomerTypes";
 import { formatINR, calculateItemTotals } from "../utils/quotationCalculations";
+import { exportQuotationToPdf } from "../utils/quotationExportPdf";
+import { exportQuotationToCustomerExcel } from "../utils/quotationExportExcel";
+import {
+  isCustomerFormatQuotation,
+  getCustomerQuotationFile,
+  downloadOriginalCustomerQuotation,
+} from "../utils/customerQuotationStorage";
 
 interface QuotationPreviewModalProps {
   isOpen: boolean;
@@ -34,10 +44,52 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
   onConvertToOrder,
   isConvertingToOrder = false,
 }) => {
+  const [showDiscount, setShowDiscount] = useState<boolean>(true);
+
   if (!isOpen) return null;
+
+  const isUploadedCustomerFormat = isCustomerFormatQuotation(
+    quotation.quotationId,
+    quotation
+  );
+  const uploadedFileRecord = getCustomerQuotationFile(quotation.quotationId);
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleExportPDF = () => {
+    try {
+      if (isUploadedCustomerFormat) {
+        const ok = downloadOriginalCustomerQuotation(quotation.quotationId);
+        if (ok) {
+          toast.success("Downloaded original customer quotation file");
+          return;
+        }
+      }
+      exportQuotationToPdf(quotation, companyProfile, customer, showDiscount);
+      toast.success("PDF exported successfully");
+    } catch (e) {
+      console.error("PDF export failed:", e);
+      toast.error("Failed to generate PDF");
+    }
+  };
+
+  const handleExportExcel = () => {
+    try {
+      if (isUploadedCustomerFormat) {
+        const ok = downloadOriginalCustomerQuotation(quotation.quotationId);
+        if (ok) {
+          toast.success("Downloaded original customer quotation file");
+          return;
+        }
+      }
+      exportQuotationToCustomerExcel(quotation, showDiscount);
+      toast.success("Excel exported successfully");
+    } catch (e) {
+      console.error("Excel export failed:", e);
+      toast.error("Failed to generate Excel file");
+    }
   };
 
   // Extract contact person display
@@ -70,30 +122,63 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto print:p-0 print:bg-white print:static print:inset-auto print:overflow-visible">
       <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl border border-gray-200 my-8 flex flex-col max-h-[92vh] overflow-hidden print:shadow-none print:border-none print:my-0 print:max-h-none print:overflow-visible print:w-full print:max-w-none">
-        {/* Top Action Bar matching Screenshot 2 */}
-        <div className="p-4 px-6 border-b border-gray-800 flex items-center justify-between bg-slate-900 text-white shrink-0 print:hidden">
+        {/* Top Action Bar */}
+        <div className="p-3.5 sm:px-6 border-b border-gray-800 flex flex-wrap items-center justify-between gap-3 bg-slate-900 text-white shrink-0 print:hidden">
           <div className="flex items-center gap-2.5">
             <FileText size={18} className="text-blue-400 shrink-0" />
             <h3 className="font-bold text-sm tracking-tight text-white">
-              Customer-Facing Quotation Format (Item Codes Hidden)
+              Customer-Facing Quotation Format
             </h3>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Show/Hide Discount Column Toggle */}
+            <label className="inline-flex items-center gap-2 cursor-pointer text-xs font-medium text-slate-200 hover:text-white select-none bg-slate-800/90 px-3 py-1.5 rounded-lg border border-slate-700 transition">
+              <input
+                type="checkbox"
+                checked={showDiscount}
+                onChange={(e) => setShowDiscount(e.target.checked)}
+                className="w-4 h-4 rounded text-blue-600 focus:ring-0 focus:ring-offset-0 cursor-pointer"
+              />
+              <span>Show Discount Column</span>
+            </label>
+
+            <button
+              type="button"
+              onClick={handleExportExcel}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow transition cursor-pointer"
+              title="Export quotation to Excel (.xlsx)"
+            >
+              <FileSpreadsheet size={14} />
+              <span>Export to Excel</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleExportPDF}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white shadow transition cursor-pointer"
+              title="Export quotation to PDF (.pdf)"
+            >
+              <Download size={14} />
+              <span>Export to PDF</span>
+            </button>
+
             <button
               type="button"
               onClick={handlePrint}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow transition cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow transition cursor-pointer"
+              title="Print quotation document"
             >
               <Printer size={14} />
-              <span>Print / Download PDF</span>
+              <span>Print</span>
             </button>
+
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold bg-slate-700 hover:bg-slate-600 text-white shadow transition cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-700 hover:bg-slate-600 text-white shadow transition cursor-pointer"
             >
-              <span>Back to Form Editor</span>
+              <span>Back</span>
             </button>
           </div>
         </div>
@@ -103,6 +188,35 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
           id="printableDocument"
           className="p-8 sm:p-10 overflow-y-auto space-y-6 flex-1 text-xs text-gray-800 bg-white"
         >
+          {/* Preserved Customer Quotation Banner if uploaded format */}
+          {isUploadedCustomerFormat && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-amber-900 print:hidden">
+              <div className="flex items-center gap-2.5">
+                <FileSpreadsheet size={20} className="text-amber-600 shrink-0" />
+                <div>
+                  <p className="text-xs font-semibold">
+                    Customer-Formatted Quotation Document
+                  </p>
+                  <p className="text-[11px] text-amber-700">
+                    File: {uploadedFileRecord?.fileName || "Original Customer Quotation.xlsx"} (Original customer format preserved)
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const ok = downloadOriginalCustomerQuotation(quotation.quotationId);
+                  if (ok) toast.success("Downloaded original file");
+                  else toast.error("Original file could not be retrieved");
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-semibold transition cursor-pointer self-start sm:self-auto shrink-0"
+              >
+                <Download size={13} />
+                <span>Download Original Customer File</span>
+              </button>
+            </div>
+          )}
+
           {/* Header Section: Company Branding & Quotation Metadata */}
           <div className="flex justify-between items-start border-b border-slate-200 pb-5">
             <div>
@@ -220,7 +334,7 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
             </div>
           </div>
 
-          {/* 7-Column Customer-Facing Product Table (Item Codes Hidden) */}
+          {/* 9-Column Customer-Facing Product Table (Item Codes Hidden) */}
           <div className="border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -228,18 +342,25 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
                   <th className="p-3 text-left">
                     PRODUCT NAME &amp; SPECIFICATION
                   </th>
-                  <th className="p-3 w-20 text-center">IMAGE</th>
-                  <th className="p-3 w-24 text-center">QTY/UOM</th>
-                  <th className="p-3 w-28 text-right">RATE (₹)</th>
-                  <th className="p-3 w-20 text-center">DISC%</th>
-                  <th className="p-3 w-20 text-center">GST%</th>
-                  <th className="p-3 w-32 text-right">TOTAL (₹)</th>
+                  <th className="p-3 w-16 text-center">IMAGE</th>
+                  <th className="p-3 w-20 text-center">HSN CODE</th>
+                  <th className="p-3 w-14 text-center">QTY</th>
+                  <th className="p-3 w-14 text-center">UOM</th>
+                  <th className="p-3 w-24 text-right">RATE (₹)</th>
+                  {showDiscount && (
+                    <th className="p-3 w-20 text-center">DISCOUNT (%)</th>
+                  )}
+                  <th className="p-3 w-16 text-center">GST (%)</th>
+                  <th className="p-3 w-28 text-right">TOTAL (₹)</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-xs">
                 {(quotation.items || []).length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="p-8 text-center text-slate-400">
+                    <td
+                      colSpan={showDiscount ? 9 : 8}
+                      className="p-8 text-center text-slate-400"
+                    >
                       No products added to this quotation.
                     </td>
                   </tr>
@@ -255,10 +376,15 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
                       (item as any).imageUrl ||
                       (item as any).image ||
                       (item as any).productImage;
+                    const hsnCode =
+                      (item as any).hsnCode ||
+                      (item as any).hsn ||
+                      (item as any).hsn_code ||
+                      "—";
                     return (
                       <React.Fragment key={idx}>
                         <tr className="hover:bg-slate-50/50 transition">
-                          {/* 1. Product Name & Specification (Item code hidden) */}
+                          {/* 1. Product Name & Specification */}
                           <td className="p-3.5 align-middle">
                             <div className="font-bold text-slate-900 text-xs sm:text-sm">
                               {item.itemName}
@@ -286,33 +412,45 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
                             </div>
                           </td>
 
-                          {/* 3. Qty/UOM */}
-                          <td className="p-3.5 align-middle text-center font-medium text-slate-700">
-                            {item.quantity} {item.unitName || "Nos"}
+                          {/* 3. HSN Code */}
+                          <td className="p-3.5 align-middle text-center font-mono text-[11px] text-slate-600">
+                            {hsnCode}
                           </td>
 
-                          {/* 4. Rate (₹) */}
+                          {/* 4. Qty */}
+                          <td className="p-3.5 align-middle text-center font-semibold text-slate-800">
+                            {item.quantity}
+                          </td>
+
+                          {/* 5. UOM */}
+                          <td className="p-3.5 align-middle text-center font-medium text-slate-600">
+                            {item.unitName || "Nos"}
+                          </td>
+
+                          {/* 6. Rate (₹) */}
                           <td className="p-3.5 align-middle text-right font-medium text-slate-800">
                             {formatINR(item.rate)}
                           </td>
 
-                          {/* 5. Disc% */}
-                          <td className="p-3.5 align-middle text-center text-slate-600">
-                            {item.discountPercentage}%
-                          </td>
+                          {/* 7. Discount (%) (Conditionally displayed) */}
+                          {showDiscount && (
+                            <td className="p-3.5 align-middle text-center text-slate-600">
+                              {item.discountPercentage}%
+                            </td>
+                          )}
 
-                          {/* 6. GST% */}
+                          {/* 8. GST (%) */}
                           <td className="p-3.5 align-middle text-center font-bold text-blue-600">
                             {item.gstRate}%
                           </td>
 
-                          {/* 7. Total (₹) */}
+                          {/* 9. Total (₹) */}
                           <td className="p-3.5 align-middle text-right font-bold text-slate-900">
                             {formatINR(calc.lineTotal)}
                           </td>
                         </tr>
 
-                        {/* Accessories linked to parent (Exact 7-column order, Item codes hidden) */}
+                        {/* Accessories linked to parent */}
                         {item.accessories &&
                           item.accessories.map((acc, aIdx) => {
                             const aCalc = calculateItemTotals(
@@ -323,11 +461,17 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
                             );
                             const accImg =
                               (acc as any).imageUrl || (acc as any).image;
+                            const accHsn =
+                              (acc as any).hsnCode ||
+                              (acc as any).hsn ||
+                              (acc as any).hsn_code ||
+                              "—";
                             return (
                               <tr
                                 key={`acc-${aIdx}`}
                                 className="bg-slate-50/40 text-[11px]"
                               >
+                                {/* 1. Product Name & Specification */}
                                 <td className="p-2.5 pl-6 align-middle">
                                   <span className="font-semibold text-slate-800">
                                     ↳ [Accessory] {acc.itemName}
@@ -338,6 +482,8 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
                                     </div>
                                   )}
                                 </td>
+
+                                {/* 2. Image Thumbnail */}
                                 <td className="p-2.5 align-middle text-center">
                                   <div className="w-7 h-7 rounded bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 mx-auto">
                                     {accImg ? (
@@ -354,18 +500,40 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
                                     )}
                                   </div>
                                 </td>
-                                <td className="p-2.5 align-middle text-center font-medium text-slate-700">
-                                  {acc.quantity} {acc.unitName || "Nos"}
+
+                                {/* 3. HSN Code */}
+                                <td className="p-2.5 align-middle text-center font-mono text-[10px] text-slate-600">
+                                  {accHsn}
                                 </td>
+
+                                {/* 4. Qty */}
+                                <td className="p-2.5 align-middle text-center font-semibold text-slate-800">
+                                  {acc.quantity}
+                                </td>
+
+                                {/* 5. UOM */}
+                                <td className="p-2.5 align-middle text-center font-medium text-slate-600">
+                                  {acc.unitName || "Nos"}
+                                </td>
+
+                                {/* 6. Rate (₹) */}
                                 <td className="p-2.5 align-middle text-right font-medium text-slate-800">
                                   {formatINR(acc.rate)}
                                 </td>
-                                <td className="p-2.5 align-middle text-center text-slate-600">
-                                  {acc.discountPercentage}%
-                                </td>
+
+                                {/* 7. Discount (%) */}
+                                {showDiscount && (
+                                  <td className="p-2.5 align-middle text-center text-slate-600">
+                                    {acc.discountPercentage}%
+                                  </td>
+                                )}
+
+                                {/* 8. GST (%) */}
                                 <td className="p-2.5 align-middle text-center font-bold text-blue-600">
                                   {acc.gstRate}%
                                 </td>
+
+                                {/* 9. Total (₹) */}
                                 <td className="p-2.5 align-middle text-right font-bold text-slate-800">
                                   {formatINR(aCalc.lineTotal)}
                                 </td>

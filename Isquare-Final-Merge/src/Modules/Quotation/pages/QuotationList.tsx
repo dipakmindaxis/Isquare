@@ -14,6 +14,8 @@ import {
   ShoppingCart,
   ChevronLeft,
   ChevronRight,
+  UploadCloud,
+  Download,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -28,6 +30,11 @@ import { formatINR, getEffectiveApprovalStatus } from "../utils/quotationCalcula
 import QuotationStatusBadge from "../components/QuotationStatusBadge";
 import ConfirmationModal from "../../../Components/Common/ConfirmationModal";
 import { exportToExcel } from "../../../Utils/exportToExcel";
+import UploadCustomerQuotationModal from "../components/UploadCustomerQuotationModal";
+import {
+  isCustomerFormatQuotation,
+  downloadOriginalCustomerQuotation,
+} from "../utils/customerQuotationStorage";
 
 export const QuotationList: React.FC = () => {
   const navigate = useNavigate();
@@ -46,6 +53,7 @@ export const QuotationList: React.FC = () => {
   // Modals state
   const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
   const [selectedQuotation, setSelectedQuotation] = useState<Quotation | null>(null);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState<boolean>(false);
 
   // Revision Modal State
   const [revisionModalOpen, setRevisionModalOpen] = useState<boolean>(false);
@@ -257,10 +265,19 @@ export const QuotationList: React.FC = () => {
           <button
             type="button"
             onClick={handleExportExcel}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl transition"
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl transition cursor-pointer"
           >
             <FileSpreadsheet size={15} />
             <span>Export Excel</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsUploadModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-slate-800 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-xl transition cursor-pointer shadow-xs"
+            title="Upload customer-formatted Excel quotation"
+          >
+            <UploadCloud size={15} className="text-blue-600" />
+            <span>Upload Quotation</span>
           </button>
           <Link
             to="/rsm/quotations/create"
@@ -353,12 +370,23 @@ export const QuotationList: React.FC = () => {
                 paginatedQuotations.map((q) => (
                   <tr key={q.quotationId} className="hover:bg-slate-50 transition">
                     <td className="p-3.5 font-bold font-mono text-gray-900">
-                      <Link
-                        to={`/rsm/quotations/${q.quotationId}`}
-                        className="hover:text-blue-600 transition"
-                      >
-                        {q.quotationNumber || `QT-${q.quotationId}`}
-                      </Link>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <Link
+                          to={`/rsm/quotations/${q.quotationId}`}
+                          className="hover:text-blue-600 transition"
+                        >
+                          {q.quotationNumber || `QT-${q.quotationId}`}
+                        </Link>
+                        {isCustomerFormatQuotation(q.quotationId, q) && (
+                          <span
+                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300"
+                            title="Preserved customer Excel quotation"
+                          >
+                            <FileSpreadsheet size={10} className="text-amber-700" />
+                            <span>Customer Excel</span>
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="p-3.5 text-center">
                       <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-mono font-bold text-[11px]">
@@ -396,6 +424,22 @@ export const QuotationList: React.FC = () => {
                       >
                         <Eye size={14} />
                       </button>
+                      {isCustomerFormatQuotation(q.quotationId, q) && (
+                        <button
+                          onClick={() => {
+                            const ok = downloadOriginalCustomerQuotation(q.quotationId);
+                            if (ok) {
+                              toast.success("Downloaded original customer quotation file");
+                            } else {
+                              toast.error("Original customer file not found");
+                            }
+                          }}
+                          className="p-1.5 bg-amber-50 hover:bg-amber-600 hover:text-white text-amber-700 rounded-lg transition"
+                          title="Download Original Customer Excel File"
+                        >
+                          <Download size={14} />
+                        </button>
+                      )}
                       <button
                         onClick={() => navigate(`/rsm/quotations/${q.quotationId}/edit`)}
                         className="p-1.5 bg-amber-50 hover:bg-amber-600 hover:text-white text-amber-600 rounded-lg transition"
@@ -546,6 +590,15 @@ export const QuotationList: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Upload Customer Quotation Modal */}
+      <UploadCustomerQuotationModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        onSuccess={() => {
+          fetchData();
+        }}
+      />
     </div>
   );
 };

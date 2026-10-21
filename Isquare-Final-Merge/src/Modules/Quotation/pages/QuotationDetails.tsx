@@ -14,8 +14,16 @@ import {
   History,
   ShieldCheck,
   ShieldAlert,
+  FileSpreadsheet,
+  Download,
 } from "lucide-react";
 import { toast } from "sonner";
+import { exportQuotationToPdf } from "../utils/quotationExportPdf";
+import { exportQuotationToCustomerExcel } from "../utils/quotationExportExcel";
+import {
+  isCustomerFormatQuotation,
+  downloadOriginalCustomerQuotation,
+} from "../utils/customerQuotationStorage";
 import {
   quotationService,
   quotationItemService,
@@ -451,10 +459,51 @@ export const QuotationDetails: React.FC = () => {
           <button
             type="button"
             onClick={() => setIsPreviewOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 rounded-xl transition shadow-sm"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 rounded-xl transition shadow-xs cursor-pointer"
+            title="Preview customer-facing quotation"
           >
             <Printer size={14} />
-            <span>Print / PDF</span>
+            <span>Preview / Print</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (isCustomerFormatQuotation(quotation.quotationId, quotation)) {
+                const ok = downloadOriginalCustomerQuotation(quotation.quotationId);
+                if (ok) {
+                  toast.success("Downloaded original customer quotation file");
+                  return;
+                }
+              }
+              exportQuotationToCustomerExcel(fullQuoteForPreview, true);
+              toast.success("Excel exported successfully");
+            }}
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl transition shadow-xs cursor-pointer"
+            title="Export Quotation to Excel (.xlsx)"
+          >
+            <FileSpreadsheet size={14} />
+            <span>Export Excel</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (isCustomerFormatQuotation(quotation.quotationId, quotation)) {
+                const ok = downloadOriginalCustomerQuotation(quotation.quotationId);
+                if (ok) {
+                  toast.success("Downloaded original customer quotation file");
+                  return;
+                }
+              }
+              exportQuotationToPdf(fullQuoteForPreview, companyProfile, customer, true);
+              toast.success("PDF exported successfully");
+            }}
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 rounded-xl transition shadow-xs cursor-pointer"
+            title="Export Quotation to PDF (.pdf)"
+          >
+            <Download size={14} />
+            <span>Export PDF</span>
           </button>
 
           <button
@@ -522,6 +571,35 @@ export const QuotationDetails: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Uploaded Customer-Formatted Quotation Banner */}
+      {isCustomerFormatQuotation(quotation.quotationId, quotation) && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-amber-900 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-amber-100 rounded-xl text-amber-700">
+              <FileSpreadsheet size={22} />
+            </div>
+            <div>
+              <h4 className="text-sm font-bold">Uploaded Customer-Formatted Quotation</h4>
+              <p className="text-xs text-amber-700">
+                This quotation was uploaded in the customer's original Excel format. All original columns, formatting, and values are preserved.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              const ok = downloadOriginalCustomerQuotation(quotation.quotationId);
+              if (ok) toast.success("Downloaded original customer file");
+              else toast.error("Could not download original file");
+            }}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-semibold transition cursor-pointer shadow-xs self-start sm:self-auto shrink-0"
+          >
+            <Download size={14} />
+            <span>Download Original Excel File</span>
+          </button>
+        </div>
+      )}
 
       {/* Main 2-Column Content Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

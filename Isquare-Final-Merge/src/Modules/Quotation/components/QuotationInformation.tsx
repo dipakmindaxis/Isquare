@@ -1,12 +1,77 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Plus, User, Building2, Phone, Mail, Loader2 } from "lucide-react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { Plus, User, Building2, Phone, Mail, Loader2, ChevronDown, Check, X } from "lucide-react";
 import type { Customer } from "../../RSM/Pages/Customer/Types/CustomerTypes";
 import type { Contact } from "../../RSM/Pages/Master/Contact/Types/ContactTypes";
 import {
   getContactsByCompanyId,
   getAllContacts,
 } from "../../RSM/Pages/Master/Contact/Services/ContactService";
+import { quotationService } from "../services/quotationService";
 import AddQuotationContactModal from "./AddQuotationContactModal";
+
+export interface EnquiryOption {
+  enquiryNumber: string;
+  companyName: string;
+  productName: string;
+  displayLabel: string;
+}
+
+export const DEFAULT_ENQUIRIES: EnquiryOption[] = [
+  {
+    enquiryNumber: "ENQ-2026-739",
+    companyName: "Thermax",
+    productName: "3M 11850 Goggle",
+    displayLabel: "ENQ-2026-739 - Thermax - 3M 11850 Goggle",
+  },
+  {
+    enquiryNumber: "ENQ-2026-0042",
+    companyName: "Tata Steel Ltd",
+    productName: "Multi-Gas Detector System (4-Gas Portable)",
+    displayLabel: "ENQ-2026-0042 - Tata Steel Ltd - Multi-Gas Detector System (4-Gas Portable)",
+  },
+  {
+    enquiryNumber: "ENQ-2026-0108",
+    companyName: "Reliance Industries Ltd",
+    productName: "Fixed IR Flame Detectors & Control Panels",
+    displayLabel: "ENQ-2026-0108 - Reliance Industries Ltd - Fixed IR Flame Detectors & Control Panels",
+  },
+  {
+    enquiryNumber: "ENQ-2026-0178",
+    companyName: "Siemens India",
+    productName: "CNC Spindle Motor 5kW",
+    displayLabel: "ENQ-2026-0178 - Siemens India - CNC Spindle Motor 5kW",
+  },
+  {
+    enquiryNumber: "ENQ-2026-0245",
+    companyName: "Larsen & Toubro",
+    productName: "Gas Leak Detection Controller",
+    displayLabel: "ENQ-2026-0245 - Larsen & Toubro - Gas Leak Detection Controller",
+  },
+  {
+    enquiryNumber: "ENQ-2026-0389",
+    companyName: "Bharat Petroleum",
+    productName: "Industrial Safety Helmet & Harness",
+    displayLabel: "ENQ-2026-0389 - Bharat Petroleum - Industrial Safety Helmet & Harness",
+  },
+  {
+    enquiryNumber: "ENQ-2026-0512",
+    companyName: "Mahindra & Mahindra",
+    productName: "Safety Optical Glasses IP55",
+    displayLabel: "ENQ-2026-0512 - Mahindra & Mahindra - Safety Optical Glasses IP55",
+  },
+  {
+    enquiryNumber: "ENQ-2026-0644",
+    companyName: "JSW Steel",
+    productName: "Flameproof Control Station",
+    displayLabel: "ENQ-2026-0644 - JSW Steel - Flameproof Control Station",
+  },
+  {
+    enquiryNumber: "ENQ-2026-0820",
+    companyName: "Adani Ports",
+    productName: "Emergency Eye Wash & Shower Station",
+    displayLabel: "ENQ-2026-0820 - Adani Ports - Emergency Eye Wash & Shower Station",
+  },
+];
 
 interface QuotationInformationProps {
   quotationNumber?: string | null;
@@ -48,8 +113,109 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
   const [isAddContactModalOpen, setIsAddContactModalOpen] = useState<boolean>(false);
   const [selectedContactId, setSelectedContactId] = useState<number | null>(contactId);
 
+  // Enquiry Reference Searchable Dropdown state
+  const [enquirySearch, setEnquirySearch] = useState<string>(enquiryRef || "");
+  const [isEnquiryDropdownOpen, setIsEnquiryDropdownOpen] = useState<boolean>(false);
+  const [enquiriesList, setEnquiriesList] = useState<EnquiryOption[]>(DEFAULT_ENQUIRIES);
+  const enquiryDropdownRef = useRef<HTMLDivElement>(null);
+
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
+
+  useEffect(() => {
+    setEnquirySearch(enquiryRef || "");
+  }, [enquiryRef]);
+
+  // Load existing quotations to extract any additional unique enquiry references
+  useEffect(() => {
+    quotationService
+      .getAll()
+      .then((quotes) => {
+        if (!quotes || quotes.length === 0) return;
+        const extra: EnquiryOption[] = [];
+        quotes.forEach((q) => {
+          if (q.enquiryRef && q.enquiryRef.trim()) {
+            const trimmed = q.enquiryRef.trim();
+            const exists = DEFAULT_ENQUIRIES.some(
+              (d) => d.enquiryNumber === trimmed || d.displayLabel === trimmed
+            );
+            if (!exists && !extra.some((e) => e.enquiryNumber === trimmed || e.displayLabel === trimmed)) {
+              extra.push({
+                enquiryNumber: trimmed,
+                companyName: q.customerName || "Customer",
+                productName: "Industrial Equipment",
+                displayLabel: `${trimmed} - ${q.customerName || "Customer"} - Industrial Equipment`,
+              });
+            }
+          }
+        });
+        if (extra.length > 0) {
+          setEnquiriesList((prev) => {
+            const combined = [...prev];
+            extra.forEach((e) => {
+              if (!combined.some((c) => c.enquiryNumber === e.enquiryNumber)) {
+                combined.push(e);
+              }
+            });
+            return combined;
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        enquiryDropdownRef.current &&
+        !enquiryDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsEnquiryDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const filteredEnquiries = useMemo(() => {
+    if (!enquirySearch || !enquirySearch.trim()) return enquiriesList;
+    const q = enquirySearch.toLowerCase().trim();
+    return enquiriesList.filter(
+      (item) =>
+        item.displayLabel.toLowerCase().includes(q) ||
+        item.enquiryNumber.toLowerCase().includes(q) ||
+        item.companyName.toLowerCase().includes(q) ||
+        item.productName.toLowerCase().includes(q)
+    );
+  }, [enquiriesList, enquirySearch]);
+
+  const handleSelectEnquiry = (item: EnquiryOption) => {
+    setEnquirySearch(item.displayLabel);
+    setIsEnquiryDropdownOpen(false);
+
+    // If matching company exists in customers list and no company selected, auto-select it
+    const matchedCustomer = customers.find((c) => {
+      const cName = (c.companyName || c.customerName || "").toLowerCase();
+      return (
+        cName.includes(item.companyName.toLowerCase()) ||
+        item.companyName.toLowerCase().includes(cName)
+      );
+    });
+
+    if (matchedCustomer && (!customerId || customerId === 0)) {
+      const newCustId = Number(matchedCustomer.customerId || matchedCustomer.companyId);
+      handleCompanyChange(newCustId);
+      onChangeRef.current({
+        enquiryRef: item.displayLabel,
+        customerId: newCustId,
+      });
+    } else {
+      onChangeRef.current({ enquiryRef: item.displayLabel });
+    }
+  };
 
   const selectedCustomer = customers.find(
     (c) => Number(c.customerId || c.companyId) === Number(customerId)
@@ -295,19 +461,114 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
           </div>
         </div>
 
-        {/* Enquiry Reference */}
-        <div>
+        {/* Enquiry Reference - Searchable Dropdown */}
+        <div ref={enquiryDropdownRef} className="relative">
           <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
             Enquiry Reference
           </label>
-          <input
-            type="text"
-            placeholder="e.g. ENQ-2026-884"
-            value={enquiryRef || ""}
-            onChange={(e) => onChangeRef.current({ enquiryRef: e.target.value })}
-            disabled={disabled}
-            className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-3 text-sm font-mono text-gray-800 transition focus:border-[#00234a] focus:outline-none focus:ring-2 focus:ring-[#00234a]/15"
-          />
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search or select enquiry (e.g. ENQ-2026-739)..."
+              value={enquirySearch}
+              onChange={(e) => {
+                setEnquirySearch(e.target.value);
+                onChangeRef.current({ enquiryRef: e.target.value });
+                setIsEnquiryDropdownOpen(true);
+              }}
+              onFocus={() => setIsEnquiryDropdownOpen(true)}
+              disabled={disabled}
+              className="w-full rounded-lg border border-gray-300 bg-white pl-3.5 pr-14 py-3 text-sm font-mono text-gray-800 transition focus:border-[#00234a] focus:outline-none focus:ring-2 focus:ring-[#00234a]/15 cursor-text"
+            />
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+              {enquirySearch && !disabled && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEnquirySearch("");
+                    onChangeRef.current({ enquiryRef: "" });
+                  }}
+                  className="p-1 text-gray-400 hover:text-gray-600 rounded transition cursor-pointer"
+                  title="Clear enquiry reference"
+                >
+                  <X size={14} />
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setIsEnquiryDropdownOpen((prev) => !prev)}
+                disabled={disabled}
+                className="p-1 text-gray-500 hover:text-gray-800 rounded transition cursor-pointer"
+                title="Toggle enquiry options"
+              >
+                <ChevronDown
+                  size={16}
+                  className={`transition-transform duration-200 ${
+                    isEnquiryDropdownOpen ? "rotate-180 text-[#00234a]" : ""
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+
+          {/* Searchable Dropdown Menu */}
+          {isEnquiryDropdownOpen && !disabled && (
+            <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden divide-y divide-gray-100 max-h-64 overflow-y-auto">
+              <div className="p-2.5 bg-slate-50 border-b border-gray-100 text-[10px] font-bold uppercase tracking-wider text-gray-500 flex items-center justify-between">
+                <span>Select Existing Enquiry ({filteredEnquiries.length})</span>
+                <span className="text-[9px] font-normal text-gray-400">Enquiry No · Company · Product</span>
+              </div>
+              {filteredEnquiries.length === 0 ? (
+                <div className="p-4 text-center">
+                  <p className="text-xs text-gray-500 font-medium">
+                    No matching enquiries found for "{enquirySearch}"
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onChangeRef.current({ enquiryRef: enquirySearch });
+                      setIsEnquiryDropdownOpen(false);
+                    }}
+                    className="mt-2 text-xs font-semibold text-blue-600 hover:text-blue-800 underline cursor-pointer"
+                  >
+                    Use "{enquirySearch}" as custom reference
+                  </button>
+                </div>
+              ) : (
+                filteredEnquiries.map((eq) => {
+                  const isSelected =
+                    enquiryRef === eq.displayLabel ||
+                    enquiryRef === eq.enquiryNumber;
+                  return (
+                    <button
+                      key={eq.enquiryNumber}
+                      type="button"
+                      onClick={() => handleSelectEnquiry(eq)}
+                      className={`w-full text-left px-3.5 py-2.5 transition flex items-start justify-between gap-3 cursor-pointer ${
+                        isSelected
+                          ? "bg-blue-50/90 text-blue-900 font-semibold"
+                          : "hover:bg-slate-50 text-gray-800"
+                      }`}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs font-mono font-bold text-[#00234a] truncate">
+                          {eq.displayLabel}
+                        </div>
+                        <div className="text-[11px] text-gray-500 flex items-center gap-1.5 mt-0.5 truncate">
+                          <span className="font-semibold text-gray-700">{eq.companyName}</span>
+                          <span>•</span>
+                          <span className="text-gray-600 truncate">{eq.productName}</span>
+                        </div>
+                      </div>
+                      {isSelected && (
+                        <Check size={16} className="text-blue-600 shrink-0 mt-0.5" />
+                      )}
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          )}
         </div>
       </div>
 
