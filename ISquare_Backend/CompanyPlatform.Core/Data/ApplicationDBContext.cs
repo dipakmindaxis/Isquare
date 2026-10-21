@@ -247,6 +247,10 @@ namespace CompanyPlatform.Core.Data
         public DbSet<EnquiryStatus> EnquiryStatuses { get; set; }
         public DbSet<ProductCategory> ProductCategories { get; set; }
         public DbSet<ProductServiceItem> ProductServices { get; set; }
+        public DbSet<UnitOfMeasure> UnitOfMeasures { get; set; }
+        public DbSet<Currency> Currencies { get; set; }
+        public DbSet<SalesTerritory> SalesTerritories { get; set; }
+        public DbSet<PlaceOfSupply> PlaceOfSupplies { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -641,6 +645,37 @@ namespace CompanyPlatform.Core.Data
 
             builder.Entity<ProductServiceItem>()
                 .HasQueryFilter(p => !p.ProductServiceIsDeleted);
+
+            builder.Entity<UnitOfMeasure>()
+              .HasIndex(u => u.UnitOfMeasureCode)
+              .IsUnique();
+
+            builder.Entity<UnitOfMeasure>()
+                .HasQueryFilter(u => !u.UnitOfMeasureIsDeleted);
+
+            builder.Entity<Currency>()
+            .HasIndex(c => c.CurrencyCode)
+            .IsUnique();
+
+            // Applies a global query filter so deleted items are ignored by default
+            builder.Entity<Currency>()
+                .HasQueryFilter(c => !c.CurrencyIsDeleted);
+
+            builder.Entity<SalesTerritory>()
+              .HasIndex(s => s.SalesTerritoryCode)
+              .IsUnique();
+
+            // Applies a global query filter so deleted items are ignored by default
+            builder.Entity<SalesTerritory>()
+                .HasQueryFilter(s => !s.SalesTerritoryIsDeleted);
+
+            builder.Entity<PlaceOfSupply>()
+              .HasIndex(p => p.PlaceOfSupplyCode)
+              .IsUnique();
+
+            // Applies a global query filter so deleted items are ignored by default
+            builder.Entity<PlaceOfSupply>()
+                .HasQueryFilter(p => !p.PlaceOfSupplyIsDeleted);
         }
     }
 }
