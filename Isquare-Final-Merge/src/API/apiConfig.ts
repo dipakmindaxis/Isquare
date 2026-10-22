@@ -48,6 +48,8 @@ export interface ApiEndpoints {
   Directors: string;
   SalesCoordinator: string;
   SalesCoordinators: string;
+  Product: string;
+  Products: string;
   [key: string]: string;
 }
 

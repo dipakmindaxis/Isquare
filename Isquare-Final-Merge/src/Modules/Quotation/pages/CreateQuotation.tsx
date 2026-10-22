@@ -90,6 +90,23 @@ export const CreateQuotation: React.FC = () => {
         toast.error("Failed to load recent quotations");
       })
       .finally(() => setIsRecentLoading(false));
+
+    // Listen for product catalog updates (e.g. specification or detail edits in Product Master)
+    const handleProductUpdated = () => {
+      productService
+        .getAll()
+        .then((prods) => {
+          setAvailableProducts(prods);
+        })
+        .catch((err) => {
+          console.error("Failed to refresh product catalog:", err);
+        });
+    };
+
+    window.addEventListener("isquare_product_updated", handleProductUpdated);
+    return () => {
+      window.removeEventListener("isquare_product_updated", handleProductUpdated);
+    };
   }, []);
 
   const handleSave = async (quotationData: Quotation) => {
