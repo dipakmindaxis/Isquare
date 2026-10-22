@@ -8,10 +8,9 @@ import {
   Users,
   MapPin,
   Calendar,
-  Plus,
 } from "lucide-react";
 import { toast } from "sonner";
-import Select, { type StylesConfig } from "react-select";
+import { buttonStyles } from "../../../../Components/Common/buttonStyles";
 import type {
   CustomerUpdatePayload,
   CustomerAddress,
@@ -44,6 +43,7 @@ import {
   getDirectors,
 } from "./Services/CustomerMasterDataService";
 import CustomerAddressSection from "./CustomerAddressSection";
+import SalesAssignmentSection from "./SalesAssignmentSection";
 import AddSalesCoordinatorModal from "../Master/SalesCoordinator/Components/AddSalesCoordinatorModal";
 
 interface EditCustomerModalProps {
@@ -63,7 +63,6 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
     customerName: "",
     isActive: true,
   });
-  const [activeTab, setActiveTab] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -73,11 +72,9 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
   const [sources, setSources] = useState<CustomerSourceItem[]>([]);
   const [areas, setAreas] = useState<CustomerAreaItem[]>([]);
   const [paymentTerms, setPaymentTerms] = useState<PaymentTermItem[]>([]);
-  const [bdeUsers, setBdeUsers] = useState<BdeUserItem[]>([]);
   const [countries, setCountries] = useState<CountryItem[]>([]);
   const [addressTypes, setAddressTypes] = useState<AddressTypeItem[]>([]);
   const [salesCoordinators, setSalesCoordinators] = useState<SalesCoordinatorItem[]>([]);
-  const [directors, setDirectors] = useState<DirectorItem[]>([]);
   const [selectedCoordinatorIds, setSelectedCoordinatorIds] = useState<number[]>([]);
   const [customerOwnerValue, setCustomerOwnerValue] = useState<string>("");
   const [isAddCoordinatorOpen, setIsAddCoordinatorOpen] = useState(false);
@@ -89,74 +86,8 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
     }
   };
 
-  interface CoordinatorSelectOption {
-    value: number;
-    label: string;
-    coordinatorName: string;
-  }
-
-  // Custom styling for react-select matching customer edit form fields
-  const customerSelectStyles: StylesConfig<CoordinatorSelectOption, true> = {
-    control: (base, state) => ({
-      ...base,
-      minHeight: "38px",
-      borderRadius: "0.375rem",
-      borderColor: state.isFocused ? "#3b82f6" : "#d1d5db",
-      boxShadow: state.isFocused ? "0 0 0 1px #3b82f6" : "none",
-      "&:hover": {
-        borderColor: state.isFocused ? "#3b82f6" : "#9ca3af",
-      },
-      backgroundColor: "#ffffff",
-      fontSize: "0.875rem",
-      cursor: "pointer",
-    }),
-    multiValue: (base) => ({
-      ...base,
-      backgroundColor: "#f1f5f9",
-      borderRadius: "0.375rem",
-      border: "1px solid #cbd5e1",
-      padding: "1px 3px",
-    }),
-    multiValueLabel: (base) => ({
-      ...base,
-      color: "#0f172a",
-      fontSize: "0.8125rem",
-      fontWeight: 500,
-    }),
-    multiValueRemove: (base) => ({
-      ...base,
-      color: "#64748b",
-      cursor: "pointer",
-      "&:hover": {
-        backgroundColor: "#e2e8f0",
-        color: "#dc2626",
-      },
-    }),
-    option: (base, state) => ({
-      ...base,
-      backgroundColor: state.isSelected
-        ? "#2563eb"
-        : state.isFocused
-        ? "#eff6ff"
-        : "#ffffff",
-      color: state.isSelected ? "#ffffff" : "#1f2937",
-      fontSize: "0.875rem",
-      cursor: "pointer",
-    }),
-    menu: (base) => ({
-      ...base,
-      zIndex: 9999,
-    }),
-    placeholder: (base) => ({
-      ...base,
-      color: "#9ca3af",
-      fontSize: "0.875rem",
-    }),
-  };
-
   useEffect(() => {
     if (isOpen && customerId) {
-      setActiveTab(0);
 
       const loadData = async () => {
         setIsLoading(true);
@@ -182,13 +113,11 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
           setAreas(Array.isArray(masterRes[3]) ? (masterRes[3] as CustomerAreaItem[]) : []);
           setPaymentTerms(Array.isArray(masterRes[4]) ? (masterRes[4] as PaymentTermItem[]) : []);
           const loadedBdes = Array.isArray(masterRes[5]) ? (masterRes[5] as BdeUserItem[]) : [];
-          setBdeUsers(loadedBdes);
           setCountries(Array.isArray(masterRes[6]) ? (masterRes[6] as CountryItem[]) : []);
           setAddressTypes(Array.isArray(masterRes[7]) ? (masterRes[7] as AddressTypeItem[]) : []);
           const loadedCoordinators = Array.isArray(masterRes[8]) ? (masterRes[8] as SalesCoordinatorItem[]) : [];
           setSalesCoordinators(loadedCoordinators);
           const loadedDirectors = Array.isArray(masterRes[9]) ? (masterRes[9] as DirectorItem[]) : [];
-          setDirectors(loadedDirectors);
 
           // Restore multi-selected coordinators
           const initialCoordinatorIds: number[] = [];
@@ -344,7 +273,6 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
     if (!customerId) return;
     if (!formData.customerName?.trim()) {
       toast.error("Customer Name is required.");
-      setActiveTab(0);
       return;
     }
 
@@ -440,722 +368,525 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
     }
   };
 
-  const tabs = [
-    { label: "Basic Details", icon: <Building2 size={16} /> },
-    { label: "Business Info", icon: <Briefcase size={16} /> },
-    { label: "Registration & Tax Information", icon: <FileText size={16} /> },
-    { label: "Sales Assignment", icon: <Users size={16} /> },
-    { label: "Addresses", icon: <MapPin size={16} /> },
-    { label: "Other Details", icon: <Calendar size={16} /> },
-  ];
+  if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex justify-center items-center z-50 p-2 sm:p-4">
-      <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-5xl h-[calc(100dvh-16px)] sm:h-auto sm:max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in duration-200 border border-gray-200">
-        {/* Header */}
-        <div className="flex justify-between items-center bg-[#154068] text-white px-4 sm:px-6 py-3 sm:py-4 shrink-0">
-          <div className="pr-2 min-w-0">
-            <h2 className="text-base sm:text-lg font-semibold tracking-wide truncate">
-              Edit Customer: {formData.customerName || `#${customerId}`}
-            </h2>
-            <p className="text-[11px] sm:text-xs text-blue-100 opacity-90 line-clamp-1 sm:line-clamp-none">
-              Update customer information and save changes
-            </p>
-          </div>
+    <div className="bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden mb-8 animate-in slide-in-from-top-4 duration-300">
+      {/* Form Top Bar */}
+      <div className="flex justify-between items-center bg-[#FF7900] text-white px-6 py-4 shrink-0 border-b border-[#e06800]">
+        <div className="flex items-center gap-2.5 pr-2 min-w-0">
+          <Building2 size={20} className="text-white shrink-0" />
+          <h2 className="text-base sm:text-lg font-bold tracking-tight text-white leading-tight truncate">
+            Edit Customer: {formData.customerName || `#${customerId}`}
+          </h2>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="text-white/80 hover:text-white p-1.5 hover:bg-white/10 rounded-lg transition shrink-0 cursor-pointer"
+          title="Back to Customers List"
+        >
+          <X size={20} />
+        </button>
+      </div>
+
+      {/* Single Unified Customer Form */}
+      <form onSubmit={handleSubmit} className="bg-white">
+        <div className="p-6 sm:p-8 space-y-8">
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-20 text-[#FF7900]">
+              <Loader2 className="animate-spin mb-2" size={32} />
+              <p className="font-medium text-sm">Loading customer data...</p>
+            </div>
+          ) : (
+            <div className="space-y-8 animate-in fade-in duration-300">
+              {/* SECTION 1: BASIC CUSTOMER DETAILS */}
+              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
+                <div className="border-b border-gray-200 pb-2.5">
+                  <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
+                    <Building2 size={16} /> Section 1 - Basic Customer Details
+                  </h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block">
+                        Customer Code
+                      </label>
+                      <span className="text-[10px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded font-medium">
+                        Read-only
+                      </span>
+                    </div>
+                    <input
+                      type="text"
+                      name="customerCode"
+                      value={formData.customerCode || ""}
+                      readOnly
+                      disabled
+                      placeholder="e.g. CUST001"
+                      className="w-full border border-gray-200 rounded-lg px-4 py-2.5 bg-gray-100 text-gray-600 text-sm cursor-not-allowed select-none font-medium"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      Customer Name <span className="text-red-500 ml-1">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="customerName"
+                      value={formData.customerName || ""}
+                      onChange={handleInputChange}
+                      required
+                      placeholder="Enter full legal customer name"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      Customer Short Name
+                    </label>
+                    <input
+                      type="text"
+                      name="customerShortName"
+                      value={formData.customerShortName || ""}
+                      onChange={handleInputChange}
+                      placeholder="e.g. Acme Corp"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      Company Name
+                    </label>
+                    <input
+                      type="text"
+                      name="companyName"
+                      value={formData.companyName || ""}
+                      onChange={handleInputChange}
+                      placeholder="e.g. Acme Industries Ltd"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      Company Group
+                    </label>
+                    <input
+                      type="text"
+                      name="companyGroup"
+                      value={formData.companyGroup || ""}
+                      onChange={handleInputChange}
+                      placeholder="e.g. Acme Holdings Group"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      Plant Code
+                    </label>
+                    <input
+                      type="text"
+                      name="plantCode"
+                      value={formData.plantCode || ""}
+                      onChange={handleInputChange}
+                      placeholder="e.g. PL-01"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION 2: BUSINESS INFORMATION */}
+              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
+                <div className="border-b border-gray-200 pb-2.5">
+                  <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
+                    <Briefcase size={16} /> Section 2 - Business Information
+                  </h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      Industry
+                    </label>
+                    <select
+                      name="industryId"
+                      value={formData.industryId ?? ""}
+                      onChange={handleInputChange}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800"
+                    >
+                      <option value="">Select Industry</option>
+                      {industries.map((ind) => (
+                        <option key={ind.industryId} value={ind.industryId}>
+                          {ind.industryName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      Customer Status
+                    </label>
+                    <select
+                      name="customerStatusId"
+                      value={formData.customerStatusId ?? ""}
+                      onChange={handleInputChange}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800"
+                    >
+                      <option value="">Select Customer Status</option>
+                      {statuses.map((st) => (
+                        <option
+                          key={st.customerStatusId}
+                          value={st.customerStatusId}
+                        >
+                          {st.statusName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      Customer Source
+                    </label>
+                    <select
+                      name="customerSourceId"
+                      value={formData.customerSourceId ?? ""}
+                      onChange={handleInputChange}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800"
+                    >
+                      <option value="">Select Customer Source</option>
+                      {sources.map((src) => (
+                        <option
+                          key={src.customerSourceId}
+                          value={src.customerSourceId}
+                        >
+                          {src.sourceName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      Customer Area
+                    </label>
+                    <select
+                      name="customerAreaId"
+                      value={formData.customerAreaId ?? ""}
+                      onChange={handleInputChange}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800"
+                    >
+                      <option value="">Select Customer Area</option>
+                      {areas.map((ar) => (
+                        <option
+                          key={ar.customerAreaId}
+                          value={ar.customerAreaId}
+                        >
+                          {ar.areaName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      Payment Terms
+                    </label>
+                    <select
+                      name="paymentTermsId"
+                      value={formData.paymentTermsId ?? ""}
+                      onChange={handleInputChange}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800"
+                    >
+                      <option value="">Select Payment Terms</option>
+                      {paymentTerms.map((pt) => (
+                        <option
+                          key={pt.paymentTermId}
+                          value={pt.paymentTermId}
+                        >
+                          {pt.paymentTermName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION 3: REGISTRATION & TAX INFORMATION */}
+              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
+                <div className="border-b border-gray-200 pb-2.5">
+                  <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
+                    <FileText size={16} /> Section 3 - Registration & Tax Information
+                  </h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      PAN No.
+                    </label>
+                    <input
+                      type="text"
+                      name="pan"
+                      value={formData.pan || ""}
+                      onChange={handleInputChange}
+                      placeholder="e.g. ABCDE1234F"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      TAN No.
+                    </label>
+                    <input
+                      type="text"
+                      name="tan"
+                      value={formData.tan || ""}
+                      onChange={handleInputChange}
+                      placeholder="e.g. ABCD12345E"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      GSTIN
+                    </label>
+                    <input
+                      type="text"
+                      name="gstin"
+                      value={formData.gstin || ""}
+                      onChange={handleInputChange}
+                      placeholder="e.g. 27ABCDE1234F1Z5"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      CIN No.
+                    </label>
+                    <input
+                      type="text"
+                      name="cin"
+                      value={formData.cin || ""}
+                      onChange={handleInputChange}
+                      placeholder="e.g. U12345MH2020PTC123456"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      MSME Number
+                    </label>
+                    <input
+                      type="text"
+                      name="msmeNumber"
+                      value={formData.msmeNumber || ""}
+                      onChange={handleInputChange}
+                      placeholder="e.g. UDYAM-MH-01-0000000"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION 4: SALES ASSIGNMENT (Cascading Flow) */}
+              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
+                <div className="border-b border-gray-200 pb-2.5">
+                  <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
+                    <Users size={16} /> Section 4 - Sales Assignment
+                  </h3>
+                </div>
+                <SalesAssignmentSection
+                  hideHeader={true}
+                  values={{
+                    directorId: formData.directorId ? Number(formData.directorId) : "",
+                    directorName: formData.directorName ?? "",
+                    directorCode: formData.directorCode ?? "",
+                    bdeUserId: formData.bdeUserId ? Number(formData.bdeUserId) : "",
+                    bdeUserName: formData.bdeUserName ?? "",
+                    salesCoordinatorId: formData.salesCoordinatorId ? Number(formData.salesCoordinatorId) : "",
+                    salesCoordinatorName: formData.salesCoordinatorName ?? "",
+                    customerOwnerId: formData.customerOwnerId ? Number(formData.customerOwnerId) : "",
+                    customerOwnerName: formData.customerOwnerName ?? "",
+                    customerOwnerType: formData.customerOwnerType ?? "",
+                    customerOwnerValue: customerOwnerValue,
+                  }}
+                  onChange={(updates) => {
+                    if (updates.customerOwnerValue !== undefined) {
+                      setCustomerOwnerValue(updates.customerOwnerValue);
+                    }
+                    setFormData((prev) => ({
+                      ...prev,
+                      directorId:
+                        updates.directorId !== undefined
+                          ? updates.directorId === ""
+                            ? null
+                            : Number(updates.directorId)
+                          : prev.directorId,
+                      directorName:
+                        updates.directorName !== undefined
+                          ? updates.directorName
+                          : prev.directorName,
+                      directorCode:
+                        updates.directorCode !== undefined
+                          ? updates.directorCode
+                          : prev.directorCode,
+                      bdeUserId:
+                        updates.bdeUserId !== undefined
+                          ? updates.bdeUserId === ""
+                            ? null
+                            : Number(updates.bdeUserId)
+                          : prev.bdeUserId,
+                      bdeUserName:
+                        updates.bdeUserName !== undefined
+                          ? updates.bdeUserName
+                          : prev.bdeUserName,
+                      salesCoordinatorId:
+                        updates.salesCoordinatorId !== undefined
+                          ? updates.salesCoordinatorId === ""
+                            ? null
+                            : Number(updates.salesCoordinatorId)
+                          : prev.salesCoordinatorId,
+                      salesCoordinatorName:
+                        updates.salesCoordinatorName !== undefined
+                          ? updates.salesCoordinatorName
+                          : prev.salesCoordinatorName,
+                      customerOwnerId:
+                        updates.customerOwnerId !== undefined
+                          ? updates.customerOwnerId === ""
+                            ? null
+                            : Number(updates.customerOwnerId)
+                          : prev.customerOwnerId,
+                      customerOwnerName:
+                        updates.customerOwnerName !== undefined
+                          ? updates.customerOwnerName
+                          : prev.customerOwnerName,
+                      customerOwnerType:
+                        updates.customerOwnerType !== undefined
+                          ? updates.customerOwnerType
+                          : prev.customerOwnerType,
+                    }));
+                  }}
+                />
+              </div>
+
+              {/* SECTION 5: ADDRESSES */}
+              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
+                <div className="border-b border-gray-200 pb-2.5">
+                  <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
+                    <MapPin size={16} /> Section 5 - Customer Addresses
+                  </h3>
+                </div>
+                <CustomerAddressSection
+                  addresses={formData.addresses || []}
+                  onChange={handleAddressesChange}
+                  countries={countries}
+                  addressTypes={addressTypes}
+                />
+              </div>
+
+              {/* SECTION 6: OTHER DETAILS & REMARKS */}
+              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
+                <div className="border-b border-gray-200 pb-2.5">
+                  <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
+                    <Calendar size={16} /> Section 6 - Other Details & Remarks
+                  </h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      Registration Date
+                    </label>
+                    <input
+                      type="date"
+                      name="registrationDate"
+                      value={formData.registrationDate || ""}
+                      onChange={handleInputChange}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      Visited Date
+                    </label>
+                    <input
+                      type="date"
+                      name="visitedDate"
+                      value={formData.visitedDate || ""}
+                      onChange={handleInputChange}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      Remarks / Notes
+                    </label>
+                    <textarea
+                      name="remarks"
+                      value={formData.remarks || ""}
+                      onChange={handleInputChange}
+                      rows={3}
+                      placeholder="Add internal notes, communication highlights, or account instructions..."
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2 flex items-center pt-2">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="isActive"
+                        checked={formData.isActive ?? true}
+                        onChange={handleInputChange}
+                        className="h-4 w-4 text-[#FF7900] rounded focus:ring-[#FF7900] border-gray-300 cursor-pointer"
+                      />
+                      <span className="text-sm font-semibold text-gray-800">
+                        Customer is Active
+                      </span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer Actions (Matching Employee Module Design) */}
+        <div className="p-5 bg-gray-50 flex justify-end gap-3 border-t border-gray-200">
           <button
             type="button"
             onClick={onClose}
-            className="text-white hover:text-gray-200 p-2 hover:bg-white/10 rounded-lg transition shrink-0 min-w-[36px] min-h-[36px] flex items-center justify-center"
+            disabled={isSubmitting}
+            className={buttonStyles.cancel}
           >
-            <X size={20} />
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={isSubmitting || isLoading}
+            className={buttonStyles.save}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="animate-spin inline mr-1" size={16} /> Saving...
+              </>
+            ) : (
+              "Update Customer"
+            )}
           </button>
         </div>
-
-        {/* Tab Navigation */}
-        <div className="flex border-b border-gray-200 bg-gray-50 px-2 sm:px-6 overflow-x-auto shrink-0 scrollbar-none gap-1">
-          {tabs.map((tab, idx) => (
-            <button
-              key={tab.label}
-              type="button"
-              onClick={() => setActiveTab(idx)}
-              className={`flex items-center gap-2 py-2.5 sm:py-3 px-3 sm:px-4 border-b-2 font-medium text-xs whitespace-nowrap transition-colors shrink-0 min-h-[36px] ${
-                activeTab === idx
-                  ? "border-[#154068] text-[#154068] bg-white font-bold"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              }`}
-            >
-              {tab.icon}
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Form Content */}
-        <form
-          onSubmit={handleSubmit}
-          className="flex-1 flex flex-col overflow-hidden"
-        >
-          <div className="p-4 sm:p-6 overflow-y-auto flex-1">
-            {isLoading ? (
-              <div className="flex flex-col items-center justify-center py-20 text-[#154068]">
-                <Loader2 className="animate-spin mb-2" size={32} />
-                <p className="font-medium text-sm">Loading customer data...</p>
-              </div>
-            ) : (
-              <>
-                {/* SECTION 1 - BASIC DETAILS */}
-                {activeTab === 0 && (
-                  <div className="space-y-4">
-                    <div className="border-b pb-2">
-                      <h3 className="text-sm font-bold text-[#154068] uppercase tracking-wider">
-                        Section 1 - Basic Customer Details
-                      </h3>
-                      <p className="text-xs text-gray-500">
-                        Primary identification and company details.
-                      </p>
-                    </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="block text-xs font-medium text-gray-700">
-                          Customer Code
-                        </label>
-                        <span className="text-[10px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded font-medium">
-                          Read-only
-                        </span>
-                      </div>
-                      <input
-                        type="text"
-                        name="customerCode"
-                        value={formData.customerCode || ""}
-                        readOnly
-                        disabled
-                        placeholder="e.g. CUST001"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-100 text-gray-600 cursor-not-allowed focus:outline-none select-none font-medium"
-                      />
-                    </div>
-
-                    <div className="sm:col-span-2 md:col-span-2">
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Customer Name <span className="text-red-500">*</span>
-                      </label>
-                        <input
-                          type="text"
-                          name="customerName"
-                          value={formData.customerName || ""}
-                          onChange={handleInputChange}
-                          required
-                          placeholder="Enter full legal customer name"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
-                          Customer Short Name
-                        </label>
-                        <input
-                          type="text"
-                          name="customerShortName"
-                          value={formData.customerShortName || ""}
-                          onChange={handleInputChange}
-                          placeholder="e.g. Acme Corp"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
-                          Company Name
-                        </label>
-                        <input
-                          type="text"
-                          name="companyName"
-                          value={formData.companyName || ""}
-                          onChange={handleInputChange}
-                          placeholder="e.g. Acme Industries Ltd"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
-                          Company Group
-                        </label>
-                        <input
-                          type="text"
-                          name="companyGroup"
-                          value={formData.companyGroup || ""}
-                          onChange={handleInputChange}
-                          placeholder="e.g. Acme Holdings Group"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
-                          Plant Code
-                        </label>
-                        <input
-                          type="text"
-                          name="plantCode"
-                          value={formData.plantCode || ""}
-                          onChange={handleInputChange}
-                          placeholder="e.g. PL-01"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* SECTION 2 - BUSINESS INFO */}
-                {activeTab === 1 && (
-                  <div className="space-y-4">
-                    <div className="border-b pb-2">
-                      <h3 className="text-sm font-bold text-[#154068] uppercase tracking-wider">
-                        Section 2 - Business Information
-                      </h3>
-                      <p className="text-xs text-gray-500">
-                        Industry classification, status, source, area and commercial terms.
-                      </p>
-                    </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
-                          Industry
-                        </label>
-                        <select
-                          name="industryId"
-                          value={formData.industryId ?? ""}
-                          onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        >
-                          <option value="">Select Industry</option>
-                          {industries.map((ind) => (
-                            <option key={ind.industryId} value={ind.industryId}>
-                              {ind.industryName}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
-                          Customer Status
-                        </label>
-                        <select
-                          name="customerStatusId"
-                          value={formData.customerStatusId ?? ""}
-                          onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        >
-                          <option value="">Select Customer Status</option>
-                          {statuses.map((st) => (
-                            <option
-                              key={st.customerStatusId}
-                              value={st.customerStatusId}
-                            >
-                              {st.statusName}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
-                          Customer Source
-                        </label>
-                        <select
-                          name="customerSourceId"
-                          value={formData.customerSourceId ?? ""}
-                          onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        >
-                          <option value="">Select Customer Source</option>
-                          {sources.map((src) => (
-                            <option
-                              key={src.customerSourceId}
-                              value={src.customerSourceId}
-                            >
-                              {src.sourceName}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
-                          Customer Area
-                        </label>
-                        <select
-                          name="customerAreaId"
-                          value={formData.customerAreaId ?? ""}
-                          onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        >
-                          <option value="">Select Customer Area</option>
-                          {areas.map((ar) => (
-                            <option
-                              key={ar.customerAreaId}
-                              value={ar.customerAreaId}
-                            >
-                              {ar.areaName}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
-                          Payment Terms
-                        </label>
-                        <select
-                          name="paymentTermsId"
-                          value={formData.paymentTermsId ?? ""}
-                          onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        >
-                          <option value="">Select Payment Terms</option>
-                          {paymentTerms.map((pt) => (
-                            <option
-                              key={pt.paymentTermId}
-                              value={pt.paymentTermId}
-                            >
-                              {pt.paymentTermName}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* SECTION 3 - REGISTRATION & TAX INFORMATION */}
-                {activeTab === 2 && (
-                  <div className="space-y-4">
-                    <div className="border-b pb-2">
-                      <h3 className="text-sm font-bold text-[#154068] uppercase tracking-wider">
-                        Section 3 - Registration & Tax Information
-                      </h3>
-                      <p className="text-xs text-gray-500">
-                        Official statutory and tax registration numbers.
-                      </p>
-                    </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
-                          PAN
-                        </label>
-                        <input
-                          type="text"
-                          name="pan"
-                          value={formData.pan || ""}
-                          onChange={handleInputChange}
-                          placeholder="e.g. ABCDE1234F"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
-                          TAN
-                        </label>
-                        <input
-                          type="text"
-                          name="tan"
-                          value={formData.tan || ""}
-                          onChange={handleInputChange}
-                          placeholder="e.g. ABCD12345E"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
-                          GSTIN
-                        </label>
-                        <input
-                          type="text"
-                          name="gstin"
-                          value={formData.gstin || ""}
-                          onChange={handleInputChange}
-                          placeholder="e.g. 27ABCDE1234F1Z5"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
-                          CIN
-                        </label>
-                        <input
-                          type="text"
-                          name="cin"
-                          value={formData.cin || ""}
-                          onChange={handleInputChange}
-                          placeholder="e.g. U12345MH2020PTC123456"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
-                          MSME Number
-                        </label>
-                        <input
-                          type="text"
-                          name="msmeNumber"
-                          value={formData.msmeNumber || ""}
-                          onChange={handleInputChange}
-                          placeholder="e.g. UDYAM-MH-01-0000000"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* SECTION 4 - SALES ASSIGNMENT */}
-                {activeTab === 3 && (
-                  <div className="space-y-4">
-                    <div className="border-b pb-2">
-                      <h3 className="text-sm font-bold text-[#154068] uppercase tracking-wider">
-                        Section 4 - Sales Assignment
-                      </h3>
-                      <p className="text-xs text-gray-500">
-                        Map leadership, account managers, and sales representatives.
-                      </p>
-                    </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                      {/* Field 1: Director */}
-                      <div>
-                        <label htmlFor="edit_directors" className="block text-xs font-medium text-gray-700 mb-1">
-                          Director
-                        </label>
-                        <select
-                          id="edit_directors"
-                          name="directorId"
-                          value={formData.directorId ?? ""}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            const dirId = val ? Number(val) : 0;
-                            const found = directors.find((d) => d.directorId === dirId);
-                            setFormData((prev) => ({
-                              ...prev,
-                              directorId: dirId,
-                              directorName: found ? found.directorName : "",
-                            }));
-                          }}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
-                        >
-                          <option value="">Select Director</option>
-                          {directors.map((dir) => (
-                            <option key={dir.directorId} value={dir.directorId}>
-                              {dir.directorName} {dir.directorCode ? `(${dir.directorCode})` : ""}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      {/* Field 2: BDE */}
-                      <div>
-                        <label htmlFor="edit_bde" className="block text-xs font-medium text-gray-700 mb-1">
-                          BDE (Business Development Executive)
-                        </label>
-                        <select
-                          id="edit_bde"
-                          name="bdeUserId"
-                          value={formData.bdeUserId ?? ""}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            const bdeId = val ? Number(val) : 0;
-                            const found = bdeUsers.find((b) => b.id === bdeId);
-                            setFormData((prev) => ({
-                              ...prev,
-                              bdeUserId: bdeId,
-                              bdeUserName: found ? found.value : "",
-                            }));
-                          }}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
-                        >
-                          <option value="">Select BDE User</option>
-                          {bdeUsers.map((bde) => (
-                            <option key={bde.id} value={bde.id}>
-                              {bde.value} {bde.code ? `(${bde.code})` : ""}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      {/* Field 3: Sales Coordinators (Multi-select with removable chips) */}
-                      <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <label htmlFor="edit_sales_coordinators" className="block text-xs font-medium text-gray-700">
-                            Sales Coordinators
-                          </label>
-                          <button
-                            type="button"
-                            onClick={() => setIsAddCoordinatorOpen(true)}
-                            className="text-xs font-semibold text-[#FF7900] hover:text-[#e06800] flex items-center gap-1 cursor-pointer transition"
-                          >
-                            <Plus size={13} />
-                            <span>Add New</span>
-                          </button>
-                        </div>
-                        <Select<CoordinatorSelectOption, true>
-                          id="edit_sales_coordinators"
-                          isMulti
-                          isClearable
-                          isSearchable
-                          placeholder="Select or search Sales Coordinator..."
-                          options={salesCoordinators.map((sc) => ({
-                            value: sc.salesCoordinatorId,
-                            label: `${sc.salesCoordinatorName}${
-                              sc.salesCoordinatorCode ? ` (${sc.salesCoordinatorCode})` : ""
-                            }`,
-                            coordinatorName: sc.salesCoordinatorName,
-                          }))}
-                          value={salesCoordinators
-                            .filter((sc) => selectedCoordinatorIds.includes(sc.salesCoordinatorId))
-                            .map((sc) => ({
-                              value: sc.salesCoordinatorId,
-                              label: `${sc.salesCoordinatorName}${
-                                sc.salesCoordinatorCode ? ` (${sc.salesCoordinatorCode})` : ""
-                              }`,
-                              coordinatorName: sc.salesCoordinatorName,
-                            }))}
-                          onChange={(selected) => {
-                            const items = (selected || []) as readonly CoordinatorSelectOption[];
-                            const ids = items.map((i) => i.value);
-                            const names = items.map((i) => i.coordinatorName).join(", ");
-                            setSelectedCoordinatorIds(ids);
-                            setFormData((prev) => ({
-                              ...prev,
-                              salesCoordinatorId: ids.length > 0 ? ids[0] : undefined,
-                              salesCoordinatorName: names,
-                            }));
-                          }}
-                          styles={customerSelectStyles}
-                        />
-                      </div>
-
-                      {/* Field 4: Customer Owner (Grouped into Directors and BDEs) */}
-                      <div>
-                        <label htmlFor="edit_customer_owner" className="block text-xs font-medium text-gray-700 mb-1">
-                          Customer Owner
-                        </label>
-                        <select
-                          id="edit_customer_owner"
-                          name="customerOwnerValue"
-                          value={customerOwnerValue}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            setCustomerOwnerValue(val);
-                            if (!val) {
-                              setFormData((prev) => ({
-                                ...prev,
-                                customerOwnerId: 0,
-                                customerOwnerName: "",
-                                customerOwnerType: "",
-                              }));
-                              return;
-                            }
-                            const [type, idStr] = val.split(":");
-                            const id = Number(idStr);
-                            let ownerName = "";
-                            if (type === "Director") {
-                              const found = directors.find((d) => d.directorId === id);
-                              ownerName = found ? found.directorName : "";
-                            } else if (type === "BDE") {
-                              const found = bdeUsers.find((b) => b.id === id);
-                              ownerName = found ? found.value : "";
-                            }
-                            setFormData((prev) => ({
-                              ...prev,
-                              customerOwnerId: id,
-                              customerOwnerName: ownerName,
-                              customerOwnerType: type as "Director" | "BDE",
-                            }));
-                          }}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
-                        >
-                          <option value="">Select Customer Owner</option>
-                          <optgroup label="Directors">
-                            {directors.map((dir) => (
-                              <option
-                                key={`Director:${dir.directorId}`}
-                                value={`Director:${dir.directorId}`}
-                              >
-                                {dir.directorName} {dir.directorCode ? `(${dir.directorCode})` : ""} - Director
-                              </option>
-                            ))}
-                          </optgroup>
-                          <optgroup label="BDEs">
-                            {bdeUsers.map((bde) => (
-                              <option
-                                key={`BDE:${bde.id}`}
-                                value={`BDE:${bde.id}`}
-                              >
-                                {bde.value} {bde.code ? `(${bde.code})` : ""} - BDE
-                              </option>
-                            ))}
-                          </optgroup>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* SECTION 5 - ADDRESS */}
-                {activeTab === 4 && (
-                  <div className="space-y-4">
-                    <div className="border-b pb-2">
-                      <h3 className="text-sm font-bold text-[#154068] uppercase tracking-wider">
-                        Section 5 - Customer Addresses
-                      </h3>
-                      <p className="text-xs text-gray-500">
-                        Manage corporate, registered, billing and shipping locations.
-                      </p>
-                    </div>
-
-                    <CustomerAddressSection
-                      addresses={formData.addresses || []}
-                      onChange={handleAddressesChange}
-                      countries={countries}
-                      addressTypes={addressTypes}
-                    />
-                  </div>
-                )}
-
-                {/* SECTION 6 - OTHER DETAILS */}
-                {activeTab === 5 && (
-                  <div className="space-y-4">
-                    <div className="border-b pb-2">
-                      <h3 className="text-sm font-bold text-[#154068] uppercase tracking-wider">
-                        Section 6 - Other Details & Remarks
-                      </h3>
-                      <p className="text-xs text-gray-500">
-                        Record history dates, relationship comments and account status.
-                      </p>
-                    </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Registration Date
-                      </label>
-                      <input
-                        type="date"
-                        name="registrationDate"
-                        value={formData.registrationDate || ""}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Visited Date
-                      </label>
-                      <input
-                        type="date"
-                        name="visitedDate"
-                        value={formData.visitedDate || ""}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      />
-                    </div>
-
-                    <div className="col-span-1 sm:col-span-2">
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Remarks / Notes
-                      </label>
-                      <textarea
-                        name="remarks"
-                        value={formData.remarks || ""}
-                        onChange={handleInputChange}
-                        rows={3}
-                        placeholder="Add internal notes, communication highlights, or account instructions..."
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      />
-                    </div>
-
-                    <div className="col-span-1 sm:col-span-2 flex items-center pt-2">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          name="isActive"
-                          checked={formData.isActive ?? true}
-                          onChange={handleInputChange}
-                          className="w-4 h-4 text-[#154068] border-gray-300 rounded focus:ring-blue-500"
-                        />
-                        <span className="text-sm font-semibold text-gray-800">
-                          Customer is Active
-                        </span>
-                      </label>
-                    </div>
-                  </div>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-
-          {/* Modal Footer */}
-          <div className="border-t border-gray-200 px-3 sm:px-6 py-3 bg-gray-50 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 shrink-0">
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              {activeTab > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setActiveTab((prev) => prev - 1)}
-                  className="flex-1 sm:flex-none px-3.5 sm:px-4 py-2 text-xs font-medium text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors min-h-[38px] flex items-center justify-center"
-                >
-                  Previous
-                </button>
-              )}
-              {activeTab < tabs.length - 1 && (
-                <button
-                  type="button"
-                  onClick={() => setActiveTab((prev) => prev + 1)}
-                  className="flex-1 sm:flex-none px-3.5 sm:px-4 py-2 text-xs font-medium text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors min-h-[38px] flex items-center justify-center"
-                >
-                  Next
-                </button>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={isSubmitting}
-                className="flex-1 sm:flex-none px-4 sm:px-5 py-2 text-xs font-medium text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors min-h-[38px] flex items-center justify-center"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="flex-1 sm:flex-none px-4 sm:px-6 py-2 text-xs font-medium text-white bg-[#154068] hover:bg-[#103050] rounded-md transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 min-h-[38px]"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="animate-spin" size={14} />
-                    <span>Saving Changes...</span>
-                  </>
-                ) : (
-                  <span>Update Customer</span>
-                )}
-              </button>
-            </div>
-          </div>
-        </form>
-      </div>
+      </form>
 
       <AddSalesCoordinatorModal
         isOpen={isAddCoordinatorOpen}

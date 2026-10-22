@@ -84,11 +84,31 @@ const router = createBrowserRouter([
         element: <EmployeeMaster />,
       },
       {
+        path: "employee",
+        element: <EmployeeMaster />,
+      },
+      {
+        path: "master/employee",
+        element: <EmployeeMaster />,
+      },
+      {
+        path: "master/employees",
+        element: <EmployeeMaster />,
+      },
+      {
         path: "locations",
         element: <MultiLocation />,
       },
       {
         path: "masters",
+        element: <BasicMasters />,
+      },
+      {
+        path: "basimasters",
+        element: <BasicMasters />,
+      },
+      {
+        path: "basicmasters",
         element: <BasicMasters />,
       },
       {
@@ -105,6 +125,10 @@ const router = createBrowserRouter([
       },
       {
         path: "masters/access-control",
+        element: <AccessControlManagement />,
+      },
+      {
+        path: "access-control",
         element: <AccessControlManagement />,
       },
     ],
@@ -203,6 +227,18 @@ const router = createBrowserRouter([
       {
         path: "sales-team",
         element: <SalesTeamMaster />,
+      },
+      {
+        path: "master/sales-assignment",
+        element: <CustomerMaster initialTab="assignment" />,
+      },
+      {
+        path: "sales-assignment",
+        element: <CustomerMaster initialTab="assignment" />,
+      },
+      {
+        path: "hierarchy-management",
+        element: <CustomerMaster initialTab="assignment" />,
       },
       {
         path: "master/follow-up-contact-updates",
@@ -551,6 +587,13 @@ const router = createBrowserRouter([
       { path: "/rsm/customers", element: <CustomerMaster /> },
       { path: "/rsm/customer", element: <CustomerMaster /> },
       { path: "/rsm/sales/customers", element: <CustomerMaster /> },
+      { path: "/sales-assignment", element: <CustomerMaster initialTab="assignment" /> },
+      { path: "/master/sales-assignment", element: <CustomerMaster initialTab="assignment" /> },
+      { path: "/hierarchy-management", element: <CustomerMaster initialTab="assignment" /> },
+      { path: "/employees", element: <EmployeeMaster /> },
+      { path: "/employee", element: <EmployeeMaster /> },
+      { path: "/master/employee", element: <EmployeeMaster /> },
+      { path: "/master/employees", element: <EmployeeMaster /> },
     ],
   },
 

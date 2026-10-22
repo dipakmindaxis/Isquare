@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace CompanyPlatform.CRM.DTO.SalesCoordinator
 {
@@ -11,8 +12,12 @@ namespace CompanyPlatform.CRM.DTO.SalesCoordinator
 
         public string SalesCoordinatorCode { get; set; } = string.Empty;
 
+        // Assigned BDE User ID
+        public int? BDEUserId { get; set; }
+
+        [DefaultValue(true)]
         public bool IsActive { get; set; } = true;
 
-        public bool IsDeleted { get; set; }
+        public bool IsDeleted { get; set; } = false;
     }
 }

@@ -1,7 +1,9 @@
-import React, { useState } from "react";
-import { X, Hash, UserCheck, Loader2, Plus } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { X, Hash, UserCheck, Loader2, Plus, Users } from "lucide-react";
 import { toast } from "sonner";
 import { createSalesCoordinator } from "../Services/SalesCoordinatorService";
+import { getAllBdeUsers } from "../../BdeUsers/Services/BdeUserService";
+import type { BdeUser } from "../../BdeUsers/Types/BdeUser";
 import type { SalesCoordinatorCreatePayload } from "../Types/SalesCoordinatorTypes";
 
 interface AddSalesCoordinatorModalProps {
@@ -16,6 +18,11 @@ const AddSalesCoordinatorModal: React.FC<AddSalesCoordinatorModalProps> = ({
   onSuccess,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [bdeUsers, setBdeUsers] = useState<BdeUser[]>([]);
+  const [isLoadingBdeUsers, setIsLoadingBdeUsers] = useState(false);
+  const [bdeUserError, setBdeUserError] = useState<string | null>(null);
+  const [selectedBdeUserId, setSelectedBdeUserId] = useState<string>("");
+
   const [formData, setFormData] = useState<SalesCoordinatorCreatePayload>({
     salesCoordinatorCode: "",
     salesCoordinatorName: "",
@@ -23,9 +30,39 @@ const AddSalesCoordinatorModal: React.FC<AddSalesCoordinatorModalProps> = ({
     isDeleted: false,
   });
 
+  useEffect(() => {
+    if (!isOpen) return;
+    let isMounted = true;
+    const fetchBdeUsers = async () => {
+      setIsLoadingBdeUsers(true);
+      setBdeUserError(null);
+      try {
+        const data = await getAllBdeUsers();
+        if (isMounted) {
+          setBdeUsers(data.filter((u) => u.isActive));
+        }
+      } catch (err) {
+        if (isMounted) {
+          console.error("Failed to load BDE users:", err);
+          setBdeUserError("Failed to load BDE users list.");
+          toast.error("Failed to load BDE users.");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingBdeUsers(false);
+        }
+      }
+    };
+    fetchBdeUsers();
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const handleClose = () => {
+    setSelectedBdeUserId("");
     setFormData({
       salesCoordinatorCode: "",
       salesCoordinatorName: "",
@@ -45,6 +82,12 @@ const AddSalesCoordinatorModal: React.FC<AddSalesCoordinatorModalProps> = ({
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+
+    if (!selectedBdeUserId) {
+      toast.error("Please select an assigned BDE User.");
+      return;
+    }
+
     if (!formData.salesCoordinatorCode.trim()) {
       toast.error("Sales coordinator code is required.");
       return;
@@ -59,6 +102,7 @@ const AddSalesCoordinatorModal: React.FC<AddSalesCoordinatorModalProps> = ({
       await createSalesCoordinator({
         salesCoordinatorCode: formData.salesCoordinatorCode.trim(),
         salesCoordinatorName: formData.salesCoordinatorName.trim(),
+        bdeUserId: Number(selectedBdeUserId),
         isActive: formData.isActive,
         isDeleted: false,
       });
@@ -102,6 +146,48 @@ const AddSalesCoordinatorModal: React.FC<AddSalesCoordinatorModalProps> = ({
 
           {/* Form Body */}
           <div className="p-6 space-y-4">
+            {/* BDE User Dropdown */}
+            <div>
+              <label
+                htmlFor="salesCoordinatorBdeUser"
+                className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5"
+              >
+                Assigned BDE User <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                  <Users className="w-4 h-4" />
+                </div>
+                <select
+                  id="salesCoordinatorBdeUser"
+                  value={selectedBdeUserId}
+                  onChange={(e) => setSelectedBdeUserId(e.target.value)}
+                  disabled={isLoading || isLoadingBdeUsers}
+                  className="w-full pl-10 pr-10 py-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-[#FF7900] focus:border-[#FF7900] transition disabled:bg-gray-100 disabled:cursor-not-allowed"
+                >
+                  <option value="">
+                    {isLoadingBdeUsers
+                      ? "Loading BDE Users..."
+                      : "-- Select BDE User --"}
+                  </option>
+                  {bdeUsers.map((bde) => (
+                    <option key={bde.id} value={bde.id}>
+                      {bde.value} {bde.code ? `(${bde.code})` : ""}
+                    </option>
+                  ))}
+                </select>
+
+                {isLoadingBdeUsers && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <Loader2 className="w-4 h-4 animate-spin text-[#FF7900]" />
+                  </div>
+                )}
+              </div>
+              {bdeUserError && (
+                <p className="mt-1 text-xs text-red-500">{bdeUserError}</p>
+              )}
+            </div>
+
             <div>
               <label
                 htmlFor="salesCoordinatorCode"
@@ -179,7 +265,7 @@ const AddSalesCoordinatorModal: React.FC<AddSalesCoordinatorModalProps> = ({
             </button>
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || isLoadingBdeUsers}
               className="flex items-center gap-2 bg-[#FF7900] hover:bg-[#e06800] text-white px-5 py-2 rounded-lg text-sm font-medium shadow-xs transition cursor-pointer disabled:opacity-50"
             >
               {isLoading ? (

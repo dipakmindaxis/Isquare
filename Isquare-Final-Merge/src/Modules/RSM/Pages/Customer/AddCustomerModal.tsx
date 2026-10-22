@@ -2,11 +2,16 @@ import React, { useEffect, useState } from "react";
 import {
   X,
   Loader2,
-  Plus,
+  Building,
+  Briefcase,
+  FileText,
+  Users,
+  MapPin,
+  Calendar,
 } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
-import Select, { type StylesConfig } from "react-select";
+import { buttonStyles } from "../../../../Components/Common/buttonStyles";
 import type {
   CustomerCreatePayload,
   CustomerAddress,
@@ -16,11 +21,9 @@ import type {
   CustomerSourceItem,
   CustomerAreaItem,
   PaymentTermItem,
-  BdeUserItem,
   CountryItem,
   AddressTypeItem,
   SalesCoordinatorItem,
-  DirectorItem,
 } from "./Types/CustomerTypes";
 import { createCustomer, getNextCustomerCode } from "./Services/CustomerService";
 import {
@@ -36,6 +39,7 @@ import {
   getDirectors,
 } from "./Services/CustomerMasterDataService";
 import CustomerAddressSection from "./CustomerAddressSection";
+import SalesAssignmentSection from "./SalesAssignmentSection";
 import AddSalesCoordinatorModal from "../Master/SalesCoordinator/Components/AddSalesCoordinatorModal";
 
 interface AddCustomerModalProps {
@@ -69,7 +73,7 @@ interface CustomerFormState {
   salesCoordinatorName: string;
   customerOwnerId: number | "";
   customerOwnerName: string;
-  customerOwnerType: "Director" | "BDE" | "";
+  customerOwnerType: "Director" | "BDE" | string;
   customerOwnerValue: string;
   addresses: CustomerAddress[];
   registrationDate: string;
@@ -158,12 +162,9 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
   const [sources, setSources] = useState<CustomerSourceItem[]>([]);
   const [areas, setAreas] = useState<CustomerAreaItem[]>([]);
   const [paymentTerms, setPaymentTerms] = useState<PaymentTermItem[]>([]);
-  const [bdeUsers, setBdeUsers] = useState<BdeUserItem[]>([]);
   const [countries, setCountries] = useState<CountryItem[]>([]);
   const [addressTypes, setAddressTypes] = useState<AddressTypeItem[]>([]);
-  const [salesCoordinators, setSalesCoordinators] = useState<SalesCoordinatorItem[]>([]);
-  const [directors, setDirectors] = useState<DirectorItem[]>([]);
-  const [selectedCoordinatorIds, setSelectedCoordinatorIds] = useState<number[]>([]);
+  const [, setSalesCoordinators] = useState<SalesCoordinatorItem[]>([]);
   const [isAddCoordinatorOpen, setIsAddCoordinatorOpen] = useState(false);
 
   const refreshSalesCoordinators = async () => {
@@ -171,71 +172,6 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
     if (Array.isArray(list)) {
       setSalesCoordinators(list);
     }
-  };
-
-  interface CoordinatorSelectOption {
-    value: number;
-    label: string;
-    coordinatorName: string;
-  }
-
-  // Custom styling for react-select matching customer form fields
-  const customerSelectStyles: StylesConfig<CoordinatorSelectOption, true> = {
-    control: (base, state) => ({
-      ...base,
-      minHeight: "42px",
-      borderRadius: "0.5rem",
-      borderColor: state.isFocused ? "#154068" : "#d1d5db",
-      boxShadow: state.isFocused ? "0 0 0 2px rgba(21, 64, 104, 0.2)" : "none",
-      "&:hover": {
-        borderColor: state.isFocused ? "#154068" : "#9ca3af",
-      },
-      backgroundColor: "#ffffff",
-      fontSize: "0.875rem",
-      cursor: "pointer",
-    }),
-    multiValue: (base) => ({
-      ...base,
-      backgroundColor: "#f1f5f9",
-      borderRadius: "0.375rem",
-      border: "1px solid #cbd5e1",
-      padding: "1px 3px",
-    }),
-    multiValueLabel: (base) => ({
-      ...base,
-      color: "#0f172a",
-      fontSize: "0.8125rem",
-      fontWeight: 500,
-    }),
-    multiValueRemove: (base) => ({
-      ...base,
-      color: "#64748b",
-      cursor: "pointer",
-      "&:hover": {
-        backgroundColor: "#e2e8f0",
-        color: "#dc2626",
-      },
-    }),
-    option: (base, state) => ({
-      ...base,
-      backgroundColor: state.isSelected
-        ? "#154068"
-        : state.isFocused
-        ? "#f0f7ff"
-        : "#ffffff",
-      color: state.isSelected ? "#ffffff" : "#1f2937",
-      fontSize: "0.875rem",
-      cursor: "pointer",
-    }),
-    menu: (base) => ({
-      ...base,
-      zIndex: 9999,
-    }),
-    placeholder: (base) => ({
-      ...base,
-      color: "#9ca3af",
-      fontSize: "0.875rem",
-    }),
   };
 
   // Support ESC key to close modal
@@ -282,11 +218,9 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
           if (results[2].status === "fulfilled" && Array.isArray(results[2].value)) setSources(results[2].value);
           if (results[3].status === "fulfilled" && Array.isArray(results[3].value)) setAreas(results[3].value);
           if (results[4].status === "fulfilled" && Array.isArray(results[4].value)) setPaymentTerms(results[4].value);
-          if (results[5].status === "fulfilled" && Array.isArray(results[5].value)) setBdeUsers(results[5].value);
           if (results[6].status === "fulfilled" && Array.isArray(results[6].value)) setCountries(results[6].value);
           if (results[7].status === "fulfilled" && Array.isArray(results[7].value)) setAddressTypes(results[7].value);
           if (results[8].status === "fulfilled" && Array.isArray(results[8].value)) setSalesCoordinators(results[8].value);
-          if (results[9].status === "fulfilled" && Array.isArray(results[9].value)) setDirectors(results[9].value);
         } catch (err) {
           console.error("Error loading dropdown data:", err);
         } finally {
@@ -504,23 +438,12 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
           formData.bdeUserId !== "" ? Number(formData.bdeUserId) : null,
         bdeUserName: formData.bdeUserName?.trim() || null,
         salesCoordinatorId:
-          selectedCoordinatorIds.length > 0
-            ? Number(selectedCoordinatorIds[0])
-            : formData.salesCoordinatorId !== "" &&
-              formData.salesCoordinatorId !== undefined &&
-              formData.salesCoordinatorId !== null
+          formData.salesCoordinatorId !== "" &&
+          formData.salesCoordinatorId !== undefined &&
+          formData.salesCoordinatorId !== null
             ? Number(formData.salesCoordinatorId)
             : null,
-        salesCoordinatorName:
-          formData.salesCoordinatorName?.trim() ||
-          (selectedCoordinatorIds.length > 0
-            ? salesCoordinators
-                .filter((sc) =>
-                  selectedCoordinatorIds.includes(sc.salesCoordinatorId)
-                )
-                .map((sc) => sc.salesCoordinatorName)
-                .join(", ")
-            : null),
+        salesCoordinatorName: formData.salesCoordinatorName?.trim() || null,
         customerOwnerId:
           formData.customerOwnerId !== ""
             ? Number(formData.customerOwnerId)
@@ -574,705 +497,491 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
     }
   };
 
+  if (!isOpen) return null;
+
   return (
-    <section className="w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.08)] animate-in slide-in-from-top-4 duration-300">
-      <div className="flex flex-col overflow-hidden">
-        {/* Customer form header */}
-        <div className="flex justify-between items-center bg-[#154068] text-white px-6 py-4 sm:px-8 sm:py-4.5 shrink-0 border-b border-[#0f3458]">
-          <div className="pr-4">
-            <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white leading-tight">
-              Add New Customer
-            </h2>
-            <p className="text-xs sm:text-[13px] text-blue-100/90 font-normal mt-0.5">
-              Enter customer profile details across all relevant sections
-            </p>
-          </div>
+    <div className="bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden mb-8 animate-in slide-in-from-top-4 duration-300">
+      {/* Form Top Bar */}
+      <div className="flex justify-between items-center bg-[#FF7900] text-white px-6 py-4 shrink-0 border-b border-[#e06800]">
+        <div className="flex items-center gap-2.5">
+          <Building size={20} className="text-white" />
+          <h2 className="text-base sm:text-lg font-bold tracking-tight text-white leading-tight">
+            Create New Customer
+          </h2>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="text-white/80 hover:text-white p-1.5 hover:bg-white/10 rounded-lg transition shrink-0 cursor-pointer"
+          title="Back to Customers List"
+        >
+          <X size={20} />
+        </button>
+      </div>
+
+      {/* Single Unified Customer Form */}
+      <form onSubmit={handleSubmit} className="bg-white">
+        <div className="p-6 sm:p-8 space-y-8">
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-24 text-[#FF7900]">
+              <Loader2 size={36} className="animate-spin mb-3 text-[#FF7900]" />
+              <p className="text-sm font-semibold text-gray-700">
+                Loading form master data...
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-8 animate-in fade-in duration-300">
+              {/* SECTION 1: BASIC CUSTOMER DETAILS */}
+              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
+                <div className="border-b border-gray-200 pb-2.5">
+                  <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
+                    <Building size={16} /> Section 1 - Basic Customer Details
+                  </h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block">
+                        Customer Code
+                      </label>
+                      <span className="text-[10px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded font-medium">
+                        Auto-generated
+                      </span>
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        name="customerCode"
+                        value={formData.customerCode || ""}
+                        readOnly
+                        disabled
+                        placeholder={isFetchingCode ? "Generating code..." : "e.g. CUST001"}
+                        className="w-full border border-gray-200 rounded-lg px-4 py-2.5 bg-gray-100 text-gray-600 text-sm cursor-not-allowed select-none font-medium"
+                      />
+                      {isFetchingCode && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                          <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      Customer Name <span className="text-red-500 ml-1">*</span>
+                    </label>
+                    <input
+                      id="customer-name-field"
+                      type="text"
+                      name="customerName"
+                      value={formData.customerName || ""}
+                      onChange={handleInputChange}
+                      placeholder="Enter Customer Name"
+                      required
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      Customer Short Name
+                    </label>
+                    <input
+                      type="text"
+                      name="customerShortName"
+                      value={formData.customerShortName || ""}
+                      onChange={handleInputChange}
+                      placeholder="Enter Short Name"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      Company Name
+                    </label>
+                    <input
+                      type="text"
+                      name="companyName"
+                      value={formData.companyName || ""}
+                      onChange={handleInputChange}
+                      placeholder="Enter Company Name"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      Company Group
+                    </label>
+                    <input
+                      type="text"
+                      name="companyGroup"
+                      value={formData.companyGroup || ""}
+                      onChange={handleInputChange}
+                      placeholder="Enter Company Group"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      Plant Code
+                    </label>
+                    <input
+                      type="text"
+                      name="plantCode"
+                      value={formData.plantCode || ""}
+                      onChange={handleInputChange}
+                      placeholder="Enter Plant Code"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION 2: BUSINESS INFORMATION */}
+              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
+                <div className="border-b border-gray-200 pb-2.5">
+                  <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
+                    <Briefcase size={16} /> Section 2 - Business Information
+                  </h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      Industry
+                    </label>
+                    <select
+                      name="industryId"
+                      value={formData.industryId ?? ""}
+                      onChange={handleInputChange}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800"
+                    >
+                      <option value="">Select Industry...</option>
+                      {industries.map((ind) => (
+                        <option key={ind.industryId} value={ind.industryId}>
+                          {ind.industryName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      Customer Status
+                    </label>
+                    <select
+                      name="customerStatusId"
+                      value={formData.customerStatusId ?? ""}
+                      onChange={handleInputChange}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800"
+                    >
+                      <option value="">Select Customer Status...</option>
+                      {statuses.map((st) => (
+                        <option
+                          key={st.customerStatusId}
+                          value={st.customerStatusId}
+                        >
+                          {st.statusName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      Customer Source
+                    </label>
+                    <select
+                      name="customerSourceId"
+                      value={formData.customerSourceId ?? ""}
+                      onChange={handleInputChange}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800"
+                    >
+                      <option value="">Select Customer Source...</option>
+                      {sources.map((src) => (
+                        <option
+                          key={src.customerSourceId}
+                          value={src.customerSourceId}
+                        >
+                          {src.sourceName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      Customer Area
+                    </label>
+                    <select
+                      name="customerAreaId"
+                      value={formData.customerAreaId ?? ""}
+                      onChange={handleInputChange}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800"
+                    >
+                      <option value="">Select Customer Area...</option>
+                      {areas.map((ar) => (
+                        <option
+                          key={ar.customerAreaId}
+                          value={ar.customerAreaId}
+                        >
+                          {ar.areaName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      Payment Terms
+                    </label>
+                    <select
+                      name="paymentTermsId"
+                      value={formData.paymentTermsId ?? ""}
+                      onChange={handleInputChange}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800"
+                    >
+                      <option value="">Select Payment Terms...</option>
+                      {paymentTerms.map((pt) => (
+                        <option
+                          key={pt.paymentTermId}
+                          value={pt.paymentTermId}
+                        >
+                          {pt.paymentTermName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION 3: REGISTRATION & TAX INFORMATION */}
+              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
+                <div className="border-b border-gray-200 pb-2.5">
+                  <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
+                    <FileText size={16} /> Section 3 - Registration & Tax Information
+                  </h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      PAN No.
+                    </label>
+                    <input
+                      type="text"
+                      name="pan"
+                      value={formData.pan || ""}
+                      onChange={handleInputChange}
+                      placeholder="Enter PAN Number"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      TAN No.
+                    </label>
+                    <input
+                      type="text"
+                      name="tan"
+                      value={formData.tan || ""}
+                      onChange={handleInputChange}
+                      placeholder="Enter TAN Number"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      GSTIN
+                    </label>
+                    <input
+                      type="text"
+                      name="gstin"
+                      value={formData.gstin || ""}
+                      onChange={handleInputChange}
+                      placeholder="Enter GSTIN Number"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      CIN No.
+                    </label>
+                    <input
+                      type="text"
+                      name="cin"
+                      value={formData.cin || ""}
+                      onChange={handleInputChange}
+                      placeholder="Enter CIN Number"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      MSME Number
+                    </label>
+                    <input
+                      type="text"
+                      name="msmeNumber"
+                      value={formData.msmeNumber || ""}
+                      onChange={handleInputChange}
+                      placeholder="Enter MSME Number"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION 4: SALES ASSIGNMENT (Cascading Flow) */}
+              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
+                <div className="border-b border-gray-200 pb-2.5">
+                  <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
+                    <Users size={16} /> Section 4 - Sales Assignment
+                  </h3>
+                </div>
+                <SalesAssignmentSection
+                  hideHeader={true}
+                  values={{
+                    directorId: formData.directorId ? Number(formData.directorId) : "",
+                    directorName: formData.directorName ?? "",
+                    bdeUserId: formData.bdeUserId ? Number(formData.bdeUserId) : "",
+                    bdeUserName: formData.bdeUserName ?? "",
+                    salesCoordinatorId: formData.salesCoordinatorId ? Number(formData.salesCoordinatorId) : "",
+                    salesCoordinatorName: formData.salesCoordinatorName ?? "",
+                    customerOwnerId: formData.customerOwnerId ? Number(formData.customerOwnerId) : "",
+                    customerOwnerName: formData.customerOwnerName ?? "",
+                    customerOwnerType: formData.customerOwnerType ?? "",
+                    customerOwnerValue: formData.customerOwnerValue ?? "",
+                  }}
+                  onChange={(updates) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      ...updates,
+                    }));
+                  }}
+                />
+              </div>
+
+              {/* SECTION 5: ADDRESSES */}
+              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
+                <div className="border-b border-gray-200 pb-2.5">
+                  <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
+                    <MapPin size={16} /> Section 5 - Customer Addresses
+                  </h3>
+                </div>
+                <CustomerAddressSection
+                  addresses={formData.addresses || []}
+                  onChange={handleAddressesChange}
+                  countries={countries}
+                  addressTypes={addressTypes}
+                />
+              </div>
+
+              {/* SECTION 6: OTHER DETAILS & REMARKS */}
+              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
+                <div className="border-b border-gray-200 pb-2.5">
+                  <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
+                    <Calendar size={16} /> Section 6 - Other Details & Remarks
+                  </h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      Registration Date
+                    </label>
+                    <input
+                      type="date"
+                      name="registrationDate"
+                      value={formData.registrationDate || ""}
+                      onChange={handleInputChange}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      Visited Date
+                    </label>
+                    <input
+                      type="date"
+                      name="visitedDate"
+                      value={formData.visitedDate || ""}
+                      onChange={handleInputChange}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      Remarks / Notes
+                    </label>
+                    <textarea
+                      name="remarks"
+                      rows={3}
+                      value={formData.remarks || ""}
+                      onChange={handleInputChange}
+                      placeholder="Enter observations, commercial agreements or special requirements..."
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2 pt-2">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="isActive"
+                        checked={formData.isActive}
+                        onChange={handleInputChange}
+                        className="h-4 w-4 text-[#FF7900] rounded focus:ring-[#FF7900] border-gray-300 cursor-pointer"
+                      />
+                      <span className="text-sm font-semibold text-gray-800">
+                        Customer is Active
+                      </span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer Actions (Matching Employee Module Design) */}
+        <div className="p-5 bg-gray-50 flex justify-end gap-3 border-t border-gray-200">
           <button
             type="button"
             onClick={onClose}
-            className="text-white/80 hover:text-white p-2 hover:bg-white/10 rounded-lg transition shrink-0 min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer"
-            title="Close"
+            disabled={isSubmitting}
+            className={buttonStyles.cancel}
           >
-            <X size={20} />
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={isSubmitting || isLoading}
+            className={buttonStyles.save}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="animate-spin inline mr-1" size={16} /> Saving...
+              </>
+            ) : (
+              "Save Customer"
+            )}
           </button>
         </div>
-
-        {/* Customer form body */}
-        <form
-          onSubmit={handleSubmit}
-          className="flex-1 flex flex-col min-h-0 bg-slate-50/60"
-        >
-          <div className="px-4 py-5 sm:px-8 sm:py-6 space-y-6">
-            {isLoading ? (
-              <div className="flex flex-col items-center justify-center py-24 text-[#154068]">
-                <Loader2 size={36} className="animate-spin mb-3 text-[#154068]" />
-                <p className="text-sm font-semibold text-gray-700">
-                  Loading form master data...
-                </p>
-              </div>
-            ) : (
-              <>
-                {/* SECTION 1 - BASIC CUSTOMER DETAILS */}
-                <div className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 shadow-xs space-y-5">
-                  <div className="border-b border-gray-200 pb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-50 text-[#154068] border border-blue-200">
-                        Section 1
-                      </span>
-                      <h3 className="text-sm font-bold text-[#154068] uppercase tracking-wider">
-                        Basic Customer Details
-                      </h3>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Primary identifying details for the customer and company.
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-                    <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <label className="block text-xs font-semibold text-gray-700">
-                          Customer Code
-                        </label>
-                        <span className="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-medium border border-blue-100">
-                          Auto-generated
-                        </span>
-                      </div>
-                      <div className="relative">
-                        <input
-                          type="text"
-                          name="customerCode"
-                          value={formData.customerCode || ""}
-                          readOnly
-                          placeholder={isFetchingCode ? "Generating code..." : "e.g. CUST001"}
-                          className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-700 placeholder:text-gray-400 focus:outline-none cursor-not-allowed select-none font-medium"
-                        />
-                        {isFetchingCode && (
-                          <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                            <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="sm:col-span-2 lg:col-span-2">
-                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                        Customer Name <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        id="customer-name-field"
-                        type="text"
-                        name="customerName"
-                        value={formData.customerName || ""}
-                        onChange={handleInputChange}
-                        placeholder="e.g. Acme Corporation Pvt Ltd"
-                        required
-                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm bg-white text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#154068]/20 focus:border-[#154068] transition font-medium"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                        Customer Short Name
-                      </label>
-                      <input
-                        type="text"
-                        name="customerShortName"
-                        value={formData.customerShortName || ""}
-                        onChange={handleInputChange}
-                        placeholder="e.g. Acme"
-                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm bg-white text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#154068]/20 focus:border-[#154068] transition"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                        Company Name
-                      </label>
-                      <input
-                        type="text"
-                        name="companyName"
-                        value={formData.companyName || ""}
-                        onChange={handleInputChange}
-                        placeholder="e.g. Acme Holdings"
-                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm bg-white text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#154068]/20 focus:border-[#154068] transition"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                        Company Group
-                      </label>
-                      <input
-                        type="text"
-                        name="companyGroup"
-                        value={formData.companyGroup || ""}
-                        onChange={handleInputChange}
-                        placeholder="e.g. Acme Enterprise Group"
-                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm bg-white text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#154068]/20 focus:border-[#154068] transition"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                        Plant Code
-                      </label>
-                      <input
-                        type="text"
-                        name="plantCode"
-                        value={formData.plantCode || ""}
-                        onChange={handleInputChange}
-                        placeholder="e.g. PL-01"
-                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm bg-white text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#154068]/20 focus:border-[#154068] transition"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* SECTION 2 - BUSINESS INFORMATION */}
-                <div className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 shadow-xs space-y-5">
-                  <div className="border-b border-gray-200 pb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-50 text-[#154068] border border-blue-200">
-                        Section 2
-                      </span>
-                      <h3 className="text-sm font-bold text-[#154068] uppercase tracking-wider">
-                        Business Information
-                      </h3>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Tax details, industry classifications and commercial terms.
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                        Industry
-                      </label>
-                      <select
-                        name="industryId"
-                        value={formData.industryId ?? ""}
-                        onChange={handleInputChange}
-                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#154068]/20 focus:border-[#154068] transition"
-                      >
-                        <option value="">Select Industry</option>
-                        {industries.map((ind) => (
-                          <option key={ind.industryId} value={ind.industryId}>
-                            {ind.industryName}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                        Customer Status
-                      </label>
-                      <select
-                        name="customerStatusId"
-                        value={formData.customerStatusId ?? ""}
-                        onChange={handleInputChange}
-                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#154068]/20 focus:border-[#154068] transition"
-                      >
-                        <option value="">Select Customer Status</option>
-                        {statuses.map((st) => (
-                          <option
-                            key={st.customerStatusId}
-                            value={st.customerStatusId}
-                          >
-                            {st.statusName}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                        Customer Source
-                      </label>
-                      <select
-                        name="customerSourceId"
-                        value={formData.customerSourceId ?? ""}
-                        onChange={handleInputChange}
-                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#154068]/20 focus:border-[#154068] transition"
-                      >
-                        <option value="">Select Customer Source</option>
-                        {sources.map((src) => (
-                          <option
-                            key={src.customerSourceId}
-                            value={src.customerSourceId}
-                          >
-                            {src.sourceName}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                        Customer Area
-                      </label>
-                      <select
-                        name="customerAreaId"
-                        value={formData.customerAreaId ?? ""}
-                        onChange={handleInputChange}
-                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#154068]/20 focus:border-[#154068] transition"
-                      >
-                        <option value="">Select Customer Area</option>
-                        {areas.map((ar) => (
-                          <option
-                            key={ar.customerAreaId}
-                            value={ar.customerAreaId}
-                          >
-                            {ar.areaName}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                        Payment Terms
-                      </label>
-                      <select
-                        name="paymentTermsId"
-                        value={formData.paymentTermsId ?? ""}
-                        onChange={handleInputChange}
-                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#154068]/20 focus:border-[#154068] transition"
-                      >
-                        <option value="">Select Payment Terms</option>
-                        {paymentTerms.map((pt) => (
-                          <option
-                            key={pt.paymentTermId}
-                            value={pt.paymentTermId}
-                          >
-                            {pt.paymentTermName}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                {/* SECTION 3 - REGISTRATION & TAX INFORMATION */}
-                <div className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 shadow-xs space-y-5">
-                  <div className="border-b border-gray-200 pb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-50 text-[#154068] border border-blue-200">
-                        Section 3
-                      </span>
-                      <h3 className="text-sm font-bold text-[#154068] uppercase tracking-wider">
-                        Registration & Tax Information
-                      </h3>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Statutory and registration identifiers.
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                        PAN
-                      </label>
-                      <input
-                        type="text"
-                        name="pan"
-                        value={formData.pan || ""}
-                        onChange={handleInputChange}
-                        placeholder="e.g. ABCDE1234F"
-                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm bg-white text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#154068]/20 focus:border-[#154068] transition"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                        TAN
-                      </label>
-                      <input
-                        type="text"
-                        name="tan"
-                        value={formData.tan || ""}
-                        onChange={handleInputChange}
-                        placeholder="e.g. ABCD12345E"
-                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm bg-white text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#154068]/20 focus:border-[#154068] transition"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                        GSTIN
-                      </label>
-                      <input
-                        type="text"
-                        name="gstin"
-                        value={formData.gstin || ""}
-                        onChange={handleInputChange}
-                        placeholder="e.g. 27ABCDE1234F1Z5"
-                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm bg-white text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#154068]/20 focus:border-[#154068] transition"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                        CIN
-                      </label>
-                      <input
-                        type="text"
-                        name="cin"
-                        value={formData.cin || ""}
-                        onChange={handleInputChange}
-                        placeholder="e.g. U12345MH2020PTC123456"
-                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm bg-white text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#154068]/20 focus:border-[#154068] transition"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                        MSME Number
-                      </label>
-                      <input
-                        type="text"
-                        name="msmeNumber"
-                        value={formData.msmeNumber || ""}
-                        onChange={handleInputChange}
-                        placeholder="e.g. UDYAM-MH-01-0000000"
-                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm bg-white text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#154068]/20 focus:border-[#154068] transition"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* SECTION 4 - SALES ASSIGNMENT */}
-                <div className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 shadow-xs space-y-5">
-                  <div className="border-b border-gray-200 pb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-50 text-[#154068] border border-blue-200">
-                        Section 4
-                      </span>
-                      <h3 className="text-sm font-bold text-[#154068] uppercase tracking-wider">
-                        Sales Assignment
-                      </h3>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Map leadership, account managers, and sales representatives.
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-                    {/* Field 1: Director */}
-                    <div>
-                      <label htmlFor="directors" className="block text-xs font-semibold text-gray-700 mb-1.5">
-                        Director
-                      </label>
-                      <select
-                        id="directors"
-                        name="directorId"
-                        value={formData.directorId ?? ""}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          const dirId = val ? Number(val) : "";
-                          const found = directors.find((d) => d.directorId === Number(dirId));
-                          setFormData((prev) => ({
-                            ...prev,
-                            directorId: dirId,
-                            directorName: found ? found.directorName : "",
-                          }));
-                        }}
-                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#154068]/20 focus:border-[#154068] transition cursor-pointer"
-                      >
-                        <option value="">Select Director</option>
-                        {directors.map((dir) => (
-                          <option key={dir.directorId} value={dir.directorId}>
-                            {dir.directorName} {dir.directorCode ? `(${dir.directorCode})` : ""}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Field 2: BDE */}
-                    <div>
-                      <label htmlFor="bde" className="block text-xs font-semibold text-gray-700 mb-1.5">
-                        BDE (Business Development Executive)
-                      </label>
-                      <select
-                        id="bde"
-                        name="bdeUserId"
-                        value={formData.bdeUserId ?? ""}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          const bdeId = val ? Number(val) : "";
-                          const found = bdeUsers.find((b) => b.id === Number(bdeId));
-                          setFormData((prev) => ({
-                            ...prev,
-                            bdeUserId: bdeId,
-                            bdeUserName: found ? found.value : "",
-                          }));
-                        }}
-                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#154068]/20 focus:border-[#154068] transition cursor-pointer"
-                      >
-                        <option value="">Select BDE User</option>
-                        {bdeUsers.map((bde) => (
-                          <option key={bde.id} value={bde.id}>
-                            {bde.value} {bde.code ? `(${bde.code})` : ""}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Field 3: Sales Coordinators (Multi-select with removable chips) */}
-                    <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <label htmlFor="sales_coordinators" className="block text-xs font-semibold text-gray-700">
-                          Sales Coordinators
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() => setIsAddCoordinatorOpen(true)}
-                          className="text-xs font-semibold text-[#FF7900] hover:text-[#e06800] flex items-center gap-1 cursor-pointer transition"
-                        >
-                          <Plus size={13} />
-                          <span>Add New</span>
-                        </button>
-                      </div>
-                      <Select<CoordinatorSelectOption, true>
-                        id="sales_coordinators"
-                        isMulti
-                        isClearable
-                        isSearchable
-                        placeholder="Select or search Sales Coordinator..."
-                        options={salesCoordinators.map((sc) => ({
-                          value: sc.salesCoordinatorId,
-                          label: `${sc.salesCoordinatorName}${
-                            sc.salesCoordinatorCode ? ` (${sc.salesCoordinatorCode})` : ""
-                          }`,
-                          coordinatorName: sc.salesCoordinatorName,
-                        }))}
-                        value={salesCoordinators
-                          .filter((sc) =>
-                            selectedCoordinatorIds.includes(sc.salesCoordinatorId)
-                          )
-                          .map((sc) => ({
-                            value: sc.salesCoordinatorId,
-                            label: `${sc.salesCoordinatorName}${
-                              sc.salesCoordinatorCode
-                                ? ` (${sc.salesCoordinatorCode})`
-                                : ""
-                            }`,
-                            coordinatorName: sc.salesCoordinatorName,
-                          }))}
-                        onChange={(selected) => {
-                          const items = (selected || []) as readonly CoordinatorSelectOption[];
-                          const ids = items.map((i) => i.value);
-                          const names = items.map((i) => i.coordinatorName).join(", ");
-                          setSelectedCoordinatorIds(ids);
-                          setFormData((prev) => ({
-                            ...prev,
-                            salesCoordinatorId: ids.length > 0 ? ids[0] : "",
-                            salesCoordinatorName: names,
-                          }));
-                        }}
-                        styles={customerSelectStyles}
-                      />
-                    </div>
-
-                    {/* Field 4: Customer Owner (Grouped into Directors and BDEs) */}
-                    <div>
-                      <label htmlFor="customer_owner" className="block text-xs font-semibold text-gray-700 mb-1.5">
-                        Customer Owner
-                      </label>
-                      <select
-                        id="customer_owner"
-                        name="customerOwnerValue"
-                        value={formData.customerOwnerValue ?? ""}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (!val) {
-                            setFormData((prev) => ({
-                              ...prev,
-                              customerOwnerValue: "",
-                              customerOwnerId: "",
-                              customerOwnerName: "",
-                              customerOwnerType: "",
-                            }));
-                            return;
-                          }
-                          const [type, idStr] = val.split(":");
-                          const id = Number(idStr);
-                          let ownerName = "";
-                          if (type === "Director") {
-                            const found = directors.find((d) => d.directorId === id);
-                            ownerName = found ? found.directorName : "";
-                          } else if (type === "BDE") {
-                            const found = bdeUsers.find((b) => b.id === id);
-                            ownerName = found ? found.value : "";
-                          }
-                          setFormData((prev) => ({
-                            ...prev,
-                            customerOwnerValue: val,
-                            customerOwnerId: id,
-                            customerOwnerName: ownerName,
-                            customerOwnerType: type as "Director" | "BDE",
-                          }));
-                        }}
-                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#154068]/20 focus:border-[#154068] transition cursor-pointer"
-                      >
-                        <option value="">Select Customer Owner</option>
-                        <optgroup label="Directors">
-                          {directors.map((dir) => (
-                            <option
-                              key={`Director:${dir.directorId}`}
-                              value={`Director:${dir.directorId}`}
-                            >
-                              {dir.directorName} {dir.directorCode ? `(${dir.directorCode})` : ""} - Director
-                            </option>
-                          ))}
-                        </optgroup>
-                        <optgroup label="BDEs">
-                          {bdeUsers.map((bde) => (
-                            <option
-                              key={`BDE:${bde.id}`}
-                              value={`BDE:${bde.id}`}
-                            >
-                              {bde.value} {bde.code ? `(${bde.code})` : ""} - BDE
-                            </option>
-                          ))}
-                        </optgroup>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                {/* SECTION 5 - ADDRESSES */}
-                <div className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 shadow-xs space-y-5">
-                  <div className="border-b border-gray-200 pb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-50 text-[#154068] border border-blue-200">
-                        Section 5
-                      </span>
-                      <h3 className="text-sm font-bold text-[#154068] uppercase tracking-wider">
-                        Customer Addresses
-                      </h3>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Manage billing, shipping, plant and registered addresses.
-                    </p>
-                  </div>
-
-                  <CustomerAddressSection
-                    addresses={formData.addresses || []}
-                    onChange={handleAddressesChange}
-                    countries={countries}
-                    addressTypes={addressTypes}
-                  />
-                </div>
-
-                {/* SECTION 6 - OTHER DETAILS & REMARKS */}
-                <div className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 shadow-xs space-y-5">
-                  <div className="border-b border-gray-200 pb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-50 text-[#154068] border border-blue-200">
-                        Section 6
-                      </span>
-                      <h3 className="text-sm font-bold text-[#154068] uppercase tracking-wider">
-                        Other Details & Remarks
-                      </h3>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Registration milestones, internal notes, and active status.
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                        Registration Date
-                      </label>
-                      <input
-                        type="date"
-                        name="registrationDate"
-                        value={formData.registrationDate || ""}
-                        onChange={handleInputChange}
-                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#154068]/20 focus:border-[#154068] transition"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                        Visited Date
-                      </label>
-                      <input
-                        type="date"
-                        name="visitedDate"
-                        value={formData.visitedDate || ""}
-                        onChange={handleInputChange}
-                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#154068]/20 focus:border-[#154068] transition"
-                      />
-                    </div>
-
-                    <div className="col-span-1 sm:col-span-2">
-                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                        Remarks / Notes
-                      </label>
-                      <textarea
-                        name="remarks"
-                        rows={3}
-                        value={formData.remarks || ""}
-                        onChange={handleInputChange}
-                        placeholder="Enter observations, commercial agreements or special requirements..."
-                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#154068]/20 focus:border-[#154068] transition"
-                      />
-                    </div>
-
-                    <div className="col-span-1 sm:col-span-2 pt-2">
-                      <label className="flex items-center gap-3 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          name="isActive"
-                          checked={formData.isActive}
-                          onChange={handleInputChange}
-                          className="h-4 w-4 text-[#154068] rounded focus:ring-[#154068] border-gray-300 cursor-pointer"
-                        />
-                        <span className="text-sm font-semibold text-gray-800">
-                          Customer is Active
-                        </span>
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Form actions */}
-          <div className="border-t border-gray-200 bg-white px-6 py-3.5 sm:px-8 flex items-center justify-end gap-3 shrink-0">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isSubmitting}
-              className="border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 font-medium text-sm px-6 py-2.5 rounded-lg transition min-h-[40px] shadow-xs disabled:opacity-50 flex items-center justify-center cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting || isLoading}
-              className="bg-[#154068] hover:bg-[#0f3050] text-white font-semibold text-sm px-7 py-2.5 rounded-lg shadow-sm transition min-h-[40px] flex items-center justify-center gap-2 active:scale-98 disabled:opacity-50 cursor-pointer"
-            >
-              {isSubmitting && <Loader2 className="animate-spin" size={16} />}
-              <span>{isSubmitting ? "Saving..." : "Save Customer"}</span>
-            </button>
-          </div>
-        </form>
-      </div>
+      </form>
 
       <AddSalesCoordinatorModal
         isOpen={isAddCoordinatorOpen}
         onClose={() => setIsAddCoordinatorOpen(false)}
         onSuccess={refreshSalesCoordinators}
       />
-    </section>
+    </div>
   );
 };
 

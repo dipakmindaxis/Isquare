@@ -47,6 +47,27 @@ namespace CompanyPlatform.CRM.Controllers
             return Ok(coordinators);
         }
 
+        // Get Sales Coordinators mapped to the selected BDE User.
+        // GET: /api/sales-coordinator/by-bde/1
+        [HttpGet("by-bde/{bdeUserId:int}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetByBDEUserId(int bdeUserId)
+        {
+            if (bdeUserId <= 0)
+            {
+                return BadRequest(new
+                {
+                    Message = "A valid BDE User ID is required."
+                });
+            }
+
+            var coordinators =
+                await _service.GetSalesCoordinatorsByBDEUserIdAsync(
+                    bdeUserId);
+
+            return Ok(coordinators);
+        }
+
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {

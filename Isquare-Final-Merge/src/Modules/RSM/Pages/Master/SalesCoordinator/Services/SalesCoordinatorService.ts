@@ -39,6 +39,11 @@ interface RawSalesCoordinator {
   SalesCoordinatorCode?: string;
   code?: string;
   Code?: string;
+  bdeUserId?: number | null;
+  BdeUserId?: number | null;
+  bdeUser?: { id?: number; value?: string; code?: string } | null;
+  bdeUserName?: string | null;
+  BdeUserName?: string | null;
   isActive?: boolean;
   IsActive?: boolean;
   isDeleted?: boolean;
@@ -67,6 +72,16 @@ const normalizeSalesCoordinator = (
     item.code ||
     item.Code ||
     "",
+  bdeUserId:
+    item.bdeUserId ??
+    item.BdeUserId ??
+    item.bdeUser?.id ??
+    null,
+  bdeUserName:
+    item.bdeUserName ??
+    item.BdeUserName ??
+    item.bdeUser?.value ??
+    null,
   isActive: item.isActive !== false && item.IsActive !== false,
   isDeleted: item.isDeleted || item.IsDeleted || false,
 });
@@ -82,6 +97,16 @@ export const getAllSalesCoordinators = async (): Promise<SalesCoordinator[]> => 
 export const getActiveSalesCoordinators = async (): Promise<SalesCoordinator[]> => {
   const response = await apiClient.get<ApiDataResponse<RawSalesCoordinator>>(
     `${SALES_COORDINATOR_URL}/active`
+  );
+  const list = ensureArray<RawSalesCoordinator>(response.data);
+  return list.map(normalizeSalesCoordinator);
+};
+
+export const getSalesCoordinatorsByBde = async (
+  bdeUserId: number
+): Promise<SalesCoordinator[]> => {
+  const response = await apiClient.get<ApiDataResponse<RawSalesCoordinator>>(
+    `${SALES_COORDINATOR_URL}/by-bde/${bdeUserId}`
   );
   const list = ensureArray<RawSalesCoordinator>(response.data);
   return list.map(normalizeSalesCoordinator);

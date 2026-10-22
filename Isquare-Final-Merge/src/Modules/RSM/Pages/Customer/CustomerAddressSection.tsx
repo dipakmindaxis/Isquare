@@ -105,14 +105,14 @@ const CustomerAddressSection: React.FC<CustomerAddressSectionProps> = ({
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-        <h4 className="text-sm font-semibold text-gray-800 uppercase tracking-wider">
+        <h4 className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest">
           Customer Addresses ({addresses.length})
         </h4>
         {!readOnly && (
           <button
             type="button"
             onClick={handleAddAddress}
-            className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-3 py-1.5 bg-[#154068] text-white text-xs font-medium rounded-md hover:bg-[#0d3357] transition shadow-sm min-h-[36px]"
+            className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 bg-[#FF7900] text-white text-xs font-semibold rounded-lg hover:bg-[#e06800] transition shadow-xs cursor-pointer"
           >
             <Plus size={14} /> Add Address
           </button>
@@ -120,7 +120,7 @@ const CustomerAddressSection: React.FC<CustomerAddressSectionProps> = ({
       </div>
 
       {addresses.length === 0 ? (
-        <div className="text-center py-6 border-2 border-dashed border-gray-200 rounded-lg text-gray-400 text-sm">
+        <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-xl text-gray-400 text-sm">
           No addresses added. {!readOnly && "Click \"Add Address\" to add an address."}
         </div>
       ) : (
@@ -128,11 +128,11 @@ const CustomerAddressSection: React.FC<CustomerAddressSectionProps> = ({
           {addresses.map((addr, idx) => (
             <div
               key={idx}
-              className="p-3 sm:p-4 border border-gray-200 rounded-lg bg-gray-50/70 hover:bg-gray-50 transition space-y-3"
+              className="p-4 sm:p-5 border border-gray-200 rounded-xl bg-gray-50/70 hover:bg-gray-50 transition space-y-4"
             >
-              <div className="flex flex-wrap justify-between items-center gap-2 pb-2 border-b border-gray-200">
+              <div className="flex flex-wrap justify-between items-center gap-2 pb-2.5 border-b border-gray-200">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-semibold text-xs text-[#154068] bg-blue-100 px-2 py-0.5 rounded">
+                  <span className="font-bold text-xs text-[#FF7900] bg-orange-50 border border-orange-200 px-2.5 py-1 rounded-md">
                     #{idx + 1} {addr.addressType || "Address"}
                   </span>
                   {addr.isPrimary && (
@@ -153,7 +153,7 @@ const CustomerAddressSection: React.FC<CustomerAddressSectionProps> = ({
                       type="button"
                       disabled={validatingIndex === idx}
                       onClick={() => handleValidateAddress(idx)}
-                      className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-emerald-600 text-white rounded hover:bg-emerald-700 disabled:opacity-50 transition min-h-[30px]"
+                      className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-emerald-600 text-white rounded-md hover:bg-emerald-700 disabled:opacity-50 transition min-h-[30px] cursor-pointer"
                       title="Validate this address via backend API"
                     >
                       {validatingIndex === idx ? (
@@ -169,7 +169,7 @@ const CustomerAddressSection: React.FC<CustomerAddressSectionProps> = ({
                     <button
                       type="button"
                       onClick={() => handleRemoveAddress(idx)}
-                      className="text-red-500 hover:text-red-700 p-1.5 transition rounded hover:bg-red-50"
+                      className="text-red-500 hover:text-red-700 p-1.5 transition rounded-md hover:bg-red-50 cursor-pointer"
                       title="Remove Address"
                     >
                       <Trash2 size={16} />
@@ -181,7 +181,7 @@ const CustomerAddressSection: React.FC<CustomerAddressSectionProps> = ({
               {/* Validation Result Banner */}
               {validationResults[idx] && (
                 <div
-                  className={`flex items-center gap-2 p-2 rounded text-xs ${
+                  className={`flex items-center gap-2 p-2.5 rounded-lg text-xs ${
                     validationResults[idx].success
                       ? "bg-green-50 text-green-800 border border-green-200"
                       : "bg-red-50 text-red-800 border border-red-200"
@@ -196,9 +196,9 @@ const CustomerAddressSection: React.FC<CustomerAddressSectionProps> = ({
                 </div>
               )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 text-sm">
                 <div className="sm:col-span-3">
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                  <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
                     Address Type
                   </label>
                   {readOnly ? (
@@ -209,7 +209,7 @@ const CustomerAddressSection: React.FC<CustomerAddressSectionProps> = ({
                       onChange={(e) =>
                         handleFieldChange(idx, "addressType", e.target.value)
                       }
-                      className="w-full px-2.5 py-1.5 border border-gray-300 rounded-md text-xs bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm"
                     >
                       {addressTypes.length > 0 ? (
                         addressTypes.map((t) => {
@@ -235,7 +235,7 @@ const CustomerAddressSection: React.FC<CustomerAddressSectionProps> = ({
                 </div>
 
                 <div className="sm:col-span-6">
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                  <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
                     Full Address / Street
                   </label>
                   {readOnly ? (
@@ -248,13 +248,13 @@ const CustomerAddressSection: React.FC<CustomerAddressSectionProps> = ({
                         handleFieldChange(idx, "address", e.target.value)
                       }
                       placeholder="Enter building, street, area details"
-                      className="w-full px-2.5 py-1.5 border border-gray-300 rounded-md text-xs bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm"
                     />
                   )}
                 </div>
 
                 <div className="sm:col-span-3">
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                  <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
                     Pin Code
                   </label>
                   {readOnly ? (
@@ -268,7 +268,7 @@ const CustomerAddressSection: React.FC<CustomerAddressSectionProps> = ({
                       }
                       placeholder="e.g. 411026"
                       maxLength={10}
-                      className="w-full px-2.5 py-1.5 border border-gray-300 rounded-md text-xs bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm"
                     />
                   )}
                 </div>

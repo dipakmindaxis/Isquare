@@ -2,7 +2,11 @@ import React, { useEffect, useState } from "react";
 import { Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 
-import { updateBdeUser } from "../Services/BdeUserService";
+import {
+  updateBdeUser,
+  getDirectorEmployees,
+  type DirectorEmployeeOption,
+} from "../Services/BdeUserService";
 import type { BdeUser } from "../Types/BdeUser";
 
 interface EditBdeUserModalProps {
@@ -18,16 +22,55 @@ const EditBdeUserModal: React.FC<EditBdeUserModalProps> = ({
   onClose,
   onSuccess,
 }) => {
+  const [directors, setDirectors] = useState<DirectorEmployeeOption[]>([]);
+  const [isLoadingDirectors, setIsLoadingDirectors] = useState(false);
+  const [directorError, setDirectorError] = useState<string | null>(null);
+  const [directorEmployeeId, setDirectorEmployeeId] = useState<string>("");
+
   const [value, setValue] = useState("");
   const [code, setCode] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Fetch directors list when modal opens
+  useEffect(() => {
+    if (!isOpen) return;
+    let isMounted = true;
+    const fetchDirectors = async () => {
+      setIsLoadingDirectors(true);
+      setDirectorError(null);
+      try {
+        const data = await getDirectorEmployees();
+        if (isMounted) {
+          setDirectors(data);
+        }
+      } catch (err) {
+        if (isMounted) {
+          console.error("Failed to load directors in edit modal:", err);
+          setDirectorError("Failed to load directors list.");
+          toast.error("Failed to load directors.");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingDirectors(false);
+        }
+      }
+    };
+    fetchDirectors();
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen]);
+
+  // Preselect data from bdeUser prop
   useEffect(() => {
     if (bdeUser) {
-      setValue(bdeUser.value);
-      setCode(bdeUser.code);
+      setValue(bdeUser.value || "");
+      setCode(bdeUser.code || "");
       setIsActive(bdeUser.isActive);
+      setDirectorEmployeeId(
+        bdeUser.directorEmployeeId ? String(bdeUser.directorEmployeeId) : ""
+      );
     }
   }, [bdeUser]);
 
@@ -37,6 +80,11 @@ const EditBdeUserModal: React.FC<EditBdeUserModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (!directorEmployeeId) {
+      toast.error("Please select a Director.");
+      return;
+    }
 
     if (!value.trim()) {
       toast.error("Value is required.");
@@ -55,6 +103,7 @@ const EditBdeUserModal: React.FC<EditBdeUserModalProps> = ({
         id: bdeUser.id,
         value: value.trim(),
         code: code.trim().toUpperCase(),
+        directorEmployeeId: Number(directorEmployeeId),
         isActive,
         isDeleted: bdeUser.isDeleted,
       });
@@ -97,12 +146,53 @@ const EditBdeUserModal: React.FC<EditBdeUserModalProps> = ({
 
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 px-6 py-5">
+            {/* Director Dropdown */}
+            <div>
+              <label
+                htmlFor="editBdeUserDirector"
+                className="mb-1 block text-sm font-medium text-gray-700"
+              >
+                Director <span className="text-red-500">*</span>
+              </label>
+
+              <div className="relative">
+                <select
+                  id="editBdeUserDirector"
+                  value={directorEmployeeId}
+                  onChange={(e) => setDirectorEmployeeId(e.target.value)}
+                  disabled={isSaving || isLoadingDirectors}
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF7900] disabled:bg-gray-100 disabled:cursor-not-allowed"
+                >
+                  <option value="">
+                    {isLoadingDirectors
+                      ? "Loading directors..."
+                      : "-- Select Director --"}
+                  </option>
+                  {directors.map((director) => (
+                    <option key={director.id} value={director.id}>
+                      {director.name} {director.code ? `(${director.code})` : ""}
+                    </option>
+                  ))}
+                </select>
+
+                {isLoadingDirectors && (
+                  <div className="absolute right-8 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <Loader2 className="w-4 h-4 animate-spin text-[#FF7900]" />
+                  </div>
+                )}
+              </div>
+
+              {directorError && (
+                <p className="mt-1 text-xs text-red-500">{directorError}</p>
+              )}
+            </div>
+
             <div>
               <label
                 htmlFor="editBdeUserValue"
                 className="mb-1 block text-sm font-medium text-gray-700"
               >
-                Value
+                Value / Name <span className="text-red-500">*</span>
               </label>
 
               <input
@@ -110,8 +200,9 @@ const EditBdeUserModal: React.FC<EditBdeUserModalProps> = ({
                 type="text"
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
+                placeholder="e.g. Rohan Deshmukh"
                 disabled={isSaving}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF7900]"
               />
             </div>
 
@@ -120,7 +211,7 @@ const EditBdeUserModal: React.FC<EditBdeUserModalProps> = ({
                 htmlFor="editBdeUserCode"
                 className="mb-1 block text-sm font-medium text-gray-700"
               >
-                Code
+                Code <span className="text-red-500">*</span>
               </label>
 
               <input
@@ -128,6 +219,7 @@ const EditBdeUserModal: React.FC<EditBdeUserModalProps> = ({
                 type="text"
                 value={code}
                 onChange={(e) => setCode(e.target.value.toUpperCase())}
+                placeholder="e.g. BDE_001"
                 disabled={isSaving}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 focus:border-[#FF7900] transition"
               />
@@ -164,7 +256,7 @@ const EditBdeUserModal: React.FC<EditBdeUserModalProps> = ({
 
             <button
               type="submit"
-              disabled={isSaving}
+              disabled={isSaving || isLoadingDirectors}
               className="flex items-center gap-2 rounded-lg bg-[#FF7900] px-5 py-2 text-sm font-semibold text-white hover:bg-[#E66D00] disabled:bg-gray-400 shadow-sm transition cursor-pointer"
             >
               {isSaving && <Loader2 size={16} className="animate-spin" />}

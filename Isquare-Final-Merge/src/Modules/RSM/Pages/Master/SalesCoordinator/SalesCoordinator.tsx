@@ -16,6 +16,7 @@ import {
   getAllSalesCoordinators,
   deleteSalesCoordinator,
 } from "./Services/SalesCoordinatorService";
+import { getAllBdeUsers } from "../BdeUsers/Services/BdeUserService";
 import type { SalesCoordinator as SalesCoordinatorType } from "./Types/SalesCoordinatorTypes";
 import AddSalesCoordinatorModal from "./Components/AddSalesCoordinatorModal";
 import EditSalesCoordinatorModal from "./Components/EditSalesCoordinatorModal";
@@ -51,8 +52,22 @@ const SalesCoordinator: React.FC<SalesCoordinatorProps> = ({ isTab = false }) =>
   const fetchItems = useCallback(async (): Promise<void> => {
     setIsLoading(true);
     try {
-      const data = await getAllSalesCoordinators();
-      setCoordinators(Array.isArray(data) ? data : []);
+      const [data, bdeUsers] = await Promise.all([
+        getAllSalesCoordinators(),
+        getAllBdeUsers().catch(() => []),
+      ]);
+      const bdeMap = new Map<number, string>(
+        bdeUsers.map((b) => [b.id, b.value])
+      );
+      const rawList = Array.isArray(data) ? data : [];
+      const resolvedList = rawList.map((item) => ({
+        ...item,
+        bdeUserName:
+          item.bdeUserName ||
+          (item.bdeUserId ? bdeMap.get(item.bdeUserId) : null) ||
+          null,
+      }));
+      setCoordinators(resolvedList);
     } catch {
       toast.error("Failed to fetch sales coordinators.");
     } finally {
@@ -70,7 +85,9 @@ const SalesCoordinator: React.FC<SalesCoordinatorProps> = ({ isTab = false }) =>
         (item.salesCoordinatorCode &&
           item.salesCoordinatorCode.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (item.salesCoordinatorName &&
-          item.salesCoordinatorName.toLowerCase().includes(searchQuery.toLowerCase()));
+          item.salesCoordinatorName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (item.bdeUserName &&
+          item.bdeUserName.toLowerCase().includes(searchQuery.toLowerCase()));
 
       const matchesStatus =
         statusFilter === "All" ||
@@ -140,6 +157,9 @@ const SalesCoordinator: React.FC<SalesCoordinatorProps> = ({ isTab = false }) =>
       "Sr. No.": index + 1,
       "Coordinator Code": item.salesCoordinatorCode || "-",
       "Coordinator Name": item.salesCoordinatorName || "-",
+      "Assigned BDE":
+        item.bdeUserName ||
+        (item.bdeUserId ? `BDE #${item.bdeUserId}` : "-"),
       Status: item.isActive ? "Active" : "Inactive",
     }));
 
@@ -295,6 +315,7 @@ const SalesCoordinator: React.FC<SalesCoordinatorProps> = ({ isTab = false }) =>
                 <th className="px-6 py-4 text-left font-bold w-20">Sr. No.</th>
                 <th className="px-6 py-4 text-left font-bold">Coordinator Code</th>
                 <th className="px-6 py-4 text-left font-bold">Coordinator Name</th>
+                <th className="px-6 py-4 text-left font-bold">Assigned BDE</th>
                 <th className="px-6 py-4 text-center font-bold">Status</th>
                 <th className="px-6 py-4 text-right font-bold">Actions</th>
               </tr>
@@ -302,13 +323,13 @@ const SalesCoordinator: React.FC<SalesCoordinatorProps> = ({ isTab = false }) =>
             <tbody className="bg-white divide-y divide-gray-100">
               {isLoading ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-12 text-gray-500">
+                  <td colSpan={6} className="text-center py-12 text-gray-500">
                     <LogoLoader />
                   </td>
                 </tr>
               ) : paginatedItems.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-12 text-gray-500">
+                  <td colSpan={6} className="text-center py-12 text-gray-500">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <UserCheck className="w-8 h-8 text-gray-300" />
                       <p className="text-sm font-medium">
@@ -338,6 +359,21 @@ const SalesCoordinator: React.FC<SalesCoordinatorProps> = ({ isTab = false }) =>
                     </td>
                     <td className="px-6 py-4 text-gray-900 font-semibold">
                       {item.salesCoordinatorName}
+                    </td>
+                    <td className="px-6 py-4 text-gray-700">
+                      {item.bdeUserName ? (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold bg-orange-50 text-[#FF7900] border border-[#FF7900]/20">
+                          {item.bdeUserName}
+                        </span>
+                      ) : item.bdeUserId ? (
+                        <span className="text-gray-600 text-xs font-medium">
+                          BDE #{item.bdeUserId}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400 italic text-xs">
+                          Not Assigned
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-center">
                       <span
