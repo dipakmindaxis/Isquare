@@ -12,15 +12,20 @@ namespace CompanyPlatform.CRM.Services.SalesCoordinator
         Task<IEnumerable<SalesCoordinatorDto>>
             GetActiveSalesCoordinatorsAsync();
 
-        Task<SalesCoordinatorDto?> GetSalesCoordinatorByIdAsync(int id);
+        Task<SalesCoordinatorDto?>
+            GetSalesCoordinatorByIdAsync(int id);
 
-        Task<SalesCoordinatorDto> CreateSalesCoordinatorAsync(
-            SalesCoordinatorDto dto);
+        Task<SalesCoordinatorDto>
+            CreateSalesCoordinatorAsync(SalesCoordinatorDto dto);
 
-        Task<bool> UpdateSalesCoordinatorAsync(
-            int id,
-            SalesCoordinatorDto dto);
+        Task<bool>
+            UpdateSalesCoordinatorAsync(int id, SalesCoordinatorDto dto);
 
-        Task<bool> DeleteSalesCoordinatorAsync(int id);
+        Task<bool>
+            DeleteSalesCoordinatorAsync(int id);
+
+        // Get Sales Coordinators assigned to a specific BDE User
+        Task<IEnumerable<SalesCoordinatorDto>>
+            GetSalesCoordinatorsByBDEUserIdAsync(int bdeUserId);
     }
 }

@@ -480,19 +480,16 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
     <section className="w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.08)] animate-in slide-in-from-top-4 duration-300">
       <div className="flex flex-col overflow-hidden">
         {/* Customer & Activity Form Header Matching Customer Module */}
-        <div className="flex justify-between items-center bg-[#FF7900] text-white px-6 py-4 sm:px-8 sm:py-4.5 shrink-0 border-b border-[#e06800]">
-          <div className="pr-4">
-            <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white leading-tight">
+        <div className="flex justify-between items-center bg-[#FF7900] text-white px-6 py-4 shrink-0 border-b border-[#e06800]">
+          <div className="flex items-center gap-2.5">
+            <h2 className="text-base sm:text-lg font-bold tracking-tight text-white leading-tight">
               Add New Sales Activity
             </h2>
-            <p className="text-xs sm:text-[13px] text-orange-100 font-normal mt-0.5">
-              Record sales activity details across all relevant sections
-            </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="text-white/80 hover:text-white p-2 hover:bg-white/10 rounded-lg transition shrink-0 min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer"
+            className="text-white/80 hover:text-white p-1.5 hover:bg-white/10 rounded-lg transition shrink-0 cursor-pointer"
             title="Close"
           >
             <X size={20} />

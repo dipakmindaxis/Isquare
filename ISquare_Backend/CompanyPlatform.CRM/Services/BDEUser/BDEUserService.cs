@@ -22,12 +22,13 @@ namespace CompanyPlatform.CRM.Services.BDEUser
             var items = await _repository.GetAll();
 
             return items
-                .Where(x => x.IsDeleted == false)
+                .Where(x => !x.IsDeleted)
                 .Select(x => new BDEUserDto
                 {
                     ID = x.ID,
                     Value = x.Value,
                     Code = x.Code,
+                    DirectorEmployeeId = x.DirectorEmployeeId,
                     IsActive = x.IsActive,
                     IsDeleted = x.IsDeleted
                 });
@@ -45,6 +46,7 @@ namespace CompanyPlatform.CRM.Services.BDEUser
                 ID = item.ID,
                 Value = item.Value,
                 Code = item.Code,
+                DirectorEmployeeId = item.DirectorEmployeeId,
                 IsActive = item.IsActive,
                 IsDeleted = item.IsDeleted
             };
@@ -52,14 +54,14 @@ namespace CompanyPlatform.CRM.Services.BDEUser
 
         public async Task<BDEUserDto> CreateBDEUserAsync(BDEUserDto dto)
         {
-            var newItem =
-                new CompanyPlatform.Core.Models.CRM.BDEUser
-                {
-                    Value = dto.Value,
-                    Code = dto.Code,
-                    IsActive = dto.IsActive,
-                    IsDeleted = false
-                };
+            var newItem = new CompanyPlatform.Core.Models.CRM.BDEUser
+            {
+                Value = dto.Value,
+                Code = dto.Code,
+                DirectorEmployeeId = dto.DirectorEmployeeId,
+                IsActive = dto.IsActive,
+                IsDeleted = false
+            };
 
             await _repository.Create(newItem);
 
@@ -80,11 +82,33 @@ namespace CompanyPlatform.CRM.Services.BDEUser
 
             item.Value = dto.Value;
             item.Code = dto.Code;
+            item.DirectorEmployeeId = dto.DirectorEmployeeId;
             item.IsActive = dto.IsActive;
 
             await _repository.Update(item);
 
             return true;
+        }
+
+        public async Task<IEnumerable<BDEUserDto>>
+            GetBDEUsersByDirectorEmployeeIdAsync(int directorEmployeeId)
+        {
+            var items = await _repository.GetAll();
+
+            return items
+                .Where(x =>
+                    x.DirectorEmployeeId == directorEmployeeId &&
+                    x.IsActive &&
+                    !x.IsDeleted)
+                .Select(x => new BDEUserDto
+                {
+                    ID = x.ID,
+                    Value = x.Value,
+                    Code = x.Code,
+                    DirectorEmployeeId = x.DirectorEmployeeId,
+                    IsActive = x.IsActive,
+                    IsDeleted = x.IsDeleted
+                });
         }
 
         public async Task<bool> DeleteBDEUserAsync(int id)

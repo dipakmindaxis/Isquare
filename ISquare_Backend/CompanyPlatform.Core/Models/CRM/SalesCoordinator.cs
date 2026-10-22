@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using CompanyPlatform.Core.Models.CRM;
 
 namespace CompanyPlatform.Core.Models.CRM.SalesCoordinator
 {
@@ -16,6 +17,12 @@ namespace CompanyPlatform.Core.Models.CRM.SalesCoordinator
 
         [Required]
         public string SalesCoordinatorCode { get; set; } = string.Empty;
+
+        // BDE assigned to this Sales Coordinator
+        public int? BDEUserId { get; set; }
+
+        [ForeignKey(nameof(BDEUserId))]
+        public virtual BDEUser? BDEUser { get; set; }
 
         [DefaultValue(true)]
         public bool IsActive { get; set; } = true;

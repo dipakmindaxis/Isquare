@@ -59,7 +59,7 @@ const mainMenuLinks = [
   {
     icon: <Users />,
     label: "EMPLOYEE",
-    to: "/master/employee",
+    to: "/employees",
     formName: "Employee",
   },
 ];
@@ -71,13 +71,13 @@ const masterMenu: MenuItem = {
     {
       icon: <ShieldCheck />,
       label: "Access Control",
-      to: "/access-control",
+      to: "/masters/access-control",
       formName: "AccessControl",
     },
     {
       icon: <UserCog />,
       label: "Basic Masters",
-      to: "/basimasters",
+      to: "/masters",
       formName: "BasicMasters",
     },
   ],

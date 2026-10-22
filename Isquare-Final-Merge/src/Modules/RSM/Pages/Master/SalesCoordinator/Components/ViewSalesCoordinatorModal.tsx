@@ -1,5 +1,5 @@
 import React from "react";
-import { X, UserCheck, Hash, CheckCircle2, XCircle } from "lucide-react";
+import { X, UserCheck, Hash, CheckCircle2, XCircle, Users } from "lucide-react";
 import type { SalesCoordinator } from "../Types/SalesCoordinatorTypes";
 
 interface ViewSalesCoordinatorModalProps {
@@ -74,6 +74,28 @@ const ViewSalesCoordinatorModal: React.FC<ViewSalesCoordinatorModalProps> = ({
             <p className="text-lg font-bold text-gray-900">
               {salesCoordinator.salesCoordinatorName}
             </p>
+          </div>
+
+          <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+            <div className="flex items-center gap-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
+              <Users className="w-3.5 h-3.5 text-gray-400" />
+              Assigned BDE User
+            </div>
+            <div>
+              {salesCoordinator.bdeUserName ? (
+                <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-orange-50 text-[#FF7900] border border-[#FF7900]/20">
+                  {salesCoordinator.bdeUserName}
+                </span>
+              ) : salesCoordinator.bdeUserId ? (
+                <span className="text-sm font-semibold text-gray-700">
+                  BDE User #{salesCoordinator.bdeUserId}
+                </span>
+              ) : (
+                <span className="text-sm text-gray-400 italic">
+                  Not Assigned
+                </span>
+              )}
+            </div>
           </div>
 
           <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 flex items-center justify-between">

@@ -15,5 +15,9 @@ namespace CompanyPlatform.CRM.Services.BDEUser
         Task<bool> UpdateBDEUserAsync(int id, BDEUserDto dto);
 
         Task<bool> DeleteBDEUserAsync(int id);
+
+        // Get BDE Users assigned to a specific Director
+        Task<IEnumerable<BDEUserDto>> GetBDEUsersByDirectorEmployeeIdAsync(
+            int directorEmployeeId);
     }
 }

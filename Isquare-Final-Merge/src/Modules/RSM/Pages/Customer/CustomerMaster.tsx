@@ -48,9 +48,11 @@ import CustomerSource from "../Master/CustomerSource/CustomerSource";
 import Industry from "../Master/Industry/Industry";
 import CustomerArea from "../Master/CustomerArea/CustomerArea";
 import PaymentTerm from "../Master/PaymentTerm/PaymentTerm";
+import SalesAssignmentSection from "./SalesAssignmentSection";
 
 export type CustomerMasterTab =
   | "customers"
+  | "assignment"
   | "status"
   | "source"
   | "industry"
@@ -73,6 +75,12 @@ const TABS: TabConfig[] = [
     id: "customers",
     label: "Customers",
     shortDesc: "Commercial client records, statutory numbers & assigned reps",
+    icon: <Users className="w-4 h-4" />,
+  },
+  {
+    id: "assignment",
+    label: "Sales Assignment",
+    shortDesc: "Role-based employee reporting structure & hierarchy",
     icon: <Users className="w-4 h-4" />,
   },
   {
@@ -110,12 +118,14 @@ const TABS: TabConfig[] = [
 const customTableStyles: any = {
   header: {
     style: {
-      minHeight: "56px",
+      minHeight: "52px",
     },
   },
   headRow: {
     style: {
       backgroundColor: "#FF7900",
+      minHeight: "52px",
+      borderRadius: "0px",
       borderTopStyle: "solid" as any,
       borderTopWidth: "1px",
       borderTopColor: "#e06800",
@@ -124,25 +134,30 @@ const customTableStyles: any = {
   headCells: {
     style: {
       color: "#ffffff",
-      fontSize: "12px",
+      fontSize: "13px",
       fontWeight: "700",
       textTransform: "uppercase",
-      paddingLeft: "16px",
-      paddingRight: "16px",
+      paddingLeft: "14px",
+      paddingRight: "14px",
       letterSpacing: "0.5px",
+      borderRight: "1px solid #e06800",
+      borderRadius: "0px",
     },
   },
   cells: {
     style: {
       fontSize: "13px",
       color: "#374151",
-      paddingLeft: "16px",
-      paddingRight: "16px",
+      paddingLeft: "14px",
+      paddingRight: "14px",
+      borderRight: "1px solid #e5e7eb",
     },
   },
   rows: {
     style: {
-      minHeight: "56px",
+      minHeight: "54px",
+      borderBottom: "1px solid #e5e7eb",
+      borderRadius: "0px",
       "&:hover": {
         backgroundColor: "#f0f7ff",
         cursor: "pointer",
@@ -167,6 +182,7 @@ const CustomerMaster: React.FC<CustomerMasterProps> = ({
 
   const validTabs = useMemo<CustomerMasterTab[]>(() => [
     "customers",
+    "assignment",
     "status",
     "source",
     "industry",
@@ -634,9 +650,36 @@ const CustomerMaster: React.FC<CustomerMasterProps> = ({
       {/* Active Tab View */}
       <div className="w-full">
         {activeTab === "customers" && (
-          <div className="space-y-6">
-            {/* Listing Header matching Referral Image */}
-            <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            {isAddModalOpen ? (
+              <AddCustomerModal
+                isOpen={isAddModalOpen}
+                onClose={() => setIsAddModalOpen(false)}
+                onSuccess={() => {
+                  setIsAddModalOpen(false);
+                  loadMasterData();
+                  fetchCustomers();
+                }}
+              />
+            ) : isEditModalOpen && selectedCustomerId ? (
+              <EditCustomerModal
+                isOpen={isEditModalOpen}
+                customerId={selectedCustomerId}
+                onClose={() => {
+                  setIsEditModalOpen(false);
+                  setSelectedCustomerId(null);
+                }}
+                onSuccess={() => {
+                  setIsEditModalOpen(false);
+                  setSelectedCustomerId(null);
+                  loadMasterData();
+                  fetchCustomers();
+                }}
+              />
+            ) : (
+              <div className="space-y-6">
+                {/* Listing Header matching Referral Image */}
+                <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <h2 className="border-b-2 border-[#FF7900] pb-2 text-2xl sm:text-3xl font-bold tracking-tight text-[#00234a]">
                   Customers
@@ -747,7 +790,7 @@ const CustomerMaster: React.FC<CustomerMasterProps> = ({
             </div>
 
             {/* Data Table */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="bg-white rounded-none shadow-sm border border-gray-200 overflow-hidden">
               <div className="overflow-x-auto w-full">
                 <div className="min-w-[850px]">
                   <DataTable
@@ -773,46 +816,28 @@ const CustomerMaster: React.FC<CustomerMasterProps> = ({
             </div>
           </div>
         )}
-
-        {/* Sub-Master Views for Dropdowns */}
-        {activeTab === "status" && <CustomerStatus isTab={true} />}
-        {activeTab === "source" && <CustomerSource isTab={true} />}
-        {activeTab === "industry" && <Industry isTab={true} />}
-        {activeTab === "area" && <CustomerArea isTab={true} />}
-        {activeTab === "payment-terms" && <PaymentTerm isTab={true} />}
       </div>
+    )}
 
-      {/* Customer Modals */}
-      <AddCustomerModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onSuccess={() => {
-          loadMasterData();
-          fetchCustomers();
-        }}
-      />
+      {/* Sub-Master Views for Dropdowns */}
+      {activeTab === "assignment" && <SalesAssignmentSection standalone={true} />}
+      {activeTab === "status" && <CustomerStatus isTab={true} />}
+      {activeTab === "source" && <CustomerSource isTab={true} />}
+      {activeTab === "industry" && <Industry isTab={true} />}
+      {activeTab === "area" && <CustomerArea isTab={true} />}
+      {activeTab === "payment-terms" && <PaymentTerm isTab={true} />}
+    </div>
 
-      <EditCustomerModal
-        isOpen={isEditModalOpen}
-        customerId={selectedCustomerId}
-        onClose={() => {
-          setIsEditModalOpen(false);
-          setSelectedCustomerId(null);
-        }}
-        onSuccess={() => {
-          loadMasterData();
-          fetchCustomers();
-        }}
-      />
-
-      <ViewCustomerModal
-        isOpen={isViewModalOpen}
-        customerId={selectedCustomerId}
-        onClose={() => {
-          setIsViewModalOpen(false);
-          setSelectedCustomerId(null);
-        }}
-      />
+      {isViewModalOpen && (
+        <ViewCustomerModal
+          isOpen={isViewModalOpen}
+          customerId={selectedCustomerId}
+          onClose={() => {
+            setIsViewModalOpen(false);
+            setSelectedCustomerId(null);
+          }}
+        />
+      )}
 
       <ConfirmationModal
         isOpen={isDeleteModalOpen}

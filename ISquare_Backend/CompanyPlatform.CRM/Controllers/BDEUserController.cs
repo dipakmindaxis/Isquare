@@ -38,6 +38,35 @@ namespace CompanyPlatform.CRM.Controllers
             }
         }
 
+        // Get BDE Users assigned to a specific Director
+        [HttpGet("by-director/{directorEmployeeId:int}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetByDirectorEmployeeId(
+            int directorEmployeeId)
+        {
+            if (directorEmployeeId <= 0)
+                return BadRequest("A valid Director Employee ID is required.");
+
+            try
+            {
+                var users =
+                    await _bdeUserService
+                        .GetBDEUsersByDirectorEmployeeIdAsync(
+                            directorEmployeeId);
+
+                return Ok(users);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Error while fetching BDE users for Director Employee ID {DirectorEmployeeId}",
+                    directorEmployeeId);
+
+                return StatusCode(500, "Internal server error.");
+            }
+        }
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {

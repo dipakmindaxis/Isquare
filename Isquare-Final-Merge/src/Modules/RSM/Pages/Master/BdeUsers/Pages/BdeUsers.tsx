@@ -9,6 +9,7 @@ import EditBdeUserModal from "../Components/EditBdeUserModal";
 import {
   deleteBdeUser,
   getAllBdeUsers,
+  getDirectorEmployees,
 } from "../Services/BdeUserService";
 
 import type { BdeUser as BdeUserType } from "../Types/BdeUser";
@@ -29,15 +30,32 @@ const BdeUsers: React.FC<BdeUsersProps> = ({ isTab = false }) => {
     setIsLoading(true);
 
     try {
-      const responseData = await getAllBdeUsers();
-      const list = Array.isArray(responseData) ? responseData : (responseData as any)?.data || [];
-      const normalized = list.map((item: any) => ({
-        id: item.id ?? item.ID ?? 0,
-        value: item.value ?? item.Value ?? "",
-        code: item.code ?? item.Code ?? "",
-        isActive: item.isActive ?? item.IsActive ?? true,
-        isDeleted: item.isDeleted ?? item.IsDeleted ?? false,
-      }));
+      const [responseData, directorsData] = await Promise.all([
+        getAllBdeUsers(),
+        getDirectorEmployees().catch(() => []),
+      ]);
+      const directorMap = new Map<number, string>(
+        directorsData.map((d) => [d.id, d.name])
+      );
+      const list = Array.isArray(responseData)
+        ? responseData
+        : (responseData as any)?.data || [];
+      const normalized: BdeUserType[] = list.map((item: any) => {
+        const dirId = item.directorEmployeeId ?? null;
+        const dirName =
+          item.directorName ||
+          (dirId ? directorMap.get(dirId) : null) ||
+          null;
+        return {
+          id: item.id ?? item.ID ?? 0,
+          value: item.value ?? item.Value ?? "",
+          code: item.code ?? item.Code ?? "",
+          directorEmployeeId: dirId,
+          directorName: dirName,
+          isActive: item.isActive ?? item.IsActive ?? true,
+          isDeleted: item.isDeleted ?? item.IsDeleted ?? false,
+        };
+      });
       setData(normalized);
     } catch (error) {
       console.error("Error fetching BDE users:", error);

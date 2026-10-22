@@ -1,8 +1,12 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 
-import { createBdeUser } from "../Services/BdeUserService";
+import {
+  createBdeUser,
+  getDirectorEmployees,
+  type DirectorEmployeeOption,
+} from "../Services/BdeUserService";
 
 interface BdeUserFormProps {
   isOpen: boolean;
@@ -15,16 +19,51 @@ const BdeUserForm: React.FC<BdeUserFormProps> = ({
   onClose,
   onSuccess,
 }) => {
+  const [directors, setDirectors] = useState<DirectorEmployeeOption[]>([]);
+  const [isLoadingDirectors, setIsLoadingDirectors] = useState(false);
+  const [directorError, setDirectorError] = useState<string | null>(null);
+  const [directorEmployeeId, setDirectorEmployeeId] = useState<string>("");
+
   const [value, setValue] = useState("");
   const [code, setCode] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    let isMounted = true;
+    const fetchDirectors = async () => {
+      setIsLoadingDirectors(true);
+      setDirectorError(null);
+      try {
+        const data = await getDirectorEmployees();
+        if (isMounted) {
+          setDirectors(data);
+        }
+      } catch (err) {
+        if (isMounted) {
+          console.error("Failed to load directors:", err);
+          setDirectorError("Failed to load directors list.");
+          toast.error("Failed to load directors.");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingDirectors(false);
+        }
+      }
+    };
+    fetchDirectors();
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen]);
 
   if (!isOpen) {
     return null;
   }
 
   const handleResetAndClose = () => {
+    setDirectorEmployeeId("");
     setValue("");
     setCode("");
     setIsActive(true);
@@ -33,6 +72,11 @@ const BdeUserForm: React.FC<BdeUserFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (!directorEmployeeId) {
+      toast.error("Please select a Director.");
+      return;
+    }
 
     if (!value.trim()) {
       toast.error("Value is required.");
@@ -51,18 +95,15 @@ const BdeUserForm: React.FC<BdeUserFormProps> = ({
         id: 0,
         value: value.trim(),
         code: code.trim().toUpperCase(),
+        directorEmployeeId: Number(directorEmployeeId),
         isActive,
         isDeleted: false,
       });
 
       toast.success("BDE user created successfully.");
 
-      setValue("");
-      setCode("");
-      setIsActive(true);
-
+      handleResetAndClose();
       onSuccess();
-      onClose();
     } catch (error) {
       console.error("Error creating BDE user:", error);
       toast.error("Failed to create BDE user.");
@@ -97,12 +138,53 @@ const BdeUserForm: React.FC<BdeUserFormProps> = ({
 
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 px-6 py-5">
+            {/* Director Dropdown */}
+            <div>
+              <label
+                htmlFor="bdeUserDirector"
+                className="mb-1 block text-sm font-medium text-gray-700"
+              >
+                Director <span className="text-red-500">*</span>
+              </label>
+
+              <div className="relative">
+                <select
+                  id="bdeUserDirector"
+                  value={directorEmployeeId}
+                  onChange={(e) => setDirectorEmployeeId(e.target.value)}
+                  disabled={isSaving || isLoadingDirectors}
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF7900] disabled:bg-gray-100 disabled:cursor-not-allowed"
+                >
+                  <option value="">
+                    {isLoadingDirectors
+                      ? "Loading directors..."
+                      : "-- Select Director --"}
+                  </option>
+                  {directors.map((director) => (
+                    <option key={director.id} value={director.id}>
+                      {director.name} {director.code ? `(${director.code})` : ""}
+                    </option>
+                  ))}
+                </select>
+
+                {isLoadingDirectors && (
+                  <div className="absolute right-8 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <Loader2 className="w-4 h-4 animate-spin text-[#FF7900]" />
+                  </div>
+                )}
+              </div>
+
+              {directorError && (
+                <p className="mt-1 text-xs text-red-500">{directorError}</p>
+              )}
+            </div>
+
             <div>
               <label
                 htmlFor="bdeUserValue"
                 className="mb-1 block text-sm font-medium text-gray-700"
               >
-                Value
+                Value / Name <span className="text-red-500">*</span>
               </label>
 
               <input
@@ -112,7 +194,7 @@ const BdeUserForm: React.FC<BdeUserFormProps> = ({
                 onChange={(e) => setValue(e.target.value)}
                 placeholder="e.g. Rohan Deshmukh"
                 disabled={isSaving}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF7900]"
               />
             </div>
 
@@ -121,7 +203,7 @@ const BdeUserForm: React.FC<BdeUserFormProps> = ({
                 htmlFor="bdeUserCode"
                 className="mb-1 block text-sm font-medium text-gray-700"
               >
-                Code
+                Code <span className="text-red-500">*</span>
               </label>
 
               <input
@@ -166,7 +248,7 @@ const BdeUserForm: React.FC<BdeUserFormProps> = ({
 
             <button
               type="submit"
-              disabled={isSaving}
+              disabled={isSaving || isLoadingDirectors}
               className="flex items-center gap-2 rounded-lg bg-[#FF7900] px-5 py-2 text-sm font-semibold text-white hover:bg-[#E66D00] disabled:bg-gray-400 shadow-sm transition cursor-pointer"
             >
               {isSaving && <Loader2 size={16} className="animate-spin" />}

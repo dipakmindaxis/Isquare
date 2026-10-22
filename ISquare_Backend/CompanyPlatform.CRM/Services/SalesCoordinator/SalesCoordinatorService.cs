@@ -87,6 +87,7 @@ namespace CompanyPlatform.CRM.Services.SalesCoordinator
                     SalesCoordinatorId = x.SalesCoordinatorId,
                     SalesCoordinatorName = x.SalesCoordinatorName,
                     SalesCoordinatorCode = x.SalesCoordinatorCode,
+                    BDEUserId = x.BDEUserId,
                     IsActive = x.IsActive,
                     IsDeleted = x.IsDeleted
                 })
@@ -108,6 +109,7 @@ namespace CompanyPlatform.CRM.Services.SalesCoordinator
                     SalesCoordinatorId = x.SalesCoordinatorId,
                     SalesCoordinatorName = x.SalesCoordinatorName,
                     SalesCoordinatorCode = x.SalesCoordinatorCode,
+                    BDEUserId = x.BDEUserId,
                     IsActive = x.IsActive,
                     IsDeleted = x.IsDeleted
                 })
@@ -135,13 +137,14 @@ namespace CompanyPlatform.CRM.Services.SalesCoordinator
                 SalesCoordinatorId = coordinator.SalesCoordinatorId,
                 SalesCoordinatorName = coordinator.SalesCoordinatorName,
                 SalesCoordinatorCode = coordinator.SalesCoordinatorCode,
+                BDEUserId = coordinator.BDEUserId,
                 IsActive = coordinator.IsActive,
                 IsDeleted = coordinator.IsDeleted
             };
         }
 
-        public async Task<SalesCoordinatorDto> CreateSalesCoordinatorAsync(
-            SalesCoordinatorDto dto)
+        public async Task<SalesCoordinatorDto>
+            CreateSalesCoordinatorAsync(SalesCoordinatorDto dto)
         {
             _logger.LogInformation(
                 "Creating Sales Coordinator: {Name}",
@@ -154,7 +157,8 @@ namespace CompanyPlatform.CRM.Services.SalesCoordinator
             {
                 SalesCoordinatorName = dto.SalesCoordinatorName.Trim(),
                 SalesCoordinatorCode = generatedCode,
-                IsActive = true,
+                BDEUserId = dto.BDEUserId,
+                IsActive = dto.IsActive,
                 IsDeleted = false,
                 CreatedDate = DateTime.UtcNow
             };
@@ -166,6 +170,7 @@ namespace CompanyPlatform.CRM.Services.SalesCoordinator
                 SalesCoordinatorId = coordinator.SalesCoordinatorId,
                 SalesCoordinatorName = coordinator.SalesCoordinatorName,
                 SalesCoordinatorCode = coordinator.SalesCoordinatorCode,
+                BDEUserId = coordinator.BDEUserId,
                 IsActive = coordinator.IsActive,
                 IsDeleted = coordinator.IsDeleted
             };
@@ -188,14 +193,40 @@ namespace CompanyPlatform.CRM.Services.SalesCoordinator
             coordinator.SalesCoordinatorName =
                 dto.SalesCoordinatorName.Trim();
 
+            coordinator.BDEUserId = dto.BDEUserId;
             coordinator.IsActive = dto.IsActive;
             coordinator.UpdatedDate = DateTime.UtcNow;
 
-            // The generated coordinator code remains unchanged.
-
+            // Keep the generated coordinator code unchanged.
             await _repository.Update(coordinator);
 
             return true;
+        }
+
+        public async Task<IEnumerable<SalesCoordinatorDto>>
+            GetSalesCoordinatorsByBDEUserIdAsync(int bdeUserId)
+        {
+            _logger.LogInformation(
+                "Fetching Sales Coordinators for BDE User ID: {BDEUserId}",
+                bdeUserId);
+
+            var coordinators = await _repository.GetAll();
+
+            return coordinators
+                .Where(x =>
+                    x.BDEUserId == bdeUserId &&
+                    x.IsActive &&
+                    !x.IsDeleted)
+                .Select(x => new SalesCoordinatorDto
+                {
+                    SalesCoordinatorId = x.SalesCoordinatorId,
+                    SalesCoordinatorName = x.SalesCoordinatorName,
+                    SalesCoordinatorCode = x.SalesCoordinatorCode,
+                    BDEUserId = x.BDEUserId,
+                    IsActive = x.IsActive,
+                    IsDeleted = x.IsDeleted
+                })
+                .ToList();
         }
 
         public async Task<bool> DeleteSalesCoordinatorAsync(int id)

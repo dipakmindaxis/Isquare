@@ -33,6 +33,9 @@ const BdeUserTable: React.FC<BdeUserTableProps> = ({
                 CODE / KEY
               </th>
               <th className="px-6 py-3.5 font-semibold text-left">
+                DIRECTOR
+              </th>
+              <th className="px-6 py-3.5 font-semibold text-left">
                 STATUS
               </th>
               <th className="px-6 py-3.5 font-semibold text-right">
@@ -45,7 +48,7 @@ const BdeUserTable: React.FC<BdeUserTableProps> = ({
             {isLoading && (
               <tr>
                 <td
-                  colSpan={5}
+                  colSpan={6}
                   className="py-10 text-center text-gray-500"
                 >
                   <div className="flex items-center justify-center gap-2">
@@ -62,7 +65,7 @@ const BdeUserTable: React.FC<BdeUserTableProps> = ({
             {!isLoading && bdeUsers.length === 0 && (
               <tr>
                 <td
-                  colSpan={5}
+                  colSpan={6}
                   className="py-10 text-center text-gray-500"
                 >
                   No BDE users found.
@@ -86,6 +89,22 @@ const BdeUserTable: React.FC<BdeUserTableProps> = ({
 
                   <td className="px-6 py-4 text-gray-700 font-mono text-xs">
                     {item.code}
+                  </td>
+
+                  <td className="px-6 py-4 text-gray-700">
+                    {item.directorName ? (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-orange-50 text-[#FF7900] border border-[#FF7900]/20">
+                        {item.directorName}
+                      </span>
+                    ) : item.directorEmployeeId ? (
+                      <span className="text-gray-600 text-xs font-medium">
+                        Director #{item.directorEmployeeId}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400 italic text-xs">
+                        Not Assigned
+                      </span>
+                    )}
                   </td>
 
                   <td className="px-6 py-4">
