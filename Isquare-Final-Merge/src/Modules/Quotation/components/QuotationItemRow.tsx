@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { Trash2, Camera } from "lucide-react";
 import { toast } from "sonner";
 import type { QuotationItem, Product } from "../models/quotationModels";
@@ -8,6 +8,7 @@ import {
   formatINR,
   STANDARD_UOMS,
 } from "../utils/quotationCalculations";
+import { resolveImageUrl } from "../services/quotationService";
 
 interface QuotationItemRowProps {
   item: QuotationItem;
@@ -32,21 +33,55 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
   const selectedProduct = useMemo(() => {
     return availableProducts.find(
       (p) =>
-        (item.productId && p.productId === item.productId) ||
-        (item.itemCode && p.itemCode && p.itemCode === item.itemCode) ||
+        (item.productId != null && Number(p.productId) === Number(item.productId)) ||
+        (item.itemCode && p.itemCode && p.itemCode.trim().toLowerCase() === item.itemCode.trim().toLowerCase()) ||
         (item.itemName &&
           p.productName &&
-          p.productName.toLowerCase() === item.itemName.toLowerCase())
+          p.productName.trim().toLowerCase() === item.itemName.trim().toLowerCase())
     );
   }, [availableProducts, item.productId, item.itemCode, item.itemName]);
 
-  const productImageUrl =
-    (item as any).imageUrl ||
-    (item as any).image ||
-    (selectedProduct as any)?.imageUrl ||
-    (selectedProduct as any)?.image ||
-    (selectedProduct as any)?.productImage ||
-    null;
+  const defaultProductImage = useMemo(() => {
+    const raw =
+      selectedProduct?.imageUrl ||
+      selectedProduct?.productImage ||
+      selectedProduct?.productImagePath ||
+      (selectedProduct as any)?.image ||
+      (selectedProduct as any)?.imagePath ||
+      null;
+    return resolveImageUrl(raw) || raw;
+  }, [selectedProduct]);
+
+  // Quotation-line-specific image override is stored in customImageUrl / hasCustomImage
+  const hasCustomOverride = Boolean(
+    item.hasCustomImage || (item.customImageUrl && item.customImageUrl !== defaultProductImage)
+  );
+
+  const productImageUrl = useMemo(() => {
+    if (hasCustomOverride && item.customImageUrl) {
+      return resolveImageUrl(item.customImageUrl) || item.customImageUrl;
+    }
+    const raw =
+      defaultProductImage ||
+      item.imageUrl ||
+      item.productImage ||
+      item.productImagePath ||
+      (item as any)?.image ||
+      null;
+    return resolveImageUrl(raw) || raw;
+  }, [
+    hasCustomOverride,
+    item.customImageUrl,
+    defaultProductImage,
+    item.imageUrl,
+    item.productImage,
+    item.productImagePath,
+    (item as any)?.image,
+  ]);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [productImageUrl]);
 
   const placeholderText = useMemo(() => {
     const name = item.itemName || selectedProduct?.productName || "";
@@ -146,16 +181,30 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
       : "—";
 
   const handleProductSelect = (selectedId: string) => {
-    if (!selectedId) return;
+    if (!selectedId) {
+      onUpdate({
+        ...item,
+        productId: null,
+      });
+      return;
+    }
     const prod = availableProducts.find((p) => String(p.productId) === selectedId);
     if (prod) {
       const uomMatch = STANDARD_UOMS.find((u) => u.id === prod.unitOfMeasurementId);
-      const prodImg =
-        (prod as any).imageUrl ||
+      const rawProdImg =
+        prod.imageUrl ||
+        prod.productImage ||
+        prod.productImagePath ||
         (prod as any).image ||
-        (prod as any).productImage ||
+        (prod as any).imagePath ||
         null;
+      const prodImg = resolveImageUrl(rawProdImg) || rawProdImg;
       setImageError(false);
+
+      // If this row already has an explicitly retained quotation-specific override, retain it.
+      // Otherwise, apply the newly selected product's default image.
+      const hasRetainedOverride = Boolean(hasCustomOverride && item.customImageUrl);
+
       onUpdate({
         ...item,
         productId: prod.productId,
@@ -163,26 +212,55 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
         itemName: prod.productName,
         brand: prod.brand || "",
         specification: prod.specification || "",
+        hasCustomSpecification: false,
         rate: prod.standardRate || 0,
         gstRate: prod.gstRate ?? 18,
         unitOfMeasurementId: prod.unitOfMeasurementId || 1,
         unitName: uomMatch?.name || "Nos",
-        ...(prodImg ? { imageUrl: prodImg } : {}),
+        productImage: prod.productImage || prod.productImagePath || null,
+        productImagePath: prod.productImagePath || prod.productImage || null,
+        ...(hasRetainedOverride
+          ? {
+              customImageUrl: item.customImageUrl,
+              hasCustomImage: true,
+              imageUrl: item.customImageUrl,
+            }
+          : {
+              customImageUrl: undefined,
+              hasCustomImage: false,
+              imageUrl: prodImg || undefined,
+            }),
       });
     }
   };
+
+  const ALLOWED_IMAGE_TYPES = [
+    "image/png",
+    "image/jpeg",
+    "image/jpg",
+    "image/webp",
+  ];
+  const ALLOWED_IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".webp"];
+  const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
 
   const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please select a valid image file");
+    const fileType = file.type.toLowerCase();
+    const ext = file.name.substring(file.name.lastIndexOf(".")).toLowerCase();
+    const isValidFormat =
+      ALLOWED_IMAGE_TYPES.includes(fileType) || ALLOWED_IMAGE_EXTENSIONS.includes(ext);
+
+    if (!isValidFormat) {
+      toast.error("Please select a valid image file (PNG, JPG, JPEG, or WEBP)");
+      e.target.value = "";
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
       toast.error("Image file size should be less than 5MB");
+      e.target.value = "";
       return;
     }
 
@@ -192,9 +270,14 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
       setImageError(false);
       onUpdate({
         ...item,
+        customImageUrl: result,
+        hasCustomImage: true,
         imageUrl: result,
-      } as QuotationItem);
+      });
       toast.success("Product image updated for this quotation item");
+    };
+    reader.onerror = () => {
+      toast.error("Failed to read image file");
     };
     reader.readAsDataURL(file);
     e.target.value = "";
@@ -202,9 +285,19 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
 
   const handleResetImage = () => {
     setImageError(false);
-    const updated = { ...item };
-    delete (updated as any).imageUrl;
-    delete (updated as any).image;
+    const updated: QuotationItem = {
+      ...item,
+      hasCustomImage: false,
+      customImageUrl: undefined,
+      imageUrl: defaultProductImage || undefined,
+      productImage: selectedProduct?.productImage || selectedProduct?.productImagePath || undefined,
+      productImagePath: selectedProduct?.productImagePath || selectedProduct?.productImage || undefined,
+    };
+    delete (updated as any).customImageUrl;
+    if (!defaultProductImage) {
+      delete (updated as any).imageUrl;
+      delete (updated as any).image;
+    }
     onUpdate(updated);
     toast.info("Reverted to original product image");
   };
@@ -291,7 +384,11 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
             rows={3}
             value={item.specification || ""}
             onChange={(e) =>
-              onUpdate({ ...item, specification: e.target.value })
+              onUpdate({
+                ...item,
+                specification: e.target.value,
+                hasCustomSpecification: true,
+              })
             }
             disabled={disabled}
             className="w-full text-xs py-1.5 px-2 bg-white border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none resize-none"
@@ -320,7 +417,7 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
+                accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
                 onChange={handleImageFileChange}
                 className="hidden"
               />
@@ -333,7 +430,7 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
                 <Camera size={11} />
                 <span>Change</span>
               </button>
-              {(item as any).imageUrl && (
+              {hasCustomOverride && (
                 <button
                   type="button"
                   onClick={handleResetImage}

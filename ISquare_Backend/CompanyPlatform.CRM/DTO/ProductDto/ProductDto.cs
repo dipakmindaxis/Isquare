@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace CompanyPlatform.CRM.DTO.Product
 {
@@ -22,6 +22,14 @@ namespace CompanyPlatform.CRM.DTO.Product
 
         [Range(typeof(decimal), "0", "100")]
         public decimal GSTRate { get; set; }
+
+        public string? ProductImage { get; set; }
+
+        public string? ProductImagePath
+        {
+            get => ProductImage;
+            set => ProductImage = value;
+        }
 
         public bool IsActive { get; set; }
 

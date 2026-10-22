@@ -91,6 +91,49 @@ export const quotationService = {
 // ==========================================
 // 2. QUOTATION ITEM SERVICE
 // ==========================================
+function sanitizeQuotationItemPayload(payload: Partial<QuotationItem>): Record<string, any> {
+  const body: Record<string, any> = {
+    quotationId: Number(payload.quotationId) || 0,
+    isAccessory: Boolean(payload.isAccessory),
+    itemName: (payload.itemName || "").trim(),
+    quantity: Math.max(0.001, Number(payload.quantity) || 1),
+    rate: Math.max(0, Number(payload.rate) || 0),
+    discountPercentage: Math.max(0, Math.min(100, Number(payload.discountPercentage) || 0)),
+    discountAmount: Math.max(0, Number(payload.discountAmount) || 0),
+    gstRate: Math.max(0, Math.min(100, Number(payload.gstRate) || 0)),
+    taxableAmount: Math.max(0, Number(payload.taxableAmount) || 0),
+    taxAmount: Math.max(0, Number(payload.taxAmount) || 0),
+    lineTotal: Math.max(0, Number(payload.lineTotal) || 0),
+    displayOrder: Number(payload.displayOrder) || 1,
+    isActive: payload.isActive ?? true,
+    isDeleted: payload.isDeleted ?? false,
+  };
+
+  if (payload.quotationItemId && payload.quotationItemId > 0) {
+    body.quotationItemId = payload.quotationItemId;
+  }
+  if (payload.productId != null && Number(payload.productId) > 0) {
+    body.productId = Number(payload.productId);
+  }
+  if (payload.parentQuotationItemId != null && Number(payload.parentQuotationItemId) > 0) {
+    body.parentQuotationItemId = Number(payload.parentQuotationItemId);
+  }
+  if (payload.itemCode) {
+    body.itemCode = payload.itemCode;
+  }
+  if (payload.brand) {
+    body.brand = payload.brand;
+  }
+  if (payload.specification) {
+    body.specification = payload.specification;
+  }
+  if (payload.unitOfMeasurementId != null) {
+    body.unitOfMeasurementId = Number(payload.unitOfMeasurementId);
+  }
+
+  return body;
+}
+
 export const quotationItemService = {
   getAll: async (): Promise<QuotationItem[]> => {
     const response = await apiClient.get(API_ENDPOINTS.QuotationItems);
@@ -115,12 +158,14 @@ export const quotationItemService = {
   },
 
   create: async (payload: Partial<QuotationItem>): Promise<QuotationItem> => {
-    const response = await apiClient.post<QuotationItem>(API_ENDPOINTS.QuotationItems, payload);
+    const cleanBody = sanitizeQuotationItemPayload(payload);
+    const response = await apiClient.post<QuotationItem>(API_ENDPOINTS.QuotationItems, cleanBody);
     return response.data;
   },
 
   update: async (id: number, payload: Partial<QuotationItem>): Promise<QuotationItem | void> => {
-    const response = await apiClient.put(`${API_ENDPOINTS.QuotationItems}/${id}`, payload);
+    const cleanBody = sanitizeQuotationItemPayload(payload);
+    const response = await apiClient.put(`${API_ENDPOINTS.QuotationItems}/${id}`, cleanBody);
     return response.data;
   },
 
@@ -493,6 +538,128 @@ export const salesOrderItemService = {
   },
 };
 
+const PRODUCT_IMAGE_STORAGE_KEY = "isquare_product_images_cache_v1";
+
+export function getProductImageCache(path?: string | null): string | null {
+  if (!path || typeof path !== "string") return null;
+  const trimmed = path.trim();
+  if (!trimmed) return null;
+  try {
+    const raw = localStorage.getItem(PRODUCT_IMAGE_STORAGE_KEY);
+    if (raw) {
+      const map = JSON.parse(raw);
+      return map[trimmed] || map[trimmed.toLowerCase()] || null;
+    }
+  } catch (e) {
+    console.warn("Failed to get product image from cache", e);
+  }
+  return null;
+}
+
+export function saveProductImageCache(path: string, dataUrl: string): void {
+  if (!path || !dataUrl) return;
+  try {
+    const raw = localStorage.getItem(PRODUCT_IMAGE_STORAGE_KEY);
+    const map = raw ? JSON.parse(raw) : {};
+    map[path] = dataUrl;
+    map[path.toLowerCase()] = dataUrl;
+    localStorage.setItem(PRODUCT_IMAGE_STORAGE_KEY, JSON.stringify(map));
+  } catch (e) {
+    console.warn("Failed to save product image to cache", e);
+  }
+}
+
+export function resolveImageUrl(path?: string | null): string | null {
+  if (!path || typeof path !== "string") return null;
+  const trimmed = path.trim();
+  if (!trimmed) return null;
+
+  // 1. Direct usable protocols (http, https, blob:, data:)
+  if (/^(?:https?:|blob:|data:)/i.test(trimmed)) {
+    return trimmed;
+  }
+
+  // 2. Check local product image cache (saved on file upload in Product Master)
+  const cached = getProductImageCache(trimmed);
+  if (cached) {
+    return cached;
+  }
+
+  // 3. Resolve relative path against backend BaseUrl
+  const backendBase = (API_ENDPOINTS?.BaseUrl || "")
+    .replace(/\/api\/?$/i, "")
+    .replace(/\/+$/, "");
+
+  if (!backendBase) {
+    return trimmed;
+  }
+
+  const cleanPath = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+  return `${backendBase}${cleanPath}`;
+}
+
+export function mapProductFromApi(raw: any): Product {
+  if (!raw || typeof raw !== "object") {
+    return {
+      productId: 0,
+      itemCode: "",
+      productName: "",
+      brand: "",
+      specification: "",
+      unitOfMeasurementId: 1,
+      standardRate: 0,
+      gstRate: 18,
+      isActive: true,
+      isDeleted: false,
+    };
+  }
+
+  const productId = Number(raw.productId ?? raw.ProductId ?? raw.id ?? raw.Id ?? 0);
+  const itemCode = (raw.itemCode ?? raw.ItemCode ?? raw.code ?? raw.Code ?? "") || "";
+  const productName = (raw.productName ?? raw.ProductName ?? raw.name ?? raw.Name ?? "") || "";
+  const brand = (raw.brand ?? raw.Brand ?? "") || "";
+  const specification =
+    (raw.specification ?? raw.Specification ?? raw.description ?? raw.Description ?? "") || "";
+  const rawUom = raw.unitOfMeasurementId ?? raw.UnitOfMeasurementId;
+  const unitOfMeasurementId = rawUom != null && !isNaN(Number(rawUom)) ? Number(rawUom) : 1;
+  const rawRate = raw.standardRate ?? raw.StandardRate ?? raw.rate ?? raw.Rate;
+  const standardRate = rawRate != null && !isNaN(Number(rawRate)) ? Number(rawRate) : 0;
+  const rawGst = raw.gstRate ?? raw.GstRate ?? raw.gst ?? raw.Gst;
+  const gstRate = rawGst != null && !isNaN(Number(rawGst)) ? Number(rawGst) : 18;
+  const isActive = raw.isActive ?? raw.IsActive ?? true;
+  const isDeleted = raw.isDeleted ?? raw.IsDeleted ?? false;
+  const productImage =
+    raw.productImage ??
+    raw.ProductImage ??
+    raw.productImagePath ??
+    raw.ProductImagePath ??
+    raw.imageUrl ??
+    raw.ImageUrl ??
+    raw.image ??
+    raw.Image ??
+    raw.imagePath ??
+    raw.ImagePath ??
+    null;
+
+  const resolved = resolveImageUrl(productImage);
+
+  return {
+    productId,
+    itemCode,
+    productName,
+    brand,
+    specification,
+    unitOfMeasurementId,
+    standardRate,
+    gstRate,
+    isActive: Boolean(isActive),
+    isDeleted: Boolean(isDeleted),
+    productImage: productImage || null,
+    productImagePath: productImage || null,
+    imageUrl: resolved || productImage || null,
+  };
+}
+
 // ==========================================
 // 10. PRODUCT SERVICE
 // ==========================================
@@ -500,7 +667,8 @@ export const productService = {
   getAll: async (): Promise<Product[]> => {
     try {
       const response = await apiClient.get(API_ENDPOINTS.Products);
-      return normalizeArray<Product>(response.data);
+      const rawList = normalizeArray<any>(response.data);
+      return rawList.map(mapProductFromApi).filter((p) => !p.isDeleted);
     } catch (error) {
       console.warn("Failed to fetch products:", error);
       return [];
@@ -509,17 +677,62 @@ export const productService = {
 
   getById: async (id: number): Promise<Product> => {
     const response = await apiClient.get<Product>(`${API_ENDPOINTS.Products}/${id}`);
-    return response.data;
+    const raw = (response.data as any)?.data ?? (response.data as any)?.result ?? response.data;
+    return mapProductFromApi(raw);
   },
 
   create: async (payload: Partial<Product>): Promise<Product> => {
-    const response = await apiClient.post<Product>(API_ENDPOINTS.Products, payload);
-    return response.data;
+    const img =
+      payload.productImage ??
+      payload.productImagePath ??
+      payload.imageUrl ??
+      null;
+    const body: Record<string, any> = {
+      productName: payload.productName?.trim() || "",
+      itemCode: payload.itemCode?.trim() || null,
+      brand: payload.brand?.trim() || null,
+      specification: payload.specification?.trim() || null,
+      unitOfMeasurementId:
+        payload.unitOfMeasurementId != null ? Number(payload.unitOfMeasurementId) : 1,
+      standardRate: Number(payload.standardRate) || 0,
+      gstRate: Number(payload.gstRate) || 0,
+      productImage: img ? img.trim() : null,
+      productImagePath: img ? img.trim() : null,
+      isActive: payload.isActive ?? true,
+      isDeleted: payload.isDeleted ?? false,
+    };
+    const response = await apiClient.post<Product>(API_ENDPOINTS.Products, body);
+    const raw = (response.data as any)?.data ?? (response.data as any)?.result ?? response.data;
+    return mapProductFromApi(raw);
   },
 
   update: async (id: number, payload: Partial<Product>): Promise<Product | void> => {
-    const response = await apiClient.put(`${API_ENDPOINTS.Products}/${id}`, payload);
-    return response.data;
+    const img =
+      payload.productImage !== undefined
+        ? payload.productImage
+        : payload.productImagePath !== undefined
+        ? payload.productImagePath
+        : payload.imageUrl;
+    const body: Record<string, any> = {
+      productId: id,
+      productName: payload.productName?.trim() || "",
+      itemCode: payload.itemCode != null ? payload.itemCode.trim() : "",
+      brand: payload.brand?.trim() || null,
+      specification: payload.specification?.trim() || null,
+      unitOfMeasurementId:
+        payload.unitOfMeasurementId != null ? Number(payload.unitOfMeasurementId) : 1,
+      standardRate: Number(payload.standardRate) || 0,
+      gstRate: Number(payload.gstRate) || 0,
+      isActive: payload.isActive ?? true,
+      isDeleted: payload.isDeleted ?? false,
+    };
+    if (img !== undefined) {
+      body.productImage = img ? img.trim() : null;
+      body.productImagePath = img ? img.trim() : null;
+    }
+    const response = await apiClient.put(`${API_ENDPOINTS.Products}/${id}`, body);
+    const raw = (response.data as any)?.data ?? (response.data as any)?.result ?? response.data;
+    return raw ? mapProductFromApi(raw) : undefined;
   },
 
   delete: async (id: number): Promise<void> => {

@@ -7,6 +7,7 @@ import {
   getSuggestedAccessories,
   STANDARD_UOMS,
 } from "../utils/quotationCalculations";
+import { resolveImageUrl } from "../services/quotationService";
 
 interface QuotationAccessoryRowProps {
   accessory: QuotationItem;
@@ -124,9 +125,28 @@ export const QuotationAccessoryRow: React.FC<QuotationAccessoryRowProps> = ({
 
       {/* 3. Accessory Image / Icon */}
       <td className="p-3 align-top text-center w-24 min-w-[80px]">
-        <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 mx-auto mt-1">
-          <Package size={14} className="text-slate-400" />
-        </div>
+        {(() => {
+          const rawAccImg =
+            (accessory as any).customImageUrl ||
+            accessory.imageUrl ||
+            (accessory as any).productImage ||
+            (accessory as any).productImagePath ||
+            (accessory as any).image;
+          const accessoryImg = resolveImageUrl(rawAccImg) || rawAccImg;
+          return (
+            <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 mx-auto mt-1 overflow-hidden">
+              {accessoryImg ? (
+                <img
+                  src={accessoryImg}
+                  alt={accessory.itemName || "Accessory"}
+                  className="w-full h-full object-contain p-0.5"
+                />
+              ) : (
+                <Package size={14} className="text-slate-400" />
+              )}
+            </div>
+          );
+        })()}
       </td>
 
       {/* 4. HSN Code */}

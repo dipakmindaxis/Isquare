@@ -55,6 +55,12 @@ export interface QuotationItem {
   isActive: boolean;
   isDeleted: boolean;
   accessories?: QuotationItem[];
+  imageUrl?: string | null;
+  customImageUrl?: string | null;
+  hasCustomImage?: boolean;
+  productImage?: string | null;
+  productImagePath?: string | null;
+  hasCustomSpecification?: boolean;
 }
 
 export interface QuotationCharge {
@@ -270,4 +276,9 @@ export interface Product {
   gstRate: number;
   isActive: boolean;
   isDeleted: boolean;
+  imageUrl?: string | null;
+  image?: string | null;
+  imagePath?: string | null;
+  productImage?: string | null;
+  productImagePath?: string | null;
 }

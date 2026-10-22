@@ -20,6 +20,7 @@ import {
   getCustomerQuotationFile,
   downloadOriginalCustomerQuotation,
 } from "../utils/customerQuotationStorage";
+import { resolveImageUrl } from "../services/quotationService";
 
 interface QuotationPreviewModalProps {
   isOpen: boolean;
@@ -372,10 +373,13 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
                       item.discountPercentage,
                       item.gstRate
                     );
-                    const itemImg =
+                    const rawItemImg =
+                      (item as any).customImageUrl ||
                       (item as any).imageUrl ||
                       (item as any).image ||
-                      (item as any).productImage;
+                      (item as any).productImage ||
+                      (item as any).productImagePath;
+                    const itemImg = resolveImageUrl(rawItemImg) || rawItemImg;
                     const hsnCode =
                       (item as any).hsnCode ||
                       (item as any).hsn ||
@@ -459,8 +463,13 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
                               acc.discountPercentage,
                               acc.gstRate
                             );
-                            const accImg =
-                              (acc as any).imageUrl || (acc as any).image;
+                            const rawAccImg =
+                              (acc as any).customImageUrl ||
+                              (acc as any).imageUrl ||
+                              (acc as any).image ||
+                              (acc as any).productImage ||
+                              (acc as any).productImagePath;
+                            const accImg = resolveImageUrl(rawAccImg) || rawAccImg;
                             const accHsn =
                               (acc as any).hsnCode ||
                               (acc as any).hsn ||

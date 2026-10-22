@@ -21,10 +21,12 @@ import QuotationSummary from "./QuotationSummary";
 import QuotationPreviewModal from "./QuotationPreviewModal";
 import {
   calculateQuotationTotals,
+  STANDARD_UOMS,
 } from "../utils/quotationCalculations";
 import {
   quotationDefaultService,
   companyProfileService,
+  resolveImageUrl,
 } from "../services/quotationService";
 
 interface QuotationFormProps {
@@ -92,37 +94,185 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
   );
 
   // Line items state
-  const [items, setItems] = useState<QuotationItem[]>(
-    initialQuotation?.items && initialQuotation.items.length > 0
-      ? initialQuotation.items
-      : [
-          {
-            quotationItemId: 0,
-            quotationId: 0,
-            productId: null,
-            parentQuotationItemId: null,
-            isAccessory: false,
-            itemCode: "PRD-01",
-            itemName: "CNC Spindle Motor 5kW",
-            brand: "Siemens",
-            specification: "3000 RPM, 380V Industrial Grade, IP55",
-            quantity: 1,
-            unitOfMeasurementId: 1,
-            unitName: "Nos",
-            rate: 45000,
-            discountPercentage: 0,
-            discountAmount: 0,
-            gstRate: 18,
-            taxableAmount: 45000,
-            taxAmount: 8100,
-            lineTotal: 53100,
-            displayOrder: 1,
-            isActive: true,
-            isDeleted: false,
-            accessories: [],
-          },
-        ]
-  );
+  const [items, setItems] = useState<QuotationItem[]>(() => {
+    if (initialQuotation?.items && initialQuotation.items.length > 0) {
+      return initialQuotation.items;
+    }
+
+    const defaultProd =
+      availableProducts.find((p) => p.productId === 1) ||
+      availableProducts.find((p) => /spindle/i.test(p.productName)) ||
+      availableProducts[0];
+
+    if (defaultProd) {
+      const uomMatch = STANDARD_UOMS.find(
+        (u) => u.id === defaultProd.unitOfMeasurementId
+      );
+      const rawProdImg =
+        defaultProd.imageUrl ||
+        defaultProd.productImage ||
+        defaultProd.productImagePath ||
+        null;
+      const prodImg = resolveImageUrl(rawProdImg) || rawProdImg;
+      const rate = defaultProd.standardRate || 45000;
+      const gst = defaultProd.gstRate ?? 18;
+      const taxAmount = (rate * gst) / 100;
+
+      return [
+        {
+          quotationItemId: 0,
+          quotationId: 0,
+          productId: defaultProd.productId,
+          parentQuotationItemId: null,
+          isAccessory: false,
+          itemCode: defaultProd.itemCode || "PRD-001",
+          itemName: defaultProd.productName,
+          brand: defaultProd.brand || "Siemens",
+          specification: defaultProd.specification || "",
+          quantity: 1,
+          unitOfMeasurementId: defaultProd.unitOfMeasurementId || 1,
+          unitName: uomMatch?.name || "Nos",
+          rate: rate,
+          discountPercentage: 0,
+          discountAmount: 0,
+          gstRate: gst,
+          taxableAmount: rate,
+          taxAmount: taxAmount,
+          lineTotal: rate + taxAmount,
+          displayOrder: 1,
+          isActive: true,
+          isDeleted: false,
+          accessories: [],
+          productImage:
+            defaultProd.productImage || defaultProd.productImagePath || null,
+          productImagePath:
+            defaultProd.productImagePath || defaultProd.productImage || null,
+          imageUrl: prodImg || undefined,
+        },
+      ];
+    }
+
+    return [
+      {
+        quotationItemId: 0,
+        quotationId: 0,
+        productId: null,
+        parentQuotationItemId: null,
+        isAccessory: false,
+        itemCode: "PRD-01",
+        itemName: "CNC Spindle Motor 5kW",
+        brand: "Siemens",
+        specification: "3000 RPM, 380V Industrial Grade, IP55",
+        quantity: 1,
+        unitOfMeasurementId: 1,
+        unitName: "Nos",
+        rate: 45000,
+        discountPercentage: 0,
+        discountAmount: 0,
+        gstRate: 18,
+        taxableAmount: 45000,
+        taxAmount: 8100,
+        lineTotal: 53100,
+        displayOrder: 1,
+        isActive: true,
+        isDeleted: false,
+        accessories: [],
+      },
+    ];
+  });
+
+  // Synchronize line items with latest master specifications when availableProducts loads/updates
+  useEffect(() => {
+    if (!availableProducts || availableProducts.length === 0) return;
+
+    setItems((prevItems) => {
+      let hasChanges = false;
+      const updated = prevItems.map((item) => {
+        let prod: Product | undefined;
+        if (item.productId) {
+          prod = availableProducts.find((p) => p.productId === item.productId);
+        } else if (!item.hasCustomSpecification) {
+          // If unlinked (like initial template row), match by itemCode or itemName
+          prod = availableProducts.find(
+            (p) =>
+              (item.itemCode &&
+                p.itemCode &&
+                (p.itemCode.toLowerCase() === item.itemCode.toLowerCase() ||
+                  p.itemCode.replace(/[-_0]/g, "").toLowerCase() ===
+                    item.itemCode.replace(/[-_0]/g, "").toLowerCase())) ||
+              (item.itemName &&
+                p.productName &&
+                p.productName.toLowerCase() === item.itemName.toLowerCase())
+          );
+        }
+
+        if (prod) {
+          const latestSpec = prod.specification || "";
+          const updates: Partial<QuotationItem> = {};
+
+          if (!item.productId) {
+            updates.productId = prod.productId;
+            updates.itemCode = prod.itemCode || item.itemCode;
+            hasChanges = true;
+          }
+
+          // If specification hasn't been manually customized in this quotation session,
+          // keep it synchronized with the latest master specification
+          if (!item.hasCustomSpecification && item.specification !== latestSpec) {
+            updates.specification = latestSpec;
+            hasChanges = true;
+          }
+
+          // Also keep master product image synchronized if no custom quotation override
+          if (!item.customImageUrl) {
+            const rawImg =
+              prod.imageUrl ||
+              prod.productImage ||
+              prod.productImagePath ||
+              null;
+            if (rawImg && item.productImage !== rawImg) {
+              updates.productImage = rawImg;
+              updates.productImagePath = rawImg;
+              updates.imageUrl = resolveImageUrl(rawImg) || rawImg;
+              hasChanges = true;
+            }
+          }
+
+          if (Object.keys(updates).length > 0) {
+            return { ...item, ...updates };
+          }
+        }
+        return item;
+      });
+
+      return hasChanges ? updated : prevItems;
+    });
+  }, [availableProducts]);
+
+  // Real-time synchronization event listener for Product Master updates
+  useEffect(() => {
+    const handleProductUpdated = (e: any) => {
+      const { productId, specification } = e.detail || {};
+      if (!productId) return;
+
+      setItems((prevItems) => {
+        let changed = false;
+        const updated = prevItems.map((item) => {
+          if (item.productId === productId && !item.hasCustomSpecification) {
+            changed = true;
+            return { ...item, specification: specification || "" };
+          }
+          return item;
+        });
+        return changed ? updated : prevItems;
+      });
+    };
+
+    window.addEventListener("isquare_product_updated", handleProductUpdated);
+    return () => {
+      window.removeEventListener("isquare_product_updated", handleProductUpdated);
+    };
+  }, []);
 
   // Pricing & charges state
   const [freightCharges, setFreightCharges] = useState<number>(
