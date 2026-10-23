@@ -44,7 +44,8 @@ import RSMDashboard from "./Modules/RSM/Dashboard/RSMDashboard";
 import VMSDashboard from "./Modules/VMS/Pages/Dashboard/VMSDashboard";
 import Home from "./Modules/HRMS/Pages/Dashboard/Home";
 import quotationRoutes from "./Modules/Quotation/routes/quotationRoutes";
-
+import EnquiryMaster from "./Modules/RSM/Pages/Master/EnquiryMaster/EnquiryMaster";
+ 
 const router = createBrowserRouter([
   {
     path: "/login",
@@ -211,7 +212,10 @@ const router = createBrowserRouter([
         path: "sales/outcomes",
         element: <ActivityOutcomes />,
       },
-
+      {
+        path: "master/enquiry-master",
+        element: <EnquiryMaster />,
+      },
       // Consolidated Master Routes
       {
         path: "master/customer-classification",
