@@ -20,6 +20,7 @@ import type {
 } from "../models/quotationModels";
 import type { Customer } from "../../RSM/Pages/Customer/Types/CustomerTypes";
 import type { PaymentTerm } from "../../RSM/Pages/Recruitment/PaymentTerm/Services/PaymentTermService";
+import { STANDARD_UOMS } from "../utils/quotationCalculations";
 
 // Helper to normalize array responses
 function normalizeArray<T>(data: any): T[] {
@@ -598,6 +599,75 @@ export function resolveImageUrl(path?: string | null): string | null {
   return `${backendBase}${cleanPath}`;
 }
 
+const PRODUCT_UOM_STORAGE_KEY = "isquare_product_uom_cache_v1";
+
+export function getAllProductUoms(): Record<string, string> {
+  try {
+    const raw = localStorage.getItem(PRODUCT_UOM_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) {
+    console.warn("Failed to get product UOM cache", e);
+    return {};
+  }
+}
+
+export function saveProductUom(key: string | number, uom: string): void {
+  if (!key || !uom) return;
+  try {
+    const all = getAllProductUoms();
+    const str = String(key).trim();
+    all[str] = uom.trim();
+    all[str.toLowerCase()] = uom.trim();
+    localStorage.setItem(PRODUCT_UOM_STORAGE_KEY, JSON.stringify(all));
+  } catch (e) {
+    console.warn("Failed to save product UOM to cache", e);
+  }
+}
+
+export function getProductUom(id?: string | number | null, fallback?: any): string | null {
+  const all = getAllProductUoms();
+  if (id != null) {
+    const str = String(id).trim();
+    if (all[str]) return all[str];
+    if (all[str.toLowerCase()]) return all[str.toLowerCase()];
+  }
+  if (fallback) {
+    if (fallback.productId && all[String(fallback.productId)]) {
+      return all[String(fallback.productId)];
+    }
+    if (fallback.itemCode) {
+      const code = String(fallback.itemCode).trim();
+      if (all[code]) return all[code];
+      if (all[code.toLowerCase()]) return all[code.toLowerCase()];
+    }
+    if (fallback.productName) {
+      const name = String(fallback.productName).trim();
+      if (all[name]) return all[name];
+      if (all[name.toLowerCase()]) return all[name.toLowerCase()];
+    }
+    if (fallback.unitName) return fallback.unitName;
+    if (fallback.uom) return fallback.uom;
+  }
+  return null;
+}
+
+export function resolveUomId(uomText: string): number {
+  const trimmed = (uomText || "").trim().toLowerCase();
+  if (!trimmed) return 1;
+  const match = STANDARD_UOMS.find(
+    (u) =>
+      u.name.toLowerCase() === trimmed ||
+      u.code.toLowerCase() === trimmed ||
+      (u.name.toLowerCase() + "s") === trimmed ||
+      (u.name.toLowerCase() + "es") === trimmed ||
+      (trimmed === "meters" || trimmed === "meter" ? u.code === "MTR" : false) ||
+      (trimmed === "liters" || trimmed === "litres" || trimmed === "litre" || trimmed === "liter" ? u.code === "LTR" : false) ||
+      (trimmed === "pieces" || trimmed === "piece" ? u.code === "PCS" : false) ||
+      (trimmed === "kilograms" || trimmed === "kilogram" ? u.code === "KG" : false)
+  );
+  return match ? match.id : 1;
+}
+
 export function mapProductFromApi(raw: any): Product {
   if (!raw || typeof raw !== "object") {
     return {
@@ -622,6 +692,19 @@ export function mapProductFromApi(raw: any): Product {
     (raw.specification ?? raw.Specification ?? raw.description ?? raw.Description ?? "") || "";
   const rawUom = raw.unitOfMeasurementId ?? raw.UnitOfMeasurementId;
   const unitOfMeasurementId = rawUom != null && !isNaN(Number(rawUom)) ? Number(rawUom) : 1;
+  const rawUnitName =
+    raw.unitName ??
+    raw.UnitName ??
+    raw.unitOfMeasurement ??
+    raw.UnitOfMeasurement ??
+    raw.uom ??
+    raw.Uom ??
+    null;
+  const unitName =
+    (rawUnitName != null && String(rawUnitName).trim() !== "" ? String(rawUnitName).trim() : null) ||
+    getProductUom(productId, { itemCode, productName }) ||
+    STANDARD_UOMS.find((u) => u.id === unitOfMeasurementId)?.name ||
+    "Nos";
   const rawRate = raw.standardRate ?? raw.StandardRate ?? raw.rate ?? raw.Rate;
   const standardRate = rawRate != null && !isNaN(Number(rawRate)) ? Number(rawRate) : 0;
   const rawGst = raw.gstRate ?? raw.GstRate ?? raw.gst ?? raw.Gst;
@@ -643,6 +726,68 @@ export function mapProductFromApi(raw: any): Product {
 
   const resolved = resolveImageUrl(productImage);
 
+  const rawHsn = raw.hsnCode ?? raw.HsnCode ?? raw.hsn ?? raw.Hsn;
+  const hsnCode = rawHsn != null ? String(rawHsn).trim() : null;
+
+  const parseSafeNumeric = (val: any): number | null => {
+    if (val == null) return null;
+    if (typeof val === "number") return isNaN(val) ? null : val;
+    if (typeof val === "string") {
+      const cleaned = val.replace(/[^0-9.-]/g, "").trim();
+      if (!cleaned || cleaned === "-" || cleaned === ".") return null;
+      const num = Number(cleaned);
+      return isNaN(num) ? null : num;
+    }
+    return null;
+  };
+
+  const rawPurchaseRate =
+    raw.purchaseRate ??
+    raw.PurchaseRate ??
+    raw.purchaserate ??
+    raw.PURCHASERATE ??
+    raw.purchase_rate ??
+    raw.Purchase_Rate ??
+    raw.purchasePrice ??
+    raw.PurchasePrice ??
+    raw.buyingPrice ??
+    raw.BuyingPrice ??
+    raw.costPrice ??
+    raw.CostPrice ??
+    raw.cost ??
+    raw.Cost;
+  const purchaseRate = parseSafeNumeric(rawPurchaseRate);
+
+  const rawProfit =
+    raw.profitPercentage ??
+    raw.ProfitPercentage ??
+    raw.profit_percentage ??
+    raw.Profit_Percentage ??
+    raw.profitpercentage ??
+    raw.PROFITPERCENTAGE ??
+    raw.profitPercent ??
+    raw.ProfitPercent ??
+    raw.profit ??
+    raw.Profit ??
+    raw.profitMargin ??
+    raw.ProfitMargin ??
+    raw.margin ??
+    raw.Margin;
+  const profitPercentage = parseSafeNumeric(rawProfit);
+
+  const rawStock =
+    raw.stock ??
+    raw.Stock ??
+    raw.STOCK ??
+    raw.stockQty ??
+    raw.StockQty ??
+    raw.stockQuantity ??
+    raw.StockQuantity ??
+    raw.availableStock ??
+    raw.AvailableStock;
+  const parsedStock = parseSafeNumeric(rawStock);
+  const stock = parsedStock != null ? Math.round(parsedStock) : null;
+
   return {
     productId,
     itemCode,
@@ -650,8 +795,15 @@ export function mapProductFromApi(raw: any): Product {
     brand,
     specification,
     unitOfMeasurementId,
+    unitName,
+    uom: unitName,
     standardRate,
     gstRate,
+    hsnCode: hsnCode || null,
+    purchaseRate,
+    profitPercentage,
+    profit: profitPercentage,
+    stock,
     isActive: Boolean(isActive),
     isDeleted: Boolean(isDeleted),
     productImage: productImage || null,
@@ -698,15 +850,43 @@ export const productService = {
       gstRate: Number(payload.gstRate) || 0,
       productImage: img ? img.trim() : null,
       productImagePath: img ? img.trim() : null,
+      hsnCode: payload.hsnCode != null && payload.hsnCode.trim() !== "" ? payload.hsnCode.trim() : null,
+      purchaseRate:
+        payload.purchaseRate != null && !isNaN(Number(payload.purchaseRate))
+          ? Number(payload.purchaseRate)
+          : null,
+      profitPercentage:
+        payload.profitPercentage != null && !isNaN(Number(payload.profitPercentage))
+          ? Number(payload.profitPercentage)
+          : payload.profit != null && !isNaN(Number(payload.profit))
+          ? Number(payload.profit)
+          : null,
+      stock:
+        payload.stock != null && !isNaN(Number(payload.stock))
+          ? Math.round(Number(payload.stock))
+          : null,
       isActive: payload.isActive ?? true,
       isDeleted: payload.isDeleted ?? false,
     };
     const response = await apiClient.post<Product>(API_ENDPOINTS.Products, body);
     const raw = (response.data as any)?.data ?? (response.data as any)?.result ?? response.data;
-    return mapProductFromApi(raw);
+    const createdProduct = mapProductFromApi(raw);
+    const uomToSave = payload.unitName || payload.uom;
+    if (uomToSave && createdProduct.productId) {
+      saveProductUom(createdProduct.productId, uomToSave);
+      if (createdProduct.itemCode) saveProductUom(createdProduct.itemCode, uomToSave);
+      createdProduct.unitName = uomToSave;
+      createdProduct.uom = uomToSave;
+    }
+    return createdProduct;
   },
 
   update: async (id: number, payload: Partial<Product>): Promise<Product | void> => {
+    const uomToSave = payload.unitName || payload.uom;
+    if (uomToSave) {
+      saveProductUom(id, uomToSave);
+      if (payload.itemCode) saveProductUom(payload.itemCode, uomToSave);
+    }
     const img =
       payload.productImage !== undefined
         ? payload.productImage
@@ -723,6 +903,32 @@ export const productService = {
         payload.unitOfMeasurementId != null ? Number(payload.unitOfMeasurementId) : 1,
       standardRate: Number(payload.standardRate) || 0,
       gstRate: Number(payload.gstRate) || 0,
+      hsnCode:
+        payload.hsnCode !== undefined
+          ? payload.hsnCode != null && payload.hsnCode.trim() !== ""
+            ? payload.hsnCode.trim()
+            : null
+          : undefined,
+      purchaseRate:
+        payload.purchaseRate !== undefined
+          ? payload.purchaseRate != null && !isNaN(Number(payload.purchaseRate))
+            ? Number(payload.purchaseRate)
+            : null
+          : undefined,
+      profitPercentage:
+        payload.profitPercentage !== undefined
+          ? payload.profitPercentage != null && !isNaN(Number(payload.profitPercentage))
+            ? Number(payload.profitPercentage)
+            : payload.profit != null && !isNaN(Number(payload.profit))
+            ? Number(payload.profit)
+            : null
+          : undefined,
+      stock:
+        payload.stock !== undefined
+          ? payload.stock != null && !isNaN(Number(payload.stock))
+            ? Math.round(Number(payload.stock))
+            : null
+          : undefined,
       isActive: payload.isActive ?? true,
       isDeleted: payload.isDeleted ?? false,
     };
