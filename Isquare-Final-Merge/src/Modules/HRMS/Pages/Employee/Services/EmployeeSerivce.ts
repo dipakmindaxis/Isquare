@@ -164,14 +164,107 @@ export interface EmployeeFullDetail {
   experiences: Experience[];
 }
 
+export interface CrmEmployeeRecord {
+  id?: number;
+  ID?: number;
+  employeeCode?: string;
+  EmployeeCode?: string;
+  firstName?: string;
+  FirstName?: string;
+  middleName?: string;
+  MiddleName?: string;
+  lastName?: string;
+  LastName?: string;
+  fullName?: string;
+  FullName?: string;
+  dateOfBirth?: string;
+  DateOfBirth?: string;
+  gender?: string;
+  Gender?: string;
+  mobileNumber?: string;
+  MobileNumber?: string;
+  emailAddress?: string;
+  EmailAddress?: string;
+  presentAddress?: string;
+  PresentAddress?: string;
+  dateOfJoining?: string;
+  DateOfJoining?: string;
+  workLocationID?: number;
+  WorkLocationID?: number;
+  workLocationName?: string;
+  WorkLocationName?: string;
+  departmentID?: number;
+  DepartmentID?: number;
+  departmentName?: string;
+  DepartmentName?: string;
+  designationID?: number;
+  DesignationID?: number;
+  designationName?: string;
+  DesignationName?: string;
+  reportingTo?: number;
+  ReportingTo?: number;
+  reportingToName?: string;
+  ReportingToName?: string;
+  userId?: string;
+  UserId?: string;
+  dateOfLeaving?: string;
+  DateOfLeaving?: string;
+  isActive?: boolean;
+  IsActive?: boolean;
+  isDeleted?: boolean;
+  IsDeleted?: boolean;
+}
+
+const mapCrmEmployeeToHrms = (e: CrmEmployeeRecord): Employee => ({
+  id: e.id ?? e.ID ?? 0,
+  employeeCode: e.employeeCode ?? e.EmployeeCode ?? "",
+  firstName: e.firstName ?? e.FirstName ?? "",
+  middleName: e.middleName ?? e.MiddleName ?? "",
+  lastName: e.lastName ?? e.LastName ?? "",
+  emailAddress: e.emailAddress ?? e.EmailAddress ?? "",
+  mobileNumber: e.mobileNumber ?? e.MobileNumber ?? "",
+  isActive: e.isActive ?? e.IsActive ?? true,
+  workLocationName: e.workLocationName ?? e.WorkLocationName ?? "",
+  departmentName: e.departmentName ?? e.DepartmentName ?? "",
+  designationName: e.designationName ?? e.DesignationName ?? "",
+  panNumber: "",
+  aadhaarNumber: "",
+  companyName: "",
+});
+
 export const getAllEmployees = async (): Promise<Employee[]> => {
   try {
     const response = await apiClient.get<Employee[]>(API_ENDPOINTS.Employees);
-    return response.data;
-  } catch (error: unknown) {
-    console.error("Failed to fetch employees:", error);
-    throw new Error("Could not fetch employee data.");
+    if (Array.isArray(response.data) && response.data.length > 0) {
+      return response.data;
+    }
+  } catch {
+    // If payroll-employees fails or is empty, fall back to CRM endpoints
   }
+
+  // Fallback 1: GET /api/employees (CompanyPlatform.CRM)
+  try {
+    const crmUrl = API_ENDPOINTS.CRMEmployees || `${API_ENDPOINTS.BaseUrl}/employees`;
+    const response = await apiClient.get<CrmEmployeeRecord[]>(crmUrl);
+    if (Array.isArray(response.data) && response.data.length > 0) {
+      return response.data.map(mapCrmEmployeeToHrms);
+    }
+  } catch {
+    // Continue to next fallback
+  }
+
+  // Fallback 2: GET /api/employee (CompanyPlatform.CRM)
+  try {
+    const crmSingleUrl = API_ENDPOINTS.CRMEmployee || `${API_ENDPOINTS.BaseUrl}/employee`;
+    const response = await apiClient.get<CrmEmployeeRecord[]>(crmSingleUrl);
+    if (Array.isArray(response.data) && response.data.length > 0) {
+      return response.data.map(mapCrmEmployeeToHrms);
+    }
+  } catch {
+    // All fallbacks exhausted
+  }
+
+  return [];
 };
 
 export const addEmployee = async (

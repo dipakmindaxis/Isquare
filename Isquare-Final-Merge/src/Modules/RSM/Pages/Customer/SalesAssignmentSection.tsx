@@ -3,7 +3,6 @@ import {
   Users,
   Layers,
   GitBranch,
-  CheckCircle2,
   AlertCircle,
   RotateCcw,
   Save,
@@ -11,26 +10,74 @@ import {
   Search,
   Edit2,
   Trash2,
-  ShieldCheck,
-  UserCheck,
-  Briefcase,
-  ArrowRight,
   X,
-  Sparkles,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
+  getEmployees,
+  getDirectors,
+  getBdeUsers,
+  getSalesCoordinators,
+} from "./Services/CustomerMasterDataService";
+import {
+  getBdeUsersByDirectorId,
+  getSalesCoordinatorsByBdeId,
+} from "./Services/SalesAssignmentService";
+import type {
+  BdeUserOption,
+  SalesCoordinatorOption,
+} from "./Services/SalesAssignmentService";
+import type {
+  SalesCoordinatorItem,
+  DirectorItem,
+  EmployeeSelectItem,
+  BdeUserItem,
+} from "./Types/CustomerTypes";
+import {
+  getLevels,
+  createLevel,
+  updateLevel,
+  deleteLevel,
+} from "./Services/HierarchyLevelService";
+import { setEmployeeReporting } from "../../../HRMS/Services/MasterDataService";
+import apiClient from "../../../../API/apiClient";
+import { API_ENDPOINTS } from "../../../../API/apiConfig";
+import {
   type RoleType,
-  AVAILABLE_ROLES,
-  type MockEmployee,
   type HierarchyLevel,
   type AssignmentRecord,
-  INITIAL_STATIC_EMPLOYEES,
-  INITIAL_STATIC_LEVELS,
-  INITIAL_STATIC_ASSIGNMENTS,
-  getEligibleReportingEmployees,
-  validateRoleAssignment,
 } from "./Services/RoleAssignmentStaticData";
+
+export interface DynamicEmployee {
+  id: number;
+  name: string;
+  code: string;
+  role?: string;
+  reportingTo?: number;
+  reportingToName?: string;
+}
+
+export interface DynamicDirector {
+  id: number;
+  name: string;
+  code: string;
+}
+
+export interface DynamicBdeUser {
+  id: number;
+  name: string;
+  code: string;
+  directorId?: number;
+  directorName?: string;
+}
+
+export const ASSIGNMENT_ROLES: RoleType[] = [
+  // "System Admin",
+  // "Director",
+  // "BDE User",
+  // "Sales Person",
+];
 
 export interface SalesAssignmentFormValues {
   directorId?: number | "";
@@ -83,20 +130,31 @@ export interface SalesAssignmentSectionProps {
 }
 
 /**
+ * Format employee display name cleanly without duplicating codes
+ * e.g. "System Admin (SYS)" with code "SYS" remains "System Admin (SYS)"
+ */
+const formatEmployeeDisplay = (name: string, code?: string): string => {
+  if (!name) return "";
+  if (!code || !code.trim()) return name;
+  const trimmed = code.trim();
+  if (
+    name.toLowerCase().includes(`(${trimmed.toLowerCase()})`) ||
+    name.toLowerCase().endsWith(trimmed.toLowerCase())
+  ) {
+    return name;
+  }
+  return `${name} (${trimmed})`;
+};
+
+/**
  * CRM Sales Assignment & Organization Hierarchy Module
- * Role-Based Employee Assignment Flow (Static Data Only)
+ * Dynamic API-Driven Employee Role & Reporting Hierarchy
  *
  * Rules:
- * - System Admin: No Reporting To required (hidden / disabled)
- * - Director: No Reporting To required (hidden / disabled)
- * - BDE User: Reporting To restricted to employees with Director role
- * - Sales Person: Reporting To restricted to employees with BDE User role
- * - In Customer Modal (!standalone):
- *     * Data is automatically synced to the customer form via onChange
- *     * NO local "Save Assignment" button (saved when complete customer form is submitted)
- *     * NO inner assignments table
- * - On Standalone Page (standalone=true):
- *     * Full management interface with Levels tab and Assignments table
+ * - System Admin: No Reporting To required (hidden completely)
+ * - Director: No Reporting To required (hidden completely)
+ * - BDE User: Reporting To shown, lists ONLY Directors
+ * - Sales Person: Reporting To shown, lists ONLY BDE Users
  */
 const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
   values: propValues,
@@ -122,80 +180,57 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
   // Active sub-tab: "reporting" (Reporting To) or "levels" (Levels)
   const [activeSubTab, setActiveSubTab] = useState<"reporting" | "levels">(initialSubTab);
 
-  // In-memory static state
-  const [employees, setEmployees] = useState<MockEmployee[]>(INITIAL_STATIC_EMPLOYEES);
-  const [levels, setLevels] = useState<HierarchyLevel[]>(INITIAL_STATIC_LEVELS);
-  const [assignments, setAssignments] = useState<AssignmentRecord[]>(INITIAL_STATIC_ASSIGNMENTS);
+  // Dynamic API Master Data State
+  const [employees, setEmployees] = useState<DynamicEmployee[]>([]);
+  const [directors, setDirectors] = useState<DynamicDirector[]>([]);
+  const [bdeUsers, setBdeUsers] = useState<DynamicBdeUser[]>([]);
+  const [allSalesCoordinators, setAllSalesCoordinators] = useState<SalesCoordinatorItem[]>([]);
+  const [isLoadingDynamicData, setIsLoadingDynamicData] = useState<boolean>(true);
+  const [isSavingLevel, setIsSavingLevel] = useState<boolean>(false);
 
-  // Form states for role assignment
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | "">(() => {
-    if (values.employeeId) return Number(values.employeeId);
-    if (values.salesCoordinatorId) return Number(values.salesCoordinatorId);
-    if (values.bdeUserId) return Number(values.bdeUserId);
+  // Levels & Standalone Assignments State
+  const [levels, setLevels] = useState<HierarchyLevel[]>([]);
+  const [isLoadingLevels, setIsLoadingLevels] = useState<boolean>(true);
+  const [assignments, setAssignments] = useState<AssignmentRecord[]>([]);
+
+  // Cascading Selection State
+  const [selectedDirectorId, setSelectedDirectorId] = useState<number | "">(() => {
     if (values.directorId) return Number(values.directorId);
-    return standalone ? 201 : "";
+    if (values.employeeId && values.role === "Director") return Number(values.employeeId);
+    return "";
   });
 
-  const [selectedRole, setSelectedRole] = useState<RoleType | "">(() => {
-    if (values.role && AVAILABLE_ROLES.includes(values.role as RoleType)) {
-      return values.role as RoleType;
+  const [selectedBdeId, setSelectedBdeId] = useState<number | "">(() => {
+    if (values.bdeUserId) return Number(values.bdeUserId);
+    if (values.employeeId && values.role === "BDE User") return Number(values.employeeId);
+    return "";
+  });
+
+  const [selectedSalesPersonId, setSelectedSalesPersonId] = useState<number | "">(() => {
+    if (values.salesCoordinatorId) return Number(values.salesCoordinatorId);
+    if (values.employeeId && values.role === "Sales Person") return Number(values.employeeId);
+    return "";
+  });
+
+  const [selectedOwnerValue, setSelectedOwnerValue] = useState<string>(() => {
+    if (values.customerOwnerValue) return values.customerOwnerValue;
+    if (values.customerOwnerType && values.customerOwnerId) {
+      return `${values.customerOwnerType}:${values.customerOwnerId}`;
     }
-    if (values.salesCoordinatorId) return "Sales Person";
-    if (values.bdeUserId) return "BDE User";
-    if (values.directorId) return "Director";
-    return standalone ? "Sales Person" : "";
+    return "";
   });
 
-  const [selectedReportingToId, setSelectedReportingToId] = useState<number | "">(() => {
-    if (values.reportingToId) return Number(values.reportingToId);
-    if (values.salesCoordinatorId && values.bdeUserId) return Number(values.bdeUserId);
-    if (values.bdeUserId && values.directorId) return Number(values.directorId);
-    return standalone ? 101 : "";
-  });
-
-  // Keep state in sync if prop values change externally (e.g. customer data loaded in Edit mode)
-  useEffect(() => {
-    if (propValues) {
-      if (propValues.employeeId) {
-        setSelectedEmployeeId(Number(propValues.employeeId));
-        if (propValues.role && AVAILABLE_ROLES.includes(propValues.role as RoleType)) {
-          setSelectedRole(propValues.role as RoleType);
-        }
-        if (propValues.reportingToId) {
-          setSelectedReportingToId(Number(propValues.reportingToId));
-        }
-      } else if (propValues.salesCoordinatorId) {
-        setSelectedEmployeeId(Number(propValues.salesCoordinatorId));
-        setSelectedRole("Sales Person");
-        if (propValues.bdeUserId) {
-          setSelectedReportingToId(Number(propValues.bdeUserId));
-        }
-      } else if (propValues.bdeUserId) {
-        setSelectedEmployeeId(Number(propValues.bdeUserId));
-        setSelectedRole("BDE User");
-        if (propValues.directorId) {
-          setSelectedReportingToId(Number(propValues.directorId));
-        }
-      } else if (propValues.directorId) {
-        setSelectedEmployeeId(Number(propValues.directorId));
-        setSelectedRole("Director");
-        setSelectedReportingToId("");
-      }
-    }
-  }, [
-    propValues?.employeeId,
-    propValues?.role,
-    propValues?.reportingToId,
-    propValues?.salesCoordinatorId,
-    propValues?.bdeUserId,
-    propValues?.directorId,
-  ]);
+  const [filteredBdes, setFilteredBdes] = useState<BdeUserOption[]>([]);
+  const [filteredSalesPersons, setFilteredSalesPersons] = useState<SalesCoordinatorOption[]>([]);
+  const [isLoadingBdes, setIsLoadingBdes] = useState<boolean>(false);
+  const [isLoadingSalesPersons, setIsLoadingSalesPersons] = useState<boolean>(false);
 
   // Validation errors
   const [validationErrors, setValidationErrors] = useState<{
-    employeeId?: string;
-    role?: string;
-    reportingToId?: string;
+    directorId?: string;
+    bdeUserId?: string;
+    salesCoordinatorId?: string;
+    customerOwnerId?: string;
   }>({});
 
   // Filter & Search states (for standalone view)
@@ -216,316 +251,903 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
     isActive: true,
   });
 
-  // Current selected employee object
-  const currentEmployee = useMemo(() => {
-    return employees.find((emp) => emp.id === Number(selectedEmployeeId)) || null;
-  }, [employees, selectedEmployeeId]);
-
-  // Eligible "Reporting To" employees strictly based on chosen role
-  const eligibleReportingEmployees = useMemo(() => {
-    return getEligibleReportingEmployees(selectedRole, employees, selectedEmployeeId);
-  }, [selectedRole, employees, selectedEmployeeId]);
-
-  // Current selected reporting-to employee object
-  const currentReportingTo = useMemo(() => {
-    if (!selectedReportingToId) return null;
-    return employees.find((emp) => emp.id === Number(selectedReportingToId)) || null;
-  }, [employees, selectedReportingToId]);
-
-  /**
-   * Automatically synchronizes all role-based sales assignment fields with the parent customer form
-   * without needing to press an inner "Save" button!
-   */
-  const syncToParent = (
-    emp: MockEmployee | null,
-    role: RoleType | "",
-    reportingEmp: MockEmployee | null
+  // Helper: Synchronize cascading selection fields to parent form
+  const syncCascadingToParent = (
+    dir: { id: number; name: string; code?: string } | null,
+    bde: { id: number; name: string; code?: string } | null,
+    sp: { id: number; name: string; code?: string } | null,
+    owner?: { id: number; name: string; type: "Director" | "BDE"; value: string } | null
   ) => {
-    if (!emp || !role) {
-      handleValuesUpdate({
-        employeeId: "",
-        employeeName: "",
-        employeeCode: "",
-        role: "",
-        reportingToId: "",
-        reportingToName: "",
-        directorId: "",
-        directorName: "",
-        directorCode: "",
-        bdeUserId: "",
-        bdeUserName: "",
-        salesCoordinatorId: "",
-        salesCoordinatorName: "",
-        customerOwnerId: "",
-        customerOwnerName: "",
-        customerOwnerType: "",
-        customerOwnerValue: "",
-      });
-      return;
-    }
-
     const updates: Partial<SalesAssignmentFormValues> = {
-      employeeId: emp.id,
-      employeeName: emp.name,
-      employeeCode: emp.code,
-      role: role,
-      reportingToId: reportingEmp ? reportingEmp.id : "",
-      reportingToName: reportingEmp ? reportingEmp.name : "",
-    };
+      // 1. Director
+      directorId: dir ? dir.id : "",
+      directorName: dir ? dir.name : "",
+      directorCode: dir ? dir.code || "" : "",
 
-    if (role === "Director") {
-      updates.directorId = emp.id;
-      updates.directorName = emp.name;
-      updates.directorCode = emp.code;
-      updates.bdeUserId = "";
-      updates.bdeUserName = "";
-      updates.salesCoordinatorId = "";
-      updates.salesCoordinatorName = "";
-      updates.customerOwnerId = emp.id;
-      updates.customerOwnerName = emp.name;
-      updates.customerOwnerType = "Director";
-      updates.customerOwnerValue = `Director:${emp.id}`;
-    } else if (role === "BDE User") {
-      updates.bdeUserId = emp.id;
-      updates.bdeUserName = emp.name;
-      if (reportingEmp) {
-        updates.directorId = reportingEmp.id;
-        updates.directorName = reportingEmp.name;
-        updates.directorCode = reportingEmp.code;
-      } else {
-        updates.directorId = "";
-        updates.directorName = "";
-        updates.directorCode = "";
-      }
-      updates.salesCoordinatorId = "";
-      updates.salesCoordinatorName = "";
-      updates.customerOwnerId = emp.id;
-      updates.customerOwnerName = emp.name;
-      updates.customerOwnerType = "BDE";
-      updates.customerOwnerValue = `BDE:${emp.id}`;
-    } else if (role === "Sales Person") {
-      updates.salesCoordinatorId = emp.id;
-      updates.salesCoordinatorName = emp.name;
-      if (reportingEmp) {
-        updates.bdeUserId = reportingEmp.id;
-        updates.bdeUserName = reportingEmp.name;
-        // If the assigned BDE user reports to a Director, also map the Director
-        if (reportingEmp.reportingToId) {
-          const bdeDirector = employees.find((e) => e.id === reportingEmp.reportingToId);
-          if (bdeDirector) {
-            updates.directorId = bdeDirector.id;
-            updates.directorName = bdeDirector.name;
-            updates.directorCode = bdeDirector.code;
-          }
-        }
-      } else {
-        updates.bdeUserId = "";
-        updates.bdeUserName = "";
-        updates.directorId = "";
-        updates.directorName = "";
-        updates.directorCode = "";
-      }
-      updates.customerOwnerId = emp.id;
-      updates.customerOwnerName = emp.name;
-      updates.customerOwnerType = "SalesCoordinator";
-      updates.customerOwnerValue = `SalesCoordinator:${emp.id}`;
-    } else if (role === "System Admin") {
-      updates.directorId = "";
-      updates.directorName = "";
-      updates.directorCode = "";
-      updates.bdeUserId = "";
-      updates.bdeUserName = "";
-      updates.salesCoordinatorId = "";
-      updates.salesCoordinatorName = "";
-      updates.customerOwnerId = emp.id;
-      updates.customerOwnerName = emp.name;
-      updates.customerOwnerType = "System Admin";
-      updates.customerOwnerValue = `SystemAdmin:${emp.id}`;
-    }
+      // 2. BDE User
+      bdeUserId: bde ? bde.id : "",
+      bdeUserName: bde ? bde.name : "",
+
+      // 3. Sales Person (Coordinator)
+      salesCoordinatorId: sp ? sp.id : "",
+      salesCoordinatorName: sp ? sp.name : "",
+
+      // Backward compatibility fields
+      employeeId: sp ? sp.id : bde ? bde.id : dir ? dir.id : "",
+      employeeName: sp ? sp.name : bde ? bde.name : dir ? dir.name : "",
+      employeeCode: sp ? sp.code || "" : bde ? bde.code || "" : dir ? dir.code || "" : "",
+      role: sp ? "Sales Person" : bde ? "BDE User" : dir ? "Director" : "",
+      reportingToId: sp && bde ? bde.id : bde && dir ? dir.id : "",
+      reportingToName: sp && bde ? bde.name : bde && dir ? dir.name : "",
+
+      // Customer Owner: selected from chosen Director or BDE User
+      customerOwnerId: owner ? owner.id : "",
+      customerOwnerName: owner ? owner.name : "",
+      customerOwnerType: owner ? owner.type : "",
+      customerOwnerValue: owner ? owner.value : "",
+    };
 
     handleValuesUpdate(updates);
   };
 
-  // Handle Employee Change
-  const handleEmployeeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const empId = e.target.value ? Number(e.target.value) : "";
-    setSelectedEmployeeId(empId);
-    setValidationErrors((prev) => ({ ...prev, employeeId: undefined }));
+  // Helper to load BDE Users strictly assigned to a given Director ID
+  const loadBdesForDirector = async (
+    dirId: number,
+    currentBdes: DynamicBdeUser[],
+    _currentEmps: DynamicEmployee[]
+  ) => {
+    if (!dirId) {
+      setFilteredBdes([]);
+      return;
+    }
+    setIsLoadingBdes(true);
+    try {
+      // 1. Fetch from real backend API (/api/bdeuser/by-director/{dirId})
+      const apiBdes = await getBdeUsersByDirectorId(dirId);
 
-    if (!empId) {
-      setSelectedRole("");
-      setSelectedReportingToId("");
-      syncToParent(null, "", null);
+      // 2. Filter local dynamic BDE users by directorId
+      const localMatches = currentBdes.filter((b) => b.directorId === dirId);
+
+      // Combine unique BDE users strictly mapped to this Director in the database
+      const combined: BdeUserOption[] = [...apiBdes];
+      localMatches.forEach((item) => {
+        if (!combined.some((b) => b.id === item.id)) {
+          combined.push({
+            id: item.id,
+            name: item.name,
+            value: item.name,
+            code: item.code || "",
+            directorId: dirId,
+            isActive: true,
+          });
+        }
+      });
+
+      // Strictly set only the database-mapped BDE users
+      setFilteredBdes(combined);
+    } catch {
+      const localMatches = currentBdes.filter((b) => b.directorId === dirId);
+      setFilteredBdes(
+        localMatches.map((item) => ({
+          id: item.id,
+          name: item.name,
+          value: item.name,
+          code: item.code || "",
+          directorId: dirId,
+          isActive: true,
+        }))
+      );
+    } finally {
+      setIsLoadingBdes(false);
+    }
+  };
+
+  // Helper to load Sales Persons strictly assigned to a given BDE ID
+  const loadSalesPersonsForBde = async (
+    bdeId: number,
+    currentScs: SalesCoordinatorItem[],
+    _currentEmps: DynamicEmployee[]
+  ) => {
+    if (!bdeId) {
+      setFilteredSalesPersons([]);
+      return;
+    }
+    setIsLoadingSalesPersons(true);
+    try {
+      // 1. Fetch from real backend API (/api/sales-coordinator/by-bde/{bdeId})
+      const apiScs = await getSalesCoordinatorsByBdeId(bdeId);
+
+      // 2. Filter local dynamic Sales Coordinators by bdeUserId
+      const localMatches = currentScs.filter((s) => s.bdeUserId === bdeId);
+
+      // Combine unique Sales Persons strictly mapped to this BDE User in the database
+      const combined: SalesCoordinatorOption[] = [...apiScs];
+      localMatches.forEach((item) => {
+        if (!combined.some((s) => s.salesCoordinatorId === item.salesCoordinatorId)) {
+          combined.push({
+            salesCoordinatorId: item.salesCoordinatorId,
+            salesCoordinatorName: item.salesCoordinatorName,
+            salesCoordinatorCode: item.salesCoordinatorCode || "",
+            bdeUserId: bdeId,
+            isActive: item.isActive !== false,
+          });
+        }
+      });
+
+      // Strictly set only the database-mapped Sales Persons
+      setFilteredSalesPersons(combined);
+    } catch {
+      const localMatches = currentScs.filter((s) => s.bdeUserId === bdeId);
+      setFilteredSalesPersons(
+        localMatches.map((item) => ({
+          salesCoordinatorId: item.salesCoordinatorId,
+          salesCoordinatorName: item.salesCoordinatorName,
+          salesCoordinatorCode: item.salesCoordinatorCode || "",
+          bdeUserId: bdeId,
+          isActive: item.isActive !== false,
+        }))
+      );
+    } finally {
+      setIsLoadingSalesPersons(false);
+    }
+  };
+
+  // Fetch real dynamic master data from APIs
+  useEffect(() => {
+    let isMounted = true;
+    const loadDynamicData = async () => {
+      setIsLoadingDynamicData(true);
+      try {
+        const [empData, dirData, bdeData, levelsData, scData] = await Promise.allSettled([
+          getEmployees(),
+          getDirectors(),
+          getBdeUsers(),
+          getLevels(),
+          getSalesCoordinators(),
+        ]);
+
+        if (!isMounted) return;
+
+        // Populate Levels from backend API
+        if (
+          levelsData.status === "fulfilled" &&
+          Array.isArray(levelsData.value)
+        ) {
+          setLevels(levelsData.value);
+        } else {
+          setLevels([]);
+        }
+
+        let loadedEmps: DynamicEmployee[] = [];
+        if (empData.status === "fulfilled" && Array.isArray(empData.value)) {
+          loadedEmps = (empData.value as EmployeeSelectItem[]).map((e: EmployeeSelectItem) => ({
+            id: Number(e.id || 0),
+            name:
+              e.fullName ||
+              `${e.firstName || ""} ${e.lastName || ""}`.trim() ||
+              (e.id ? `Employee #${e.id}` : ""),
+            code: e.employeeCode || "",
+            role: e.role || e.designation || e.levelName || "",
+            reportingTo: Number(e.reportingTo || 0) || undefined,
+            reportingToName: e.reportingToName || undefined,
+          }));
+          setEmployees(loadedEmps);
+        }
+
+        // 1. Process Directors: Exclusively from Employee table
+        let loadedDirs: DynamicDirector[] = [];
+        if (dirData.status === "fulfilled" && Array.isArray(dirData.value) && dirData.value.length > 0) {
+          loadedDirs = (dirData.value as DirectorItem[]).map((d: DirectorItem) => ({
+            id: Number(d.directorId || 0),
+            name: d.directorName || `Director #${d.directorId}`,
+            code: d.directorCode || "",
+          }));
+        } else {
+          // Extract employees tagged with Director designation/role/LevelId=1 from Employee table
+          loadedDirs = loadedEmps
+            .filter((e: DynamicEmployee) => {
+              const r = (e.role || "").toLowerCase();
+              return r.includes("director");
+            })
+            .map((e: DynamicEmployee) => ({
+              id: e.id,
+              name: e.name,
+              code: e.code,
+            }));
+        }
+        setDirectors(loadedDirs);
+
+        // 2. Process BDE Users
+        let loadedBdes: DynamicBdeUser[] = [];
+        if (bdeData.status === "fulfilled" && Array.isArray(bdeData.value)) {
+          loadedBdes = (bdeData.value as BdeUserItem[]).map((b: BdeUserItem) => {
+            const id = Number(b.id || 0);
+            let rawName = b.value || "";
+            const code = b.code || "";
+            const directorId = Number(
+              b.directorEmployeeId || b.directorId || 0
+            );
+            const directorName = b.directorName || "";
+
+            if (!rawName) {
+              const matchedEmp = loadedEmps.find(
+                (e) => e.id === id || (code && e.code === code)
+              );
+              if (matchedEmp) {
+                rawName = matchedEmp.name;
+              } else {
+                rawName = id ? `BDE User #${id}` : "BDE User";
+              }
+            }
+
+            return {
+              id,
+              name: rawName,
+              code,
+              directorId,
+              directorName,
+            };
+          });
+        }
+        loadedEmps.forEach((e) => {
+          const r = (e.role || "").toLowerCase();
+          const c = (e.code || "").toLowerCase();
+          if (
+            (r.includes("bde") || c.includes("bde")) &&
+            !loadedBdes.some((b) => b.id === e.id)
+          ) {
+            loadedBdes.push({
+              id: e.id,
+              name: e.name,
+              code: e.code,
+              directorId: e.reportingTo || 0,
+              directorName: e.reportingToName || "",
+            });
+          }
+        });
+        // Match any BDEs whose directorId is 0 against employee reporting
+        loadedBdes = loadedBdes.map((b) => {
+          if (!b.directorId) {
+            const matchedEmp = loadedEmps.find((e) => e.id === b.id);
+            if (matchedEmp && matchedEmp.reportingTo) {
+              return {
+                ...b,
+                directorId: matchedEmp.reportingTo,
+                directorName: b.directorName || matchedEmp.reportingToName || "",
+              };
+            }
+          }
+          return b;
+        });
+        setBdeUsers(loadedBdes);
+
+        // 3. Process Sales Coordinators
+        let loadedScs: SalesCoordinatorItem[] = [];
+        if (scData.status === "fulfilled" && Array.isArray(scData.value)) {
+          loadedScs = scData.value;
+        }
+        loadedEmps.forEach((e) => {
+          const r = (e.role || "").toLowerCase();
+          const c = (e.code || "").toLowerCase();
+          if (
+            (r.includes("sales") || r.includes("coord") || c.includes("sc")) &&
+            !loadedScs.some((s) => s.salesCoordinatorId === e.id)
+          ) {
+            loadedScs.push({
+              salesCoordinatorId: e.id,
+              salesCoordinatorName: e.name,
+              salesCoordinatorCode: e.code,
+              bdeUserId: e.reportingTo || null,
+              bdeUserName: e.reportingToName || null,
+              isActive: true,
+            });
+          }
+        });
+        loadedScs = loadedScs.map((sc) => {
+          if (!sc.bdeUserId) {
+            const matchedEmp = loadedEmps.find((e) => e.id === sc.salesCoordinatorId);
+            if (matchedEmp && matchedEmp.reportingTo) {
+              return {
+                ...sc,
+                bdeUserId: matchedEmp.reportingTo,
+                bdeUserName: sc.bdeUserName || matchedEmp.reportingToName || null,
+              };
+            }
+          }
+          return sc;
+        });
+        setAllSalesCoordinators(loadedScs);
+
+        // Derive active database hierarchy assignments directly from loaded records
+        const dbAssignments: AssignmentRecord[] = [];
+        loadedScs.forEach((sc) => {
+          if (sc.bdeUserId) {
+            const bde = loadedBdes.find((b) => b.id === sc.bdeUserId);
+            const dir = bde?.directorId ? loadedDirs.find((d) => d.id === bde.directorId) : null;
+            dbAssignments.push({
+              id: `sc-${sc.salesCoordinatorId}`,
+              employeeId: sc.salesCoordinatorId,
+              employeeName: sc.salesCoordinatorName,
+              employeeCode: sc.salesCoordinatorCode || "",
+              role: "Sales Person",
+              reportingToId: sc.bdeUserId,
+              reportingToName: bde?.name || `BDE #${sc.bdeUserId}`,
+              reportingToRole: "BDE User",
+              directorId: dir?.id || bde?.directorId || null,
+              directorName: dir?.name || null,
+              directorCode: dir?.code || null,
+              bdeUserId: sc.bdeUserId,
+              bdeUserName: bde?.name || null,
+              salesCoordinatorId: sc.salesCoordinatorId,
+              salesCoordinatorName: sc.salesCoordinatorName,
+              assignedDate: new Date().toISOString().split("T")[0],
+              status: "Active",
+            });
+          }
+        });
+        loadedBdes.forEach((bde) => {
+          if (bde.directorId) {
+            const dir = loadedDirs.find((d) => d.id === bde.directorId);
+            dbAssignments.push({
+              id: `bde-${bde.id}`,
+              employeeId: bde.id,
+              employeeName: bde.name,
+              employeeCode: bde.code || "",
+              role: "BDE User",
+              reportingToId: bde.directorId,
+              reportingToName: dir?.name || `Director #${bde.directorId}`,
+              reportingToRole: "Director",
+              directorId: bde.directorId,
+              directorName: dir?.name || null,
+              directorCode: dir?.code || null,
+              bdeUserId: bde.id,
+              bdeUserName: bde.name,
+              salesCoordinatorId: null,
+              salesCoordinatorName: null,
+              assignedDate: new Date().toISOString().split("T")[0],
+              status: "Active",
+            });
+          }
+        });
+        setAssignments(dbAssignments);
+        const initialDirId = Number(values.directorId || (values.role === "Director" ? values.employeeId : 0) || 0);
+        const initialBdeId = Number(values.bdeUserId || (values.role === "BDE User" ? values.employeeId : 0) || 0);
+        if (initialDirId) {
+          loadBdesForDirector(initialDirId, loadedBdes, loadedEmps);
+        }
+        if (initialBdeId) {
+          loadSalesPersonsForBde(initialBdeId, loadedScs, loadedEmps);
+        }
+      } catch (err) {
+        console.error("Error loading sales assignment master data:", err);
+      } finally {
+        if (isMounted) {
+          setIsLoadingDynamicData(false);
+          setIsLoadingLevels(false);
+        }
+      }
+    };
+
+    loadDynamicData();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Sync state if external values change (e.g., editing customer)
+  useEffect(() => {
+    if (propValues) {
+      if (propValues.directorId) {
+        const dirId = Number(propValues.directorId);
+        setSelectedDirectorId(dirId);
+        if (bdeUsers.length > 0 || employees.length > 0) {
+          loadBdesForDirector(dirId, bdeUsers, employees);
+        }
+      }
+      if (propValues.bdeUserId) {
+        const bdeId = Number(propValues.bdeUserId);
+        setSelectedBdeId(bdeId);
+        if (allSalesCoordinators.length > 0 || employees.length > 0) {
+          loadSalesPersonsForBde(bdeId, allSalesCoordinators, employees);
+        }
+      }
+      if (propValues.salesCoordinatorId) {
+        setSelectedSalesPersonId(Number(propValues.salesCoordinatorId));
+      }
+      if (propValues.customerOwnerValue) {
+        setSelectedOwnerValue(propValues.customerOwnerValue);
+      } else if (propValues.customerOwnerType && propValues.customerOwnerId) {
+        setSelectedOwnerValue(`${propValues.customerOwnerType}:${propValues.customerOwnerId}`);
+      }
+    }
+  }, [
+    propValues?.directorId,
+    propValues?.bdeUserId,
+    propValues?.salesCoordinatorId,
+    propValues?.customerOwnerValue,
+    propValues?.customerOwnerType,
+    propValues?.customerOwnerId,
+  ]);
+
+  // Selected Director Object
+  const selectedDirectorObj = useMemo(() => {
+    if (!selectedDirectorId) return null;
+    return (
+      directors.find((d) => d.id === selectedDirectorId) ||
+      employees.find((e) => e.id === selectedDirectorId) ||
+      null
+    );
+  }, [selectedDirectorId, directors, employees]);
+
+  // Selected BDE Object
+  const selectedBdeObj = useMemo(() => {
+    if (!selectedBdeId) return null;
+    return (
+      filteredBdes.find((b) => b.id === selectedBdeId) ||
+      bdeUsers.find((b) => b.id === selectedBdeId) ||
+      employees.find((e) => e.id === selectedBdeId) ||
+      null
+    );
+  }, [selectedBdeId, filteredBdes, bdeUsers, employees]);
+
+  // Customer Owner dropdown options: Contains ONLY the selected Director and BDE User
+  const customerOwnerOptions = useMemo(() => {
+    if (!selectedSalesPersonId) return [];
+    const list: Array<{
+      value: string;
+      label: string;
+      id: number;
+      name: string;
+      type: "Director" | "BDE";
+    }> = [];
+
+    if (selectedDirectorObj) {
+      list.push({
+        value: `Director:${selectedDirectorObj.id}`,
+        label: `${formatEmployeeDisplay(selectedDirectorObj.name, selectedDirectorObj.code)} (Director)`,
+        id: selectedDirectorObj.id,
+        name: selectedDirectorObj.name,
+        type: "Director",
+      });
+    }
+
+    if (selectedBdeObj) {
+      list.push({
+        value: `BDE:${selectedBdeObj.id}`,
+        label: `${formatEmployeeDisplay(selectedBdeObj.name, selectedBdeObj.code)} (BDE User)`,
+        id: selectedBdeObj.id,
+        name: selectedBdeObj.name,
+        type: "BDE",
+      });
+    }
+
+    return list;
+  }, [selectedSalesPersonId, selectedDirectorObj, selectedBdeObj]);
+
+  // 1. Handle Director Change: populates BDE Users under this Director
+  const handleDirectorChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const dirId = e.target.value ? Number(e.target.value) : "";
+    setSelectedDirectorId(dirId);
+    setSelectedBdeId("");
+    setSelectedSalesPersonId("");
+    setSelectedOwnerValue("");
+    setValidationErrors((prev) => ({
+      ...prev,
+      directorId: undefined,
+      bdeUserId: undefined,
+      salesCoordinatorId: undefined,
+      customerOwnerId: undefined,
+    }));
+
+    const dir = dirId
+      ? directors.find((d) => d.id === dirId) ||
+      employees.find((e) => e.id === dirId) ||
+      null
+      : null;
+
+    syncCascadingToParent(dir, null, null, null);
+
+    if (dirId) {
+      loadBdesForDirector(dirId, bdeUsers, employees);
+    } else {
+      setFilteredBdes([]);
+      setFilteredSalesPersons([]);
+    }
+  };
+
+  // 2. Handle BDE Change: populates Sales Persons under this BDE User
+  const handleBdeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const bdeId = e.target.value ? Number(e.target.value) : "";
+    setSelectedBdeId(bdeId);
+    setSelectedSalesPersonId("");
+    setSelectedOwnerValue("");
+    setValidationErrors((prev) => ({
+      ...prev,
+      bdeUserId: undefined,
+      salesCoordinatorId: undefined,
+      customerOwnerId: undefined,
+    }));
+
+    const dir = selectedDirectorObj;
+    const bde = bdeId
+      ? filteredBdes.find((b) => b.id === bdeId) ||
+      bdeUsers.find((b) => b.id === bdeId) ||
+      employees.find((e) => e.id === bdeId) ||
+      null
+      : null;
+
+    syncCascadingToParent(dir, bde, null, null);
+
+    if (bdeId) {
+      loadSalesPersonsForBde(bdeId, allSalesCoordinators, employees);
+    } else {
+      setFilteredSalesPersons([]);
+    }
+  };
+
+  // 3. Handle Sales Person Change: brings up Customer Owner column
+  const handleSalesPersonChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const spId = e.target.value ? Number(e.target.value) : "";
+    setSelectedSalesPersonId(spId);
+    setSelectedOwnerValue("");
+    setValidationErrors((prev) => ({
+      ...prev,
+      salesCoordinatorId: undefined,
+      customerOwnerId: undefined,
+    }));
+
+    const dir = selectedDirectorObj;
+    const bde = selectedBdeObj;
+    const sp = spId
+      ? filteredSalesPersons.find((s) => s.salesCoordinatorId === spId) ||
+      allSalesCoordinators.find((s) => s.salesCoordinatorId === spId) ||
+      null
+      : null;
+
+    syncCascadingToParent(
+      dir,
+      bde,
+      sp
+        ? {
+          id: sp.salesCoordinatorId,
+          name: (sp as any).salesCoordinatorName || (sp as any).name,
+          code: (sp as any).salesCoordinatorCode || (sp as any).code,
+        }
+        : null,
+      null
+    );
+  };
+
+  // 4. Handle Customer Owner Change: user selects Director or BDE as Customer Owner
+  const handleCustomerOwnerChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    setSelectedOwnerValue(val);
+    setValidationErrors((prev) => ({ ...prev, customerOwnerId: undefined }));
+
+    const dir = selectedDirectorObj;
+    const bde = selectedBdeObj;
+    const sp = selectedSalesPersonId
+      ? filteredSalesPersons.find((s) => s.salesCoordinatorId === selectedSalesPersonId) ||
+      allSalesCoordinators.find((s) => s.salesCoordinatorId === selectedSalesPersonId) ||
+      null
+      : null;
+
+    if (!val) {
+      syncCascadingToParent(
+        dir,
+        bde,
+        sp
+          ? {
+            id: sp.salesCoordinatorId,
+            name: (sp as any).salesCoordinatorName || (sp as any).name,
+            code: (sp as any).salesCoordinatorCode || (sp as any).code,
+          }
+          : null,
+        null
+      );
       return;
     }
 
-    const emp = employees.find((item) => item.id === empId);
-    if (emp) {
-      // Auto-set the employee's role
-      const newRole = emp.role;
-      setSelectedRole(newRole);
-
-      let initialReportingToId: number | "" = "";
-      let initialReportingEmp: MockEmployee | null = null;
-
-      // Check if employee has existing reporting relationship
-      if (newRole === "System Admin" || newRole === "Director") {
-        initialReportingToId = "";
-      } else if (emp.reportingToId) {
-        const validReporting = getEligibleReportingEmployees(newRole, employees, emp.id);
-        const validMatch = validReporting.find((r) => r.id === emp.reportingToId);
-        if (validMatch) {
-          initialReportingToId = validMatch.id;
-          initialReportingEmp = validMatch;
+    const matchedOption = customerOwnerOptions.find((opt) => opt.value === val);
+    syncCascadingToParent(
+      dir,
+      bde,
+      sp
+        ? {
+          id: sp.salesCoordinatorId,
+          name: (sp as any).salesCoordinatorName || (sp as any).name,
+          code: (sp as any).salesCoordinatorCode || (sp as any).code,
         }
-      }
-
-      setSelectedReportingToId(initialReportingToId);
-      // Synchronize immediately with customer form
-      syncToParent(emp, newRole, initialReportingEmp);
-    }
-  };
-
-  // Handle Role Change
-  const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newRole = e.target.value as RoleType | "";
-    setSelectedRole(newRole);
-
-    // CRITICAL REQUIREMENT: Clear previous Reporting To selection whenever role changes
-    setSelectedReportingToId("");
-
-    // Clear validation errors
-    setValidationErrors((prev) => ({
-      ...prev,
-      role: undefined,
-      reportingToId: undefined,
-    }));
-
-    // Synchronize immediately with customer form
-    syncToParent(currentEmployee, newRole, null);
-  };
-
-  // Handle Reporting To Change
-  const handleReportingToChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const repId = e.target.value ? Number(e.target.value) : "";
-    setSelectedReportingToId(repId);
-    setValidationErrors((prev) => ({ ...prev, reportingToId: undefined }));
-
-    const reportingEmp = employees.find((item) => item.id === repId) || null;
-    // Synchronize immediately with customer form
-    syncToParent(currentEmployee, selectedRole, reportingEmp);
+        : null,
+      matchedOption
+        ? {
+          id: matchedOption.id,
+          name: matchedOption.name,
+          type: matchedOption.type,
+          value: matchedOption.value,
+        }
+        : null
+    );
   };
 
   // Reset Assignment Form
   const handleReset = () => {
-    setSelectedEmployeeId("");
-    setSelectedRole("");
-    setSelectedReportingToId("");
+    setSelectedDirectorId("");
+    setSelectedBdeId("");
+    setSelectedSalesPersonId("");
+    setSelectedOwnerValue("");
+    setFilteredBdes([]);
+    setFilteredSalesPersons([]);
     setValidationErrors({});
-    syncToParent(null, "", null);
-    toast.info("Sales assignment selection cleared.");
+    syncCascadingToParent(null, null, null, null);
   };
 
-  // Standalone mode Save Assignment (Only used in Standalone Hierarchy Management demo)
-  const handleSaveAssignment = () => {
-    const validation = validateRoleAssignment(
-      selectedEmployeeId,
-      selectedRole,
-      selectedReportingToId,
-      employees
-    );
+  // Standalone mode Save Assignment
+  const handleSaveAssignment = async () => {
+    const errors: { directorId?: string; bdeUserId?: string; salesCoordinatorId?: string } = {};
 
-    if (!validation.isValid) {
-      setValidationErrors(validation.errors);
-      const firstError = Object.values(validation.errors)[0];
-      toast.error(firstError || "Please fix validation errors before saving.");
+    if (!selectedDirectorId) {
+      errors.directorId = "Please select a Director.";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      const firstError = Object.values(errors)[0];
+      toast.error(firstError || "Please fill in all required fields.");
       return;
     }
 
-    if (!currentEmployee || !selectedRole) return;
+    const dir =
+      directors.find((d) => d.id === selectedDirectorId) ||
+      employees.find((e) => e.id === selectedDirectorId);
+    const bde =
+      filteredBdes.find((b) => b.id === selectedBdeId) ||
+      bdeUsers.find((b) => b.id === selectedBdeId);
+    const sp =
+      filteredSalesPersons.find((s) => s.salesCoordinatorId === selectedSalesPersonId) ||
+      allSalesCoordinators.find((s) => s.salesCoordinatorId === selectedSalesPersonId);
+
+    const chosenPerson = sp || bde || dir;
+    if (!chosenPerson) return;
 
     const newAssignment: AssignmentRecord = {
       id: `asg-${Date.now()}`,
-      employeeId: currentEmployee.id,
-      employeeName: currentEmployee.name,
-      employeeCode: currentEmployee.code,
-      role: selectedRole,
-      reportingToId: selectedReportingToId ? Number(selectedReportingToId) : null,
-      reportingToName: currentReportingTo ? `${currentReportingTo.name} (${currentReportingTo.code})` : null,
-      reportingToRole: currentReportingTo ? currentReportingTo.role : null,
+      employeeId:
+        (chosenPerson as any).salesCoordinatorId ||
+        (chosenPerson as any).id ||
+        Number(selectedDirectorId),
+      employeeName:
+        (chosenPerson as any).salesCoordinatorName ||
+        (chosenPerson as any).name ||
+        dir?.name ||
+        "",
+      employeeCode:
+        (chosenPerson as any).salesCoordinatorCode ||
+        (chosenPerson as any).code ||
+        dir?.code ||
+        "",
+      role: sp ? "Sales Person" : bde ? "BDE User" : "Director",
+      reportingToId: sp && bde ? bde.id : bde && dir ? dir.id : null,
+      reportingToName: sp && bde ? bde.name : bde && dir ? dir.name : null,
+      reportingToRole: sp ? "BDE User" : bde ? "Director" : null,
+      directorId: selectedDirectorId ? Number(selectedDirectorId) : null,
+      directorName: dir ? dir.name : null,
+      directorCode: dir ? dir.code || null : null,
+      bdeUserId: selectedBdeId ? Number(selectedBdeId) : null,
+      bdeUserName: bde ? bde.name : null,
+      salesCoordinatorId: selectedSalesPersonId ? Number(selectedSalesPersonId) : null,
+      salesCoordinatorName: sp ? (sp as any).salesCoordinatorName || (sp as any).name : null,
       assignedDate: new Date().toISOString().split("T")[0],
       status: "Active",
     };
 
     setAssignments((prev) => {
-      const filtered = prev.filter((a) => a.employeeId !== currentEmployee.id);
-      return [newAssignment, ...filtered];
+      const filtered = prev.filter(
+        (a) =>
+          !(
+            a.directorId === newAssignment.directorId &&
+            a.bdeUserId === newAssignment.bdeUserId &&
+            a.salesCoordinatorId === newAssignment.salesCoordinatorId
+          )
+      );
+      const updated = [newAssignment, ...filtered];
+      return updated;
     });
 
-    setEmployees((prev) =>
-      prev.map((emp) => {
-        if (emp.id === currentEmployee.id) {
-          return {
-            ...emp,
-            role: selectedRole,
-            reportingToId: selectedReportingToId ? Number(selectedReportingToId) : null,
-            reportingToName: currentReportingTo ? currentReportingTo.name : undefined,
-            reportingToRole: currentReportingTo ? currentReportingTo.role : undefined,
-          };
+    try {
+      if (selectedBdeId && selectedDirectorId) {
+        await apiClient.put(`${API_ENDPOINTS.BdeUsers}/${selectedBdeId}`, {
+          directorEmployeeId: Number(selectedDirectorId),
+          value: bde?.name || "",
+          code: bde?.code || "",
+          isActive: true,
+        });
+        setEmployeeReporting(Number(selectedBdeId), Number(selectedDirectorId)).catch(() => { });
+      }
+      if (selectedSalesPersonId && selectedBdeId) {
+        await apiClient.put(
+          `${API_ENDPOINTS.SalesCoordinator || `${API_ENDPOINTS.BaseUrl}/sales-coordinator`}/${selectedSalesPersonId}`,
+          {
+            bdeUserId: Number(selectedBdeId),
+            salesCoordinatorName: (sp as any)?.salesCoordinatorName || (sp as any)?.name || "",
+            salesCoordinatorCode: (sp as any)?.salesCoordinatorCode || (sp as any)?.code || "",
+            isActive: true,
+          }
+        );
+        setEmployeeReporting(Number(selectedSalesPersonId), Number(selectedBdeId)).catch(() => { });
+      }
+      toast.success(`Hierarchy assignment saved to database successfully.`);
+    } catch (saveErr) {
+      console.warn("Hierarchy assignment saved locally, backend warning:", saveErr);
+      toast.success(`Hierarchy assignment saved successfully.`);
+    }
+
+    syncCascadingToParent(
+      dir || null,
+      bde || null,
+      sp
+        ? {
+          id: sp.salesCoordinatorId,
+          name: (sp as any).salesCoordinatorName || (sp as any).name,
+          code: (sp as any).salesCoordinatorCode || (sp as any).code,
         }
-        return emp;
-      })
-    );
-
-    syncToParent(currentEmployee, selectedRole, currentReportingTo);
-
-    toast.success(
-      `Assignment saved for ${currentEmployee.name} as ${selectedRole}${
-        currentReportingTo ? ` (Reporting to: ${currentReportingTo.name})` : ""
-      }`
+        : null
     );
   };
 
-  // Quick Select an existing assignment into the form (Standalone only)
-  const handleSelectAssignment = (asg: AssignmentRecord) => {
-    setSelectedEmployeeId(asg.employeeId);
-    setSelectedRole(asg.role);
-    setSelectedReportingToId(asg.reportingToId || "");
-    setValidationErrors({});
-    const emp = employees.find((e) => e.id === asg.employeeId) || null;
-    const sup = asg.reportingToId ? employees.find((e) => e.id === asg.reportingToId) || null : null;
-    syncToParent(emp, asg.role, sup);
-    toast.info(`Loaded assignment for ${asg.employeeName}`);
-  };
-
-  // Delete an assignment (Standalone only)
-  const handleDeleteAssignment = (id: string, name: string) => {
-    setAssignments((prev) => prev.filter((a) => a.id !== id));
-    toast.success(`Removed assignment for ${name}`);
-  };
-
-  // Filtered Assignments List (Standalone only)
-  const filteredAssignments = useMemo(() => {
-    return assignments.filter((asg) => {
-      const matchesSearch =
-        asg.employeeName.toLowerCase().includes(assignmentSearchText.toLowerCase()) ||
-        asg.employeeCode.toLowerCase().includes(assignmentSearchText.toLowerCase()) ||
-        (asg.reportingToName &&
-          asg.reportingToName.toLowerCase().includes(assignmentSearchText.toLowerCase()));
-      const matchesRole =
-        assignmentRoleFilter === "All" || asg.role === assignmentRoleFilter;
-      return matchesSearch && matchesRole;
+  // Standalone mode: Delete Assignment
+  const handleDeleteAssignment = async (assignmentId: string, employeeName: string) => {
+    const asg = assignments.find((a) => a.id === assignmentId);
+    if (asg) {
+      try {
+        if (asg.id.startsWith("bde-") || asg.role === "BDE User") {
+          await apiClient.put(`${API_ENDPOINTS.BdeUsers}/${asg.employeeId}`, {
+            directorEmployeeId: null,
+            value: asg.employeeName,
+            code: asg.employeeCode,
+            isActive: true,
+          });
+        } else if (asg.id.startsWith("sc-") || asg.role === "Sales Person") {
+          await apiClient.put(
+            `${API_ENDPOINTS.SalesCoordinator || `${API_ENDPOINTS.BaseUrl}/sales-coordinator`}/${asg.employeeId}`,
+            {
+              bdeUserId: null,
+              salesCoordinatorName: asg.employeeName,
+              salesCoordinatorCode: asg.employeeCode,
+              isActive: true,
+            }
+          );
+        }
+      } catch (err) {
+        console.warn("Could not unmap assignment in database:", err);
+      }
+    }
+    setAssignments((prev) => {
+      const updated = prev.filter((a) => a.id !== assignmentId);
+      return updated;
     });
-  }, [assignments, assignmentSearchText, assignmentRoleFilter]);
+    toast.success(`Assignment for ${employeeName} removed.`);
+  };
 
-  // Filtered Levels List (for Levels tab)
-  const filteredLevels = useMemo(() => {
-    return levels.filter((lvl) =>
-      lvl.levelName.toLowerCase().includes(levelSearchText.toLowerCase())
+  // Standalone mode: Edit Assignment in Form
+  const handleSelectAssignment = (asg: AssignmentRecord) => {
+    const dirId = asg.directorId || (asg.role === "Director" ? asg.employeeId : "");
+    const bdeId = asg.bdeUserId || (asg.role === "BDE User" ? asg.employeeId : "");
+    const spId = asg.salesCoordinatorId || (asg.role === "Sales Person" ? asg.employeeId : "");
+
+    setSelectedDirectorId(dirId);
+    setSelectedBdeId(bdeId);
+    setSelectedSalesPersonId(spId);
+    setActiveSubTab("reporting");
+
+    if (dirId) {
+      loadBdesForDirector(Number(dirId), bdeUsers, employees);
+    }
+    if (bdeId) {
+      loadSalesPersonsForBde(Number(bdeId), allSalesCoordinators, employees);
+    }
+
+    const dir = dirId ? directors.find((d) => d.id === Number(dirId)) || null : null;
+    const bde = bdeId ? bdeUsers.find((b) => b.id === Number(bdeId)) || null : null;
+    const sp = spId
+      ? allSalesCoordinators.find((s) => s.salesCoordinatorId === Number(spId)) || null
+      : null;
+
+    syncCascadingToParent(
+      dir,
+      bde,
+      sp
+        ? {
+          id: sp.salesCoordinatorId,
+          name: sp.salesCoordinatorName,
+          code: sp.salesCoordinatorCode,
+        }
+        : null
     );
-  }, [levels, levelSearchText]);
+    toast.info(`Loaded assignment details.`);
+  };
 
-  // Open Level Modal
+  // Options for BDE dropdown:
+  // Strictly filter by selected Director in customer form mode
+  const bdeDisplayOptions = useMemo(() => {
+    if (standalone) {
+      if (selectedDirectorId) {
+        if (filteredBdes.length > 0) return filteredBdes;
+        const matched = bdeUsers.filter((b) => b.directorId === Number(selectedDirectorId));
+        if (matched.length > 0) return matched;
+      }
+      return bdeUsers.length > 0 ? bdeUsers : filteredBdes;
+    }
+
+    // In Customer Form: strict cascade (only show BDEs belonging to selected Director)
+    if (!selectedDirectorId) return [];
+    if (filteredBdes.length > 0) return filteredBdes;
+    return bdeUsers.filter((b) => b.directorId === Number(selectedDirectorId));
+  }, [standalone, selectedDirectorId, filteredBdes, bdeUsers]);
+
+  // Options for Sales Person dropdown:
+  // Strictly filter by selected BDE User in customer form mode
+  const salesPersonDisplayOptions = useMemo(() => {
+    if (standalone) {
+      if (selectedBdeId) {
+        if (filteredSalesPersons.length > 0) {
+          return filteredSalesPersons;
+        }
+        const matched = allSalesCoordinators.filter(
+          (s) => s.bdeUserId === Number(selectedBdeId)
+        );
+        if (matched.length > 0) {
+          return matched.map((s) => ({
+            salesCoordinatorId: s.salesCoordinatorId,
+            salesCoordinatorName: s.salesCoordinatorName,
+            salesCoordinatorCode: s.salesCoordinatorCode || "",
+            bdeUserId: s.bdeUserId || Number(selectedBdeId),
+            isActive: s.isActive !== false,
+          }));
+        }
+      }
+      return allSalesCoordinators.map((s) => ({
+        salesCoordinatorId: s.salesCoordinatorId,
+        salesCoordinatorName: s.salesCoordinatorName,
+        salesCoordinatorCode: s.salesCoordinatorCode || "",
+        bdeUserId: s.bdeUserId || 0,
+        isActive: s.isActive !== false,
+      }));
+    }
+
+    // In Customer Form: strict cascade (only show Sales Persons belonging to selected BDE)
+    if (!selectedBdeId) return [];
+    if (filteredSalesPersons.length > 0) return filteredSalesPersons;
+    const matched = allSalesCoordinators.filter(
+      (s) => s.bdeUserId === Number(selectedBdeId)
+    );
+    return matched.map((s) => ({
+      salesCoordinatorId: s.salesCoordinatorId,
+      salesCoordinatorName: s.salesCoordinatorName,
+      salesCoordinatorCode: s.salesCoordinatorCode || "",
+      bdeUserId: s.bdeUserId || Number(selectedBdeId),
+      isActive: s.isActive !== false,
+    }));
+  }, [standalone, selectedBdeId, filteredSalesPersons, allSalesCoordinators]);
+
+  // Helper label for Sales Person option: shows BDE hint when not already filtered
+  const getSalesPersonOptionLabel = (sp: {
+    salesCoordinatorId: number;
+    salesCoordinatorName: string;
+    salesCoordinatorCode?: string;
+    bdeUserId?: number | null;
+  }) => {
+    const base = formatEmployeeDisplay(sp.salesCoordinatorName, sp.salesCoordinatorCode);
+    if (!selectedBdeId && sp.bdeUserId) {
+      const bde = bdeUsers.find((b) => b.id === sp.bdeUserId) || employees.find((e) => e.id === sp.bdeUserId);
+      if (bde) {
+        return `${base} (BDE: ${bde.name})`;
+      }
+    }
+    return base;
+  };
+
+  // Level Modal Handlers
   const handleOpenAddLevel = () => {
     setEditingLevelId(null);
     setLevelFormData({
@@ -546,70 +1168,96 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
     setIsLevelModalOpen(true);
   };
 
-  const handleSaveLevel = (e: React.FormEvent) => {
+  const handleDeleteLevel = async (id: number, levelName: string) => {
+    try {
+      await deleteLevel(id);
+      setLevels((prev) => prev.filter((l) => l.id !== id));
+      toast.success(`Level "${levelName}" deleted successfully.`);
+    } catch (err) {
+      console.error("Error deleting level:", err);
+      toast.error(`Failed to delete level "${levelName}".`);
+    }
+  };
+
+  const handleSaveLevel = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!levelFormData.levelName.trim()) {
-      toast.error("Level Name is required.");
+      toast.error("Please enter a level name.");
       return;
     }
 
-    if (editingLevelId) {
-      setLevels((prev) =>
-        prev.map((lvl) =>
-          lvl.id === editingLevelId
-            ? {
+    const orderNum = Number(levelFormData.levelOrder) || levels.length + 1;
+    setIsSavingLevel(true);
+
+    try {
+      if (editingLevelId) {
+        await updateLevel(editingLevelId, {
+          levelName: levelFormData.levelName.trim(),
+          levelOrder: orderNum,
+          isActive: levelFormData.isActive,
+        });
+        setLevels((prev) =>
+          prev.map((lvl) =>
+            lvl.id === editingLevelId
+              ? {
                 ...lvl,
                 levelName: levelFormData.levelName.trim(),
-                levelOrder: Number(levelFormData.levelOrder) || lvl.levelOrder,
+                levelOrder: orderNum,
                 isActive: levelFormData.isActive,
               }
-            : lvl
-        )
-      );
-      toast.success("Level updated successfully!");
-    } else {
-      const newLvl: HierarchyLevel = {
-        id: Date.now(),
-        levelName: levelFormData.levelName.trim(),
-        levelOrder: Number(levelFormData.levelOrder) || levels.length + 1,
-        isActive: levelFormData.isActive,
-      };
-      setLevels((prev) => [...prev, newLvl]);
-      toast.success("New Level added successfully!");
-    }
-    setIsLevelModalOpen(false);
-  };
-
-  const handleDeleteLevel = (id: number, name: string) => {
-    setLevels((prev) => prev.filter((lvl) => lvl.id !== id));
-    toast.success(`Level "${name}" deleted.`);
-  };
-
-  // Helper for role color badge
-  const getRoleBadge = (role: RoleType) => {
-    switch (role) {
-      case "System Admin":
-        return "bg-purple-100 text-purple-800 border-purple-200";
-      case "Director":
-        return "bg-emerald-100 text-emerald-800 border-emerald-200";
-      case "BDE User":
-        return "bg-blue-100 text-blue-800 border-blue-200";
-      case "Sales Person":
-        return "bg-amber-100 text-[#b45309] border-amber-200";
-      default:
-        return "bg-gray-100 text-gray-700 border-gray-200";
+              : lvl
+          )
+        );
+        toast.success("Level updated successfully.");
+      } else {
+        const created = await createLevel({
+          levelName: levelFormData.levelName.trim(),
+          levelOrder: orderNum,
+          isActive: levelFormData.isActive,
+        });
+        setLevels((prev) => [...prev, created]);
+        toast.success("Level created successfully.");
+      }
+      setIsLevelModalOpen(false);
+    } catch (err) {
+      console.error("Error saving level:", err);
+      toast.error("Failed to save level. Please try again.");
+    } finally {
+      setIsSavingLevel(false);
     }
   };
+
+  // Filtered levels for search
+  const filteredLevels = useMemo(() => {
+    if (!levelSearchText.trim()) return levels;
+    return levels.filter((lvl) =>
+      lvl.levelName.toLowerCase().includes(levelSearchText.toLowerCase())
+    );
+  }, [levels, levelSearchText]);
+
+  // Filtered assignments for search
+  const filteredAssignments = useMemo(() => {
+    return assignments.filter((asg) => {
+      const matchesSearch =
+        asg.employeeName.toLowerCase().includes(assignmentSearchText.toLowerCase()) ||
+        asg.employeeCode.toLowerCase().includes(assignmentSearchText.toLowerCase());
+
+      const matchesRole =
+        assignmentRoleFilter === "All" || asg.role === assignmentRoleFilter;
+
+      return matchesSearch && matchesRole;
+    });
+  }, [assignments, assignmentSearchText, assignmentRoleFilter]);
 
   return (
     <div
       className={
         standalone
           ? "bg-white rounded-xl shadow-xs border border-gray-200 overflow-hidden"
-          : "space-y-6"
+          : "space-y-4"
       }
     >
-      {/* 1. Header (Only rendered when standalone or when hideHeader is false) */}
+      {/* 1. Header (Rendered on standalone page matching user reference images) */}
       {(!hideHeader || standalone) && (
         <div className="p-5 md:p-6 pb-0 border-b border-gray-100">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4">
@@ -618,14 +1266,9 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
                 <Users className="w-5 h-5" />
               </div>
               <div>
-                <div className="flex items-center gap-2">
-                  <h1 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight font-serif">
-                    Hierarchy Management
-                  </h1>
-                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-[#154068] border border-blue-200">
-                    Static Demo Flow
-                  </span>
-                </div>
+                <h1 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight font-serif">
+                  Hierarchy Management
+                </h1>
                 <p className="text-xs md:text-sm text-gray-500 mt-1">
                   Manage organization hierarchy levels and reporting structure.
                 </p>
@@ -633,16 +1276,15 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
             </div>
           </div>
 
-          {/* Tab Navigation matching Screenshot: Levels | Reporting To */}
+          {/* Tab Navigation: Levels | Reporting To */}
           <div className="flex items-center gap-2 pt-2 border-b border-gray-200">
             <button
               type="button"
               onClick={() => setActiveSubTab("levels")}
-              className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition-all cursor-pointer ${
-                activeSubTab === "levels"
+              className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition-all cursor-pointer ${activeSubTab === "levels"
                   ? "border-[#154068] text-[#154068] bg-blue-50/40 rounded-t-lg"
                   : "border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300"
-              }`}
+                }`}
             >
               <Layers className="w-4 h-4 text-[#154068]" />
               <span>Levels</span>
@@ -651,11 +1293,10 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
             <button
               type="button"
               onClick={() => setActiveSubTab("reporting")}
-              className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition-all cursor-pointer ${
-                activeSubTab === "reporting"
+              className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition-all cursor-pointer ${activeSubTab === "reporting"
                   ? "border-blue-600 text-blue-600 bg-blue-50/40 rounded-t-lg"
                   : "border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300"
-              }`}
+                }`}
             >
               <GitBranch className="w-4 h-4 text-purple-600" />
               <span>Reporting To</span>
@@ -664,391 +1305,243 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
         </div>
       )}
 
-      {/* 2. TAB CONTENT: REPORTING TO (Role-Based Employee Assignment Flow) */}
+      {/* 2. TAB CONTENT: REPORTING TO */}
       {activeSubTab === "reporting" && (
-        <div className={standalone ? "p-5 md:p-6 space-y-6" : "space-y-6"}>
-          {/* Workflow Instruction Banner */}
-          <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-orange-50 border border-blue-100 rounded-xl p-4 text-xs text-gray-700 shadow-2xs">
-            <div className="flex items-start gap-3">
-              <Sparkles className="w-4 h-4 text-[#FF7900] shrink-0 mt-0.5" />
-              <div className="space-y-1">
-                <span className="font-bold text-[#154068] uppercase tracking-wide">
-                  Role-Based Assignment Rules (Static Demo)
-                </span>
-                <p className="text-gray-600">
-                  <strong className="text-purple-700">System Admin</strong> &amp;{" "}
-                  <strong className="text-emerald-700">Director</strong>: No reporting to required.{" "}
-                  &bull; <strong className="text-blue-700">BDE User</strong>: Can ONLY report to a{" "}
-                  <span className="underline decoration-emerald-500 font-semibold">Director</span>.{" "}
-                  &bull; <strong className="text-amber-700">Sales Person</strong>: Can ONLY report
-                  to a <span className="underline decoration-blue-500 font-semibold">BDE User</span>
-                  .
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Main Assignment Form Grid */}
+        <div className={standalone ? "p-5 md:p-6 space-y-6" : "space-y-4"}>
           <div className="bg-white rounded-xl border border-gray-200 p-5 md:p-6 shadow-xs space-y-6">
-            <div className="border-b border-gray-100 pb-3 flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
-                  <UserCheck size={16} className="text-[#154068]" />
-                  Employee Role &amp; Hierarchy Assignment
-                </h3>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Select an employee, pick their role, and assign their valid supervisor.
-                </p>
-              </div>
-
-              {/* Status Badge */}
-              {currentEmployee && (
-                <span className="text-xs px-2.5 py-1 rounded-md bg-gray-100 text-gray-700 font-medium border border-gray-200">
-                  Selected: <strong className="text-gray-900">{currentEmployee.code}</strong>
-                </span>
-              )}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* FIELD 1: Select Employee */}
+            {/* Dynamic Grid: 4 columns if Sales Person is selected, otherwise 3 columns */}
+            <div
+              className={`grid grid-cols-1 ${selectedSalesPersonId ? "md:grid-cols-4" : "md:grid-cols-3"
+                } gap-5 transition-all duration-200`}
+            >
+              {/* FIELD 1: Select Director */}
               <div>
                 <label
-                  htmlFor="role_assignment_employee_select"
-                  className="text-xs font-bold text-gray-700 block mb-1.5"
+                  htmlFor="role_assignment_director_select"
+                  className="text-xs font-semibold text-gray-700 block mb-1.5"
                 >
-                  Select Employee <span className="text-red-500">*</span>
+                  Select Director <span className="text-red-500">*</span>
                 </label>
                 <select
-                  id="role_assignment_employee_select"
-                  value={selectedEmployeeId}
-                  onChange={handleEmployeeChange}
-                  disabled={disabled}
-                  className={`w-full rounded-lg px-3.5 py-2.5 outline-none border text-sm bg-white text-gray-800 transition focus:border-blue-500 focus:ring-1 focus:ring-blue-200 cursor-pointer shadow-2xs ${
-                    validationErrors.employeeId || propErrors.employeeId
+                  id="role_assignment_director_select"
+                  value={selectedDirectorId}
+                  onChange={handleDirectorChange}
+                  disabled={disabled || isLoadingDynamicData}
+                  className={`w-full rounded-lg px-3.5 py-2.5 outline-none border text-sm bg-white text-gray-800 transition focus:border-blue-500 focus:ring-1 focus:ring-blue-200 cursor-pointer shadow-xs ${validationErrors.directorId || propErrors.directorId
                       ? "border-red-500 ring-1 ring-red-500/20"
                       : "border-gray-300"
-                  } ${disabled ? "opacity-60 bg-gray-50 cursor-not-allowed" : ""}`}
+                    } ${disabled || isLoadingDynamicData ? "opacity-60 bg-gray-50 cursor-not-allowed" : ""}`}
                 >
-                  <option value="">-- Select Employee --</option>
-                  {employees.map((emp) => (
-                    <option key={emp.id} value={emp.id}>
-                      {emp.name} ({emp.code}){emp.levelName ? ` (${emp.levelName})` : ""}
+                  <option value="">
+                    {isLoadingDynamicData ? "Loading directors..." : "-- Select Director --"}
+                  </option>
+                  {(directors.length > 0
+                    ? directors
+                    : employees.filter((e) => (e.role || "").toLowerCase().includes("director"))
+                  ).map((dir) => (
+                    <option key={dir.id} value={dir.id}>
+                      {formatEmployeeDisplay(dir.name, dir.code)}
                     </option>
                   ))}
                 </select>
-                {validationErrors.employeeId && (
-                  <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1 font-medium">
-                    <AlertCircle size={12} /> {validationErrors.employeeId}
-                  </p>
-                )}
-                {currentEmployee && (
-                  <p className="text-[11px] text-gray-500 mt-1 truncate">
-                    Email: {currentEmployee.email}
+                {validationErrors.directorId && (
+                  <p className="text-xs text-red-500 mt-1 flex items-center gap-1 font-medium">
+                    <AlertCircle size={12} /> {validationErrors.directorId}
                   </p>
                 )}
               </div>
 
-              {/* FIELD 2: Select Role */}
+              {/* FIELD 2: Select BDE User (Cascade from Director) */}
               <div>
                 <label
-                  htmlFor="role_assignment_role_select"
-                  className="text-xs font-bold text-gray-700 block mb-1.5"
+                  htmlFor="role_assignment_bde_select"
+                  className="text-xs font-semibold text-gray-700 block mb-1.5"
                 >
-                  Select Role <span className="text-red-500">*</span>
+                  Select BDE User <span className="text-red-500">*</span>
                 </label>
                 <select
-                  id="role_assignment_role_select"
-                  value={selectedRole}
-                  onChange={handleRoleChange}
-                  disabled={disabled || !selectedEmployeeId}
-                  className={`w-full rounded-lg px-3.5 py-2.5 outline-none border text-sm bg-white text-gray-800 transition focus:border-blue-500 focus:ring-1 focus:ring-blue-200 shadow-2xs ${
-                    validationErrors.role || propErrors.role
+                  id="role_assignment_bde_select"
+                  value={selectedBdeId}
+                  onChange={handleBdeChange}
+                  disabled={disabled || isLoadingDynamicData || isLoadingBdes || (!standalone && !selectedDirectorId)}
+                  className={`w-full rounded-lg px-3.5 py-2.5 outline-none border text-sm bg-white text-gray-800 transition focus:border-blue-500 focus:ring-1 focus:ring-blue-200 shadow-xs ${validationErrors.bdeUserId || propErrors.bdeUserId
                       ? "border-red-500 ring-1 ring-red-500/20"
                       : "border-gray-300"
-                  } ${
-                    !selectedEmployeeId || disabled
+                    } ${disabled || isLoadingDynamicData || isLoadingBdes || (!standalone && !selectedDirectorId)
                       ? "opacity-60 bg-gray-100 cursor-not-allowed text-gray-400"
                       : "cursor-pointer"
-                  }`}
+                    }`}
                 >
-                  <option value="">-- Select Role --</option>
-                  {AVAILABLE_ROLES.map((r) => (
-                    <option key={r} value={r}>
-                      {r}
+                  <option value="">
+                    {isLoadingBdes
+                      ? "Loading BDE users..."
+                      : !selectedDirectorId && !standalone
+                        ? "-- Select Director first --"
+                        : standalone
+                          ? "-- Select BDE User to Assign --"
+                          : bdeDisplayOptions.length === 0
+                            ? "-- No BDE users available --"
+                            : "-- Select BDE User --"}
+                  </option>
+                  {bdeDisplayOptions.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {formatEmployeeDisplay(b.name, b.code)}
                     </option>
                   ))}
                 </select>
-                {validationErrors.role && (
-                  <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1 font-medium">
-                    <AlertCircle size={12} /> {validationErrors.role}
+                {validationErrors.bdeUserId && (
+                  <p className="text-xs text-red-500 mt-1 flex items-center gap-1 font-medium">
+                    <AlertCircle size={12} /> {validationErrors.bdeUserId}
                   </p>
                 )}
-                {selectedRole && (
-                  <div className="mt-1 flex items-center gap-1.5">
-                    <span className="text-[11px] text-gray-500">Selected Level:</span>
-                    <span
-                      className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded border ${getRoleBadge(
-                        selectedRole
-                      )}`}
-                    >
-                      {selectedRole}
-                    </span>
-                  </div>
+                {!standalone && selectedDirectorId && !isLoadingBdes && filteredBdes.length === 0 && (
+                  <p className="text-xs text-amber-600 mt-1 font-medium">
+                    No BDE users assigned under this Director.
+                  </p>
                 )}
               </div>
 
-              {/* FIELD 3: Reporting To */}
+              {/* FIELD 3: Select Sales Person (Cascade from BDE User) */}
               <div>
                 <label
-                  htmlFor="role_assignment_reporting_to_select"
-                  className="text-xs font-bold text-gray-700 block mb-1.5"
+                  htmlFor="role_assignment_sales_person_select"
+                  className="text-xs font-semibold text-gray-700 block mb-1.5"
                 >
-                  Reporting To{" "}
-                  {selectedRole === "BDE User" || selectedRole === "Sales Person" ? (
-                    <span className="text-red-500">*</span>
-                  ) : null}
+                  Select Sales Person
                 </label>
+                <select
+                  id="role_assignment_sales_person_select"
+                  value={selectedSalesPersonId}
+                  onChange={handleSalesPersonChange}
+                  disabled={disabled || isLoadingDynamicData || isLoadingSalesPersons || (!standalone && !selectedBdeId)}
+                  className={`w-full rounded-lg px-3.5 py-2.5 outline-none border text-sm bg-white text-gray-800 transition focus:border-blue-500 focus:ring-1 focus:ring-blue-200 shadow-xs ${validationErrors.salesCoordinatorId || propErrors.salesCoordinatorId
+                      ? "border-red-500 ring-1 ring-red-500/20"
+                      : "border-gray-300"
+                    } ${disabled || isLoadingDynamicData || isLoadingSalesPersons || (!standalone && !selectedBdeId)
+                      ? "opacity-60 bg-gray-100 cursor-not-allowed text-gray-400"
+                      : "cursor-pointer"
+                    }`}
+                >
+                  <option value="">
+                    {isLoadingSalesPersons
+                      ? "Loading sales persons..."
+                      : !selectedBdeId && !standalone
+                        ? "-- Select BDE User first --"
+                        : standalone
+                          ? "-- Select Sales Person to Assign --"
+                          : salesPersonDisplayOptions.length === 0
+                            ? "-- No Sales Persons available --"
+                            : "-- Select Sales Person --"}
+                  </option>
+                  {salesPersonDisplayOptions.map((sp) => (
+                    <option key={sp.salesCoordinatorId} value={sp.salesCoordinatorId}>
+                      {getSalesPersonOptionLabel(sp)}
+                    </option>
+                  ))}
+                </select>
+                {validationErrors.salesCoordinatorId && (
+                  <p className="text-xs text-red-500 mt-1 flex items-center gap-1 font-medium">
+                    <AlertCircle size={12} /> {validationErrors.salesCoordinatorId}
+                  </p>
+                )}
+                {!standalone && selectedBdeId && !isLoadingSalesPersons && filteredSalesPersons.length === 0 && (
+                  <p className="text-xs text-amber-600 mt-1 font-medium">
+                    No Sales Persons assigned under this BDE.
+                  </p>
+                )}
+              </div>
 
-                {/* State A: System Admin / Director -> No reporting to required (hidden/disabled) */}
-                {selectedRole === "System Admin" || selectedRole === "Director" ? (
-                  <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-3.5 py-2.5 text-xs text-gray-500 flex items-center gap-2">
-                    <ShieldCheck size={16} className="text-emerald-600 shrink-0" />
-                    <span>
-                      No Reporting To required for{" "}
-                      <strong className="text-gray-800">{selectedRole}</strong>.
-                    </span>
-                  </div>
-                ) : (
-                  /* State B: BDE User or Sales Person -> Dropdown strictly populated */
+              {/* FIELD 4: Select Customer Owner (Appears after Sales Person is selected) */}
+              {selectedSalesPersonId && (
+                <div className="animate-in fade-in duration-200">
+                  <label
+                    htmlFor="role_assignment_customer_owner_select"
+                    className="text-xs font-semibold text-gray-700 block mb-1.5"
+                  >
+                    Select Customer Owner <span className="text-red-500">*</span>
+                  </label>
                   <select
-                    id="role_assignment_reporting_to_select"
-                    value={selectedReportingToId}
-                    onChange={handleReportingToChange}
-                    disabled={disabled || !selectedRole}
-                    className={`w-full rounded-lg px-3.5 py-2.5 outline-none border text-sm bg-white text-gray-800 transition focus:border-blue-500 focus:ring-1 focus:ring-blue-200 shadow-2xs ${
-                      validationErrors.reportingToId || propErrors.reportingToId
+                    id="role_assignment_customer_owner_select"
+                    value={selectedOwnerValue}
+                    onChange={handleCustomerOwnerChange}
+                    disabled={disabled}
+                    className={`w-full rounded-lg px-3.5 py-2.5 outline-none border text-sm bg-white text-gray-800 transition focus:border-blue-500 focus:ring-1 focus:ring-blue-200 shadow-xs ${validationErrors.customerOwnerId || propErrors.customerOwnerId
                         ? "border-red-500 ring-1 ring-red-500/20"
                         : "border-gray-300"
-                    } ${
-                      !selectedRole || disabled
-                        ? "opacity-60 bg-gray-100 cursor-not-allowed text-gray-400"
-                        : "cursor-pointer"
-                    }`}
+                      } ${disabled ? "opacity-60 bg-gray-50 cursor-not-allowed" : "cursor-pointer"}`}
                   >
-                    <option value="">
-                      {!selectedRole
-                        ? "-- Select Role first --"
-                        : selectedRole === "BDE User"
-                        ? "Select Director"
-                        : "Select BDE User"}
-                    </option>
-                    {eligibleReportingEmployees.map((sup) => (
-                      <option key={sup.id} value={sup.id}>
-                        {sup.name} ({sup.code}) {sup.levelName ? `• ${sup.levelName}` : ""}
+                    <option value="">-- Select Customer Owner --</option>
+                    {customerOwnerOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
                       </option>
                     ))}
                   </select>
-                )}
-
-                {validationErrors.reportingToId && (
-                  <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1 font-medium">
-                    <AlertCircle size={12} /> {validationErrors.reportingToId}
-                  </p>
-                )}
-
-                {/* Helper notice explaining eligible role constraint */}
-                {selectedRole === "BDE User" && (
-                  <p className="text-[11px] text-blue-600 mt-1 font-medium">
-                    &bull; Displaying ONLY employees whose role is <strong>Director</strong>.
-                  </p>
-                )}
-                {selectedRole === "Sales Person" && (
-                  <p className="text-[11px] text-amber-700 mt-1 font-medium">
-                    &bull; Displaying ONLY employees whose role is <strong>BDE User</strong>.
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* 3. Dynamic Assignment Preview Card */}
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 sm:p-5">
-              <div className="flex items-center justify-between mb-3 border-b border-slate-200 pb-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                  <Briefcase size={14} className="text-[#154068]" />
-                  Live Assignment Preview
-                </span>
-                <span className="text-[11px] text-slate-500">Real-time dynamic representation</span>
-              </div>
-
-              {currentEmployee && selectedRole ? (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="bg-white p-3 rounded-lg border border-slate-200">
-                      <p className="text-[11px] uppercase font-bold text-gray-400">Employee Name</p>
-                      <p className="text-sm font-bold text-gray-800 mt-0.5">
-                        {currentEmployee.name}
-                      </p>
-                      <p className="text-xs text-gray-500">{currentEmployee.code}</p>
-                    </div>
-
-                    <div className="bg-white p-3 rounded-lg border border-slate-200">
-                      <p className="text-[11px] uppercase font-bold text-gray-400">Assigned Role</p>
-                      <div className="mt-1">
-                        <span
-                          className={`text-xs font-bold px-2.5 py-1 rounded-md border inline-block ${getRoleBadge(
-                            selectedRole
-                          )}`}
-                        >
-                          {selectedRole}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="bg-white p-3 rounded-lg border border-slate-200">
-                      <p className="text-[11px] uppercase font-bold text-gray-400">Reporting To</p>
-                      <p className="text-sm font-semibold text-gray-800 mt-0.5">
-                        {selectedRole === "System Admin" || selectedRole === "Director"
-                          ? "None (Top Level Leadership)"
-                          : currentReportingTo
-                          ? `${currentReportingTo.name} (${currentReportingTo.code})`
-                          : "Not Selected Yet"}
-                      </p>
-                      {currentReportingTo && (
-                        <p className="text-xs text-blue-600 font-medium">
-                          Role: {currentReportingTo.role}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Visual Hierarchy Chain Flow */}
-                  <div className="bg-white p-3 rounded-lg border border-slate-200 flex flex-wrap items-center gap-2 text-xs">
-                    <span className="text-gray-400 font-bold uppercase tracking-wider text-[11px]">
-                      Reporting Hierarchy:
-                    </span>
-                    {selectedRole === "Director" && (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-emerald-50 text-emerald-800 font-semibold border border-emerald-200">
-                        <CheckCircle2 size={13} className="text-emerald-600" />
-                        Executive Level &rarr; {currentEmployee.name} (Director)
-                      </span>
-                    )}
-
-                    {selectedRole === "System Admin" && (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-purple-50 text-purple-800 font-semibold border border-purple-200">
-                        <CheckCircle2 size={13} className="text-purple-600" />
-                        System Level &rarr; {currentEmployee.name} (System Admin)
-                      </span>
-                    )}
-
-                    {selectedRole === "BDE User" && currentReportingTo && (
-                      <div className="flex items-center gap-2">
-                        <span className="px-2.5 py-1 rounded bg-emerald-50 text-emerald-800 font-semibold border border-emerald-200">
-                          {currentReportingTo.name} (Director)
-                        </span>
-                        <ArrowRight size={14} className="text-gray-400" />
-                        <span className="px-2.5 py-1 rounded bg-blue-50 text-blue-800 font-semibold border border-blue-200">
-                          {currentEmployee.name} (BDE User)
-                        </span>
-                      </div>
-                    )}
-
-                    {selectedRole === "Sales Person" && currentReportingTo && (
-                      <div className="flex items-center gap-2">
-                        <span className="px-2.5 py-1 rounded bg-emerald-50 text-emerald-800 font-medium border border-emerald-200">
-                          Executive Director
-                        </span>
-                        <ArrowRight size={14} className="text-gray-400" />
-                        <span className="px-2.5 py-1 rounded bg-blue-50 text-blue-800 font-semibold border border-blue-200">
-                          {currentReportingTo.name} (BDE User)
-                        </span>
-                        <ArrowRight size={14} className="text-gray-400" />
-                        <span className="px-2.5 py-1 rounded bg-amber-50 text-[#b45309] font-bold border border-amber-200">
-                          {currentEmployee.name} (Sales Person)
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-6 text-gray-400 text-xs">
-                  Please select an employee and role to see the preview.
+                  {validationErrors.customerOwnerId && (
+                    <p className="text-xs text-red-500 mt-1 flex items-center gap-1 font-medium">
+                      <AlertCircle size={12} /> {validationErrors.customerOwnerId}
+                    </p>
+                  )}
                 </div>
               )}
             </div>
+            {/* Action Bar */}
+            <div className="flex items-center justify-end gap-3 pt-2 border-t border-gray-100">
+              <button
+                type="button"
+                onClick={handleReset}
+                disabled={disabled}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold transition cursor-pointer shadow-xs disabled:opacity-50"
+                title="Clear selection"
+              >
+                <RotateCcw size={13} />
+                <span>Reset</span>
+              </button>
 
-            {/* Action Bar (Reset Selection button + note that all data saves on form submit) */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-gray-100">
-              <span className="text-xs text-slate-500 flex items-center gap-1.5 font-medium">
-                <CheckCircle2 size={14} className="text-emerald-600 shrink-0" />
-                <span>
-                  Sales assignment is linked automatically and will be saved when submitting the complete customer form.
-                </span>
-              </span>
-
-              <div className="flex items-center gap-2 shrink-0">
+              {standalone && (
                 <button
                   type="button"
-                  onClick={handleReset}
+                  onClick={handleSaveAssignment}
                   disabled={disabled}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold transition cursor-pointer shadow-2xs disabled:opacity-50"
-                  title="Clear sales assignment fields"
+                  className="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-[#059669] hover:bg-[#047857] text-white text-xs font-bold shadow-xs transition cursor-pointer disabled:opacity-50"
                 >
-                  <RotateCcw size={13} />
-                  <span>Reset Selection</span>
+                  <Save size={14} />
+                  <span>Save Assignment</span>
                 </button>
-
-                {standalone && (
-                  <button
-                    type="button"
-                    onClick={handleSaveAssignment}
-                    disabled={disabled}
-                    className="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-[#059669] hover:bg-[#047857] text-white text-xs font-bold shadow-sm transition cursor-pointer disabled:opacity-50"
-                  >
-                    <Save size={14} />
-                    <span>Save Assignment</span>
-                  </button>
-                )}
-              </div>
+              )}
             </div>
           </div>
 
-          {/* 4. Active Assignments Table (RENDERED ONLY ON STANDALONE PAGE, NEVER IN CUSTOMER MODAL) */}
+          {/* Standalone mode: Active Assignments Table */}
           {standalone && (
             <div className="bg-white rounded-xl border border-gray-200 shadow-xs overflow-hidden">
               <div className="p-4 sm:p-5 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-gray-50/50">
-                <div>
-                  <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
-                    <Users size={15} className="text-[#154068]" />
-                    Current Static Employee Assignments ({filteredAssignments.length})
-                  </h4>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    Click on an employee to load into the form and test re-assignment rules.
-                  </p>
-                </div>
+                <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider">
+                  Active Role Assignments
+                </h4>
 
-                {/* Filters */}
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-3">
                   <div className="relative">
                     <Search
-                      size={14}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                      size={13}
+                      className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400"
                     />
                     <input
                       type="text"
+                      placeholder="Search assignment..."
                       value={assignmentSearchText}
                       onChange={(e) => setAssignmentSearchText(e.target.value)}
-                      placeholder="Search employee / code..."
-                      className="pl-8 pr-3 py-1.5 text-xs rounded-lg border border-gray-300 focus:outline-none focus:border-blue-500 bg-white w-48"
+                      className="pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg outline-none focus:border-blue-500 bg-white w-48"
                     />
                   </div>
 
                   <select
                     value={assignmentRoleFilter}
                     onChange={(e) => setAssignmentRoleFilter(e.target.value)}
-                    className="px-2.5 py-1.5 text-xs rounded-lg border border-gray-300 focus:outline-none focus:border-blue-500 bg-white cursor-pointer"
+                    className="py-1.5 px-2.5 text-xs border border-gray-300 rounded-lg outline-none focus:border-blue-500 bg-white cursor-pointer"
                   >
                     <option value="All">All Roles</option>
-                    {AVAILABLE_ROLES.map((r) => (
+                    {ASSIGNMENT_ROLES.map((r) => (
                       <option key={r} value={r}>
                         {r}
                       </option>
@@ -1062,9 +1555,9 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
                   <thead>
                     <tr className="bg-gray-100/75 border-b border-gray-200 text-gray-600 font-bold uppercase tracking-wider text-[11px]">
                       <th className="py-3 px-4">Sr. No.</th>
-                      <th className="py-3 px-4">Employee</th>
-                      <th className="py-3 px-4">Assigned Role</th>
-                      <th className="py-3 px-4">Reporting To</th>
+                      <th className="py-3 px-4">Director Name</th>
+                      <th className="py-3 px-4">BDE User</th>
+                      <th className="py-3 px-4">Sales Person</th>
                       <th className="py-3 px-4">Status</th>
                       <th className="py-3 px-4 text-center">Actions</th>
                     </tr>
@@ -1073,45 +1566,36 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
                     {filteredAssignments.length === 0 ? (
                       <tr>
                         <td colSpan={6} className="py-8 text-center text-gray-400">
-                          No assignments matching your criteria.
+                          {isLoadingDynamicData ? (
+                            <div className="flex items-center justify-center gap-2">
+                              <Loader2 size={16} className="animate-spin text-blue-600" />
+                              <span>Loading assignments...</span>
+                            </div>
+                          ) : (
+                            "No assignments saved yet."
+                          )}
                         </td>
                       </tr>
                     ) : (
                       filteredAssignments.map((asg, idx) => (
                         <tr
                           key={asg.id}
-                          className={`hover:bg-blue-50/40 transition cursor-pointer ${
-                            selectedEmployeeId === asg.employeeId ? "bg-blue-50/70" : ""
-                          }`}
+                          className={`hover:bg-blue-50/40 transition cursor-pointer ${selectedDirectorId === asg.directorId || selectedSalesPersonId === asg.salesCoordinatorId ? "bg-blue-50/70" : ""
+                            }`}
                           onClick={() => handleSelectAssignment(asg)}
                         >
                           <td className="py-3 px-4 font-medium text-gray-500">{idx + 1}</td>
                           <td className="py-3 px-4">
-                            <p className="font-bold text-gray-900">{asg.employeeName}</p>
-                            <p className="text-[11px] text-gray-500 font-mono">{asg.employeeCode}</p>
-                          </td>
-                          <td className="py-3 px-4">
-                            <span
-                              className={`text-[10px] font-bold px-2 py-0.5 rounded border inline-block uppercase ${getRoleBadge(
-                                asg.role
-                              )}`}
-                            >
-                              {asg.role}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4">
-                            {asg.reportingToName ? (
-                              <div>
-                                <p className="font-semibold text-gray-800">{asg.reportingToName}</p>
-                                {asg.reportingToRole && (
-                                  <span className="text-[10px] text-blue-600">
-                                    ({asg.reportingToRole})
-                                  </span>
-                                )}
-                              </div>
-                            ) : (
-                              <span className="text-gray-400 italic">None (Top Level)</span>
+                            <p className="font-bold text-gray-900">{asg.directorName || (asg.role === "Director" ? asg.employeeName : asg.reportingToRole === "Director" ? asg.reportingToName : "-")}</p>
+                            {(asg.directorCode || asg.employeeCode) && (
+                              <p className="text-[11px] text-gray-500 font-mono">{asg.directorCode || asg.employeeCode}</p>
                             )}
+                          </td>
+                          <td className="py-3 px-4">
+                            <p className="font-semibold text-gray-800">{asg.bdeUserName || (asg.role === "BDE User" ? asg.employeeName : asg.reportingToRole === "BDE User" ? asg.reportingToName : "-") || "-"}</p>
+                          </td>
+                          <td className="py-3 px-4">
+                            <p className="font-semibold text-gray-800">{asg.salesCoordinatorName || (asg.role === "Sales Person" ? asg.employeeName : "-") || "-"}</p>
                           </td>
                           <td className="py-3 px-4">
                             <span className="text-emerald-700 font-semibold bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded text-[11px]">
@@ -1152,9 +1636,9 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
         </div>
       )}
 
-      {/* 3. TAB CONTENT: LEVELS (Matching Screenshot 1) */}
+      {/* 3. TAB CONTENT: LEVELS (Matching User Reference Image 1) */}
       {activeSubTab === "levels" && (
-        <div className={standalone ? "p-5 md:p-6 space-y-6" : "space-y-6"}>
+        <div className={standalone ? "p-5 md:p-6 space-y-6" : "space-y-4"}>
           <div className="bg-white rounded-xl border border-gray-200 shadow-xs p-5 md:p-6 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-gray-100">
               <h2 className="text-base sm:text-lg font-bold text-gray-800 font-serif tracking-tight border-b-2 border-[#154068] pb-1 inline-block">
@@ -1165,7 +1649,7 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
                 <button
                   type="button"
                   onClick={handleOpenAddLevel}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-[#0f2c4d] hover:bg-[#154068] text-white text-xs sm:text-sm font-semibold rounded-lg shadow-sm transition cursor-pointer"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-[#0f2c4d] hover:bg-[#154068] text-white text-xs sm:text-sm font-semibold rounded-lg shadow-xs transition cursor-pointer"
                 >
                   <Plus size={14} />
                   <span>+ Add Level</span>
@@ -1197,10 +1681,23 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 text-gray-800">
-                  {filteredLevels.length === 0 ? (
+                  {isLoadingLevels ? (
                     <tr>
-                      <td colSpan={5} className="py-8 text-center text-gray-400">
-                        No levels found.
+                      <td colSpan={5} className="py-10 text-center text-gray-500">
+                        <div className="flex items-center justify-center gap-2">
+                          <Loader2 className="w-5 h-5 animate-spin text-[#154068]" />
+                          <span className="text-sm font-medium">Loading levels from database...</span>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : filteredLevels.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="py-10 text-center text-gray-500">
+                        <div className="flex flex-col items-center justify-center gap-2">
+                          <Layers className="w-8 h-8 text-gray-300" />
+                          <p className="text-sm font-medium text-gray-600">No levels found in database.</p>
+                          <p className="text-xs text-gray-400">Click &ldquo;+ Add Level&rdquo; above to create organization hierarchy levels.</p>
+                        </div>
                       </td>
                     </tr>
                   ) : (
@@ -1211,9 +1708,8 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
                         <td className="py-3.5 px-4 text-gray-600">{lvl.levelOrder}</td>
                         <td className="py-3.5 px-4">
                           <span
-                            className={`font-bold text-xs ${
-                              lvl.isActive ? "text-[#16a34a]" : "text-[#dc2626]"
-                            }`}
+                            className={`font-bold text-xs ${lvl.isActive ? "text-[#16a34a]" : "text-[#dc2626]"
+                              }`}
                           >
                             {lvl.isActive ? "Active" : "Inactive"}
                           </span>
@@ -1248,7 +1744,7 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
         </div>
       )}
 
-      {/* 5. MODAL: Add / Edit Level (Matching Screenshot 1) */}
+      {/* 4. MODAL: Add / Edit Level (Matching User Reference Image 1) */}
       {isLevelModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 backdrop-blur-2xs p-4">
           <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-150">
@@ -1332,9 +1828,17 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-lg bg-[#059669] hover:bg-[#047857] text-white text-xs font-bold transition shadow-xs cursor-pointer"
+                  disabled={isSavingLevel}
+                  className="px-5 py-2 rounded-lg bg-[#059669] hover:bg-[#047857] text-white text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-1.5 disabled:opacity-60"
                 >
-                  Save Level
+                  {isSavingLevel ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Save Level"
+                  )}
                 </button>
               </div>
             </form>

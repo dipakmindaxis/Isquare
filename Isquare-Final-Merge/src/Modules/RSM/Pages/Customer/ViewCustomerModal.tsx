@@ -15,7 +15,6 @@ import { toast } from "sonner";
 import type {
   Customer,
   CustomerAddress,
-  SalesCoordinatorItem,
   IndustryItem,
   CustomerAreaItem,
 } from "./Types/CustomerTypes";
@@ -25,7 +24,6 @@ import {
   validateCustomerAddress,
 } from "./Services/CustomerService";
 import {
-  getSalesCoordinators,
   getIndustries,
   getCustomerAreas,
 } from "./Services/CustomerMasterDataService";
@@ -71,7 +69,6 @@ const ViewCustomerModal: React.FC<ViewCustomerModalProps> = ({
 }) => {
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [addresses, setAddresses] = useState<CustomerAddress[]>([]);
-  const [coordinators, setCoordinators] = useState<SalesCoordinatorItem[]>([]);
   const [industries, setIndustries] = useState<IndustryItem[]>([]);
   const [areas, setAreas] = useState<CustomerAreaItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -85,15 +82,13 @@ const ViewCustomerModal: React.FC<ViewCustomerModalProps> = ({
       const fetchData = async () => {
         setIsLoading(true);
         try {
-          const [custData, addrData, coordData, indData, areaData] = await Promise.all([
+          const [custData, addrData, indData, areaData] = await Promise.all([
             getCustomerById(customerId),
             getCustomerAddresses(customerId).catch(() => []),
-            getSalesCoordinators().catch(() => []),
             getIndustries().catch(() => []),
             getCustomerAreas().catch(() => []),
           ]);
           setCustomer(custData);
-          setCoordinators(Array.isArray(coordData) ? coordData : []);
           setIndustries(Array.isArray(indData) ? indData : []);
           setAreas(Array.isArray(areaData) ? areaData : []);
           setAddresses(
@@ -157,11 +152,10 @@ const ViewCustomerModal: React.FC<ViewCustomerModalProps> = ({
                   {customer?.customerName || "Customer Details"}
                 </h2>
                 <span
-                  className={`px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider shrink-0 ${
-                    customer?.isActive
+                  className={`px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider shrink-0 ${customer?.isActive
                       ? "bg-emerald-500 text-white"
                       : "bg-red-500 text-white"
-                  }`}
+                    }`}
                 >
                   {customer?.isActive ? "Active" : "Inactive"}
                 </span>
@@ -215,8 +209,8 @@ const ViewCustomerModal: React.FC<ViewCustomerModalProps> = ({
                       customer.industryName ||
                       (customer.industryId
                         ? industries.find(
-                            (i) => i.industryId === Number(customer.industryId)
-                          )?.industryName || customer.industryId
+                          (i) => i.industryId === Number(customer.industryId)
+                        )?.industryName || customer.industryId
                         : "-")
                     }
                   />
@@ -234,10 +228,10 @@ const ViewCustomerModal: React.FC<ViewCustomerModalProps> = ({
                       customer.customerAreaName ||
                       (customer.customerAreaId
                         ? areas.find(
-                            (a) =>
-                              a.customerAreaId ===
-                              Number(customer.customerAreaId)
-                          )?.areaName || customer.customerAreaId
+                          (a) =>
+                            a.customerAreaId ===
+                            Number(customer.customerAreaId)
+                        )?.areaName || customer.customerAreaId
                         : "-")
                     }
                   />
@@ -261,22 +255,37 @@ const ViewCustomerModal: React.FC<ViewCustomerModalProps> = ({
               <div>
                 <SectionHeader icon={Users} title="Sales Assignment" />
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
-                  <DetailItem label="Director" value={customer.directorName || customer.directorId} />
-                  <DetailItem label="BDE" value={customer.bdeUserName || customer.bdeUserId} />
                   <DetailItem
-                    label="Sales Coordinator"
+                    label="Director Name"
                     value={
-                      customer.salesCoordinatorName ||
-                      (customer.salesCoordinatorId
-                        ? coordinators.find(
-                            (sc) =>
-                              sc.salesCoordinatorId ===
-                              Number(customer.salesCoordinatorId)
-                          )?.salesCoordinatorName || customer.salesCoordinatorId
-                        : "-")
+                      customer.directorName ||
+                      (customer.directorId ? `Director #${customer.directorId}` : "-")
                     }
                   />
-                  <DetailItem label="Customer Owner" value={customer.customerOwnerName || customer.customerOwnerId} />
+                  <DetailItem
+                    label="BDE User"
+                    value={
+                      customer.bdeUserName ||
+                      (customer.bdeUserId ? `BDE #${customer.bdeUserId}` : "-")
+                    }
+                  />
+                  <DetailItem
+                    label="Sales Person"
+                    value={
+                      customer.salesCoordinatorName ||
+                      (customer.salesCoordinatorId ? `Sales Person #${customer.salesCoordinatorId}` : "-")
+                    }
+                  />
+                  <DetailItem
+                    label="Customer Owner"
+                    value={
+                      customer.customerOwnerName
+                        ? (customer.customerOwnerType
+                            ? `${customer.customerOwnerName} (${customer.customerOwnerType})`
+                            : customer.customerOwnerName)
+                        : (customer.customerOwnerId ? `Owner #${customer.customerOwnerId}` : "-")
+                    }
+                  />
                 </div>
               </div>
 
@@ -293,11 +302,10 @@ const ViewCustomerModal: React.FC<ViewCustomerModalProps> = ({
                     {addresses.map((addr, idx) => (
                       <div
                         key={addr.addressId || idx}
-                        className={`p-4 rounded-xl border transition-all ${
-                          addr.isPrimary
+                        className={`p-4 rounded-xl border transition-all ${addr.isPrimary
                             ? "border-blue-300 bg-blue-50/30 ring-1 ring-blue-300/50"
                             : "border-gray-200 bg-white"
-                        }`}
+                          }`}
                       >
                         <div className="flex justify-between items-start mb-2">
                           <div className="flex items-center gap-2">
@@ -350,11 +358,10 @@ const ViewCustomerModal: React.FC<ViewCustomerModalProps> = ({
 
                         {addr.addressId && validationMsg[addr.addressId] && (
                           <div
-                            className={`mt-2.5 p-2 rounded text-xs flex items-center gap-1.5 ${
-                              validationMsg[addr.addressId].success
+                            className={`mt-2.5 p-2 rounded text-xs flex items-center gap-1.5 ${validationMsg[addr.addressId].success
                                 ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
                                 : "bg-red-50 text-red-800 border border-red-200"
-                            }`}
+                              }`}
                           >
                             {validationMsg[addr.addressId].success ? (
                               <CheckCircle size={14} className="shrink-0 text-emerald-600" />

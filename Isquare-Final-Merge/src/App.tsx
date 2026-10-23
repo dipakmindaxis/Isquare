@@ -14,6 +14,7 @@ import BasicMasters from "./Modules/HRMS/Pages/Masters/BasicMasters/BasicMasters
 import PaymentTerm from "./Modules/RSM/Pages/Master/PaymentTerm/PaymentTerm";
 import Director from "./Modules/RSM/Pages/Master/Director/Director";
 import SalesCoordinator from "./Modules/RSM/Pages/Master/SalesCoordinator/SalesCoordinator";
+import RoleMaster from "./Modules/RSM/Pages/Master/Role/RoleMaster";
 import CustomerClassificationMaster from "./Modules/RSM/Pages/Master/CustomerClassification/CustomerClassificationMaster";
 import SalesTeamMaster from "./Modules/RSM/Pages/Master/SalesTeam/SalesTeamMaster";
 import FollowUpContactUpdatesMaster from "./Modules/RSM/Pages/Master/FollowUpContactUpdates/FollowUpContactUpdatesMaster";
@@ -517,6 +518,22 @@ const router = createBrowserRouter([
       {
         path: "master/sales-coordinators",
         element: <SalesCoordinator />,
+      },
+      {
+        path: "role",
+        element: <RoleMaster />,
+      },
+      {
+        path: "roles",
+        element: <RoleMaster />,
+      },
+      {
+        path: "master/role",
+        element: <RoleMaster />,
+      },
+      {
+        path: "master/roles",
+        element: <RoleMaster />,
       },
     ],
   },
