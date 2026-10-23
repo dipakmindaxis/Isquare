@@ -151,5 +151,12 @@ export const API_ENDPOINTS: ApiEndpoints = {
   Directors: `${BASE_URL}/director`,
   SalesCoordinator: `${BASE_URL}/sales-coordinator`,
   SalesCoordinators: `${BASE_URL}/sales-coordinator`,
+  EnquirySources: `${BASE_URL}/EnquirySource`,
+  EnquiryTypes: `${BASE_URL}/EnquiryType`,
+  EnquiryStatuses: `${BASE_URL}/EnquiryStatus`,
+  EnquiryStages: `${BASE_URL}/EnquiryStage`,
+  UnitOfMeasures: `${BASE_URL}/UnitOfMeasure`,
+  LostReasons: `${BASE_URL}/LostReason`,
+
 };
 
