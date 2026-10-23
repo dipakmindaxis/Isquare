@@ -36,7 +36,7 @@ export const QuotationItemsTable: React.FC<QuotationItemsTableProps> = ({
           <button
             type="button"
             onClick={onAddItem}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#00234a] hover:bg-[#003366] text-white shadow-sm transition"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-[#00234a] hover:bg-[#FF7900] text-white shadow-sm transition cursor-pointer"
           >
             <Plus size={14} />
             <span>Add Product</span>
@@ -48,20 +48,20 @@ export const QuotationItemsTable: React.FC<QuotationItemsTableProps> = ({
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1300px] text-left border-collapse">
             <thead>
-              <tr className="bg-[#154068] text-white text-[11px] font-bold uppercase tracking-wider">
-                <th className="p-3 min-w-[240px]">Select / Code / Brand</th>
-                <th className="p-3 min-w-[200px]">Technical Specification</th>
-                <th className="p-3 w-24 text-center">Image</th>
-                <th className="p-3 w-24 text-center">HSN Code</th>
-                <th className="p-3 w-20 text-center">Qty</th>
-                <th className="p-3 w-24">UOM</th>
-                <th className="p-3 w-28 text-right">Rate (₹)</th>
-                <th className="p-3 w-20 text-center">Disc (%)</th>
-                <th className="p-3 w-20 text-center">GST (%)</th>
-                <th className="p-3 w-28 text-right">Total (₹)</th>
-                <th className="p-3 w-28 text-right">Purchase Rate</th>
-                <th className="p-3 w-20 text-center">Profit %</th>
-                <th className="p-3 w-20 text-center">Stock</th>
+              <tr className="bg-[#FF7900] text-white text-[11px] font-bold uppercase tracking-wider">
+                <th className="p-3 min-w-[240px] border-r border-[#e06800]">Select / Code / Brand</th>
+                <th className="p-3 min-w-[200px] border-r border-[#e06800]">Technical Specification</th>
+                <th className="p-3 w-24 text-center border-r border-[#e06800]">Image</th>
+                <th className="p-3 w-24 text-center border-r border-[#e06800]">HSN CODE</th>
+                <th className="p-3 w-20 text-center border-r border-[#e06800]">Qty</th>
+                <th className="p-3 w-24 border-r border-[#e06800]">UOM</th>
+                <th className="p-3 w-28 text-right border-r border-[#e06800]">Rate (₹)</th>
+                <th className="p-3 w-20 text-center border-r border-[#e06800]">Disc (%)</th>
+                <th className="p-3 w-20 text-center border-r border-[#e06800]">GST (%)</th>
+                <th className="p-3 w-28 text-right border-r border-[#e06800]">Total (₹)</th>
+                <th className="p-3 w-28 text-right border-r border-[#e06800]">Purchase Rate</th>
+                <th className="p-3 w-20 text-center border-r border-[#e06800]">Profit %</th>
+                <th className="p-3 w-20 text-center border-r border-[#e06800]">Stock</th>
                 <th className="p-3 w-12 text-center"></th>
               </tr>
             </thead>

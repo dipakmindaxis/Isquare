@@ -21,6 +21,7 @@ import QuotationSummary from "./QuotationSummary";
 import QuotationPreviewModal from "./QuotationPreviewModal";
 import {
   calculateQuotationTotals,
+  calculateProfitPercentage,
   STANDARD_UOMS,
 } from "../utils/quotationCalculations";
 import {
@@ -143,6 +144,18 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
           isActive: true,
           isDeleted: false,
           accessories: [],
+          purchaseRate: defaultProd.purchaseRate ?? null,
+          profitPercentage: calculateProfitPercentage(
+            rate,
+            1,
+            defaultProd.purchaseRate
+          ),
+          profit: calculateProfitPercentage(
+            rate,
+            1,
+            defaultProd.purchaseRate
+          ),
+          stock: defaultProd.stock ?? null,
           productImage:
             defaultProd.productImage || defaultProd.productImagePath || null,
           productImagePath:
@@ -189,8 +202,8 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
       let hasChanges = false;
       const updated = prevItems.map((item) => {
         let prod: Product | undefined;
-        if (item.productId) {
-          prod = availableProducts.find((p) => p.productId === item.productId);
+        if (item.productId != null && Number(item.productId) > 0) {
+          prod = availableProducts.find((p) => Number(p.productId) === Number(item.productId));
         } else if (!item.hasCustomSpecification) {
           // If unlinked (like initial template row), match by itemCode or itemName
           prod = availableProducts.find(
@@ -236,6 +249,35 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
               updates.imageUrl = resolveImageUrl(rawImg) || rawImg;
               hasChanges = true;
             }
+          }
+
+          const prodPR =
+            prod.purchaseRate != null && !isNaN(Number(prod.purchaseRate))
+              ? Number(prod.purchaseRate)
+              : null;
+          if (item.purchaseRate == null && prodPR != null) {
+            updates.purchaseRate = prodPR;
+            hasChanges = true;
+          }
+
+          const prodStock =
+            prod.stock != null && !isNaN(Number(prod.stock))
+              ? Math.round(Number(prod.stock))
+              : null;
+          if (item.stock == null && prodStock != null) {
+            updates.stock = prodStock;
+            hasChanges = true;
+          }
+
+          const effPR = updates.purchaseRate ?? item.purchaseRate ?? prodPR;
+          const currentQty = Math.max(0, Number(item.quantity) || 1);
+          const taxableAmt = item.taxableAmount ?? (Number(item.rate || 0) * currentQty);
+          const dynamicProfit = calculateProfitPercentage(taxableAmt, currentQty, effPR);
+
+          if (item.profitPercentage !== dynamicProfit) {
+            updates.profitPercentage = dynamicProfit;
+            updates.profit = dynamicProfit;
+            hasChanges = true;
           }
 
           if (Object.keys(updates).length > 0) {
@@ -313,7 +355,10 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
     initialQuotation?.paymentTermId ?? paymentTerms[0]?.paymentTermId
   );
   const [warranty, setWarranty] = useState<string>(
-    initialQuotation?.warranty || "1 Year Standard"
+    initialQuotation?.warranty &&
+      initialQuotation.warranty.trim().toLowerCase() !== "1 year standard"
+      ? initialQuotation.warranty
+      : ""
   );
   const [validity, setValidity] = useState<string>("30 Days");
   const [validUntil, setValidUntil] = useState<string>(
@@ -336,7 +381,12 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
       if (def) {
         if (def.defaultDeliveryPeriod) setDeliveryPeriod(def.defaultDeliveryPeriod);
         if (def.paymentTermId) setPaymentTermId(def.paymentTermId);
-        if (def.standardWarranty) setWarranty(def.standardWarranty);
+        if (
+          def.standardWarranty &&
+          def.standardWarranty.trim().toLowerCase() !== "1 year standard"
+        ) {
+          setWarranty(def.standardWarranty);
+        }
         if (def.quotationValidity) setValidity(def.quotationValidity);
         if (def.standardTermsAndConditions) setTermsAndConditions(def.standardTermsAndConditions);
         toast.success("Loaded company quotation defaults");
@@ -396,6 +446,10 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
       isActive: true,
       isDeleted: false,
       accessories: [],
+      purchaseRate: null,
+      profitPercentage: null,
+      profit: null,
+      stock: null,
     };
     setItems([...items, newItem]);
   };
@@ -513,22 +567,24 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200/90 shadow-sm overflow-hidden">
-      {/* Top Banner Header */}
-      <div className="p-5 border-b border-gray-200 bg-slate-50 flex flex-wrap items-center justify-between gap-4">
+      {/* Top Banner Header matching Customer Master */}
+      <div className="p-5 border-b border-gray-200 bg-white flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-[#00234a] text-white flex items-center justify-center font-bold shadow-sm">
-            <ClipboardList size={22} />
+          <div className="w-12 h-12 bg-orange-50 border border-[#FF7900]/30 text-[#FF7900] rounded-xl flex items-center justify-center shrink-0 shadow-xs">
+            <ClipboardList className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-[11px] font-bold text-blue-700 uppercase tracking-wider">
-              ISQUARE · Commercial Proposal Engine
-            </p>
-            <h2 className="text-lg font-bold text-gray-900 tracking-tight">
-              {isEditMode
-                ? `Edit Quotation — ${quotationNumber || `QT-${initialQuotation?.quotationId}`}`
-                : "Create Professional Quotation"}
-            </h2>
-            <p className="text-xs text-gray-500">
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">
+                {isEditMode
+                  ? `Edit Quotation — ${quotationNumber || `QT-${initialQuotation?.quotationId}`}`
+                  : "Create Professional Quotation"}
+              </h2>
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-orange-50 text-[#FF7900] border border-[#FF7900]/20">
+                Commercial Proposal Engine
+              </span>
+            </div>
+            <p className="text-gray-500 mt-1 text-xs md:text-sm">
               Itemized equipment proposal with GST computation, accessories &amp; legal terms
             </p>
           </div>
@@ -538,7 +594,7 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
           <button
             type="button"
             onClick={onCancel}
-            className="px-3.5 py-2 text-xs font-semibold text-gray-600 hover:text-gray-900 bg-white border border-gray-200 rounded-xl transition"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer"
           >
             Cancel
           </button>
@@ -546,7 +602,7 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
             type="button"
             onClick={() => handleSubmit()}
             disabled={isSubmitting}
-            className="px-5 py-2 text-xs font-bold text-white bg-[#00234a] hover:bg-[#003366] rounded-xl shadow-md transition disabled:opacity-50"
+            className="rounded-xl bg-[#00234a] hover:bg-[#FF7900] px-5 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-[0_10px_18px_rgba(0,35,74,0.18)] transition cursor-pointer flex items-center gap-2 disabled:opacity-50"
           >
             {isSubmitting ? "Saving..." : isEditMode ? "Update Quotation" : "Save Quotation"}
           </button>
@@ -554,14 +610,14 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
       </div>
 
       <div className="p-4 sm:p-6">
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <section className="min-w-0 rounded-xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <section className="min-w-0 rounded-xl border border-gray-200 bg-white p-5 shadow-xs sm:p-6 space-y-5">
             <div className="mb-5 flex items-center gap-2 border-b border-gray-200 pb-3">
-              <span className="rounded border border-blue-200 bg-blue-50 px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-[#154068]">
+              <span className="px-2.5 py-0.5 rounded-md text-xs font-bold uppercase tracking-wider bg-orange-50 text-[#FF7900] border border-[#FF7900]/20">
                 Section 1
               </span>
-              <FileText size={16} className="text-[#154068]" />
-              <h3 className="text-sm font-bold uppercase tracking-wider text-[#154068]">
+              <FileText size={16} className="text-[#FF7900]" />
+              <h3 className="text-sm font-bold uppercase tracking-wider text-[#FF7900]">
                 Quotation Info
               </h3>
             </div>
@@ -587,12 +643,12 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
             />
           </section>
 
-          <section className="min-w-0 rounded-xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
+          <section className="min-w-0 rounded-xl border border-gray-200 bg-white p-5 shadow-xs sm:p-6 space-y-5">
             <div className="mb-5 flex items-center gap-2 border-b border-gray-200 pb-3">
-              <span className="rounded border border-blue-200 bg-blue-50 px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-[#154068]">
+              <span className="px-2.5 py-0.5 rounded-md text-xs font-bold uppercase tracking-wider bg-orange-50 text-[#FF7900] border border-[#FF7900]/20">
                 Section 2
               </span>
-              <h3 className="text-sm font-bold uppercase tracking-wider text-[#154068]">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-[#FF7900]">
                 Product Details
               </h3>
             </div>
@@ -605,12 +661,12 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
             />
           </section>
 
-          <section className="min-w-0 rounded-xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
+          <section className="min-w-0 rounded-xl border border-gray-200 bg-white p-5 shadow-xs sm:p-6 space-y-5">
             <div className="mb-5 flex items-center gap-2 border-b border-gray-200 pb-3">
-              <span className="rounded border border-blue-200 bg-blue-50 px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-[#154068]">
+              <span className="px-2.5 py-0.5 rounded-md text-xs font-bold uppercase tracking-wider bg-orange-50 text-[#FF7900] border border-[#FF7900]/20">
                 Section 3
               </span>
-              <h3 className="text-sm font-bold uppercase tracking-wider text-[#154068]">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-[#FF7900]">
                 Pricing &amp; Charges
               </h3>
             </div>
@@ -634,12 +690,12 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
             />
           </section>
 
-          <section className="min-w-0 rounded-xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
+          <section className="min-w-0 rounded-xl border border-gray-200 bg-white p-5 shadow-xs sm:p-6 space-y-5">
             <div className="mb-5 flex items-center gap-2 border-b border-gray-200 pb-3">
-              <span className="rounded border border-blue-200 bg-blue-50 px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-[#154068]">
+              <span className="px-2.5 py-0.5 rounded-md text-xs font-bold uppercase tracking-wider bg-orange-50 text-[#FF7900] border border-[#FF7900]/20">
                 Section 4
               </span>
-              <h3 className="text-sm font-bold uppercase tracking-wider text-[#154068]">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-[#FF7900]">
                 Terms &amp; Delivery
               </h3>
             </div>

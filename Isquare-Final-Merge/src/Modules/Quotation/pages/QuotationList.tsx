@@ -241,39 +241,61 @@ export const QuotationList: React.FC = () => {
   };
 
   return (
-    <div className="space-y-5">
-      {/* Page Title & Actions */}
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+    <div className="p-4 md:p-6 bg-[#F5F7F5] min-h-full space-y-6">
+      {/* Unified Header Card matching Customer Master */}
+      <div className="bg-white rounded-xl shadow-xs border border-gray-200 p-5">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 bg-orange-50 border border-[#FF7900]/30 text-[#FF7900] rounded-xl flex items-center justify-center shrink-0 shadow-xs">
+              <FileSpreadsheet className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">
+                  Commercial Quotations
+                </h1>
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-orange-50 text-[#FF7900] border border-[#FF7900]/20">
+                  Quotation Management
+                </span>
+              </div>
+              <p className="text-gray-500 mt-1 text-xs md:text-sm">
+                Manage proposal documents, customer pricing, revisions, and approval cycles
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Listing Header & Actions matching Customer Master */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#00234a] tracking-tight">
-            Commercial Quotations
-          </h1>
-          <p className="text-xs text-gray-500 mt-1">
-            Manage proposal documents, customer pricing, revisions, and approval cycles
-          </p>
+          <h2 className="border-b-2 border-[#FF7900] pb-2 text-2xl sm:text-3xl font-bold tracking-tight text-[#00234a]">
+            All Quotations
+          </h2>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button
             type="button"
             onClick={fetchData}
-            className="p-2 text-gray-600 bg-white hover:bg-gray-50 border border-gray-300 rounded-xl transition"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer"
             title="Refresh list"
           >
-            <RefreshCw size={15} />
+            <RefreshCw size={15} className={isLoading ? "animate-spin" : ""} />
+            <span>Refresh</span>
           </button>
           <button
             type="button"
             onClick={handleExportExcel}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl transition cursor-pointer"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer"
           >
-            <FileSpreadsheet size={15} />
+            <FileSpreadsheet size={15} className="text-emerald-600" />
             <span>Export Excel</span>
           </button>
           <button
             type="button"
             onClick={() => setIsUploadModalOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-slate-800 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-xl transition cursor-pointer shadow-xs"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer"
             title="Upload customer-formatted Excel quotation"
           >
             <UploadCloud size={15} className="text-blue-600" />
@@ -281,35 +303,33 @@ export const QuotationList: React.FC = () => {
           </button>
           <Link
             to="/rsm/quotations/create"
-            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-[#00234a] hover:bg-[#003366] rounded-xl shadow-md transition"
+            className="rounded-xl bg-[#00234a] hover:bg-[#FF7900] px-5 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-[0_10px_18px_rgba(0,35,74,0.18)] transition cursor-pointer flex items-center gap-2"
           >
-            <Plus size={15} />
+            <Plus size={14} />
             <span>Create Quotation</span>
           </Link>
         </div>
       </div>
 
-      {/* Filter and Search Bar */}
-      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-3 flex-1 min-w-[280px]">
-          <div className="relative flex-1 min-w-[220px]">
-            <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-              <Search size={15} />
-            </span>
-            <input
-              type="text"
-              placeholder="Search by Quotation #, Customer or Enquiry..."
-              value={searchText}
-              onChange={(e) => {
-                setSearchText(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="min-h-11 w-full rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm text-gray-800 focus:border-[#00234a] focus:outline-none focus:ring-2 focus:ring-[#00234a]/15"
-            />
-          </div>
+      {/* Filter and Search Bar matching Customer Master */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 sm:gap-4">
+        <div className="relative flex-1 max-w-md">
+          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Search by Quotation #, Customer or Enquiry..."
+            value={searchText}
+            onChange={(e) => {
+              setSearchText(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#FF8500]/20 focus:border-[#FF8500] text-gray-800"
+          />
+        </div>
 
+        <div className="flex items-center justify-between sm:justify-start gap-3 w-full md:w-auto">
           <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-500 font-semibold flex items-center gap-1">
+            <span className="text-xs font-semibold text-gray-500 whitespace-nowrap flex items-center gap-1">
               <Filter size={13} /> Status:
             </span>
             <select
@@ -318,7 +338,7 @@ export const QuotationList: React.FC = () => {
                 setStatusFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="min-h-11 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 focus:border-[#00234a] focus:outline-none focus:ring-2 focus:ring-[#00234a]/15"
+              className="border border-gray-200 rounded-lg px-3 py-1.5 text-xs font-medium text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#FF8500]/20 focus:border-[#FF8500] cursor-pointer"
             >
               <option value="All">All Statuses</option>
               <option value="Draft">Draft</option>
@@ -329,27 +349,27 @@ export const QuotationList: React.FC = () => {
               <option value="Revised">Revised</option>
             </select>
           </div>
-        </div>
 
-        <div className="text-xs text-gray-500 font-medium">
-          Showing <span className="font-bold text-gray-800">{filteredQuotations.length}</span> records
+          <div className="text-xs text-gray-500 font-medium">
+            Showing <span className="font-bold text-gray-800">{filteredQuotations.length}</span> records
+          </div>
         </div>
       </div>
 
-      {/* Main Table */}
+      {/* Main Table with Customer Master Orange Header */}
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[980px] border-collapse text-left text-xs">
             <thead>
-              <tr className="bg-[#154068] text-[11px] font-bold uppercase tracking-wider text-white">
-                <th className="p-3.5">Quotation #</th>
-                <th className="p-3.5 w-20 text-center">Rev</th>
-                <th className="p-3.5">Customer Name</th>
-                <th className="p-3.5">Enquiry Ref</th>
-                <th className="p-3.5">Date</th>
-                <th className="p-3.5 text-right">Grand Total (₹)</th>
-                <th className="p-3.5 text-center">Status</th>
-                <th className="p-3.5 text-center">Approval</th>
+              <tr className="bg-[#FF7900] text-white text-[12px] font-bold uppercase tracking-wider">
+                <th className="p-3.5 border-r border-[#e06800]">Quotation #</th>
+                <th className="p-3.5 w-20 text-center border-r border-[#e06800]">Rev</th>
+                <th className="p-3.5 border-r border-[#e06800]">Customer Name</th>
+                <th className="p-3.5 border-r border-[#e06800]">Enquiry Ref</th>
+                <th className="p-3.5 border-r border-[#e06800]">Date</th>
+                <th className="p-3.5 text-right border-r border-[#e06800]">Grand Total (₹)</th>
+                <th className="p-3.5 text-center border-r border-[#e06800]">Status</th>
+                <th className="p-3.5 text-center border-r border-[#e06800]">Approval</th>
                 <th className="p-3.5 text-right w-44">Actions</th>
               </tr>
             </thead>
@@ -368,12 +388,12 @@ export const QuotationList: React.FC = () => {
                 </tr>
               ) : (
                 paginatedQuotations.map((q) => (
-                  <tr key={q.quotationId} className="hover:bg-slate-50 transition">
-                    <td className="p-3.5 font-bold font-mono text-gray-900">
+                  <tr key={q.quotationId} className="hover:bg-[#f0f7ff] transition duration-150 min-h-[54px]">
+                    <td className="p-3.5 font-bold font-mono text-gray-900 border-r border-gray-100">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <Link
                           to={`/rsm/quotations/${q.quotationId}`}
-                          className="hover:text-blue-600 transition"
+                          className="hover:text-[#FF7900] transition"
                         >
                           {q.quotationNumber || `QT-${q.quotationId}`}
                         </Link>
@@ -388,29 +408,29 @@ export const QuotationList: React.FC = () => {
                         )}
                       </div>
                     </td>
-                    <td className="p-3.5 text-center">
-                      <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-mono font-bold text-[11px]">
+                    <td className="p-3.5 text-center border-r border-gray-100">
+                      <span className="px-2 py-0.5 rounded-full bg-orange-50 text-[#FF7900] border border-[#FF7900]/20 font-mono font-bold text-[11px]">
                         R{q.revisionNumber}
                       </span>
                     </td>
-                    <td className="p-3.5 font-semibold text-gray-800">
+                    <td className="p-3.5 font-semibold text-gray-800 border-r border-gray-100">
                       {q.customerName || `Customer #${q.customerId}`}
                     </td>
-                    <td className="p-3.5 text-gray-500 font-mono">
+                    <td className="p-3.5 text-gray-500 font-mono border-r border-gray-100">
                       {q.enquiryRef || "—"}
                     </td>
-                    <td className="p-3.5 text-gray-500">
+                    <td className="p-3.5 text-gray-500 border-r border-gray-100">
                       {q.quotationDate
                         ? new Date(q.quotationDate).toLocaleDateString("en-IN")
                         : "—"}
                     </td>
-                    <td className="p-3.5 text-right font-bold text-gray-900 font-mono">
+                    <td className="p-3.5 text-right font-bold text-gray-900 font-mono border-r border-gray-100">
                       {formatINR(q.grandTotal)}
                     </td>
-                    <td className="p-3.5 text-center">
+                    <td className="p-3.5 text-center border-r border-gray-100">
                       <QuotationStatusBadge status={q.status} />
                     </td>
-                    <td className="p-3.5 text-center">
+                    <td className="p-3.5 text-center border-r border-gray-100">
                       <QuotationStatusBadge
                         status={getEffectiveApprovalStatus(q, approvals)}
                         type="approval"
@@ -419,7 +439,7 @@ export const QuotationList: React.FC = () => {
                     <td className="p-3.5 text-right space-x-1.5 whitespace-nowrap">
                       <button
                         onClick={() => navigate(`/rsm/quotations/${q.quotationId}`)}
-                        className="p-1.5 bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-600 rounded-lg transition"
+                        className="p-2 bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-600 rounded-lg transition shadow-xs inline-flex items-center justify-center cursor-pointer"
                         title="View Details"
                       >
                         <Eye size={14} />
@@ -434,7 +454,7 @@ export const QuotationList: React.FC = () => {
                               toast.error("Original customer file not found");
                             }
                           }}
-                          className="p-1.5 bg-amber-50 hover:bg-amber-600 hover:text-white text-amber-700 rounded-lg transition"
+                          className="p-2 bg-amber-50 hover:bg-amber-600 hover:text-white text-amber-700 rounded-lg transition shadow-xs inline-flex items-center justify-center cursor-pointer"
                           title="Download Original Customer Excel File"
                         >
                           <Download size={14} />
@@ -442,7 +462,7 @@ export const QuotationList: React.FC = () => {
                       )}
                       <button
                         onClick={() => navigate(`/rsm/quotations/${q.quotationId}/edit`)}
-                        className="p-1.5 bg-amber-50 hover:bg-amber-600 hover:text-white text-amber-600 rounded-lg transition"
+                        className="p-2 bg-amber-50 hover:bg-amber-600 hover:text-white text-amber-600 rounded-lg transition shadow-xs inline-flex items-center justify-center cursor-pointer"
                         title="Edit Quotation"
                       >
                         <Edit size={14} />
@@ -452,7 +472,7 @@ export const QuotationList: React.FC = () => {
                           setSelectedQuotation(q);
                           setRevisionModalOpen(true);
                         }}
-                        className="p-1.5 bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-600 rounded-lg transition"
+                        className="p-2 bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-600 rounded-lg transition shadow-xs inline-flex items-center justify-center cursor-pointer"
                         title="Create Revision (+R)"
                       >
                         <RotateCcw size={14} />
@@ -460,7 +480,7 @@ export const QuotationList: React.FC = () => {
                       <button
                         onClick={() => handleConvertToSalesOrder(q)}
                         disabled={convertingQuotationId === q.quotationId}
-                        className="p-1.5 bg-emerald-50 hover:bg-emerald-600 hover:text-white text-emerald-600 rounded-lg transition disabled:cursor-wait disabled:opacity-50"
+                        className="p-2 bg-emerald-50 hover:bg-emerald-600 hover:text-white text-emerald-600 rounded-lg transition shadow-xs inline-flex items-center justify-center disabled:cursor-wait disabled:opacity-50 cursor-pointer"
                         title="Convert to Sales Order"
                       >
                         <ShoppingCart
@@ -477,7 +497,7 @@ export const QuotationList: React.FC = () => {
                           setSelectedQuotation(q);
                           setDeleteModalOpen(true);
                         }}
-                        className="p-1.5 bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-600 rounded-lg transition"
+                        className="p-2 bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-600 rounded-lg transition shadow-xs inline-flex items-center justify-center cursor-pointer"
                         title="Delete Quotation"
                       >
                         <Trash2 size={14} />
@@ -499,14 +519,14 @@ export const QuotationList: React.FC = () => {
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="p-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-100 disabled:opacity-40 transition"
+              className="p-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-100 disabled:opacity-40 transition cursor-pointer"
             >
               <ChevronLeft size={15} />
             </button>
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="p-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-100 disabled:opacity-40 transition"
+              className="p-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-100 disabled:opacity-40 transition cursor-pointer"
             >
               <ChevronRight size={15} />
             </button>
@@ -534,59 +554,61 @@ export const QuotationList: React.FC = () => {
       {/* Create Revision Modal */}
       {revisionModalOpen && selectedQuotation && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-md rounded-2xl shadow-xl border border-gray-200 p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-              <h3 className="text-base font-bold text-gray-900">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+            <div className="flex items-center justify-between bg-[#FF7900] text-white px-6 py-4">
+              <h3 className="text-base font-bold text-white">
                 Create Revision Snapshot
               </h3>
               <button
                 onClick={() => setRevisionModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-white/80 hover:text-white p-1 hover:bg-white/10 rounded-lg transition"
               >
                 ✕
               </button>
             </div>
 
-            <p className="text-xs text-gray-600">
-              Creating a revision will archive the current snapshot of{" "}
-              <span className="font-bold font-mono">
-                {selectedQuotation.quotationNumber || `QT-${selectedQuotation.quotationId}`} (R{selectedQuotation.revisionNumber})
-              </span>{" "}
-              into the revision history table.
-            </p>
+            <div className="p-6 space-y-4">
+              <p className="text-xs text-gray-600">
+                Creating a revision will archive the current snapshot of{" "}
+                <span className="font-bold font-mono text-[#00234a]">
+                  {selectedQuotation.quotationNumber || `QT-${selectedQuotation.quotationId}`} (R{selectedQuotation.revisionNumber})
+                </span>{" "}
+                into the revision history table.
+              </p>
 
-            <form onSubmit={handleCreateRevisionSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
-                  Revision Reason <span className="text-rose-500">*</span>
-                </label>
-                <textarea
-                  rows={3}
-                  required
-                  placeholder="e.g. Scope adjustment as per client request, rate discount applied."
-                  value={revisionReason}
-                  onChange={(e) => setRevisionReason(e.target.value)}
-                  className="w-full text-xs p-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:bg-white focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                />
-              </div>
+              <form onSubmit={handleCreateRevisionSubmit} className="space-y-4">
+                <div>
+                  <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
+                    Revision Reason <span className="text-rose-500">*</span>
+                  </label>
+                  <textarea
+                    rows={3}
+                    required
+                    placeholder="e.g. Scope adjustment as per client request, rate discount applied."
+                    value={revisionReason}
+                    onChange={(e) => setRevisionReason(e.target.value)}
+                    className="w-full text-xs p-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF8500]/20 focus:border-[#FF8500]"
+                  />
+                </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setRevisionModalOpen(false)}
-                  className="px-4 py-2 text-xs font-semibold text-gray-600 hover:text-gray-900 bg-gray-100 rounded-lg transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmittingRevision}
-                  className="px-4 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition disabled:opacity-50"
-                >
-                  {isSubmittingRevision ? "Creating..." : "Confirm Revision"}
-                </button>
-              </div>
-            </form>
+                <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
+                  <button
+                    type="button"
+                    onClick={() => setRevisionModalOpen(false)}
+                    className="px-5 py-2.5 text-xs font-semibold text-gray-700 hover:bg-gray-100 bg-gray-50 border border-gray-200 rounded-xl transition cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmittingRevision}
+                    className="px-5 py-2.5 text-xs font-semibold text-white bg-[#00234a] hover:bg-[#FF7900] rounded-xl shadow-md transition disabled:opacity-50 cursor-pointer"
+                  >
+                    {isSubmittingRevision ? "Creating..." : "Confirm Revision"}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}

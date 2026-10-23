@@ -348,24 +348,24 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
     : new Date().toISOString().substring(0, 10);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
         {/* Quotation Number */}
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+          <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
             Quotation Number
           </label>
           <input
             type="text"
             readOnly
             value={quotationNumber || "Auto-generated upon save"}
-            className="w-full rounded-lg border border-gray-300 bg-gray-100 px-3.5 py-3 text-sm font-mono font-semibold text-gray-700 cursor-not-allowed"
+            className="w-full rounded-lg border border-gray-200 bg-gray-100 px-3.5 py-2.5 text-xs font-mono font-semibold text-gray-700 cursor-not-allowed select-none"
           />
         </div>
 
         {/* 1. Company Name Dropdown */}
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+          <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
             Company Name <span className="text-rose-500">*</span>
           </label>
           <div className="relative">
@@ -376,7 +376,7 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
               }
               disabled={disabled}
               required
-              className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-3 text-sm font-medium text-gray-800 transition focus:border-[#00234a] focus:outline-none focus:ring-2 focus:ring-[#00234a]/15 cursor-pointer"
+              className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs font-medium text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 cursor-pointer"
             >
               <option value="" disabled>
                 Select Company...
@@ -397,15 +397,15 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
 
         {/* 2 & 3. Customer Name / Contact Person Dependent Dropdown with Add Contact Button */}
         <div>
-          <div className="flex items-center justify-between mb-1">
-            <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block">
               Contact Person <span className="text-rose-500">*</span>
             </label>
             <button
               type="button"
               onClick={() => setIsAddContactModalOpen(true)}
               disabled={disabled}
-              className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-700 hover:text-blue-900 transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              className="inline-flex items-center gap-1 text-[11px] font-bold text-[#FF7900] hover:text-[#e06800] transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               title="Add New Customer / Contact Person"
             >
               <Plus size={13} />
@@ -421,7 +421,7 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
                 }
                 disabled={disabled || !customerId || isLoadingContacts}
                 required
-                className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-3 text-sm font-medium text-gray-800 transition focus:border-[#00234a] focus:outline-none focus:ring-2 focus:ring-[#00234a]/15 disabled:bg-gray-100 disabled:cursor-not-allowed cursor-pointer"
+                className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs font-medium text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 disabled:bg-gray-100 disabled:cursor-not-allowed cursor-pointer"
               >
                 {!customerId ? (
                   <option value="">Select Company first...</option>
@@ -445,7 +445,7 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
               </select>
               {isLoadingContacts && (
                 <div className="absolute right-8 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <Loader2 size={16} className="animate-spin text-[#00234a]" />
+                  <Loader2 size={16} className="animate-spin text-[#FF7900]" />
                 </div>
               )}
             </div>
@@ -453,7 +453,7 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
               type="button"
               onClick={() => setIsAddContactModalOpen(true)}
               disabled={disabled}
-              className="p-3 bg-[#00234a] hover:bg-[#001833] text-white rounded-lg transition disabled:opacity-40 disabled:cursor-not-allowed shrink-0 cursor-pointer shadow-xs"
+              className="p-2.5 bg-[#00234a] hover:bg-[#FF7900] text-white rounded-lg transition disabled:opacity-40 disabled:cursor-not-allowed shrink-0 cursor-pointer shadow-xs"
               title="Add New Customer / Contact Person"
             >
               <Plus size={16} />
@@ -463,7 +463,7 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
 
         {/* Enquiry Reference - Searchable Dropdown */}
         <div ref={enquiryDropdownRef} className="relative">
-          <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+          <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
             Enquiry Reference
           </label>
           <div className="relative">
@@ -478,7 +478,7 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
               }}
               onFocus={() => setIsEnquiryDropdownOpen(true)}
               disabled={disabled}
-              className="w-full rounded-lg border border-gray-300 bg-white pl-3.5 pr-14 py-3 text-sm font-mono text-gray-800 transition focus:border-[#00234a] focus:outline-none focus:ring-2 focus:ring-[#00234a]/15 cursor-text"
+              className="w-full rounded-lg border border-gray-300 bg-white pl-3.5 pr-14 py-2.5 text-xs font-mono text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 cursor-text"
             />
             <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
               {enquirySearch && !disabled && (
@@ -504,7 +504,7 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
                 <ChevronDown
                   size={16}
                   className={`transition-transform duration-200 ${
-                    isEnquiryDropdownOpen ? "rotate-180 text-[#00234a]" : ""
+                    isEnquiryDropdownOpen ? "rotate-180 text-[#FF7900]" : ""
                   }`}
                 />
               </button>
@@ -514,7 +514,7 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
           {/* Searchable Dropdown Menu */}
           {isEnquiryDropdownOpen && !disabled && (
             <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden divide-y divide-gray-100 max-h-64 overflow-y-auto">
-              <div className="p-2.5 bg-slate-50 border-b border-gray-100 text-[10px] font-bold uppercase tracking-wider text-gray-500 flex items-center justify-between">
+              <div className="p-2.5 bg-orange-50/60 border-b border-orange-100 text-[10px] font-bold uppercase tracking-wider text-gray-600 flex items-center justify-between">
                 <span>Select Existing Enquiry ({filteredEnquiries.length})</span>
                 <span className="text-[9px] font-normal text-gray-400">Enquiry No · Company · Product</span>
               </div>
@@ -529,7 +529,7 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
                       onChangeRef.current({ enquiryRef: enquirySearch });
                       setIsEnquiryDropdownOpen(false);
                     }}
-                    className="mt-2 text-xs font-semibold text-blue-600 hover:text-blue-800 underline cursor-pointer"
+                    className="mt-2 text-xs font-semibold text-[#FF7900] hover:text-[#e06800] underline cursor-pointer"
                   >
                     Use "{enquirySearch}" as custom reference
                   </button>
@@ -546,7 +546,7 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
                       onClick={() => handleSelectEnquiry(eq)}
                       className={`w-full text-left px-3.5 py-2.5 transition flex items-start justify-between gap-3 cursor-pointer ${
                         isSelected
-                          ? "bg-blue-50/90 text-blue-900 font-semibold"
+                          ? "bg-orange-50 text-[#00234a] font-semibold"
                           : "hover:bg-slate-50 text-gray-800"
                       }`}
                     >
@@ -561,7 +561,7 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
                         </div>
                       </div>
                       {isSelected && (
-                        <Check size={16} className="text-blue-600 shrink-0 mt-0.5" />
+                        <Check size={16} className="text-[#FF7900] shrink-0 mt-0.5" />
                       )}
                     </button>
                   );
@@ -575,7 +575,7 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
         {/* Quotation Date */}
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+          <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
             Quotation Date
           </label>
           <input
@@ -587,17 +587,17 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
               })
             }
             disabled={disabled}
-            className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-3 text-sm text-gray-800 transition focus:border-[#00234a] focus:outline-none focus:ring-2 focus:ring-[#00234a]/15"
+            className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20"
           />
         </div>
 
         {/* Revision Number */}
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+          <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
             Revision
           </label>
           <div className="flex items-center gap-2">
-            <span className="px-3 py-2 bg-blue-50 text-blue-700 rounded-lg border border-blue-200 text-xs font-bold font-mono">
+            <span className="px-3 py-1.5 bg-orange-50 text-[#FF7900] rounded-lg border border-[#FF7900]/20 text-xs font-bold font-mono">
               R{revisionNumber}
             </span>
             <span className="text-xs text-gray-500">
@@ -610,14 +610,14 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
 
         {/* Quotation Status */}
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+          <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
             Status
           </label>
           <select
             value={status || "Draft"}
             onChange={(e) => onChangeRef.current({ status: e.target.value })}
             disabled={disabled}
-            className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-3 text-sm font-medium text-gray-800 transition focus:border-[#00234a] focus:outline-none focus:ring-2 focus:ring-[#00234a]/15 cursor-pointer"
+            className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs font-medium text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 cursor-pointer"
           >
             <option value="Draft">Draft</option>
             <option value="Sent">Sent</option>
@@ -629,12 +629,12 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
         </div>
       </div>
 
-      {/* Selected Customer & Contact Details Preview Banner */}
+      {/* Selected Customer & Contact Details Preview Banner matching Customer Master */}
       {(selectedCustomer || selectedContact) && (
-        <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex flex-wrap items-center justify-between gap-3 text-xs text-slate-600">
+        <div className="p-3.5 bg-orange-50/30 border border-orange-100 rounded-xl flex flex-wrap items-center justify-between gap-3 text-xs text-slate-600">
           <div className="flex flex-wrap items-center gap-y-1">
             <span className="font-bold text-slate-800 mr-2 flex items-center gap-1">
-              <User size={13} className="text-[#00234a]" />
+              <User size={13} className="text-[#FF7900]" />
               <span>Contact Person:</span>
             </span>
             <span className="font-semibold text-gray-900">

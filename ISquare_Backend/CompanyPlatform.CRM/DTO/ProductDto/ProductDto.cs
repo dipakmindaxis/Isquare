@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace CompanyPlatform.CRM.DTO.Product
 {
@@ -22,6 +22,29 @@ namespace CompanyPlatform.CRM.DTO.Product
 
         [Range(typeof(decimal), "0", "100")]
         public decimal GSTRate { get; set; }
+
+        public string? HsnCode { get; set; }
+
+        public string? Hsn
+        {
+            get => HsnCode;
+            set => HsnCode = value;
+        }
+
+        [Range(typeof(decimal), "0", "9999999999999999")]
+        public decimal? PurchaseRate { get; set; }
+
+        [Range(typeof(decimal), "-100", "10000")]
+        public decimal? ProfitPercentage { get; set; }
+
+        public decimal? Profit
+        {
+            get => ProfitPercentage;
+            set => ProfitPercentage = value;
+        }
+
+        [Range(0, int.MaxValue)]
+        public int? Stock { get; set; }
 
         public string? ProductImage { get; set; }
 

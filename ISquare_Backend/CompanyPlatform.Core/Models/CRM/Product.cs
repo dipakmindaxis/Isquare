@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -31,6 +31,17 @@ namespace CompanyPlatform.Core.Models.CRM.Company
 
         [Column(TypeName = "decimal(5,2)")]
         public decimal GSTRate { get; set; }
+
+        [StringLength(50)]
+        public string? HsnCode { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal? PurchaseRate { get; set; }
+
+        [Column(TypeName = "decimal(5,2)")]
+        public decimal? ProfitPercentage { get; set; }
+
+        public int? Stock { get; set; }
 
         [StringLength(500)]
         public string? ProductImage { get; set; }

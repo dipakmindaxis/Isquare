@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using CompanyPlatform.CRM.DTO.Product;
 using CompanyPlatform.Core.Repository;
 using ProductModel = CompanyPlatform.Core.Models.CRM.Company.Product;
@@ -67,6 +67,10 @@ namespace CompanyPlatform.CRM.Services.Product
                     UnitOfMeasurementId = x.UnitOfMeasurementId,
                     StandardRate = x.StandardRate,
                     GSTRate = x.GSTRate,
+                    HsnCode = x.HsnCode,
+                    PurchaseRate = x.PurchaseRate,
+                    ProfitPercentage = x.ProfitPercentage,
+                    Stock = x.Stock,
                     ProductImage = x.ProductImage,
                     IsActive = x.IsActive,
                     IsDeleted = x.IsDeleted
@@ -95,6 +99,10 @@ namespace CompanyPlatform.CRM.Services.Product
                 UnitOfMeasurementId = product.UnitOfMeasurementId,
                 StandardRate = product.StandardRate,
                 GSTRate = product.GSTRate,
+                HsnCode = product.HsnCode,
+                PurchaseRate = product.PurchaseRate,
+                ProfitPercentage = product.ProfitPercentage,
+                Stock = product.Stock,
                 ProductImage = product.ProductImage,
                 IsActive = product.IsActive,
                 IsDeleted = product.IsDeleted
@@ -118,6 +126,10 @@ namespace CompanyPlatform.CRM.Services.Product
                 UnitOfMeasurementId = dto.UnitOfMeasurementId,
                 StandardRate = dto.StandardRate,
                 GSTRate = dto.GSTRate,
+                HsnCode = dto.HsnCode,
+                PurchaseRate = dto.PurchaseRate,
+                ProfitPercentage = dto.ProfitPercentage,
+                Stock = dto.Stock,
                 ProductImage = dto.ProductImage ?? dto.ProductImagePath,
                 IsActive = true,
                 IsDeleted = false
@@ -127,6 +139,10 @@ namespace CompanyPlatform.CRM.Services.Product
 
             dto.ProductId = product.ProductId;
             dto.ItemCode = product.ItemCode;
+            dto.HsnCode = product.HsnCode;
+            dto.PurchaseRate = product.PurchaseRate;
+            dto.ProfitPercentage = product.ProfitPercentage;
+            dto.Stock = product.Stock;
             dto.ProductImage = product.ProductImage;
             dto.IsActive = product.IsActive;
             dto.IsDeleted = product.IsDeleted;
@@ -152,6 +168,10 @@ namespace CompanyPlatform.CRM.Services.Product
             product.UnitOfMeasurementId = dto.UnitOfMeasurementId;
             product.StandardRate = dto.StandardRate;
             product.GSTRate = dto.GSTRate;
+            product.HsnCode = dto.HsnCode;
+            product.PurchaseRate = dto.PurchaseRate;
+            product.ProfitPercentage = dto.ProfitPercentage;
+            product.Stock = dto.Stock;
             product.IsActive = dto.IsActive;
             product.ProductImage = dto.ProductImage ?? dto.ProductImagePath ?? product.ProductImage;
 

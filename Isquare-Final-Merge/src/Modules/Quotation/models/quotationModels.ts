@@ -61,6 +61,11 @@ export interface QuotationItem {
   productImage?: string | null;
   productImagePath?: string | null;
   hasCustomSpecification?: boolean;
+  hsnCode?: string | null;
+  purchaseRate?: number | null;
+  profitPercentage?: number | null;
+  profit?: number | null;
+  stock?: number | null;
 }
 
 export interface QuotationCharge {
@@ -272,6 +277,8 @@ export interface Product {
   brand?: string | null;
   specification?: string | null;
   unitOfMeasurementId?: number | null;
+  unitName?: string | null;
+  uom?: string | null;
   standardRate: number;
   gstRate: number;
   isActive: boolean;
@@ -281,4 +288,9 @@ export interface Product {
   imagePath?: string | null;
   productImage?: string | null;
   productImagePath?: string | null;
+  hsnCode?: string | null;
+  purchaseRate?: number | null;
+  profitPercentage?: number | null;
+  profit?: number | null;
+  stock?: number | null;
 }

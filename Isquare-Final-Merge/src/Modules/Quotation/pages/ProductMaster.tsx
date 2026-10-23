@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { Plus, Search, Edit, Edit3, Trash2, RefreshCw, Upload, X, Package, Check, Image as ImageIcon } from "lucide-react";
+import { Plus, Search, Edit, Trash2, RefreshCw, Upload, X, Package, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import {
   productService,
   getApiErrorMessage,
   resolveImageUrl,
   saveProductImageCache,
+  saveProductUom,
+  getProductUom,
+  resolveUomId,
 } from "../services/quotationService";
 import type { Product } from "../models/quotationModels";
 import { formatINR, STANDARD_UOMS } from "../utils/quotationCalculations";
@@ -56,13 +59,13 @@ export const ProductMaster: React.FC = () => {
   const [specification, setSpecification] = useState<string>("");
   const [standardRate, setStandardRate] = useState<number>(0);
   const [gstRate, setGstRate] = useState<number>(18);
-  const [unitOfMeasurementId, setUnitOfMeasurementId] = useState<number>(1);
+  const [defaultUom, setDefaultUom] = useState<string>("Nos");
+  const [hsnCode, setHsnCode] = useState<string>("");
+  const [purchaseRate, setPurchaseRate] = useState<number | string>("");
+  const [profitPercentage, setProfitPercentage] = useState<number | string>("");
+  const [stock, setStock] = useState<number | string>("");
   const modalSpecRef = useRef<HTMLTextAreaElement>(null);
 
-  // Inline Technical Specification Edit state
-  const [editingSpecProductId, setEditingSpecProductId] = useState<number | null>(null);
-  const [editingSpecValue, setEditingSpecValue] = useState<string>("");
-  const [isSavingSpec, setIsSavingSpec] = useState<boolean>(false);
 
   // Image state
   const [productImage, setProductImage] = useState<string>("");
@@ -103,11 +106,13 @@ export const ProductMaster: React.FC = () => {
       const code = (p.itemCode || "").toLowerCase();
       const b = (p.brand || "").toLowerCase();
       const spec = (p.specification || "").toLowerCase();
+      const hsn = (p.hsnCode || "").toLowerCase();
       return (
         name.includes(query) ||
         code.includes(query) ||
         b.includes(query) ||
-        spec.includes(query)
+        spec.includes(query) ||
+        hsn.includes(query)
       );
     });
   }, [products, searchText]);
@@ -120,7 +125,11 @@ export const ProductMaster: React.FC = () => {
     setSpecification("");
     setStandardRate(25000);
     setGstRate(18);
-    setUnitOfMeasurementId(1);
+    setDefaultUom("Nos");
+    setHsnCode("");
+    setPurchaseRate("");
+    setProfitPercentage("");
+    setStock("");
     setProductImage("");
     setImagePreview(null);
     setImagePreviewError(false);
@@ -146,7 +155,31 @@ export const ProductMaster: React.FC = () => {
         ? Number(prod.gstRate)
         : 18
     );
-    setUnitOfMeasurementId(prod.unitOfMeasurementId || 1);
+    const existingUom =
+      prod.unitName ||
+      (prod as any).uom ||
+      getProductUom(prod.productId, prod) ||
+      STANDARD_UOMS.find((u) => u.id === prod.unitOfMeasurementId)?.name ||
+      "Nos";
+    setDefaultUom(existingUom);
+    setHsnCode(prod.hsnCode || "");
+    setPurchaseRate(
+      prod.purchaseRate != null && !isNaN(Number(prod.purchaseRate))
+        ? Number(prod.purchaseRate)
+        : ""
+    );
+    setProfitPercentage(
+      prod.profitPercentage != null && !isNaN(Number(prod.profitPercentage))
+        ? Number(prod.profitPercentage)
+        : prod.profit != null && !isNaN(Number(prod.profit))
+        ? Number(prod.profit)
+        : ""
+    );
+    setStock(
+      prod.stock != null && !isNaN(Number(prod.stock))
+        ? Number(prod.stock)
+        : ""
+    );
     const existingImg =
       prod.productImage || prod.productImagePath || prod.imageUrl || "";
     setProductImage(existingImg);
@@ -214,80 +247,6 @@ export const ProductMaster: React.FC = () => {
     }
   };
 
-  const handleStartEditSpec = (prod: Product) => {
-    setEditingSpecProductId(prod.productId);
-    setEditingSpecValue(prod.specification || "");
-  };
-
-  const handleCancelEditSpec = () => {
-    setEditingSpecProductId(null);
-    setEditingSpecValue("");
-  };
-
-  const handleSaveInlineSpec = async (prod: Product) => {
-    setIsSavingSpec(true);
-    try {
-      const trimmedSpec = editingSpecValue.trim();
-      // Preserve all existing product properties while updating specification
-      await productService.update(prod.productId, {
-        productId: prod.productId,
-        productName: prod.productName,
-        itemCode: prod.itemCode,
-        brand: prod.brand,
-        specification: trimmedSpec,
-        standardRate: prod.standardRate,
-        gstRate: prod.gstRate,
-        unitOfMeasurementId: prod.unitOfMeasurementId,
-        productImage: prod.productImage || prod.productImagePath,
-        productImagePath: prod.productImagePath || prod.productImage,
-        isActive: prod.isActive ?? true,
-        isDeleted: prod.isDeleted ?? false,
-      });
-
-      // 1. Immediately update displayed specification in the listing
-      setProducts((prev) =>
-        prev.map((item) =>
-          item.productId === prod.productId
-            ? { ...item, specification: trimmedSpec }
-            : item
-        )
-      );
-
-      // Broadcast product update event so Create Quotation synchronizes immediately
-      window.dispatchEvent(
-        new CustomEvent("isquare_product_updated", {
-          detail: {
-            productId: prod.productId,
-            itemCode: prod.itemCode,
-            productName: prod.productName,
-            specification: trimmedSpec,
-          },
-        })
-      );
-
-      toast.success(
-        trimmedSpec
-          ? `Specification updated for '${prod.productName}'`
-          : `Specification cleared for '${prod.productName}'`
-      );
-
-      // 2. Exit inline editing
-      setEditingSpecProductId(null);
-      setEditingSpecValue("");
-
-      // 3. Re-sync with backend in background
-      fetchProducts();
-    } catch (err: any) {
-      console.error("Failed to update specification:", err);
-      const msg =
-        getApiErrorMessage(err?.response?.data) ||
-        err?.message ||
-        "Failed to update specification";
-      toast.error(msg);
-    } finally {
-      setIsSavingSpec(false);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -298,14 +257,32 @@ export const ProductMaster: React.FC = () => {
 
     setIsSubmitting(true);
     try {
+      const enteredUom = defaultUom.trim() || "Nos";
+      const uomId = resolveUomId(enteredUom);
+
       const payload: Partial<Product> = {
         itemCode: itemCode.trim() || undefined,
         productName: productName.trim(),
         brand: brand.trim() || undefined,
         specification: specification.trim() || undefined,
+        hsnCode: hsnCode.trim() || null,
+        purchaseRate:
+          purchaseRate !== "" && !isNaN(Number(purchaseRate))
+            ? Number(purchaseRate)
+            : null,
+        profitPercentage:
+          profitPercentage !== "" && !isNaN(Number(profitPercentage))
+            ? Number(profitPercentage)
+            : null,
+        stock:
+          stock !== "" && !isNaN(Number(stock))
+            ? Math.round(Number(stock))
+            : null,
         standardRate: Number(standardRate) || 0,
         gstRate: Number(gstRate) || 0,
-        unitOfMeasurementId: Number(unitOfMeasurementId) || 1,
+        unitOfMeasurementId: uomId,
+        unitName: enteredUom,
+        uom: enteredUom,
         isActive: true,
         isDeleted: false,
       };
@@ -324,6 +301,10 @@ export const ProductMaster: React.FC = () => {
           productImagePath: imgToSend,
         });
 
+        saveProductUom(editingProduct.productId, enteredUom);
+        if (payload.itemCode) saveProductUom(payload.itemCode, enteredUom);
+        saveProductUom(payload.productName || editingProduct.productName, enteredUom);
+
         window.dispatchEvent(
           new CustomEvent("isquare_product_updated", {
             detail: {
@@ -331,6 +312,9 @@ export const ProductMaster: React.FC = () => {
               itemCode: payload.itemCode,
               productName: payload.productName,
               specification: payload.specification || "",
+              unitName: enteredUom,
+              uom: enteredUom,
+              unitOfMeasurementId: uomId,
             },
           })
         );
@@ -338,11 +322,17 @@ export const ProductMaster: React.FC = () => {
         toast.success(`Product '${productName}' updated`);
       } else {
         const imgToSend = productImage.trim() || undefined;
-        await productService.create({
+        const created = await productService.create({
           ...payload,
           productImage: imgToSend,
           productImagePath: imgToSend,
         });
+        if (created?.productId) {
+          saveProductUom(created.productId, enteredUom);
+        }
+        if (payload.itemCode) saveProductUom(payload.itemCode, enteredUom);
+        if (payload.productName) saveProductUom(payload.productName, enteredUom);
+
         toast.success(`Product '${productName}' created`);
       }
 
@@ -377,30 +367,49 @@ export const ProductMaster: React.FC = () => {
   };
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-[#00234a] tracking-tight">
-            Product Master
-          </h1>
-          <p className="text-xs text-gray-500 mt-1">
-            Enterprise product catalog with standardized rate lists, GST taxation, and brands
-          </p>
+    <div className="p-4 md:p-6 bg-[#F5F7F5] min-h-full space-y-6">
+      {/* Top Header Card matching Customer Master */}
+      <div className="bg-white rounded-xl p-4 md:p-5 border border-gray-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-orange-50 border border-[#FF7900]/30 text-[#FF7900] rounded-xl flex items-center justify-center shrink-0 shadow-xs">
+            <Package size={24} />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-bold text-[#00234a] tracking-tight">
+                Product Master
+              </h1>
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-orange-50 text-[#FF7900] border border-[#FF7900]/30">
+                Unified Master
+              </span>
+            </div>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Enterprise product catalog with standardized rate lists, GST taxation, and brands.
+            </p>
+          </div>
         </div>
+      </div>
+
+      {/* Section Title & Actions */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <h2 className="border-b-2 border-[#FF7900] pb-2 text-2xl sm:text-3xl font-bold tracking-tight text-[#00234a]">
+          Products
+        </h2>
 
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={fetchProducts}
-            className="p-2 text-gray-600 bg-white hover:bg-gray-50 border border-gray-300 rounded-xl transition"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#00234a] shadow-xs transition hover:bg-slate-50 cursor-pointer"
             title="Refresh"
           >
-            <RefreshCw size={15} />
+            <RefreshCw size={14} className="text-[#FF7900]" />
+            <span>Refresh</span>
           </button>
           <button
             type="button"
             onClick={handleOpenAdd}
-            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-[#00234a] hover:bg-[#003366] rounded-xl shadow-md transition"
+            className="rounded-xl bg-[#00234a] hover:bg-[#FF7900] px-5 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-[0_10px_18px_rgba(0,35,74,0.18)] transition cursor-pointer flex items-center gap-2"
           >
             <Plus size={15} />
             <span>Add Product</span>
@@ -408,8 +417,8 @@ export const ProductMaster: React.FC = () => {
         </div>
       </div>
 
-      {/* Filter and Search */}
-      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between gap-3">
+      {/* Filter and Search Bar */}
+      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-xs flex items-center justify-between gap-3">
         <div className="relative flex-1 max-w-md">
           <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
             <Search size={15} />
@@ -419,121 +428,69 @@ export const ProductMaster: React.FC = () => {
             placeholder="Search products by code, name, or brand..."
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            className="w-full text-xs pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 focus:bg-white focus:outline-none"
+            className="w-full text-xs pl-9 pr-3 py-2 bg-gray-50/70 border border-gray-200 rounded-lg text-gray-800 focus:bg-white focus:border-[#FF7900] focus:ring-2 focus:ring-[#FF7900]/20 focus:outline-none transition shadow-2xs"
           />
         </div>
 
-        <div className="text-xs text-gray-500">
-          Showing <span className="font-bold text-gray-800">{filteredProducts.length}</span> products
+        <div className="text-xs text-gray-500 font-medium">
+          Showing <span className="font-bold text-[#00234a]">{filteredProducts.length}</span> products
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+      {/* Table Container */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-[#154068] text-white font-bold uppercase text-[11px] tracking-wider">
-                <th className="p-3.5 w-14 text-center">Image</th>
-                <th className="p-3.5 w-24">Item Code</th>
-                <th className="p-3.5">Product Name</th>
-                <th className="p-3.5">Brand / Make</th>
-                <th className="p-3.5">Specification</th>
-                <th className="p-3.5 text-right">Standard Rate (₹)</th>
-                <th className="p-3.5 text-center">GST Rate %</th>
+              <tr className="bg-[#FF7900] text-white font-bold uppercase text-[12px] tracking-wider">
+                <th className="p-3.5 w-14 text-center border-r border-[#e06800]">Image</th>
+                <th className="p-3.5 w-24 border-r border-[#e06800]">Item Code</th>
+                <th className="p-3.5 border-r border-[#e06800]">Product Name</th>
+                <th className="p-3.5 border-r border-[#e06800]">Brand / Make</th>
+                <th className="p-3.5 border-r border-[#e06800] text-center w-24">HSN Code</th>
+                <th className="p-3.5 border-r border-[#e06800]">Specification</th>
+                <th className="p-3.5 text-right border-r border-[#e06800] w-32">Standard Rate (₹)</th>
+                <th className="p-3.5 text-center border-r border-[#e06800] w-24">GST Rate %</th>
                 <th className="p-3.5 text-right w-24">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {isLoading ? (
                 <tr>
-                  <td colSpan={8} className="p-10 text-center text-gray-400 font-medium">
+                  <td colSpan={9} className="p-10 text-center text-gray-400 font-medium">
                     Loading products from API...
                   </td>
                 </tr>
               ) : filteredProducts.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-10 text-center text-gray-400 font-medium">
+                  <td colSpan={9} className="p-10 text-center text-gray-400 font-medium">
                     No products found. Click "Add Product" to create items.
                   </td>
                 </tr>
               ) : (
                 filteredProducts.map((p) => (
-                  <tr key={p.productId} className="hover:bg-slate-50 transition">
+                  <tr key={p.productId} className="hover:bg-[#f0f7ff] transition duration-150 min-h-[52px]">
                     <td className="p-3.5 text-center w-14">
                       <ProductThumbnail
                         src={p.productImage || p.productImagePath || p.imageUrl}
                         alt={p.productName}
                       />
                     </td>
-                    <td className="p-3.5 font-bold font-mono text-blue-700">
+                    <td className="p-3.5 font-bold font-mono text-[#00234a]">
                       {p.itemCode || `PRD-${p.productId}`}
                     </td>
                     <td className="p-3.5 font-bold text-gray-900">{p.productName}</td>
                     <td className="p-3.5 text-gray-600 font-medium">{p.brand || "ISQUARE"}</td>
+                    <td className="p-3.5 font-mono text-center text-gray-700 font-semibold">
+                      {p.hsnCode || "—"}
+                    </td>
                     <td className="p-3.5 text-gray-500 max-w-xs align-top">
-                      {editingSpecProductId === p.productId ? (
-                        <div className="space-y-1.5 min-w-[240px] py-0.5">
-                          <textarea
-                            autoFocus
-                            rows={2}
-                            value={editingSpecValue}
-                            onChange={(e) => setEditingSpecValue(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Escape") {
-                                e.preventDefault();
-                                handleCancelEditSpec();
-                              } else if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-                                e.preventDefault();
-                                handleSaveInlineSpec(p);
-                              }
-                            }}
-                            placeholder="Enter specification (or leave blank)..."
-                            className="w-full text-xs p-2 bg-white border border-blue-500 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 shadow-xs resize-y"
-                          />
-                          <div className="flex items-center justify-end gap-1.5">
-                            <button
-                              type="button"
-                              onClick={handleCancelEditSpec}
-                              disabled={isSavingSpec}
-                              className="px-2.5 py-1 text-[11px] font-semibold text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 rounded-md transition cursor-pointer"
-                            >
-                              Cancel
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleSaveInlineSpec(p)}
-                              disabled={isSavingSpec}
-                              className="inline-flex items-center gap-1 px-3 py-1 text-[11px] font-bold text-white bg-[#00234a] hover:bg-[#003366] rounded-md transition disabled:opacity-50 cursor-pointer shadow-xs"
-                            >
-                              {isSavingSpec ? (
-                                <span>Saving...</span>
-                              ) : (
-                                <>
-                                  <Check size={12} />
-                                  <span>Save</span>
-                                </>
-                              )}
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-between gap-1.5 group">
-                          <span
-                            className="truncate flex-1"
-                            title={p.specification || "No specification"}
-                          >
-                            {p.specification || "—"}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => handleStartEditSpec(p)}
-                            className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition shrink-0 cursor-pointer"
-                            title="Edit Technical Specification"
-                          >
-                            <Edit3 size={13} />
-                          </button>
-                        </div>
-                      )}
+                      <div
+                        className="truncate"
+                        title={p.specification || "No specification"}
+                      >
+                        {p.specification || "—"}
+                      </div>
                     </td>
                     <td className="p-3.5 text-right font-bold text-gray-900 font-mono">
                       {formatINR(p.standardRate ?? 0)}
@@ -544,7 +501,7 @@ export const ProductMaster: React.FC = () => {
                     <td className="p-3.5 text-right space-x-1.5 whitespace-nowrap">
                       <button
                         onClick={() => handleOpenEdit(p)}
-                        className="p-1.5 bg-amber-50 hover:bg-amber-600 hover:text-white text-amber-600 rounded-lg transition"
+                        className="p-1.5 bg-amber-50 hover:bg-amber-600 hover:text-white text-amber-600 rounded-lg transition cursor-pointer shadow-2xs"
                         title="Edit Product"
                       >
                         <Edit size={14} />
@@ -554,7 +511,7 @@ export const ProductMaster: React.FC = () => {
                           setProductToDelete(p);
                           setDeleteModalOpen(true);
                         }}
-                        className="p-1.5 bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-600 rounded-lg transition"
+                        className="p-1.5 bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-600 rounded-lg transition cursor-pointer shadow-2xs"
                         title="Delete Product"
                       >
                         <Trash2 size={14} />
@@ -568,23 +525,24 @@ export const ProductMaster: React.FC = () => {
         </div>
       </div>
 
-      {/* Add / Edit Modal */}
+      {/* Add / Edit Modal matching Customer Master style */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl shadow-xl border border-gray-200 p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-gray-100 pb-2">
-              <h3 className="text-base font-bold text-gray-900">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-xl border border-gray-200 overflow-hidden space-y-0">
+            {/* Modal Header */}
+            <div className="bg-[#FF7900] px-6 py-4 flex items-center justify-between text-white sticky top-0 z-10">
+              <h3 className="text-base font-bold text-white">
                 {editingProduct ? "Edit Product Master" : "Add New Product"}
               </h3>
-              <button onClick={() => setModalOpen(false)} className="text-gray-400 hover:text-gray-600">
-                ✕
+              <button onClick={() => setModalOpen(false)} className="text-white/80 hover:text-white transition cursor-pointer">
+                <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+                  <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
                     Item Code
                   </label>
                   <input
@@ -592,12 +550,12 @@ export const ProductMaster: React.FC = () => {
                     value={itemCode}
                     onChange={(e) => setItemCode(e.target.value)}
                     placeholder="e.g. PRD-01"
-                    className="w-full text-xs p-2 bg-gray-50 border border-gray-300 rounded-lg focus:bg-white focus:outline-none font-mono"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs font-mono"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+                  <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
                     Brand / Manufacturer
                   </label>
                   <input
@@ -605,13 +563,13 @@ export const ProductMaster: React.FC = () => {
                     value={brand}
                     onChange={(e) => setBrand(e.target.value)}
                     placeholder="e.g. Siemens"
-                    className="w-full text-xs p-2 bg-gray-50 border border-gray-300 rounded-lg focus:bg-white focus:outline-none"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+                <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
                   Product Name <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -620,41 +578,30 @@ export const ProductMaster: React.FC = () => {
                   value={productName}
                   onChange={(e) => setProductName(e.target.value)}
                   placeholder="e.g. CNC Spindle Motor 5kW"
-                  className="w-full text-xs p-2 bg-gray-50 border border-gray-300 rounded-lg focus:bg-white focus:outline-none font-semibold"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs font-semibold"
                 />
               </div>
 
               <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">
-                    Technical Specification
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => modalSpecRef.current?.focus()}
-                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-800 transition cursor-pointer"
-                    title="Click to edit technical specification"
-                  >
-                    <Edit3 size={12} />
-                    <span>Edit</span>
-                  </button>
-                </div>
+                <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
+                  Technical Specification
+                </label>
                 <textarea
                   ref={modalSpecRef}
                   rows={3}
                   value={specification}
                   onChange={(e) => setSpecification(e.target.value)}
                   placeholder="Detailed parameters, voltage, RPM, mounting details"
-                  className="w-full text-xs p-2 bg-gray-50 border border-gray-300 rounded-lg focus:bg-white focus:outline-none"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
                 />
               </div>
 
               {/* Product Image Field */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+                <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
                   Product Image
                 </label>
-                <div className="flex items-start gap-3 p-3 bg-gray-50 border border-gray-200 rounded-xl">
+                <div className="flex items-start gap-3 p-3 bg-gray-50/80 border border-gray-200 rounded-xl">
                   {/* Image Preview Box */}
                   <div className="relative w-16 h-16 rounded-lg bg-white border border-gray-200 flex items-center justify-center overflow-hidden shrink-0 shadow-2xs">
                     {(() => {
@@ -688,9 +635,9 @@ export const ProductMaster: React.FC = () => {
                       />
                       <label
                         htmlFor="product-image-file-input"
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer shadow-2xs transition"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#00234a] bg-white border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer shadow-2xs transition"
                       >
-                        <Upload size={13} />
+                        <Upload size={13} className="text-[#FF7900]" />
                         <span>{imagePreview ? "Replace Image" : "Choose Image"}</span>
                       </label>
 
@@ -698,7 +645,7 @@ export const ProductMaster: React.FC = () => {
                         <button
                           type="button"
                           onClick={handleRemoveImage}
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition"
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition cursor-pointer"
                           title="Remove Image"
                         >
                           <X size={13} />
@@ -712,7 +659,7 @@ export const ProductMaster: React.FC = () => {
                       value={productImage}
                       onChange={(e) => handleImageUrlChange(e.target.value)}
                       placeholder="Or enter image URL / path (e.g. /images/...)"
-                      className="w-full text-xs p-1.5 bg-white border border-gray-200 rounded-md text-gray-700 focus:outline-none focus:border-blue-500 font-mono"
+                      className="w-full rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-xs text-gray-700 font-mono transition focus:border-[#FF7900] focus:outline-none focus:ring-1 focus:ring-[#FF7900]"
                     />
 
                     <p className="text-[10px] text-gray-500">
@@ -722,9 +669,39 @@ export const ProductMaster: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              {/* Row: HSN Code & Default UOM (2 Columns) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+                  <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
+                    HSN Code
+                  </label>
+                  <input
+                    type="text"
+                    value={hsnCode}
+                    onChange={(e) => setHsnCode(e.target.value)}
+                    placeholder="e.g. 8466"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
+                    Default UOM
+                  </label>
+                  <input
+                    type="text"
+                    value={defaultUom}
+                    onChange={(e) => setDefaultUom(e.target.value)}
+                    placeholder="e.g. Nos, Pcs, Kg, Boxes"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs font-medium"
+                  />
+                </div>
+              </div>
+
+              {/* Row: Standard Rate & GST Rate (2 Columns) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
                     Standard Rate (₹)
                   </label>
                   <input
@@ -732,13 +709,21 @@ export const ProductMaster: React.FC = () => {
                     min="0"
                     step="any"
                     value={standardRate}
-                    onChange={(e) => setStandardRate(parseFloat(e.target.value) || 0)}
-                    className="w-full text-xs p-2 bg-gray-50 border border-gray-300 rounded-lg font-semibold text-right focus:bg-white focus:outline-none"
+                    onChange={(e) => {
+                      const newStd = parseFloat(e.target.value) || 0;
+                      setStandardRate(newStd);
+                      const pRate = parseFloat(String(purchaseRate)) || 0;
+                      if (pRate > 0 && newStd > 0) {
+                        setProfitPercentage(parseFloat((((newStd - pRate) / pRate) * 100).toFixed(1)));
+                      }
+                    }}
+                    placeholder="e.g. 25000"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-800 text-right font-semibold transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs font-mono"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+                  <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
                     GST Rate (%)
                   </label>
                   <input
@@ -747,40 +732,81 @@ export const ProductMaster: React.FC = () => {
                     max="100"
                     value={gstRate}
                     onChange={(e) => setGstRate(parseFloat(e.target.value) || 0)}
-                    className="w-full text-xs p-2 bg-gray-50 border border-gray-300 rounded-lg text-center focus:bg-white focus:outline-none"
+                    placeholder="e.g. 18"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-800 text-center font-semibold transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
                   />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
-                    Default UOM
-                  </label>
-                  <select
-                    value={unitOfMeasurementId}
-                    onChange={(e) => setUnitOfMeasurementId(parseInt(e.target.value, 10))}
-                    className="w-full text-xs p-2 bg-gray-50 border border-gray-300 rounded-lg focus:bg-white focus:outline-none"
-                  >
-                    {STANDARD_UOMS.map((u) => (
-                      <option key={u.id} value={u.id}>
-                        {u.name}
-                      </option>
-                    ))}
-                  </select>
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-100">
+              {/* Row: Edit-only fields (Purchase Rate, Profit %, Stock Quantity) */}
+              {editingProduct && (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
+                      Purchase Rate (₹)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="any"
+                      value={purchaseRate}
+                      onChange={(e) => {
+                        const newP = e.target.value;
+                        setPurchaseRate(newP);
+                        const pRate = parseFloat(newP) || 0;
+                        const sRate = parseFloat(String(standardRate)) || 0;
+                        if (pRate > 0 && sRate > 0) {
+                          setProfitPercentage(parseFloat((((sRate - pRate) / pRate) * 100).toFixed(1)));
+                        }
+                      }}
+                      placeholder="e.g. 175"
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-800 text-right font-semibold transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
+                      Profit %
+                    </label>
+                    <input
+                      type="number"
+                      step="any"
+                      value={profitPercentage}
+                      onChange={(e) => setProfitPercentage(e.target.value)}
+                      placeholder="e.g. 1.7"
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-800 text-center font-semibold transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
+                      Stock Quantity
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={stock}
+                      onChange={(e) => setStock(e.target.value)}
+                      placeholder="e.g. 50"
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-800 text-center font-semibold transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs font-mono"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-gray-100">
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="px-4 py-2 text-xs font-semibold text-gray-600 bg-gray-100 rounded-lg"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-[#00234a] shadow-xs transition hover:bg-slate-50 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 text-xs font-bold text-white bg-[#00234a] hover:bg-[#003366] rounded-lg disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-[#00234a] hover:bg-[#FF7900] px-5 py-2.5 text-xs font-semibold text-white shadow-xs transition cursor-pointer disabled:opacity-50"
                 >
                   {isSubmitting ? "Saving..." : editingProduct ? "Update Product" : "Save Product"}
                 </button>
@@ -809,4 +835,3 @@ export const ProductMaster: React.FC = () => {
 };
 
 export default ProductMaster;
-
