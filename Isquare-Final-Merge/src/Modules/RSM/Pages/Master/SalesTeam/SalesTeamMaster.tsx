@@ -1,13 +1,14 @@
 import React, { useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { UserCheck, UserCog, Users } from "lucide-react";
+import { ShieldCheck, UserCheck, UserCog, Users } from "lucide-react";
 import BdeUsers from "../BdeUsers/Pages/BdeUsers";
 import SalesUserManager from "../SalesUserManager/Pages/SalesUserManager";
 
 import Director from "../Director/Director";
 import SalesCoordinator from "../SalesCoordinator/SalesCoordinator";
+import RoleMaster from "../Role/RoleMaster";
 
-export type SalesTeamTab = "bde" | "managers" | "directors" | "coordinators";
+export type SalesTeamTab = "bde" | "managers" | "directors" | "coordinators" | "roles";
 
 interface SalesTeamMasterProps {
   initialTab?: SalesTeamTab;
@@ -45,6 +46,12 @@ const TABS: TabConfig[] = [
     shortDesc: "Sales operations & client coordinators",
     icon: <UserCheck className="w-4 h-4" />,
   },
+  {
+    id: "roles",
+    label: "Roles",
+    shortDesc: "Role definitions and hierarchy positions",
+    icon: <ShieldCheck className="w-4 h-4" />,
+  },
 ];
 
 export const SalesTeamMaster: React.FC<SalesTeamMasterProps> = ({
@@ -57,6 +64,7 @@ export const SalesTeamMaster: React.FC<SalesTeamMasterProps> = ({
     if (rawTab === "managers") return "managers";
     if (rawTab === "directors") return "directors";
     if (rawTab === "coordinators") return "coordinators";
+    if (rawTab === "roles") return "roles";
     return "bde";
   }, [rawTab]);
 
@@ -89,7 +97,7 @@ export const SalesTeamMaster: React.FC<SalesTeamMasterProps> = ({
                 </span>
               </div>
               <p className="text-gray-500 mt-1 text-xs md:text-sm">
-                Unified administration for Business Development Executives (BDEs), Sales Managers, and Directors.
+                Unified administration for Business Development Executives (BDEs), Sales Managers, Directors, Coordinators, and Roles.
               </p>
             </div>
           </div>
@@ -126,6 +134,7 @@ export const SalesTeamMaster: React.FC<SalesTeamMasterProps> = ({
         {activeTab === "managers" && <SalesUserManager isTab={true} />}
         {activeTab === "directors" && <Director isTab={true} />}
         {activeTab === "coordinators" && <SalesCoordinator isTab={true} />}
+        {activeTab === "roles" && <RoleMaster isTab={true} />}
       </div>
     </div>
   );

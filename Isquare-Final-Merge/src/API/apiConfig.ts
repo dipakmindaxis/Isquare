@@ -13,6 +13,8 @@ export interface ApiEndpoints {
   ResetPassword: string;
   ChangePassword: string;
   Employees: string;
+  CRMEmployees: string;
+  CRMEmployee: string;
   EmployeesByRoleAndDepartment: string;
   WorkLocations: string;
   Departments: string;
@@ -62,6 +64,8 @@ export const API_ENDPOINTS: ApiEndpoints = {
   ResetPassword: `${BASE_URL}/auth/reset-password`,
   ChangePassword: `${BASE_URL}/auth/change-password`,
   Employees: `${BASE_URL}/payroll-employees`,
+  CRMEmployees: `${BASE_URL}/employees`,
+  CRMEmployee: `${BASE_URL}/employee`,
   EmployeesByRoleAndDepartment: `${BASE_URL}/payroll-employees/by-role-and-department`,
   WorkLocations: `${BASE_URL}/worklocations`,
   Departments: `${BASE_URL}/departments`,
@@ -158,5 +162,7 @@ export const API_ENDPOINTS: ApiEndpoints = {
   UnitOfMeasures: `${BASE_URL}/UnitOfMeasure`,
   LostReasons: `${BASE_URL}/LostReason`,
 
+  Levels: `${BASE_URL}/levels`,
+  LevelMaster: `${BASE_URL}/level-master`,
 };
 

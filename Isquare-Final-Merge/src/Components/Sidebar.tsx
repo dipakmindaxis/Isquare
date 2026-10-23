@@ -27,6 +27,7 @@ import {
   Sliders,
   Building2,
   Package,
+  GitBranch,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import ISquareLogo, { ISquareIcon } from "./Common/ISquareLogo";
@@ -194,6 +195,16 @@ const rsmMenuConfig: MenuItem[] = [
         icon: <UserCheck />,
         label: "SALES COORDINATOR",
         to: "/rsm/sales-coordinator",
+      },
+      {
+        icon: <ShieldCheck />,
+        label: "ROLE MASTER",
+        to: "/rsm/role",
+      },
+      {
+        icon: <GitBranch />,
+        label: "HIERARCHY MANAGEMENT",
+        to: "/rsm/hierarchy-management",
       },
       {
         icon: <Clock />,

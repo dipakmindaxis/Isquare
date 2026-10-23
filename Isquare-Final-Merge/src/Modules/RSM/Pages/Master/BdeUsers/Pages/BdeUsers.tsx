@@ -37,23 +37,21 @@ const BdeUsers: React.FC<BdeUsersProps> = ({ isTab = false }) => {
       const directorMap = new Map<number, string>(
         directorsData.map((d) => [d.id, d.name])
       );
-      const list = Array.isArray(responseData)
-        ? responseData
-        : (responseData as any)?.data || [];
-      const normalized: BdeUserType[] = list.map((item: any) => {
+      const list: BdeUserType[] = Array.isArray(responseData) ? responseData : [];
+      const normalized: BdeUserType[] = list.map((item: BdeUserType) => {
         const dirId = item.directorEmployeeId ?? null;
         const dirName =
           item.directorName ||
           (dirId ? directorMap.get(dirId) : null) ||
           null;
         return {
-          id: item.id ?? item.ID ?? 0,
-          value: item.value ?? item.Value ?? "",
-          code: item.code ?? item.Code ?? "",
+          id: item.id ?? 0,
+          value: item.value ?? "",
+          code: item.code ?? "",
           directorEmployeeId: dirId,
           directorName: dirName,
-          isActive: item.isActive ?? item.IsActive ?? true,
-          isDeleted: item.isDeleted ?? item.IsDeleted ?? false,
+          isActive: item.isActive !== false,
+          isDeleted: item.isDeleted || false,
         };
       });
       setData(normalized);
