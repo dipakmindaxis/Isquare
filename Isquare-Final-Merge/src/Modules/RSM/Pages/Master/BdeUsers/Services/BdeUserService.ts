@@ -14,7 +14,7 @@ export interface DirectorEmployeeOption {
   code?: string;
 }
 
-interface RawEmployeeRecord {
+export interface RawEmployeeRecord {
   id?: number;
   ID?: number;
   employeeId?: number;
@@ -30,60 +30,178 @@ interface RawEmployeeRecord {
   employeeCode?: string;
   EmployeeCode?: string;
   code?: string;
+  designationName?: string;
+  DesignationName?: string;
+  designation?: string;
+  role?: string;
+  Role?: string;
+  roleName?: string;
+  levelId?: number;
+  levelID?: number;
+  LevelId?: number;
+  LevelID?: number;
+  levelName?: string;
+  LevelName?: string;
   isActive?: boolean;
   IsActive?: boolean;
   isDeleted?: boolean;
   IsDeleted?: boolean;
 }
 
+interface RawEmployeeApiResponse {
+  data?: RawEmployeeRecord[];
+  result?: RawEmployeeRecord[];
+  items?: RawEmployeeRecord[];
+}
+
+type EmployeeApiResponseType = RawEmployeeRecord[] | RawEmployeeApiResponse | null;
+
+const ensureEmployeeArray = (data: EmployeeApiResponseType): RawEmployeeRecord[] => {
+  if (Array.isArray(data)) return data;
+  if (data !== null && typeof data === "object") {
+    if (Array.isArray(data.data)) return data.data;
+    if (Array.isArray(data.result)) return data.result;
+    if (Array.isArray(data.items)) return data.items;
+  }
+  return [];
+};
+
+const isDirectorRecord = (emp: RawEmployeeRecord): boolean => {
+  if (emp.isDeleted === true || emp.IsDeleted === true) return false;
+  if (emp.isActive === false || emp.IsActive === false) return false;
+
+  const levelId: number = Number(
+    emp.levelID ?? emp.levelId ?? emp.LevelID ?? emp.LevelId ?? 0
+  );
+  if (levelId === 1) return true;
+
+  const levelName: string = (emp.levelName ?? emp.LevelName ?? "").toLowerCase();
+  if (levelName.includes("director")) return true;
+
+  const designation: string = (
+    emp.designationName ??
+    emp.DesignationName ??
+    emp.designation ??
+    ""
+  ).toLowerCase();
+  if (designation.includes("director")) return true;
+
+  const role: string = (emp.role ?? emp.Role ?? emp.roleName ?? "").toLowerCase();
+  if (role.includes("director")) return true;
+
+  return false;
+};
+
+const normalizeDirectorRecord = (emp: RawEmployeeRecord): DirectorEmployeeOption => {
+  const id: number = Number(
+    emp.id ?? emp.ID ?? emp.employeeId ?? emp.EmployeeId ?? 0
+  );
+  const firstName: string = (emp.firstName ?? emp.FirstName ?? "").trim();
+  const middleName: string = (emp.middleName ?? emp.MiddleName ?? "").trim();
+  const lastName: string = (emp.lastName ?? emp.LastName ?? "").trim();
+
+  const parts: string[] = [firstName, middleName, lastName].filter(
+    (p: string) => p.length > 0
+  );
+  const fromParts: string = parts.join(" ").trim();
+  const rawName: string = (emp.fullName ?? emp.FullName ?? "").trim();
+  const cleanedFullName: string = rawName.replace(/\s*\([^)]*\)\s*$/, "").trim();
+
+  const name: string =
+    fromParts.length > 0
+      ? fromParts
+      : cleanedFullName.length > 0
+      ? cleanedFullName
+      : `Director #${id}`;
+
+  const code: string = (
+    emp.employeeCode ??
+    emp.EmployeeCode ??
+    emp.code ??
+    ""
+  ).trim();
+
+  return { id, name, code };
+};
+
 /**
- * Fetch employees with Director role / designation dynamically from backend
- * Primary endpoint: GET /api/payroll-employees/by-role/Director
- * Fallback: GET /api/payroll-employees/selection-list
+ * Fetch employees with Director role / LevelId = 1 from the Employee table.
+ * Strictly typed with no any or unknown types.
  */
 export const getDirectorEmployees = async (): Promise<DirectorEmployeeOption[]> => {
+  // 1st priority: Employee Selection List (/api/payroll-employees/selection-list) - LevelID = 1
   try {
-    const url = `${API_ENDPOINTS.Employees}/by-role/Director`;
-    const response = await apiClient.get<RawEmployeeRecord[] | { data?: RawEmployeeRecord[] }>(url);
-    const raw = Array.isArray(response.data)
-      ? response.data
-      : response.data?.data ?? [];
-    if (Array.isArray(raw) && raw.length > 0) {
-      return raw
-        .map((emp) => {
-          const id = Number(emp.id ?? emp.ID ?? emp.employeeId ?? emp.EmployeeId ?? 0);
-          const rawName = emp.fullName ?? emp.FullName;
-          const nameParts = [emp.firstName ?? emp.FirstName, emp.middleName ?? emp.MiddleName, emp.lastName ?? emp.LastName].filter(Boolean);
-          const name = rawName || nameParts.join(" ").trim() || `Director #${id}`;
-          const code = emp.employeeCode ?? emp.EmployeeCode ?? emp.code ?? "";
-          return { id, name, code };
-        })
-        .filter((d) => d.id > 0);
+    const selectionListUrl: string =
+      API_ENDPOINTS.EmployeeSelectionList ||
+      `${API_ENDPOINTS.BaseUrl}/payroll-employees/selection-list`;
+    const response = await apiClient.get<EmployeeApiResponseType>(selectionListUrl);
+    const list: RawEmployeeRecord[] = ensureEmployeeArray(response.data);
+    if (list.length > 0) {
+      const directors: DirectorEmployeeOption[] = list
+        .filter(isDirectorRecord)
+        .map(normalizeDirectorRecord)
+        .filter((d: DirectorEmployeeOption) => d.id > 0);
+
+      if (directors.length > 0) return directors;
     }
-  } catch (error) {
-    console.warn("Could not fetch /api/payroll-employees/by-role/Director, trying fallback:", error);
+  } catch {
+    // Continue to next employee endpoint
   }
 
-  // Fallback to employee selection list
+  // 2nd priority: Payroll Employees endpoint (/api/payroll-employees)
   try {
-    const response = await apiClient.get<RawEmployeeRecord[] | { data?: RawEmployeeRecord[] }>(API_ENDPOINTS.EmployeeSelectionList);
-    const raw = Array.isArray(response.data)
-      ? response.data
-      : response.data?.data ?? [];
-    if (Array.isArray(raw) && raw.length > 0) {
-      return raw
-        .map((emp) => {
-          const id = Number(emp.id ?? emp.ID ?? emp.employeeId ?? emp.EmployeeId ?? 0);
-          const rawName = emp.fullName ?? emp.FullName;
-          const nameParts = [emp.firstName ?? emp.FirstName, emp.middleName ?? emp.MiddleName, emp.lastName ?? emp.LastName].filter(Boolean);
-          const name = rawName || nameParts.join(" ").trim() || `Employee #${id}`;
-          const code = emp.employeeCode ?? emp.EmployeeCode ?? emp.code ?? "";
-          return { id, name, code };
-        })
-        .filter((d) => d.id > 0);
+    const payrollUrl: string =
+      API_ENDPOINTS.Employees || `${API_ENDPOINTS.BaseUrl}/payroll-employees`;
+    const response = await apiClient.get<EmployeeApiResponseType>(payrollUrl);
+    const list: RawEmployeeRecord[] = ensureEmployeeArray(response.data);
+    if (list.length > 0) {
+      const directors: DirectorEmployeeOption[] = list
+        .filter(isDirectorRecord)
+        .map(normalizeDirectorRecord)
+        .filter((d: DirectorEmployeeOption) => d.id > 0);
+
+      if (directors.length > 0) return directors;
     }
-  } catch (err) {
-    console.error("Failed to load director employees:", err);
+  } catch {
+    // Continue to next employee endpoint
+  }
+
+  // 3rd priority: CRM Employees active endpoint (/api/employees/active)
+  try {
+    const activeUrl: string = `${
+      API_ENDPOINTS.CRMEmployees || `${API_ENDPOINTS.BaseUrl}/employees`
+    }/active`;
+    const response = await apiClient.get<EmployeeApiResponseType>(activeUrl);
+    const list: RawEmployeeRecord[] = ensureEmployeeArray(response.data);
+    if (list.length > 0) {
+      const directors: DirectorEmployeeOption[] = list
+        .filter(isDirectorRecord)
+        .map(normalizeDirectorRecord)
+        .filter((d: DirectorEmployeeOption) => d.id > 0);
+
+      if (directors.length > 0) return directors;
+    }
+  } catch {
+    // Continue to next employee endpoint
+  }
+
+  // 4th priority: CRM Employees by designation (/api/employees/by-designation/director)
+  try {
+    const designatedUrl: string = `${
+      API_ENDPOINTS.CRMEmployees || `${API_ENDPOINTS.BaseUrl}/employees`
+    }/by-designation/director`;
+    const response = await apiClient.get<EmployeeApiResponseType>(designatedUrl);
+    const list: RawEmployeeRecord[] = ensureEmployeeArray(response.data);
+    if (list.length > 0) {
+      const directors: DirectorEmployeeOption[] = list
+        .filter(isDirectorRecord)
+        .map(normalizeDirectorRecord)
+        .filter((d: DirectorEmployeeOption) => d.id > 0);
+
+      if (directors.length > 0) return directors;
+    }
+  } catch {
+    // All endpoints failed
   }
 
   return [];

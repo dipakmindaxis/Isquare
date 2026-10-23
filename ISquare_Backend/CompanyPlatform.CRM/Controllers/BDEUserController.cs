@@ -1,4 +1,4 @@
-﻿using CompanyPlatform.CRM.DTO.BDEUser;
+using CompanyPlatform.CRM.DTO.BDEUser;
 using CompanyPlatform.CRM.Services.BDEUser;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -24,10 +24,22 @@ namespace CompanyPlatform.CRM.Controllers
 
         [HttpGet]
         [AllowAnonymous]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll(
+            [FromQuery] int? directorEmployeeId = null,
+            [FromQuery] int? directorId = null)
         {
             try
             {
+                var filterId = directorEmployeeId ?? directorId;
+                if (filterId.HasValue && filterId.Value > 0)
+                {
+                    var filtered =
+                        await _bdeUserService
+                            .GetBDEUsersByDirectorEmployeeIdAsync(
+                                filterId.Value);
+                    return Ok(filtered);
+                }
+
                 var users = await _bdeUserService.GetAllBDEUsersAsync();
                 return Ok(users);
             }

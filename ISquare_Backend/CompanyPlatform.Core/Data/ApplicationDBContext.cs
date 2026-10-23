@@ -107,6 +107,8 @@ namespace CompanyPlatform.Core.Data
         // Employee
 
         public DbSet<Employees> Employees { get; set; }
+        public DbSet<CompanyPlatform.Core.Models.CRM.Company.Employee> Tbl_Employee { get; set; }
+
 
         public DbSet<WorkLocation> WorkLocations { get; set; }
 
@@ -256,6 +258,12 @@ namespace CompanyPlatform.Core.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            builder.Entity<CompanyPlatform.Core.Models.CRM.Company.Employee>()
+                .ToTable("tbl_Employee", tb => tb.HasTrigger("trg_tbl_Employee"));
+
+            builder.Entity<Employees>()
+                .ToTable("tbl_Employees", tb => tb.HasTrigger("trg_tbl_Employees"));
 
 
             builder.Entity<Reminder>()

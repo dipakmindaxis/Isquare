@@ -79,8 +79,8 @@ const TABS: TabConfig[] = [
   },
   {
     id: "assignment",
-    label: "Sales Assignment",
-    shortDesc: "Role-based employee reporting structure & hierarchy",
+    label: "Hierarchy Management",
+    shortDesc: "Organization hierarchy levels & employee reporting structure",
     icon: <Users className="w-4 h-4" />,
   },
   {

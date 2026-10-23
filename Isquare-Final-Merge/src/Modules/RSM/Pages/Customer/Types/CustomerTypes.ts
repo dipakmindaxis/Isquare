@@ -209,6 +209,9 @@ export interface BdeUserItem {
   id: number;
   value: string;
   code?: string;
+  directorId?: number | null;
+  directorEmployeeId?: number | null;
+  directorName?: string | null;
   isActive?: boolean;
 }
 
@@ -226,6 +229,11 @@ export interface EmployeeSelectItem {
   firstName?: string;
   lastName?: string;
   designation?: string;
+  role?: string;
+  reportingTo?: number;
+  reportingToName?: string;
+  levelId?: number;
+  levelName?: string;
 }
 
 export interface CountryItem {
@@ -259,6 +267,10 @@ export interface SalesCoordinatorItem {
   salesCoordinatorId: number;
   salesCoordinatorName: string;
   salesCoordinatorCode?: string;
+  bdeUserId?: number | null;
+  bdeUserName?: string | null;
+  directorId?: number | null;
+  directorName?: string | null;
   isActive?: boolean;
 }
 
