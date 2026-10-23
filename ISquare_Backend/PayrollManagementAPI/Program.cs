@@ -380,6 +380,10 @@ builder.Services.AddScoped<ILostReasonService, LostReasonService>();
 builder.Services.AddScoped<IEnquiryStatusService, EnquiryStatusService>();
 builder.Services.AddScoped<IProductCategoryService, ProductCategoryService>();
 builder.Services.AddScoped<IProductServiceItemService, ProductServiceItemService>();
+builder.Services.AddScoped<IUnitOfMeasureService, UnitOfMeasureService>();
+builder.Services.AddScoped<ICurrencyService, CurrencyService>();
+builder.Services.AddScoped<ISalesTerritoryService, SalesTerritoryService>();
+builder.Services.AddScoped<IPlaceOfSupplyService, PlaceOfSupplyService>();
 
 
 
