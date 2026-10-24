@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace CompanyPlatform.Core.Migrations
 {
     /// <inheritdoc />
-    public partial class initialsetup : Migration
+    public partial class UpdateMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -14,14 +14,6 @@ namespace CompanyPlatform.Core.Migrations
             migrationBuilder.DropForeignKey(
                 name: "FK_Tbl_AccessControls_AspNetRoles_RoleId",
                 table: "Tbl_AccessControls");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_tbl_Employee_tbl_LevelMasters_LevelID",
-                table: "tbl_Employee");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_tbl_EmployeeAddress_tbl_Employee_EmployeeID",
-                table: "tbl_EmployeeAddress");
 
             migrationBuilder.DropForeignKey(
                 name: "FK_tbl_EmployeeBankDetails_tbl_Employee_EmployeeID",
@@ -32,16 +24,8 @@ namespace CompanyPlatform.Core.Migrations
                 table: "tbl_EmployeeDocument");
 
             migrationBuilder.DropForeignKey(
-                name: "FK_tbl_EmployeeExperience_tbl_Employee_EmployeeID",
-                table: "tbl_EmployeeExperience");
-
-            migrationBuilder.DropForeignKey(
                 name: "FK_tbl_EmployeePFDetails_tbl_Employee_EmployeeID",
                 table: "tbl_EmployeePFDetails");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_tbl_EmployeeQualification_tbl_Employee_EmployeeID",
-                table: "tbl_EmployeeQualification");
 
             migrationBuilder.DropForeignKey(
                 name: "FK_tbl_EmployeeSalarySummary_tbl_Employee_EmployeeID",
@@ -59,6 +43,89 @@ namespace CompanyPlatform.Core.Migrations
                 name: "FK_tbl_EmployeeTDSDetails_tbl_Employee_EmployeeID",
                 table: "tbl_EmployeeTDSDetails");
 
+            migrationBuilder.DropForeignKey(
+                name: "FK_Tbl_Notifications_tbl_Employee_EmployeeId",
+                table: "Tbl_Notifications");
+
+            migrationBuilder.DropTable(
+                name: "SalarySettingPercentage");
+
+            migrationBuilder.DropTable(
+                name: "tbl_AdvanceRepayment");
+
+            migrationBuilder.DropTable(
+                name: "tbl_AssignLeaveType");
+
+            migrationBuilder.DropTable(
+                name: "tbl_BonusRecords");
+
+            migrationBuilder.DropTable(
+                name: "tbl_ComplianceFilingStatus");
+
+            migrationBuilder.DropTable(
+                name: "tbl_ExpenseClaim");
+
+            migrationBuilder.DropTable(
+                name: "tbl_Form16Status");
+
+            migrationBuilder.DropTable(
+                name: "tbl_Holiday");
+
+            migrationBuilder.DropTable(
+                name: "tbl_LeaveCreditLedger");
+
+            migrationBuilder.DropTable(
+                name: "Tbl_LoanRepayments");
+
+            migrationBuilder.DropTable(
+                name: "tbl_MonthlySalaryComponentDetail");
+
+            migrationBuilder.DropTable(
+                name: "tbl_OutdoorDuty");
+
+            migrationBuilder.DropTable(
+                name: "tbl_Payslip");
+
+            migrationBuilder.DropTable(
+                name: "tbl_ProfessionalTaxSlab");
+
+            migrationBuilder.DropTable(
+                name: "tbl_StatutorySetting");
+
+            migrationBuilder.DropTable(
+                name: "tbl_TaxSlabs");
+
+            migrationBuilder.DropTable(
+                name: "tbl_Advance");
+
+            migrationBuilder.DropTable(
+                name: "tbl_ExpenseType");
+
+            migrationBuilder.DropTable(
+                name: "Tbl_Attendance");
+
+            migrationBuilder.DropTable(
+                name: "tbl_LeaveRequest");
+
+            migrationBuilder.DropTable(
+                name: "Tbl_LoanApplications");
+
+            migrationBuilder.DropTable(
+                name: "tbl_MonthlySalaryRecord");
+
+            migrationBuilder.DropTable(
+                name: "tbl_LeaveType");
+
+            migrationBuilder.DropTable(
+                name: "Tbl_LoanMasters");
+
+            migrationBuilder.DropTable(
+                name: "tbl_PayrollRun");
+
+            migrationBuilder.DropIndex(
+                name: "IX_Tbl_Notifications_EmployeeId",
+                table: "Tbl_Notifications");
+
             migrationBuilder.DropIndex(
                 name: "IX_tbl_EmployeeTaxDeclaration_EmployeeID",
                 table: "tbl_EmployeeTaxDeclaration");
@@ -72,10 +139,6 @@ namespace CompanyPlatform.Core.Migrations
                 table: "tbl_EmployeePFDetails");
 
             migrationBuilder.DropIndex(
-                name: "IX_tbl_EmployeeExperience_EmployeeID",
-                table: "tbl_EmployeeExperience");
-
-            migrationBuilder.DropIndex(
                 name: "IX_tbl_EmployeeDocument_EmployeeID",
                 table: "tbl_EmployeeDocument");
 
@@ -83,59 +146,278 @@ namespace CompanyPlatform.Core.Migrations
                 name: "IX_tbl_EmployeeBankDetails_EmployeeID",
                 table: "tbl_EmployeeBankDetails");
 
-            migrationBuilder.DropIndex(
-                name: "IX_tbl_EmployeeAddress_EmployeeID",
-                table: "tbl_EmployeeAddress");
-
-            migrationBuilder.DropIndex(
-                name: "IX_tbl_Employee_LevelID",
-                table: "tbl_Employee");
-
             migrationBuilder.DropPrimaryKey(
                 name: "PK_Tbl_AccessControls",
                 table: "Tbl_AccessControls");
 
             migrationBuilder.DropColumn(
-                name: "GoogleCalendarId",
-                table: "tbl_Employee");
+                name: "BeneficiaryName",
+                table: "tbl_EmployeeBankDetails");
 
             migrationBuilder.DropColumn(
-                name: "LevelID",
-                table: "tbl_Employee");
+                name: "CittdsAddress",
+                table: "tbl_CompanyProfile");
+
+            migrationBuilder.DropColumn(
+                name: "SignatoryDesignation",
+                table: "tbl_CompanyProfile");
+
+            migrationBuilder.DropColumn(
+                name: "SignatoryName",
+                table: "tbl_CompanyProfile");
+
+            migrationBuilder.DropColumn(
+                name: "TAN",
+                table: "tbl_CompanyProfile");
 
             migrationBuilder.RenameTable(
                 name: "Tbl_AccessControls",
                 newName: "tbl_AccessControls");
 
             migrationBuilder.RenameColumn(
-                name: "PhotoPath",
-                table: "tbl_Employee",
-                newName: "UserId");
+                name: "ID",
+                table: "tbl_CompanyProfile",
+                newName: "CompanyProfileId");
 
             migrationBuilder.RenameIndex(
                 name: "IX_Tbl_AccessControls_RoleId",
                 table: "tbl_AccessControls",
                 newName: "IX_tbl_AccessControls_RoleId");
 
-            migrationBuilder.AlterColumn<decimal>(
-                name: "Percentage",
-                table: "tbl_EmployeeQualification",
-                type: "decimal(5,2)",
+            migrationBuilder.AddColumn<int>(
+                name: "EntityId",
+                table: "Tbl_Notifications",
+                type: "int",
+                nullable: true);
+
+            migrationBuilder.AddColumn<string>(
+                name: "EntityType",
+                table: "Tbl_Notifications",
+                type: "nvarchar(max)",
+                nullable: true);
+
+            migrationBuilder.AddColumn<string>(
+                name: "PassportNumber",
+                table: "tbl_EmployeeStatutoryDetails",
+                type: "nvarchar(max)",
+                nullable: true);
+
+            migrationBuilder.AddColumn<string>(
+                name: "AccountHolderName",
+                table: "tbl_EmployeeBankDetails",
+                type: "nvarchar(max)",
+                nullable: true);
+
+            migrationBuilder.AddColumn<string>(
+                name: "BankAddress",
+                table: "tbl_EmployeeBankDetails",
+                type: "nvarchar(max)",
+                nullable: true);
+
+            migrationBuilder.AddColumn<string>(
+                name: "IBANNo",
+                table: "tbl_EmployeeBankDetails",
+                type: "nvarchar(max)",
+                nullable: true);
+
+            migrationBuilder.AddColumn<string>(
+                name: "SortCode",
+                table: "tbl_EmployeeBankDetails",
+                type: "nvarchar(max)",
+                nullable: true);
+
+            migrationBuilder.AddColumn<string>(
+                name: "SwiftCode",
+                table: "tbl_EmployeeBankDetails",
+                type: "nvarchar(max)",
+                nullable: true);
+
+            migrationBuilder.AddColumn<string>(
+                name: "UserId",
+                table: "tbl_Employee",
+                type: "nvarchar(max)",
+                nullable: true);
+
+            migrationBuilder.AlterColumn<string>(
+                name: "PAN",
+                table: "tbl_CompanyProfile",
+                type: "nvarchar(20)",
+                maxLength: 20,
+                nullable: true,
+                oldClrType: typeof(string),
+                oldType: "nvarchar(max)");
+
+            migrationBuilder.AlterColumn<string>(
+                name: "CompanyName",
+                table: "tbl_CompanyProfile",
+                type: "nvarchar(200)",
+                maxLength: 200,
                 nullable: false,
-                oldClrType: typeof(decimal),
-                oldType: "decimal(18,2)");
+                oldClrType: typeof(string),
+                oldType: "nvarchar(max)");
 
-            migrationBuilder.AddColumn<int>(
-                name: "EmployeesID",
-                table: "tbl_EmployeeExperience",
-                type: "int",
+            migrationBuilder.AlterColumn<string>(
+                name: "Address",
+                table: "tbl_CompanyProfile",
+                type: "nvarchar(500)",
+                maxLength: 500,
+                nullable: true,
+                oldClrType: typeof(string),
+                oldType: "nvarchar(max)");
+
+            migrationBuilder.AddColumn<string>(
+                name: "AccountHolderName",
+                table: "tbl_CompanyProfile",
+                type: "nvarchar(150)",
+                maxLength: 150,
                 nullable: true);
 
-            migrationBuilder.AddColumn<int>(
-                name: "EmployeesID",
-                table: "tbl_EmployeeAddress",
-                type: "int",
+            migrationBuilder.AddColumn<string>(
+                name: "AccountNumber",
+                table: "tbl_CompanyProfile",
+                type: "nvarchar(50)",
+                maxLength: 50,
                 nullable: true);
+
+            migrationBuilder.AddColumn<string>(
+                name: "AccountType",
+                table: "tbl_CompanyProfile",
+                type: "nvarchar(30)",
+                maxLength: 30,
+                nullable: true);
+
+            migrationBuilder.AddColumn<string>(
+                name: "BankName",
+                table: "tbl_CompanyProfile",
+                type: "nvarchar(150)",
+                maxLength: 150,
+                nullable: true);
+
+            migrationBuilder.AddColumn<string>(
+                name: "BranchName",
+                table: "tbl_CompanyProfile",
+                type: "nvarchar(150)",
+                maxLength: 150,
+                nullable: true);
+
+            migrationBuilder.AddColumn<string>(
+                name: "City",
+                table: "tbl_CompanyProfile",
+                type: "nvarchar(100)",
+                maxLength: 100,
+                nullable: true);
+
+            migrationBuilder.AddColumn<string>(
+                name: "Country",
+                table: "tbl_CompanyProfile",
+                type: "nvarchar(100)",
+                maxLength: 100,
+                nullable: true);
+
+            migrationBuilder.AddColumn<DateTime>(
+                name: "CreatedAt",
+                table: "tbl_CompanyProfile",
+                type: "datetime2",
+                nullable: false,
+                defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
+
+            migrationBuilder.AddColumn<string>(
+                name: "Email",
+                table: "tbl_CompanyProfile",
+                type: "nvarchar(150)",
+                maxLength: 150,
+                nullable: true);
+
+            migrationBuilder.AddColumn<string>(
+                name: "GSTIN",
+                table: "tbl_CompanyProfile",
+                type: "nvarchar(30)",
+                maxLength: 30,
+                nullable: true);
+
+            migrationBuilder.AddColumn<string>(
+                name: "IFSCCode",
+                table: "tbl_CompanyProfile",
+                type: "nvarchar(20)",
+                maxLength: 20,
+                nullable: true);
+
+            migrationBuilder.AddColumn<bool>(
+                name: "IsActive",
+                table: "tbl_CompanyProfile",
+                type: "bit",
+                nullable: false,
+                defaultValue: false);
+
+            migrationBuilder.AddColumn<bool>(
+                name: "IsDefault",
+                table: "tbl_CompanyProfile",
+                type: "bit",
+                nullable: false,
+                defaultValue: false);
+
+            migrationBuilder.AddColumn<string>(
+                name: "LegalName",
+                table: "tbl_CompanyProfile",
+                type: "nvarchar(100)",
+                maxLength: 100,
+                nullable: true);
+
+            migrationBuilder.AddColumn<string>(
+                name: "LogoPath",
+                table: "tbl_CompanyProfile",
+                type: "nvarchar(500)",
+                maxLength: 500,
+                nullable: true);
+
+            migrationBuilder.AddColumn<string>(
+                name: "PINCode",
+                table: "tbl_CompanyProfile",
+                type: "nvarchar(10)",
+                maxLength: 10,
+                nullable: true);
+
+            migrationBuilder.AddColumn<string>(
+                name: "Phone",
+                table: "tbl_CompanyProfile",
+                type: "nvarchar(20)",
+                maxLength: 20,
+                nullable: true);
+
+            migrationBuilder.AddColumn<string>(
+                name: "State",
+                table: "tbl_CompanyProfile",
+                type: "nvarchar(100)",
+                maxLength: 100,
+                nullable: true);
+
+            migrationBuilder.AddColumn<DateTime>(
+                name: "UpdatedAt",
+                table: "tbl_CompanyProfile",
+                type: "datetime2",
+                nullable: true);
+
+            migrationBuilder.AddColumn<string>(
+                name: "Website",
+                table: "tbl_CompanyProfile",
+                type: "nvarchar(500)",
+                maxLength: 500,
+                nullable: true);
+
+            migrationBuilder.AddColumn<bool>(
+                name: "IsDeleted",
+                table: "tbl_AccessControls",
+                type: "bit",
+                nullable: false,
+                defaultValue: false);
+
+            migrationBuilder.AddColumn<string>(
+                name: "SystemName",
+                table: "tbl_AccessControls",
+                type: "nvarchar(100)",
+                maxLength: 100,
+                nullable: false,
+                defaultValue: "");
 
             migrationBuilder.AddPrimaryKey(
                 name: "PK_tbl_AccessControls",
@@ -348,6 +630,26 @@ namespace CompanyPlatform.Core.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "tbl_Companiess",
+                columns: table => new
+                {
+                    CompanyId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CompanyName = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    CreatedBy = table.Column<int>(type: "int", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedBy = table.Column<int>(type: "int", nullable: true),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_Companiess", x => x.CompanyId);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "tbl_CompanyTimeline",
                 columns: table => new
                 {
@@ -523,6 +825,491 @@ namespace CompanyPlatform.Core.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "tbl_History",
+                columns: table => new
+                {
+                    HistoryId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CompanyId = table.Column<int>(type: "int", nullable: false),
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    RefType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    RefId = table.Column<int>(type: "int", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ActivityDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_History", x => x.HistoryId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_Industry",
+                columns: table => new
+                {
+                    IndustryId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    IndustryName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IndustryCode = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_Industry", x => x.IndustryId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_InvoiceType",
+                columns: table => new
+                {
+                    ID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    InvoiceTypeName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_InvoiceType", x => x.ID);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_LevelMasters",
+                columns: table => new
+                {
+                    ID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    LevelName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LevelOrder = table.Column<int>(type: "int", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_LevelMasters", x => x.ID);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_MeetingType",
+                columns: table => new
+                {
+                    ID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    MeetingTypeName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_MeetingType", x => x.ID);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_PaymentTerm",
+                columns: table => new
+                {
+                    PaymentTermId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    PaymentTermName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    PaymentTermCode = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedBy = table.Column<int>(type: "int", nullable: true),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<int>(type: "int", nullable: true),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_PaymentTerm", x => x.PaymentTermId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_Priority",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    PriorityName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ColorCode = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_Priority", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_Product",
+                columns: table => new
+                {
+                    ProductId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ItemCode = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    ProductName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Brand = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    Specification = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    UnitOfMeasurementId = table.Column<int>(type: "int", nullable: true),
+                    StandardRate = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    GSTRate = table.Column<decimal>(type: "decimal(5,2)", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_Product", x => x.ProductId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_Quotation",
+                columns: table => new
+                {
+                    QuotationId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    QuotationNumber = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    CustomerId = table.Column<int>(type: "int", nullable: false),
+                    EnquiryId = table.Column<int>(type: "int", nullable: true),
+                    QuotationDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    RevisionNumber = table.Column<int>(type: "int", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
+                    ApprovalStatus = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
+                    Subtotal = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    DiscountAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    TaxableAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    TaxAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    FreightCharges = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    InstallationCharges = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    OtherCharges = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    GrandTotal = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    DeliveryPeriod = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    PaymentTermId = table.Column<int>(type: "int", nullable: true),
+                    Warranty = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    ValidUntil = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    TermsAndConditions = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_Quotation", x => x.QuotationId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_QuotationApproval",
+                columns: table => new
+                {
+                    QuotationApprovalId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    QuotationId = table.Column<int>(type: "int", nullable: false),
+                    ApprovalStatus = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    ApprovalReason = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    RequestedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    RequestedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ApprovedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    ApprovedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ApproverComments = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_QuotationApproval", x => x.QuotationApprovalId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_QuotationCharge",
+                columns: table => new
+                {
+                    QuotationChargeId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    QuotationId = table.Column<int>(type: "int", nullable: false),
+                    ChargeName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    ChargeType = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
+                    ChargeAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    TaxRate = table.Column<decimal>(type: "decimal(5,2)", nullable: false),
+                    TaxAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    TotalAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    IsTaxable = table.Column<bool>(type: "bit", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_QuotationCharge", x => x.QuotationChargeId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_QuotationDefault",
+                columns: table => new
+                {
+                    QuotationDefaultId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    DefaultDeliveryPeriod = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    PaymentTermId = table.Column<int>(type: "int", nullable: true),
+                    StandardWarranty = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    QuotationValidity = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    StandardTermsAndConditions = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CompanyName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    GSTNumber = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: true),
+                    CompanyAddress = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    CompanyLogoPath = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    BankName = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: true),
+                    AccountNumber = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    IFSCCode = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
+                    AccountHolderName = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_QuotationDefault", x => x.QuotationDefaultId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_QuotationItem",
+                columns: table => new
+                {
+                    QuotationItemId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    QuotationId = table.Column<int>(type: "int", nullable: false),
+                    ProductId = table.Column<int>(type: "int", nullable: true),
+                    ParentQuotationItemId = table.Column<int>(type: "int", nullable: true),
+                    IsAccessory = table.Column<bool>(type: "bit", nullable: false),
+                    ItemCode = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    ItemName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Brand = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    Specification = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Quantity = table.Column<decimal>(type: "decimal(18,3)", nullable: false),
+                    UnitOfMeasurementId = table.Column<int>(type: "int", nullable: true),
+                    Rate = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    DiscountPercentage = table.Column<decimal>(type: "decimal(5,2)", nullable: false),
+                    DiscountAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    GSTRate = table.Column<decimal>(type: "decimal(5,2)", nullable: false),
+                    TaxableAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    TaxAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    LineTotal = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    DisplayOrder = table.Column<int>(type: "int", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_QuotationItem", x => x.QuotationItemId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_QuotationRevision",
+                columns: table => new
+                {
+                    QuotationRevisionId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    QuotationId = table.Column<int>(type: "int", nullable: false),
+                    RevisionNumber = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    RevisionReason = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    RevisedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    RevisionDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    QuotationNumber = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    CustomerId = table.Column<int>(type: "int", nullable: true),
+                    EnquiryId = table.Column<int>(type: "int", nullable: true),
+                    QuotationDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    QuotationStatus = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    Subtotal = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    DiscountAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    TaxableAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    TaxAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    FreightCharges = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    InstallationCharges = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    OtherCharges = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    GrandTotal = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    DeliveryPeriod = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    PaymentTermId = table.Column<int>(type: "int", nullable: true),
+                    Warranty = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    ValidUntil = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    TermsAndConditions = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_QuotationRevision", x => x.QuotationRevisionId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_ReminderStatus",
+                columns: table => new
+                {
+                    ID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    StatusName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_ReminderStatus", x => x.ID);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_SalesAttachment",
+                columns: table => new
+                {
+                    SalesAttachmentId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    FileName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    StoredFileName = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    FilePath = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
+                    ContentType = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: true),
+                    FileSize = table.Column<long>(type: "bigint", nullable: false),
+                    CustomerId = table.Column<int>(type: "int", nullable: true),
+                    EnquiryId = table.Column<int>(type: "int", nullable: true),
+                    SalesActivityId = table.Column<int>(type: "int", nullable: true),
+                    DocumentType = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    UploadedBy = table.Column<int>(type: "int", nullable: true),
+                    UploadedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_SalesAttachment", x => x.SalesAttachmentId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_SalesOrder",
+                columns: table => new
+                {
+                    SalesOrderId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    SalesOrderNumber = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    QuotationId = table.Column<int>(type: "int", nullable: true),
+                    CustomerId = table.Column<int>(type: "int", nullable: false),
+                    OrderDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ExpectedDeliveryDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    OrderStatus = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Subtotal = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    DiscountAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    TaxableAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    TaxAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    FreightCharges = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    OtherCharges = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    GrandTotal = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    PaymentTerms = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    DeliveryAddress = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    Remarks = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_SalesOrder", x => x.SalesOrderId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_SalesOrderItem",
+                columns: table => new
+                {
+                    SalesOrderItemId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    SalesOrderId = table.Column<int>(type: "int", nullable: false),
+                    ProductId = table.Column<int>(type: "int", nullable: true),
+                    ParentSalesOrderItemId = table.Column<int>(type: "int", nullable: true),
+                    IsAccessory = table.Column<bool>(type: "bit", nullable: false),
+                    ItemCode = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    ItemName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Brand = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: true),
+                    Specification = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    Quantity = table.Column<decimal>(type: "decimal(18,3)", nullable: false),
+                    UnitOfMeasurement = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: true),
+                    Rate = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    DiscountPercentage = table.Column<decimal>(type: "decimal(5,2)", nullable: false),
+                    DiscountAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    GSTRate = table.Column<decimal>(type: "decimal(5,2)", nullable: false),
+                    TaxableAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    TaxAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    LineTotal = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    DisplayOrder = table.Column<int>(type: "int", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_SalesOrderItem", x => x.SalesOrderItemId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_TaskStatus",
+                columns: table => new
+                {
+                    ID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    StatusName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_TaskStatus", x => x.ID);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_VisitType",
+                columns: table => new
+                {
+                    ID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    VisitTypeName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_VisitType", x => x.ID);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_State",
+                columns: table => new
+                {
+                    StateId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CountryId = table.Column<int>(type: "int", nullable: false),
+                    StateName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    StateCode = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_State", x => x.StateId);
+                    table.ForeignKey(
+                        name: "FK_tbl_State_tbl_Country_CountryId",
+                        column: x => x.CountryId,
+                        principalTable: "tbl_Country",
+                        principalColumn: "CountryId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "tbl_Employees",
                 columns: table => new
                 {
@@ -586,190 +1373,13 @@ namespace CompanyPlatform.Core.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "tbl_History",
+                name: "tbl_City",
                 columns: table => new
                 {
-                    HistoryId = table.Column<int>(type: "int", nullable: false)
+                    CityId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    CompanyId = table.Column<int>(type: "int", nullable: false),
-                    UserId = table.Column<int>(type: "int", nullable: false),
-                    RefType = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    RefId = table.Column<int>(type: "int", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ActivityDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_tbl_History", x => x.HistoryId);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "tbl_Industry",
-                columns: table => new
-                {
-                    IndustryId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    IndustryName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    IndustryCode = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_tbl_Industry", x => x.IndustryId);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "tbl_InvoiceType",
-                columns: table => new
-                {
-                    ID = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    InvoiceTypeName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_tbl_InvoiceType", x => x.ID);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "tbl_MeetingType",
-                columns: table => new
-                {
-                    ID = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    MeetingTypeName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_tbl_MeetingType", x => x.ID);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Tbl_Notifications",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    EmployeeId = table.Column<int>(type: "int", nullable: false),
-                    Message = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    IsRead = table.Column<bool>(type: "bit", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ReadAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    EntityType = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    EntityId = table.Column<int>(type: "int", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Tbl_Notifications", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "tbl_PaymentTerm",
-                columns: table => new
-                {
-                    PaymentTermId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    PaymentTermName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    PaymentTermCode = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    CreatedBy = table.Column<int>(type: "int", nullable: true),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    UpdatedBy = table.Column<int>(type: "int", nullable: true),
-                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_tbl_PaymentTerm", x => x.PaymentTermId);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "tbl_Priority",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    PriorityName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ColorCode = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_tbl_Priority", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "tbl_ReminderStatus",
-                columns: table => new
-                {
-                    ID = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    StatusName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_tbl_ReminderStatus", x => x.ID);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "tbl_SalaryComponent",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    ComponentName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    ComponentType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    IsTaxable = table.Column<bool>(type: "bit", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_tbl_SalaryComponent", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "tbl_TaskStatus",
-                columns: table => new
-                {
-                    ID = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    StatusName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_tbl_TaskStatus", x => x.ID);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "tbl_VisitType",
-                columns: table => new
-                {
-                    ID = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    VisitTypeName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_tbl_VisitType", x => x.ID);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "tbl_State",
-                columns: table => new
-                {
-                    StateId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    CountryId = table.Column<int>(type: "int", nullable: false),
-                    StateName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    StateCode = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    StateId = table.Column<int>(type: "int", nullable: false),
+                    CityName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -778,12 +1388,12 @@ namespace CompanyPlatform.Core.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_tbl_State", x => x.StateId);
+                    table.PrimaryKey("PK_tbl_City", x => x.CityId);
                     table.ForeignKey(
-                        name: "FK_tbl_State_tbl_Country_CountryId",
-                        column: x => x.CountryId,
-                        principalTable: "tbl_Country",
-                        principalColumn: "CountryId",
+                        name: "FK_tbl_City_tbl_State_StateId",
+                        column: x => x.StateId,
+                        principalTable: "tbl_State",
+                        principalColumn: "StateId",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -846,57 +1456,81 @@ namespace CompanyPlatform.Core.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "tbl_SalaryStructure",
+                name: "tbl_EmployeeAddress",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
+                    ID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     EmployeeID = table.Column<int>(type: "int", nullable: false),
-                    SalaryComponentID = table.Column<int>(type: "int", nullable: false),
-                    Amount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    EffectiveDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    Status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    AddressType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FlatNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PremisesName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    RoadName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Locality = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    TownDistrict = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PinNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    MobileNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    AltMobileNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Email = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    AltEmail = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    EmployeesID = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_EmployeeAddress", x => x.ID);
+                    table.ForeignKey(
+                        name: "FK_tbl_EmployeeAddress_tbl_Employees_EmployeesID",
+                        column: x => x.EmployeesID,
+                        principalTable: "tbl_Employees",
+                        principalColumn: "ID");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_EmployeeExperience",
+                columns: table => new
+                {
+                    ID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    EmployeeID = table.Column<int>(type: "int", nullable: false),
+                    CompanyName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Designation = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FromDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ToDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Location = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    EmployeesID = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_EmployeeExperience", x => x.ID);
+                    table.ForeignKey(
+                        name: "FK_tbl_EmployeeExperience_tbl_Employees_EmployeesID",
+                        column: x => x.EmployeesID,
+                        principalTable: "tbl_Employees",
+                        principalColumn: "ID");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_EmployeeQualification",
+                columns: table => new
+                {
+                    ID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    EmployeeID = table.Column<int>(type: "int", nullable: false),
+                    Degree = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    University = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    PassingYear = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Percentage = table.Column<decimal>(type: "decimal(5,2)", nullable: false),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_tbl_SalaryStructure", x => x.Id);
+                    table.PrimaryKey("PK_tbl_EmployeeQualification", x => x.ID);
                     table.ForeignKey(
-                        name: "FK_tbl_SalaryStructure_tbl_Employee_EmployeeID",
+                        name: "FK_tbl_EmployeeQualification_tbl_Employees_EmployeeID",
                         column: x => x.EmployeeID,
-                        principalTable: "tbl_Employee",
+                        principalTable: "tbl_Employees",
                         principalColumn: "ID",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_tbl_SalaryStructure_tbl_SalaryComponent_SalaryComponentID",
-                        column: x => x.SalaryComponentID,
-                        principalTable: "tbl_SalaryComponent",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "tbl_City",
-                columns: table => new
-                {
-                    CityId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    StateId = table.Column<int>(type: "int", nullable: false),
-                    CityName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_tbl_City", x => x.CityId);
-                    table.ForeignKey(
-                        name: "FK_tbl_City_tbl_State_StateId",
-                        column: x => x.StateId,
-                        principalTable: "tbl_State",
-                        principalColumn: "StateId",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -909,6 +1543,11 @@ namespace CompanyPlatform.Core.Migrations
                     CompanyTypeId = table.Column<int>(type: "int", nullable: true),
                     CompanyCode = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CompanyName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CustomerName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CustomerShortName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CompanyGroup = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PlantCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    VendorSupplierCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     OwnerName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Email = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     AlternateEmail = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -916,10 +1555,21 @@ namespace CompanyPlatform.Core.Migrations
                     AlternateMobile = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     GSTNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Website = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PAN = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    TAN = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    GSTIN = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CIN = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    MSMENumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     IndustryId = table.Column<int>(type: "int", nullable: true),
                     CompanyCategoryId = table.Column<int>(type: "int", nullable: true),
                     ClientTypeId = table.Column<int>(type: "int", nullable: true),
                     CompanyStatusId = table.Column<int>(type: "int", nullable: true),
+                    CustomerSourceId = table.Column<int>(type: "int", nullable: true),
+                    CustomerAreaId = table.Column<int>(type: "int", nullable: true),
+                    PaymentTermsId = table.Column<int>(type: "int", nullable: true),
+                    DirectorId = table.Column<int>(type: "int", nullable: true),
+                    SalesCoordinatorId = table.Column<int>(type: "int", nullable: true),
+                    CustomerOwnerId = table.Column<int>(type: "int", nullable: true),
                     SalesManagerId = table.Column<int>(type: "int", nullable: true),
                     BDEUserId = table.Column<int>(type: "int", nullable: true),
                     Address = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -956,10 +1606,20 @@ namespace CompanyPlatform.Core.Migrations
                         principalTable: "tbl_Country",
                         principalColumn: "CountryId");
                     table.ForeignKey(
+                        name: "FK_tbl_Company_tbl_CustomerArea_CustomerAreaId",
+                        column: x => x.CustomerAreaId,
+                        principalTable: "tbl_CustomerArea",
+                        principalColumn: "CustomerAreaId");
+                    table.ForeignKey(
                         name: "FK_tbl_Company_tbl_CustomerCategory_CompanyCategoryId",
                         column: x => x.CompanyCategoryId,
                         principalTable: "tbl_CustomerCategory",
                         principalColumn: "CustomerCategoryId");
+                    table.ForeignKey(
+                        name: "FK_tbl_Company_tbl_CustomerSource_CustomerSourceId",
+                        column: x => x.CustomerSourceId,
+                        principalTable: "tbl_CustomerSource",
+                        principalColumn: "CustomerSourceId");
                     table.ForeignKey(
                         name: "FK_tbl_Company_tbl_CustomerStatus_CompanyStatusId",
                         column: x => x.CompanyStatusId,
@@ -973,6 +1633,21 @@ namespace CompanyPlatform.Core.Migrations
                     table.ForeignKey(
                         name: "FK_tbl_Company_tbl_Employee_CreatedBy",
                         column: x => x.CreatedBy,
+                        principalTable: "tbl_Employee",
+                        principalColumn: "ID");
+                    table.ForeignKey(
+                        name: "FK_tbl_Company_tbl_Employee_CustomerOwnerId",
+                        column: x => x.CustomerOwnerId,
+                        principalTable: "tbl_Employee",
+                        principalColumn: "ID");
+                    table.ForeignKey(
+                        name: "FK_tbl_Company_tbl_Employee_DirectorId",
+                        column: x => x.DirectorId,
+                        principalTable: "tbl_Employee",
+                        principalColumn: "ID");
+                    table.ForeignKey(
+                        name: "FK_tbl_Company_tbl_Employee_SalesCoordinatorId",
+                        column: x => x.SalesCoordinatorId,
                         principalTable: "tbl_Employee",
                         principalColumn: "ID");
                     table.ForeignKey(
@@ -990,6 +1665,11 @@ namespace CompanyPlatform.Core.Migrations
                         column: x => x.IndustryId,
                         principalTable: "tbl_Industry",
                         principalColumn: "IndustryId");
+                    table.ForeignKey(
+                        name: "FK_tbl_Company_tbl_PaymentTerm_PaymentTermsId",
+                        column: x => x.PaymentTermsId,
+                        principalTable: "tbl_PaymentTerm",
+                        principalColumn: "PaymentTermId");
                     table.ForeignKey(
                         name: "FK_tbl_Company_tbl_State_StateId",
                         column: x => x.StateId,
@@ -2218,16 +2898,6 @@ namespace CompanyPlatform.Core.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_tbl_EmployeeExperience_EmployeesID",
-                table: "tbl_EmployeeExperience",
-                column: "EmployeesID");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_tbl_EmployeeAddress_EmployeesID",
-                table: "tbl_EmployeeAddress",
-                column: "EmployeesID");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_MeetingAttendees_MeetingId",
                 table: "MeetingAttendees",
                 column: "MeetingId");
@@ -2318,9 +2988,39 @@ namespace CompanyPlatform.Core.Migrations
                 column: "CreatedBy");
 
             migrationBuilder.CreateIndex(
+                name: "IX_tbl_Company_CustomerAreaId",
+                table: "tbl_Company",
+                column: "CustomerAreaId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_tbl_Company_CustomerOwnerId",
+                table: "tbl_Company",
+                column: "CustomerOwnerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_tbl_Company_CustomerSourceId",
+                table: "tbl_Company",
+                column: "CustomerSourceId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_tbl_Company_DirectorId",
+                table: "tbl_Company",
+                column: "DirectorId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_tbl_Company_IndustryId",
                 table: "tbl_Company",
                 column: "IndustryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_tbl_Company_PaymentTermsId",
+                table: "tbl_Company",
+                column: "PaymentTermsId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_tbl_Company_SalesCoordinatorId",
+                table: "tbl_Company",
+                column: "SalesCoordinatorId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_tbl_Company_SalesManagerId",
@@ -2426,6 +3126,21 @@ namespace CompanyPlatform.Core.Migrations
                 name: "IX_tbl_CompanyVisit_VisitTypeId",
                 table: "tbl_CompanyVisit",
                 column: "VisitTypeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_tbl_EmployeeAddress_EmployeesID",
+                table: "tbl_EmployeeAddress",
+                column: "EmployeesID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_tbl_EmployeeExperience_EmployeesID",
+                table: "tbl_EmployeeExperience",
+                column: "EmployeesID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_tbl_EmployeeQualification_EmployeeID",
+                table: "tbl_EmployeeQualification",
+                column: "EmployeeID");
 
             migrationBuilder.CreateIndex(
                 name: "IX_tbl_Employees_ApplicationUserId",
@@ -2613,16 +3328,6 @@ namespace CompanyPlatform.Core.Migrations
                 column: "SentBy");
 
             migrationBuilder.CreateIndex(
-                name: "IX_tbl_SalaryStructure_EmployeeID",
-                table: "tbl_SalaryStructure",
-                column: "EmployeeID");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_tbl_SalaryStructure_SalaryComponentID",
-                table: "tbl_SalaryStructure",
-                column: "SalaryComponentID");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_tbl_State_CountryId",
                 table: "tbl_State",
                 column: "CountryId");
@@ -2776,28 +3481,6 @@ namespace CompanyPlatform.Core.Migrations
                 onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
-                name: "FK_tbl_EmployeeAddress_tbl_Employees_EmployeesID",
-                table: "tbl_EmployeeAddress",
-                column: "EmployeesID",
-                principalTable: "tbl_Employees",
-                principalColumn: "ID");
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_tbl_EmployeeExperience_tbl_Employees_EmployeesID",
-                table: "tbl_EmployeeExperience",
-                column: "EmployeesID",
-                principalTable: "tbl_Employees",
-                principalColumn: "ID");
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_tbl_EmployeeQualification_tbl_Employees_EmployeeID",
-                table: "tbl_EmployeeQualification",
-                column: "EmployeeID",
-                principalTable: "tbl_Employees",
-                principalColumn: "ID",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
                 name: "FK_tbl_EmployeeStatutoryDetails_tbl_Employees_EmployeeID",
                 table: "tbl_EmployeeStatutoryDetails",
                 column: "EmployeeID",
@@ -2820,18 +3503,6 @@ namespace CompanyPlatform.Core.Migrations
             migrationBuilder.DropForeignKey(
                 name: "FK_tbl_AccessControls_AspNetRoles_RoleId",
                 table: "tbl_AccessControls");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_tbl_EmployeeAddress_tbl_Employees_EmployeesID",
-                table: "tbl_EmployeeAddress");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_tbl_EmployeeExperience_tbl_Employees_EmployeesID",
-                table: "tbl_EmployeeExperience");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_tbl_EmployeeQualification_tbl_Employees_EmployeeID",
-                table: "tbl_EmployeeQualification");
 
             migrationBuilder.DropForeignKey(
                 name: "FK_tbl_EmployeeStatutoryDetails_tbl_Employees_EmployeeID",
@@ -2881,6 +3552,9 @@ namespace CompanyPlatform.Core.Migrations
                 name: "tbl_CallHistory");
 
             migrationBuilder.DropTable(
+                name: "tbl_Companiess");
+
+            migrationBuilder.DropTable(
                 name: "tbl_CompanyAddresses");
 
             migrationBuilder.DropTable(
@@ -2908,16 +3582,19 @@ namespace CompanyPlatform.Core.Migrations
                 name: "tbl_ContactType");
 
             migrationBuilder.DropTable(
-                name: "tbl_CustomerArea");
-
-            migrationBuilder.DropTable(
-                name: "tbl_CustomerSource");
-
-            migrationBuilder.DropTable(
                 name: "tbl_CustomerTypes");
 
             migrationBuilder.DropTable(
                 name: "tbl_EmailTemplate");
+
+            migrationBuilder.DropTable(
+                name: "tbl_EmployeeAddress");
+
+            migrationBuilder.DropTable(
+                name: "tbl_EmployeeExperience");
+
+            migrationBuilder.DropTable(
+                name: "tbl_EmployeeQualification");
 
             migrationBuilder.DropTable(
                 name: "tbl_FollowUp");
@@ -2941,13 +3618,28 @@ namespace CompanyPlatform.Core.Migrations
                 name: "tbl_NonGSTProformaItem");
 
             migrationBuilder.DropTable(
-                name: "Tbl_Notifications");
-
-            migrationBuilder.DropTable(
-                name: "tbl_PaymentTerm");
+                name: "tbl_Product");
 
             migrationBuilder.DropTable(
                 name: "tbl_ProformaInvoiceItem");
+
+            migrationBuilder.DropTable(
+                name: "tbl_Quotation");
+
+            migrationBuilder.DropTable(
+                name: "tbl_QuotationApproval");
+
+            migrationBuilder.DropTable(
+                name: "tbl_QuotationCharge");
+
+            migrationBuilder.DropTable(
+                name: "tbl_QuotationDefault");
+
+            migrationBuilder.DropTable(
+                name: "tbl_QuotationItem");
+
+            migrationBuilder.DropTable(
+                name: "tbl_QuotationRevision");
 
             migrationBuilder.DropTable(
                 name: "tbl_ReminderHistory");
@@ -2956,7 +3648,13 @@ namespace CompanyPlatform.Core.Migrations
                 name: "tbl_ReminderNotification");
 
             migrationBuilder.DropTable(
-                name: "tbl_SalaryStructure");
+                name: "tbl_SalesAttachment");
+
+            migrationBuilder.DropTable(
+                name: "tbl_SalesOrder");
+
+            migrationBuilder.DropTable(
+                name: "tbl_SalesOrderItem");
 
             migrationBuilder.DropTable(
                 name: "tbl_TaskAssignment");
@@ -3004,9 +3702,6 @@ namespace CompanyPlatform.Core.Migrations
                 name: "tbl_ProformaInvoice");
 
             migrationBuilder.DropTable(
-                name: "tbl_SalaryComponent");
-
-            migrationBuilder.DropTable(
                 name: "tbl_Task");
 
             migrationBuilder.DropTable(
@@ -3046,7 +3741,13 @@ namespace CompanyPlatform.Core.Migrations
                 name: "tbl_ClientType");
 
             migrationBuilder.DropTable(
+                name: "tbl_CustomerArea");
+
+            migrationBuilder.DropTable(
                 name: "tbl_CustomerCategory");
+
+            migrationBuilder.DropTable(
+                name: "tbl_CustomerSource");
 
             migrationBuilder.DropTable(
                 name: "tbl_CustomerStatus");
@@ -3055,69 +3756,876 @@ namespace CompanyPlatform.Core.Migrations
                 name: "tbl_Industry");
 
             migrationBuilder.DropTable(
+                name: "tbl_PaymentTerm");
+
+            migrationBuilder.DropTable(
+                name: "tbl_LevelMasters");
+
+            migrationBuilder.DropTable(
                 name: "tbl_State");
 
             migrationBuilder.DropTable(
                 name: "tbl_Country");
-
-            migrationBuilder.DropIndex(
-                name: "IX_tbl_EmployeeExperience_EmployeesID",
-                table: "tbl_EmployeeExperience");
-
-            migrationBuilder.DropIndex(
-                name: "IX_tbl_EmployeeAddress_EmployeesID",
-                table: "tbl_EmployeeAddress");
 
             migrationBuilder.DropPrimaryKey(
                 name: "PK_tbl_AccessControls",
                 table: "tbl_AccessControls");
 
             migrationBuilder.DropColumn(
-                name: "EmployeesID",
-                table: "tbl_EmployeeExperience");
+                name: "EntityId",
+                table: "Tbl_Notifications");
 
             migrationBuilder.DropColumn(
-                name: "EmployeesID",
-                table: "tbl_EmployeeAddress");
+                name: "EntityType",
+                table: "Tbl_Notifications");
+
+            migrationBuilder.DropColumn(
+                name: "PassportNumber",
+                table: "tbl_EmployeeStatutoryDetails");
+
+            migrationBuilder.DropColumn(
+                name: "AccountHolderName",
+                table: "tbl_EmployeeBankDetails");
+
+            migrationBuilder.DropColumn(
+                name: "BankAddress",
+                table: "tbl_EmployeeBankDetails");
+
+            migrationBuilder.DropColumn(
+                name: "IBANNo",
+                table: "tbl_EmployeeBankDetails");
+
+            migrationBuilder.DropColumn(
+                name: "SortCode",
+                table: "tbl_EmployeeBankDetails");
+
+            migrationBuilder.DropColumn(
+                name: "SwiftCode",
+                table: "tbl_EmployeeBankDetails");
+
+            migrationBuilder.DropColumn(
+                name: "UserId",
+                table: "tbl_Employee");
+
+            migrationBuilder.DropColumn(
+                name: "AccountHolderName",
+                table: "tbl_CompanyProfile");
+
+            migrationBuilder.DropColumn(
+                name: "AccountNumber",
+                table: "tbl_CompanyProfile");
+
+            migrationBuilder.DropColumn(
+                name: "AccountType",
+                table: "tbl_CompanyProfile");
+
+            migrationBuilder.DropColumn(
+                name: "BankName",
+                table: "tbl_CompanyProfile");
+
+            migrationBuilder.DropColumn(
+                name: "BranchName",
+                table: "tbl_CompanyProfile");
+
+            migrationBuilder.DropColumn(
+                name: "City",
+                table: "tbl_CompanyProfile");
+
+            migrationBuilder.DropColumn(
+                name: "Country",
+                table: "tbl_CompanyProfile");
+
+            migrationBuilder.DropColumn(
+                name: "CreatedAt",
+                table: "tbl_CompanyProfile");
+
+            migrationBuilder.DropColumn(
+                name: "Email",
+                table: "tbl_CompanyProfile");
+
+            migrationBuilder.DropColumn(
+                name: "GSTIN",
+                table: "tbl_CompanyProfile");
+
+            migrationBuilder.DropColumn(
+                name: "IFSCCode",
+                table: "tbl_CompanyProfile");
+
+            migrationBuilder.DropColumn(
+                name: "IsActive",
+                table: "tbl_CompanyProfile");
+
+            migrationBuilder.DropColumn(
+                name: "IsDefault",
+                table: "tbl_CompanyProfile");
+
+            migrationBuilder.DropColumn(
+                name: "LegalName",
+                table: "tbl_CompanyProfile");
+
+            migrationBuilder.DropColumn(
+                name: "LogoPath",
+                table: "tbl_CompanyProfile");
+
+            migrationBuilder.DropColumn(
+                name: "PINCode",
+                table: "tbl_CompanyProfile");
+
+            migrationBuilder.DropColumn(
+                name: "Phone",
+                table: "tbl_CompanyProfile");
+
+            migrationBuilder.DropColumn(
+                name: "State",
+                table: "tbl_CompanyProfile");
+
+            migrationBuilder.DropColumn(
+                name: "UpdatedAt",
+                table: "tbl_CompanyProfile");
+
+            migrationBuilder.DropColumn(
+                name: "Website",
+                table: "tbl_CompanyProfile");
+
+            migrationBuilder.DropColumn(
+                name: "IsDeleted",
+                table: "tbl_AccessControls");
+
+            migrationBuilder.DropColumn(
+                name: "SystemName",
+                table: "tbl_AccessControls");
 
             migrationBuilder.RenameTable(
                 name: "tbl_AccessControls",
                 newName: "Tbl_AccessControls");
 
             migrationBuilder.RenameColumn(
-                name: "UserId",
-                table: "tbl_Employee",
-                newName: "PhotoPath");
+                name: "CompanyProfileId",
+                table: "tbl_CompanyProfile",
+                newName: "ID");
 
             migrationBuilder.RenameIndex(
                 name: "IX_tbl_AccessControls_RoleId",
                 table: "Tbl_AccessControls",
                 newName: "IX_Tbl_AccessControls_RoleId");
 
-            migrationBuilder.AlterColumn<decimal>(
-                name: "Percentage",
-                table: "tbl_EmployeeQualification",
-                type: "decimal(18,2)",
+            migrationBuilder.AddColumn<string>(
+                name: "BeneficiaryName",
+                table: "tbl_EmployeeBankDetails",
+                type: "nvarchar(max)",
                 nullable: false,
-                oldClrType: typeof(decimal),
-                oldType: "decimal(5,2)");
+                defaultValue: "");
+
+            migrationBuilder.AlterColumn<string>(
+                name: "PAN",
+                table: "tbl_CompanyProfile",
+                type: "nvarchar(max)",
+                nullable: false,
+                defaultValue: "",
+                oldClrType: typeof(string),
+                oldType: "nvarchar(20)",
+                oldMaxLength: 20,
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<string>(
+                name: "CompanyName",
+                table: "tbl_CompanyProfile",
+                type: "nvarchar(max)",
+                nullable: false,
+                oldClrType: typeof(string),
+                oldType: "nvarchar(200)",
+                oldMaxLength: 200);
+
+            migrationBuilder.AlterColumn<string>(
+                name: "Address",
+                table: "tbl_CompanyProfile",
+                type: "nvarchar(max)",
+                nullable: false,
+                defaultValue: "",
+                oldClrType: typeof(string),
+                oldType: "nvarchar(500)",
+                oldMaxLength: 500,
+                oldNullable: true);
 
             migrationBuilder.AddColumn<string>(
-                name: "GoogleCalendarId",
-                table: "tbl_Employee",
+                name: "CittdsAddress",
+                table: "tbl_CompanyProfile",
                 type: "nvarchar(max)",
-                nullable: true);
+                nullable: false,
+                defaultValue: "");
 
-            migrationBuilder.AddColumn<int>(
-                name: "LevelID",
-                table: "tbl_Employee",
-                type: "int",
-                nullable: true);
+            migrationBuilder.AddColumn<string>(
+                name: "SignatoryDesignation",
+                table: "tbl_CompanyProfile",
+                type: "nvarchar(max)",
+                nullable: false,
+                defaultValue: "");
+
+            migrationBuilder.AddColumn<string>(
+                name: "SignatoryName",
+                table: "tbl_CompanyProfile",
+                type: "nvarchar(max)",
+                nullable: false,
+                defaultValue: "");
+
+            migrationBuilder.AddColumn<string>(
+                name: "TAN",
+                table: "tbl_CompanyProfile",
+                type: "nvarchar(max)",
+                nullable: false,
+                defaultValue: "");
 
             migrationBuilder.AddPrimaryKey(
                 name: "PK_Tbl_AccessControls",
                 table: "Tbl_AccessControls",
                 column: "Id");
+
+            migrationBuilder.CreateTable(
+                name: "SalarySettingPercentage",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CalculationBase = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ComponentName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    EffectiveFrom = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    EffectiveTo = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    FixedAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    IsApplicable = table.Column<bool>(type: "bit", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    Percentage = table.Column<decimal>(type: "decimal(18,2)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SalarySettingPercentage", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_Advance",
+                columns: table => new
+                {
+                    ID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    EmployeeID = table.Column<int>(type: "int", nullable: false),
+                    ProcessedByEmployeeId = table.Column<int>(type: "int", nullable: true),
+                    Amount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    Reason = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    RequestDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    StatusDate = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_Advance", x => x.ID);
+                    table.ForeignKey(
+                        name: "FK_tbl_Advance_tbl_Employee_EmployeeID",
+                        column: x => x.EmployeeID,
+                        principalTable: "tbl_Employee",
+                        principalColumn: "ID",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_tbl_Advance_tbl_Employee_ProcessedByEmployeeId",
+                        column: x => x.ProcessedByEmployeeId,
+                        principalTable: "tbl_Employee",
+                        principalColumn: "ID",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Tbl_Attendance",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    EmployeeID = table.Column<int>(type: "int", nullable: false),
+                    Date = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    InDeviceID = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    InTime = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    Notes = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    OutDeviceID = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    OutTime = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Status = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Tbl_Attendance", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Tbl_Attendance_tbl_Employee_EmployeeID",
+                        column: x => x.EmployeeID,
+                        principalTable: "tbl_Employee",
+                        principalColumn: "ID",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_BonusRecords",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    EmployeeID = table.Column<int>(type: "int", nullable: false),
+                    AppliedRule = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    BonusAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    CalculationDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    EligibleSalaryForCalculation = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    FinancialYear = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    TenureInDays = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_BonusRecords", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_tbl_BonusRecords_tbl_Employee_EmployeeID",
+                        column: x => x.EmployeeID,
+                        principalTable: "tbl_Employee",
+                        principalColumn: "ID",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_ComplianceFilingStatus",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ComplianceType = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    DueDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    FiledDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    Month = table.Column<int>(type: "int", nullable: false),
+                    Notes = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    TransactionId = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    Year = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_ComplianceFilingStatus", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_ExpenseType",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ExpenseTypeName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_ExpenseType", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_Form16Status",
+                columns: table => new
+                {
+                    ID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    EmployeeID = table.Column<int>(type: "int", nullable: false),
+                    CertificateNo = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    FinalStatus = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    FinancialYear = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
+                    GeneratedFormFilePath = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastUpdated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    PartAFilePath = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PartAStatus = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    PartBStatus = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_Form16Status", x => x.ID);
+                    table.ForeignKey(
+                        name: "FK_tbl_Form16Status_tbl_Employee_EmployeeID",
+                        column: x => x.EmployeeID,
+                        principalTable: "tbl_Employee",
+                        principalColumn: "ID",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_Holiday",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Date = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    Year = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_Holiday", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_LeaveType",
+                columns: table => new
+                {
+                    ID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    LeaveTypeName = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_LeaveType", x => x.ID);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Tbl_LoanMasters",
+                columns: table => new
+                {
+                    ID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    LoanTypeName = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Tbl_LoanMasters", x => x.ID);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_OutdoorDuty",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ApproverID = table.Column<int>(type: "int", nullable: true),
+                    EmployeeID = table.Column<int>(type: "int", nullable: false),
+                    AppliedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ApprovalDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    FromDate = table.Column<DateTime>(type: "date", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    ManagerRemarks = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    Status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    ToDate = table.Column<DateTime>(type: "date", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_OutdoorDuty", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_tbl_OutdoorDuty_tbl_Employee_ApproverID",
+                        column: x => x.ApproverID,
+                        principalTable: "tbl_Employee",
+                        principalColumn: "ID");
+                    table.ForeignKey(
+                        name: "FK_tbl_OutdoorDuty_tbl_Employee_EmployeeID",
+                        column: x => x.EmployeeID,
+                        principalTable: "tbl_Employee",
+                        principalColumn: "ID",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_PayrollRun",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Month = table.Column<int>(type: "int", nullable: false),
+                    ProcessedByUserID = table.Column<int>(type: "int", nullable: false),
+                    ProcessedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Year = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_PayrollRun", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_ProfessionalTaxSlab",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Gender = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    MaxGrossSalary = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    MinGrossSalary = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    State = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    TaxAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_ProfessionalTaxSlab", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_StatutorySetting",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    EffectiveDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    SettingName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    SettingValue = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_StatutorySetting", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_TaxSlabs",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CitizenType = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    FinancialYear = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
+                    FromAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    RatePercentage = table.Column<decimal>(type: "decimal(5,2)", nullable: false),
+                    TaxRegime = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    ToAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_TaxSlabs", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_AdvanceRepayment",
+                columns: table => new
+                {
+                    ID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    AdvanceID = table.Column<int>(type: "int", nullable: false),
+                    CreatedByEmployeeId = table.Column<int>(type: "int", nullable: false),
+                    Notes = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    RepaymentAmount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    RepaymentDate = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_AdvanceRepayment", x => x.ID);
+                    table.ForeignKey(
+                        name: "FK_tbl_AdvanceRepayment_tbl_Advance_AdvanceID",
+                        column: x => x.AdvanceID,
+                        principalTable: "tbl_Advance",
+                        principalColumn: "ID",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_tbl_AdvanceRepayment_tbl_Employee_CreatedByEmployeeId",
+                        column: x => x.CreatedByEmployeeId,
+                        principalTable: "tbl_Employee",
+                        principalColumn: "ID",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_ExpenseClaim",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ApproverID = table.Column<int>(type: "int", nullable: true),
+                    EmployeeID = table.Column<int>(type: "int", nullable: false),
+                    ExpenseTypeID = table.Column<int>(type: "int", nullable: false),
+                    Amount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    AppliedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ApprovalDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ApprovedAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    ClaimDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    ManagerRemarks = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    ReceiptFilePath = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_ExpenseClaim", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_tbl_ExpenseClaim_tbl_Employee_ApproverID",
+                        column: x => x.ApproverID,
+                        principalTable: "tbl_Employee",
+                        principalColumn: "ID");
+                    table.ForeignKey(
+                        name: "FK_tbl_ExpenseClaim_tbl_Employee_EmployeeID",
+                        column: x => x.EmployeeID,
+                        principalTable: "tbl_Employee",
+                        principalColumn: "ID",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_tbl_ExpenseClaim_tbl_ExpenseType_ExpenseTypeID",
+                        column: x => x.ExpenseTypeID,
+                        principalTable: "tbl_ExpenseType",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_AssignLeaveType",
+                columns: table => new
+                {
+                    ID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    EmployeeID = table.Column<int>(type: "int", nullable: false),
+                    LeaveTypeID = table.Column<int>(type: "int", nullable: false),
+                    AllocatedDays = table.Column<decimal>(type: "decimal(5,2)", precision: 5, scale: 2, nullable: false),
+                    FinancialYear = table.Column<int>(type: "int", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_AssignLeaveType", x => x.ID);
+                    table.ForeignKey(
+                        name: "FK_tbl_AssignLeaveType_tbl_Employee_EmployeeID",
+                        column: x => x.EmployeeID,
+                        principalTable: "tbl_Employee",
+                        principalColumn: "ID",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_tbl_AssignLeaveType_tbl_LeaveType_LeaveTypeID",
+                        column: x => x.LeaveTypeID,
+                        principalTable: "tbl_LeaveType",
+                        principalColumn: "ID",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_LeaveRequest",
+                columns: table => new
+                {
+                    ID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    EmployeeID = table.Column<int>(type: "int", nullable: false),
+                    LeaveTypeID = table.Column<int>(type: "int", nullable: false),
+                    AppliedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ApprovedByEmployeeID = table.Column<int>(type: "int", nullable: true),
+                    Days = table.Column<decimal>(type: "decimal(5,2)", nullable: false),
+                    FromDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    HalfDayPeriod = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    IsHalfDay = table.Column<bool>(type: "bit", nullable: false),
+                    Reason = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ToDate = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_LeaveRequest", x => x.ID);
+                    table.ForeignKey(
+                        name: "FK_tbl_LeaveRequest_tbl_Employee_EmployeeID",
+                        column: x => x.EmployeeID,
+                        principalTable: "tbl_Employee",
+                        principalColumn: "ID",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_tbl_LeaveRequest_tbl_LeaveType_LeaveTypeID",
+                        column: x => x.LeaveTypeID,
+                        principalTable: "tbl_LeaveType",
+                        principalColumn: "ID",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Tbl_LoanApplications",
+                columns: table => new
+                {
+                    ID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ApprovedByUserID = table.Column<int>(type: "int", nullable: true),
+                    EmployeeID = table.Column<int>(type: "int", nullable: false),
+                    LoanTypeID = table.Column<int>(type: "int", nullable: false),
+                    ApplicationDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    LoanAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    MonthlyDeduction = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    TenureInMonths = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Tbl_LoanApplications", x => x.ID);
+                    table.ForeignKey(
+                        name: "FK_Tbl_LoanApplications_Tbl_LoanMasters_LoanTypeID",
+                        column: x => x.LoanTypeID,
+                        principalTable: "Tbl_LoanMasters",
+                        principalColumn: "ID",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Tbl_LoanApplications_tbl_Employee_ApprovedByUserID",
+                        column: x => x.ApprovedByUserID,
+                        principalTable: "tbl_Employee",
+                        principalColumn: "ID");
+                    table.ForeignKey(
+                        name: "FK_Tbl_LoanApplications_tbl_Employee_EmployeeID",
+                        column: x => x.EmployeeID,
+                        principalTable: "tbl_Employee",
+                        principalColumn: "ID",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_MonthlySalaryRecord",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    EmployeeID = table.Column<int>(type: "int", nullable: false),
+                    PayrollRunID = table.Column<int>(type: "int", nullable: false),
+                    EmployerPF = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    GrossEarnings = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    LOPDays = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    NetSalary = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    PayableDays = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    ReimbursableAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Remarks = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    TotalDaysInMonth = table.Column<int>(type: "int", nullable: false),
+                    TotalDeductions = table.Column<decimal>(type: "decimal(18,2)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_MonthlySalaryRecord", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_tbl_MonthlySalaryRecord_tbl_Employee_EmployeeID",
+                        column: x => x.EmployeeID,
+                        principalTable: "tbl_Employee",
+                        principalColumn: "ID",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_tbl_MonthlySalaryRecord_tbl_PayrollRun_PayrollRunID",
+                        column: x => x.PayrollRunID,
+                        principalTable: "tbl_PayrollRun",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_Payslip",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    EmployeeID = table.Column<int>(type: "int", nullable: false),
+                    PayrollRunID = table.Column<int>(type: "int", nullable: false),
+                    Downloaded = table.Column<bool>(type: "bit", nullable: false),
+                    EmailSent = table.Column<bool>(type: "bit", nullable: false),
+                    GeneratedOn = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    PdfFilePath = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_Payslip", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_tbl_Payslip_tbl_Employee_EmployeeID",
+                        column: x => x.EmployeeID,
+                        principalTable: "tbl_Employee",
+                        principalColumn: "ID",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_tbl_Payslip_tbl_PayrollRun_PayrollRunID",
+                        column: x => x.PayrollRunID,
+                        principalTable: "tbl_PayrollRun",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_LeaveCreditLedger",
+                columns: table => new
+                {
+                    ID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    AttendanceID = table.Column<int>(type: "int", nullable: true),
+                    EmployeeID = table.Column<int>(type: "int", nullable: false),
+                    LeaveRequestID = table.Column<int>(type: "int", nullable: true),
+                    LeaveTypeID = table.Column<int>(type: "int", nullable: false),
+                    Credit = table.Column<decimal>(type: "decimal(5,2)", nullable: false),
+                    EarnedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ExpiryDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Notes = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_LeaveCreditLedger", x => x.ID);
+                    table.ForeignKey(
+                        name: "FK_tbl_LeaveCreditLedger_Tbl_Attendance_AttendanceID",
+                        column: x => x.AttendanceID,
+                        principalTable: "Tbl_Attendance",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_tbl_LeaveCreditLedger_tbl_Employee_EmployeeID",
+                        column: x => x.EmployeeID,
+                        principalTable: "tbl_Employee",
+                        principalColumn: "ID",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_tbl_LeaveCreditLedger_tbl_LeaveRequest_LeaveRequestID",
+                        column: x => x.LeaveRequestID,
+                        principalTable: "tbl_LeaveRequest",
+                        principalColumn: "ID",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_tbl_LeaveCreditLedger_tbl_LeaveType_LeaveTypeID",
+                        column: x => x.LeaveTypeID,
+                        principalTable: "tbl_LeaveType",
+                        principalColumn: "ID",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Tbl_LoanRepayments",
+                columns: table => new
+                {
+                    ID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    LoanApplicationID = table.Column<int>(type: "int", nullable: false),
+                    AmountPaid = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    PaymentDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    PayrollPeriod = table.Column<string>(type: "nvarchar(7)", maxLength: 7, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Tbl_LoanRepayments", x => x.ID);
+                    table.ForeignKey(
+                        name: "FK_Tbl_LoanRepayments_Tbl_LoanApplications_LoanApplicationID",
+                        column: x => x.LoanApplicationID,
+                        principalTable: "Tbl_LoanApplications",
+                        principalColumn: "ID",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tbl_MonthlySalaryComponentDetail",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    MonthlySalaryRecordID = table.Column<int>(type: "int", nullable: false),
+                    Amount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    ComponentName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ComponentType = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tbl_MonthlySalaryComponentDetail", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_tbl_MonthlySalaryComponentDetail_tbl_MonthlySalaryRecord_MonthlySalaryRecordID",
+                        column: x => x.MonthlySalaryRecordID,
+                        principalTable: "tbl_MonthlySalaryRecord",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Tbl_Notifications_EmployeeId",
+                table: "Tbl_Notifications",
+                column: "EmployeeId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_tbl_EmployeeTaxDeclaration_EmployeeID",
@@ -3135,11 +4643,6 @@ namespace CompanyPlatform.Core.Migrations
                 column: "EmployeeID");
 
             migrationBuilder.CreateIndex(
-                name: "IX_tbl_EmployeeExperience_EmployeeID",
-                table: "tbl_EmployeeExperience",
-                column: "EmployeeID");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_tbl_EmployeeDocument_EmployeeID",
                 table: "tbl_EmployeeDocument",
                 column: "EmployeeID");
@@ -3150,14 +4653,150 @@ namespace CompanyPlatform.Core.Migrations
                 column: "EmployeeID");
 
             migrationBuilder.CreateIndex(
-                name: "IX_tbl_EmployeeAddress_EmployeeID",
-                table: "tbl_EmployeeAddress",
+                name: "IX_tbl_Advance_EmployeeID",
+                table: "tbl_Advance",
                 column: "EmployeeID");
 
             migrationBuilder.CreateIndex(
-                name: "IX_tbl_Employee_LevelID",
-                table: "tbl_Employee",
-                column: "LevelID");
+                name: "IX_tbl_Advance_ProcessedByEmployeeId",
+                table: "tbl_Advance",
+                column: "ProcessedByEmployeeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_tbl_AdvanceRepayment_AdvanceID",
+                table: "tbl_AdvanceRepayment",
+                column: "AdvanceID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_tbl_AdvanceRepayment_CreatedByEmployeeId",
+                table: "tbl_AdvanceRepayment",
+                column: "CreatedByEmployeeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_tbl_AssignLeaveType_EmployeeID",
+                table: "tbl_AssignLeaveType",
+                column: "EmployeeID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_tbl_AssignLeaveType_LeaveTypeID",
+                table: "tbl_AssignLeaveType",
+                column: "LeaveTypeID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Tbl_Attendance_EmployeeID_Date",
+                table: "Tbl_Attendance",
+                columns: new[] { "EmployeeID", "Date" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_tbl_BonusRecords_EmployeeID",
+                table: "tbl_BonusRecords",
+                column: "EmployeeID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_tbl_ExpenseClaim_ApproverID",
+                table: "tbl_ExpenseClaim",
+                column: "ApproverID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_tbl_ExpenseClaim_EmployeeID",
+                table: "tbl_ExpenseClaim",
+                column: "EmployeeID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_tbl_ExpenseClaim_ExpenseTypeID",
+                table: "tbl_ExpenseClaim",
+                column: "ExpenseTypeID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_tbl_Form16Status_EmployeeID",
+                table: "tbl_Form16Status",
+                column: "EmployeeID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_tbl_LeaveCreditLedger_AttendanceID",
+                table: "tbl_LeaveCreditLedger",
+                column: "AttendanceID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_tbl_LeaveCreditLedger_EmployeeID",
+                table: "tbl_LeaveCreditLedger",
+                column: "EmployeeID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_tbl_LeaveCreditLedger_LeaveRequestID",
+                table: "tbl_LeaveCreditLedger",
+                column: "LeaveRequestID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_tbl_LeaveCreditLedger_LeaveTypeID",
+                table: "tbl_LeaveCreditLedger",
+                column: "LeaveTypeID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_tbl_LeaveRequest_EmployeeID",
+                table: "tbl_LeaveRequest",
+                column: "EmployeeID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_tbl_LeaveRequest_LeaveTypeID",
+                table: "tbl_LeaveRequest",
+                column: "LeaveTypeID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Tbl_LoanApplications_ApprovedByUserID",
+                table: "Tbl_LoanApplications",
+                column: "ApprovedByUserID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Tbl_LoanApplications_EmployeeID",
+                table: "Tbl_LoanApplications",
+                column: "EmployeeID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Tbl_LoanApplications_LoanTypeID",
+                table: "Tbl_LoanApplications",
+                column: "LoanTypeID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Tbl_LoanRepayments_LoanApplicationID",
+                table: "Tbl_LoanRepayments",
+                column: "LoanApplicationID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_tbl_MonthlySalaryComponentDetail_MonthlySalaryRecordID",
+                table: "tbl_MonthlySalaryComponentDetail",
+                column: "MonthlySalaryRecordID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_tbl_MonthlySalaryRecord_EmployeeID",
+                table: "tbl_MonthlySalaryRecord",
+                column: "EmployeeID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_tbl_MonthlySalaryRecord_PayrollRunID",
+                table: "tbl_MonthlySalaryRecord",
+                column: "PayrollRunID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_tbl_OutdoorDuty_ApproverID",
+                table: "tbl_OutdoorDuty",
+                column: "ApproverID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_tbl_OutdoorDuty_EmployeeID",
+                table: "tbl_OutdoorDuty",
+                column: "EmployeeID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_tbl_Payslip_EmployeeID",
+                table: "tbl_Payslip",
+                column: "EmployeeID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_tbl_Payslip_PayrollRunID",
+                table: "tbl_Payslip",
+                column: "PayrollRunID");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Tbl_AccessControls_AspNetRoles_RoleId",
@@ -3165,21 +4804,6 @@ namespace CompanyPlatform.Core.Migrations
                 column: "RoleId",
                 principalTable: "AspNetRoles",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_tbl_Employee_tbl_LevelMasters_LevelID",
-                table: "tbl_Employee",
-                column: "LevelID",
-                principalTable: "tbl_LevelMasters",
-                principalColumn: "ID");
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_tbl_EmployeeAddress_tbl_Employee_EmployeeID",
-                table: "tbl_EmployeeAddress",
-                column: "EmployeeID",
-                principalTable: "tbl_Employee",
-                principalColumn: "ID",
                 onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
@@ -3199,24 +4823,8 @@ namespace CompanyPlatform.Core.Migrations
                 onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
-                name: "FK_tbl_EmployeeExperience_tbl_Employee_EmployeeID",
-                table: "tbl_EmployeeExperience",
-                column: "EmployeeID",
-                principalTable: "tbl_Employee",
-                principalColumn: "ID",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
                 name: "FK_tbl_EmployeePFDetails_tbl_Employee_EmployeeID",
                 table: "tbl_EmployeePFDetails",
-                column: "EmployeeID",
-                principalTable: "tbl_Employee",
-                principalColumn: "ID",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_tbl_EmployeeQualification_tbl_Employee_EmployeeID",
-                table: "tbl_EmployeeQualification",
                 column: "EmployeeID",
                 principalTable: "tbl_Employee",
                 principalColumn: "ID",
@@ -3250,6 +4858,14 @@ namespace CompanyPlatform.Core.Migrations
                 name: "FK_tbl_EmployeeTDSDetails_tbl_Employee_EmployeeID",
                 table: "tbl_EmployeeTDSDetails",
                 column: "EmployeeID",
+                principalTable: "tbl_Employee",
+                principalColumn: "ID",
+                onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Tbl_Notifications_tbl_Employee_EmployeeId",
+                table: "Tbl_Notifications",
+                column: "EmployeeId",
                 principalTable: "tbl_Employee",
                 principalColumn: "ID",
                 onDelete: ReferentialAction.Cascade);
