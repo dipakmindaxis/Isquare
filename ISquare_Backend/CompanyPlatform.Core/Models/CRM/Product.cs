@@ -32,6 +32,27 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         [Column(TypeName = "decimal(5,2)")]
         public decimal GSTRate { get; set; }
 
+        [StringLength(50)]
+        public string? HsnCode { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal? PurchaseRate { get; set; }
+
+        [Column(TypeName = "decimal(5,2)")]
+        public decimal? ProfitPercentage { get; set; }
+
+        public int? Stock { get; set; }
+
+        [StringLength(500)]
+        public string? ProductImage { get; set; }
+
+        [NotMapped]
+        public string? ProductImagePath
+        {
+            get => ProductImage;
+            set => ProductImage = value;
+        }
+
         [DefaultValue(true)]
         public bool IsActive { get; set; } = true;
 

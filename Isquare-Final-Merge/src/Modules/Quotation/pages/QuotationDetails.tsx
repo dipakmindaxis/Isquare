@@ -488,7 +488,7 @@ export const QuotationDetails: React.FC = () => {
 
           <button
             type="button"
-            onClick={() => {
+            onClick={async () => {
               if (isCustomerFormatQuotation(quotation.quotationId, quotation)) {
                 const ok = downloadOriginalCustomerQuotation(quotation.quotationId);
                 if (ok) {
@@ -496,8 +496,13 @@ export const QuotationDetails: React.FC = () => {
                   return;
                 }
               }
-              exportQuotationToPdf(fullQuoteForPreview, companyProfile, customer, true);
-              toast.success("PDF exported successfully");
+              try {
+                await exportQuotationToPdf(fullQuoteForPreview, companyProfile, customer, true);
+                toast.success("PDF exported successfully");
+              } catch (error) {
+                console.error("PDF export failed:", error);
+                toast.error("Failed to generate PDF");
+              }
             }}
             className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 rounded-xl transition shadow-xs cursor-pointer"
             title="Export Quotation to PDF (.pdf)"
@@ -730,7 +735,7 @@ export const QuotationDetails: React.FC = () => {
             <h3 className="text-xs font-bold uppercase tracking-wider text-gray-700">
               Commercial Terms &amp; Legal Conditions
             </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs bg-slate-50 p-3 rounded-xl border border-slate-100">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs bg-slate-50 p-3 rounded-xl border border-slate-100">
               <div>
                 <span className="text-gray-400 block text-[10px] uppercase font-bold">
                   Delivery Period
@@ -742,12 +747,6 @@ export const QuotationDetails: React.FC = () => {
                   Payment Terms
                 </span>
                 <span className="font-bold text-gray-800">{quotation.paymentTermsName || "Standard as agreed"}</span>
-              </div>
-              <div>
-                <span className="text-gray-400 block text-[10px] uppercase font-bold">
-                  Warranty
-                </span>
-                <span className="font-bold text-gray-800">{quotation.warranty || "1 Year Standard"}</span>
               </div>
               <div>
                 <span className="text-gray-400 block text-[10px] uppercase font-bold">

@@ -32,8 +32,8 @@ export const QuotationSummary: React.FC<QuotationSummaryProps> = ({
     <div className="space-y-6">
       {/* High Discount Alert */}
       {hasHighDiscount && (
-        <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3 text-amber-800">
-          <ShieldAlert size={20} className="shrink-0 text-amber-600 mt-0.5" />
+        <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3 text-amber-800 shadow-xs">
+          <ShieldAlert size={20} className="shrink-0 text-[#FF7900] mt-0.5" />
           <div className="flex-1 text-xs">
             <p className="font-bold">Commercial Policy Warning: High Discount Detected (&gt;15%)</p>
             <p className="text-amber-700 mt-0.5">
@@ -44,7 +44,7 @@ export const QuotationSummary: React.FC<QuotationSummaryProps> = ({
             <button
               type="button"
               onClick={onRequestApproval}
-              className="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-semibold transition shrink-0"
+              className="px-3.5 py-1.5 bg-[#FF7900] hover:bg-[#e06800] text-white rounded-xl text-xs font-semibold transition shrink-0 cursor-pointer shadow-xs"
             >
               Request Approval
             </button>
@@ -53,7 +53,7 @@ export const QuotationSummary: React.FC<QuotationSummaryProps> = ({
       )}
 
       {/* Financial Summary Card */}
-      <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 p-5 rounded-2xl border border-slate-200">
+      <div className="bg-[#F5F7F5] p-5 rounded-2xl border border-slate-200/80 shadow-xs">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
           {/* Left Recap Column */}
           <div className="space-y-2 text-xs text-slate-600">
@@ -92,7 +92,7 @@ export const QuotationSummary: React.FC<QuotationSummaryProps> = ({
           </div>
 
           {/* Right Grand Total Column */}
-          <div className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-sm text-right space-y-2">
+          <div className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-xs text-right space-y-2">
             <div className="flex justify-between text-xs text-slate-500">
               <span>Gross Catalog Subtotal:</span>
               <span className="font-mono font-medium">{formatINR(totals.subtotal)}</span>
@@ -111,7 +111,7 @@ export const QuotationSummary: React.FC<QuotationSummaryProps> = ({
               <span>GST (Goods &amp; Services Tax):</span>
               <span className="font-mono font-medium">{formatINR(totals.taxAmount)}</span>
             </div>
-            <div className="border-t-2 border-slate-900/10 pt-3 flex justify-between items-baseline">
+            <div className="border-t-2 border-[#FF7900]/20 pt-3 flex justify-between items-baseline">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
                 Grand Total Value:
               </span>
@@ -132,7 +132,7 @@ export const QuotationSummary: React.FC<QuotationSummaryProps> = ({
           type="button"
           onClick={onCancel}
           disabled={isSubmitting}
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 transition"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#00234a] shadow-xs transition hover:bg-slate-50 cursor-pointer disabled:opacity-50"
         >
           <X size={15} />
           <span>Cancel</span>
@@ -142,7 +142,7 @@ export const QuotationSummary: React.FC<QuotationSummaryProps> = ({
           type="button"
           onClick={onPreview}
           disabled={isSubmitting}
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 transition"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50/80 px-4 py-2.5 text-xs sm:text-sm font-semibold text-blue-700 shadow-xs transition hover:bg-blue-100 cursor-pointer disabled:opacity-50"
         >
           <Eye size={15} />
           <span>Preview Quotation</span>
@@ -152,7 +152,7 @@ export const QuotationSummary: React.FC<QuotationSummaryProps> = ({
           type="button"
           onClick={onSave}
           disabled={isSubmitting}
-          className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-bold bg-[#00234a] hover:bg-[#003366] text-white shadow-md shadow-blue-900/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-[#00234a] hover:bg-[#FF7900] text-white shadow-[0_10px_18px_rgba(0,35,74,0.18)] transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isSubmitting ? (
             <>

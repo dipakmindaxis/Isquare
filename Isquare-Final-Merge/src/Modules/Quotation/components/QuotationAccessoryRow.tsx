@@ -7,6 +7,7 @@ import {
   getSuggestedAccessories,
   STANDARD_UOMS,
 } from "../utils/quotationCalculations";
+import { resolveImageUrl } from "../services/quotationService";
 
 interface QuotationAccessoryRowProps {
   accessory: QuotationItem;
@@ -49,14 +50,14 @@ export const QuotationAccessoryRow: React.FC<QuotationAccessoryRowProps> = ({
   };
 
   return (
-    <tr className="bg-blue-50/40 hover:bg-blue-50/70 border-b border-blue-100 transition text-xs">
+    <tr className="bg-orange-50/20 hover:bg-orange-50/40 border-b border-gray-100 transition text-xs">
       {/* Code, Name, Suggestion & Link */}
-      <td className="p-3 pl-6 align-top">
+      <td className="p-3 pl-6 align-top border-r border-gray-100">
         <div className="flex items-start gap-2">
-          <CornerDownRight size={16} className="text-blue-600 shrink-0 mt-1" />
+          <CornerDownRight size={16} className="text-[#FF7900] shrink-0 mt-1" />
           <div className="flex-1 space-y-1.5 min-w-[200px]">
             <div className="flex items-center gap-1.5">
-              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase bg-blue-100 text-blue-800 tracking-wide">
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase bg-orange-50 text-[#FF7900] border border-[#FF7900]/20 tracking-wide">
                 Accessory
               </span>
               <span className="text-[11px] text-gray-400 truncate">
@@ -69,7 +70,7 @@ export const QuotationAccessoryRow: React.FC<QuotationAccessoryRowProps> = ({
               value={accessory.itemCode || ""}
               onChange={(e) => handleSelectPredefined(e.target.value)}
               disabled={disabled}
-              className="w-full text-xs py-1 px-2 bg-white border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none"
+              className="w-full text-xs py-1 px-2 bg-white border border-gray-200 rounded-lg focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none"
             >
               <option value="">Custom Accessory...</option>
               <optgroup label="Suggested for This Product">
@@ -90,7 +91,7 @@ export const QuotationAccessoryRow: React.FC<QuotationAccessoryRowProps> = ({
                   onUpdate({ ...accessory, itemCode: e.target.value })
                 }
                 disabled={disabled}
-                className="w-full text-xs py-1 px-2 bg-white border border-gray-300 rounded font-mono focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                className="w-full text-xs py-1 px-2 bg-white border border-gray-200 rounded-lg font-mono focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none"
               />
               <input
                 type="text"
@@ -101,7 +102,7 @@ export const QuotationAccessoryRow: React.FC<QuotationAccessoryRowProps> = ({
                 }
                 disabled={disabled}
                 required
-                className="w-full text-xs py-1 px-2 bg-white border border-gray-300 rounded font-semibold focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                className="w-full text-xs py-1 px-2 bg-white border border-gray-200 rounded-lg font-semibold focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none"
               />
             </div>
           </div>
@@ -109,7 +110,7 @@ export const QuotationAccessoryRow: React.FC<QuotationAccessoryRowProps> = ({
       </td>
 
       {/* Specification */}
-      <td className="p-3 align-top min-w-[180px]">
+      <td className="p-3 align-top min-w-[180px] border-r border-gray-100">
         <textarea
           placeholder="Accessory technical specification..."
           rows={2}
@@ -118,15 +119,34 @@ export const QuotationAccessoryRow: React.FC<QuotationAccessoryRowProps> = ({
             onUpdate({ ...accessory, specification: e.target.value })
           }
           disabled={disabled}
-          className="w-full text-xs py-1 px-2 bg-white border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none resize-none"
+          className="w-full text-xs py-1 px-2 bg-white border border-gray-200 rounded-lg focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none resize-none"
         />
       </td>
 
       {/* 3. Accessory Image / Icon */}
       <td className="p-3 align-top text-center w-24 min-w-[80px]">
-        <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 mx-auto mt-1">
-          <Package size={14} className="text-slate-400" />
-        </div>
+        {(() => {
+          const rawAccImg =
+            (accessory as any).customImageUrl ||
+            accessory.imageUrl ||
+            (accessory as any).productImage ||
+            (accessory as any).productImagePath ||
+            (accessory as any).image;
+          const accessoryImg = resolveImageUrl(rawAccImg) || rawAccImg;
+          return (
+            <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 mx-auto mt-1 overflow-hidden">
+              {accessoryImg ? (
+                <img
+                  src={accessoryImg}
+                  alt={accessory.itemName || "Accessory"}
+                  className="w-full h-full object-contain p-0.5"
+                />
+              ) : (
+                <Package size={14} className="text-slate-400" />
+              )}
+            </div>
+          );
+        })()}
       </td>
 
       {/* 4. HSN Code */}
@@ -248,21 +268,21 @@ export const QuotationAccessoryRow: React.FC<QuotationAccessoryRowProps> = ({
       </td>
 
       {/* 11. Purchase Rate */}
-      <td className="p-3 align-top w-28 min-w-[100px] text-right">
+      <td className="p-3 align-top w-28 min-w-[100px] text-right border-r border-gray-100">
         <div className="py-1 px-1.5 bg-slate-50 border border-slate-200 rounded text-right font-medium text-xs text-gray-400">
           —
         </div>
       </td>
 
       {/* 12. Profit % */}
-      <td className="p-3 align-top w-20 min-w-[75px] text-center">
+      <td className="p-3 align-top w-20 min-w-[75px] text-center border-r border-gray-100">
         <div className="py-1 px-1.5 bg-slate-50 border border-slate-200 rounded text-center font-medium text-xs text-gray-400">
           —
         </div>
       </td>
 
       {/* 13. Stock */}
-      <td className="p-3 align-top w-20 min-w-[70px] text-center">
+      <td className="p-3 align-top w-20 min-w-[70px] text-center border-r border-gray-100">
         <div className="py-1 px-1.5 bg-slate-50 border border-slate-200 rounded text-center font-medium text-xs text-gray-400">
           —
         </div>

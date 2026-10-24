@@ -50,6 +50,8 @@ export interface ApiEndpoints {
   Directors: string;
   SalesCoordinator: string;
   SalesCoordinators: string;
+  Product: string;
+  Products: string;
   [key: string]: string;
 }
 
@@ -153,6 +155,13 @@ export const API_ENDPOINTS: ApiEndpoints = {
   Directors: `${BASE_URL}/director`,
   SalesCoordinator: `${BASE_URL}/sales-coordinator`,
   SalesCoordinators: `${BASE_URL}/sales-coordinator`,
+  EnquirySources: `${BASE_URL}/EnquirySource`,
+  EnquiryTypes: `${BASE_URL}/EnquiryType`,
+  EnquiryStatuses: `${BASE_URL}/EnquiryStatus`,
+  EnquiryStages: `${BASE_URL}/EnquiryStage`,
+  UnitOfMeasures: `${BASE_URL}/UnitOfMeasure`,
+  LostReasons: `${BASE_URL}/LostReason`,
+
   Levels: `${BASE_URL}/levels`,
   LevelMaster: `${BASE_URL}/level-master`,
 };

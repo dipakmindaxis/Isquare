@@ -39,6 +39,29 @@ export function calculateItemTotals(
   };
 }
 
+/**
+ * Computes Profit % using: ((Taxable Amount / Qty - Purchase Rate) / Purchase Rate) * 100
+ * Safely returns null if Qty <= 0, Purchase Rate <= 0, or either value is missing/invalid.
+ */
+export function calculateProfitPercentage(
+  taxableAmount: number,
+  quantity: number,
+  purchaseRate: number | null | undefined
+): number | null {
+  const safeQty = Number(quantity);
+  const pRate = Number(purchaseRate);
+
+  if (!Number.isFinite(safeQty) || safeQty <= 0) return null;
+  if (!Number.isFinite(pRate) || pRate <= 0) return null;
+  if (!Number.isFinite(taxableAmount)) return null;
+
+  const unitSellingPrice = taxableAmount / safeQty;
+  const rawProfit = ((unitSellingPrice - pRate) / pRate) * 100;
+
+  if (!Number.isFinite(rawProfit)) return null;
+  return Number(rawProfit.toFixed(2));
+}
+
 export interface QuotationTotalsResult {
   subtotal: number;
   discountAmount: number;

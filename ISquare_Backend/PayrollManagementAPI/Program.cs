@@ -145,8 +145,14 @@ builder.Services.AddVMSModule();
 
 
 
+//builder.Services.AddDbContext<ApplicationDBContext>(options =>
+//    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 builder.Services.AddDbContext<ApplicationDBContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        sqlOptions => sqlOptions.CommandTimeout(300)));
+
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
@@ -319,7 +325,6 @@ builder.Services.AddScoped<IHistoryService, HistoryService>();
 builder.Services.AddScoped<IEmailTemplateService, EmailTemplateService>();
 builder.Services.AddScoped<IDocumentTypeService, DocumentTypeService>();
 builder.Services.AddScoped<IPriorityService, PriorityService>();
-
 //pa
 builder.Services.AddScoped<IInvoiceService, InvoiceService>();
 builder.Services.AddScoped<IInvoiceItemService, InvoiceItemService>();
@@ -379,6 +384,10 @@ builder.Services.AddScoped<ILostReasonService, LostReasonService>();
 builder.Services.AddScoped<IEnquiryStatusService, EnquiryStatusService>();
 builder.Services.AddScoped<IProductCategoryService, ProductCategoryService>();
 builder.Services.AddScoped<IProductServiceItemService, ProductServiceItemService>();
+builder.Services.AddScoped<IUnitOfMeasureService, UnitOfMeasureService>();
+builder.Services.AddScoped<ICurrencyService, CurrencyService>();
+builder.Services.AddScoped<ISalesTerritoryService, SalesTerritoryService>();
+builder.Services.AddScoped<IPlaceOfSupplyService, PlaceOfSupplyService>();
 
 
 

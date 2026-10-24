@@ -90,6 +90,23 @@ export const CreateQuotation: React.FC = () => {
         toast.error("Failed to load recent quotations");
       })
       .finally(() => setIsRecentLoading(false));
+
+    // Listen for product catalog updates (e.g. specification or detail edits in Product Master)
+    const handleProductUpdated = () => {
+      productService
+        .getAll()
+        .then((prods) => {
+          setAvailableProducts(prods);
+        })
+        .catch((err) => {
+          console.error("Failed to refresh product catalog:", err);
+        });
+    };
+
+    window.addEventListener("isquare_product_updated", handleProductUpdated);
+    return () => {
+      window.removeEventListener("isquare_product_updated", handleProductUpdated);
+    };
   }, []);
 
   const handleSave = async (quotationData: Quotation) => {
@@ -244,7 +261,7 @@ export const CreateQuotation: React.FC = () => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="p-4 md:p-6 bg-[#F5F7F5] min-h-full space-y-6">
       <QuotationForm
         initialQuotation={initialQuotation}
         customers={customers}
@@ -267,13 +284,13 @@ export const CreateQuotation: React.FC = () => {
       <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="p-5 border-b border-gray-200 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="font-bold text-gray-900 text-base">Recent Quotations</h2>
+            <h2 className="font-bold text-[#00234a] text-base">Recent Quotations</h2>
             <p className="text-xs text-gray-500">Latest active commercial quotations</p>
           </div>
           <button
             type="button"
             onClick={() => navigate("/rsm/quotations")}
-            className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1"
+            className="text-xs font-semibold text-[#FF7900] hover:text-[#e06800] flex items-center gap-1 transition cursor-pointer"
           >
             <span>View All Quotations</span>
             <ArrowRight size={14} />
@@ -283,14 +300,14 @@ export const CreateQuotation: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full min-w-[820px] border-collapse text-left text-xs">
             <thead>
-              <tr className="bg-[#154068] text-white font-bold uppercase text-[11px] tracking-wider">
-                <th className="p-3.5">Quotation #</th>
-                <th className="p-3.5">Customer</th>
-                <th className="p-3.5">Enquiry Ref</th>
-                <th className="p-3.5">Date</th>
-                <th className="p-3.5 text-right">Total Value</th>
-                <th className="p-3.5 text-center">Status</th>
-                <th className="p-3.5 text-right">Actions</th>
+              <tr className="bg-[#FF7900] text-white font-bold uppercase text-[12px] tracking-wider">
+                <th className="p-3.5 border-r border-[#e06800]">Quotation #</th>
+                <th className="p-3.5 border-r border-[#e06800]">Customer</th>
+                <th className="p-3.5 border-r border-[#e06800]">Enquiry Ref</th>
+                <th className="p-3.5 border-r border-[#e06800]">Date</th>
+                <th className="p-3.5 text-right border-r border-[#e06800]">Total Value</th>
+                <th className="p-3.5 text-center border-r border-[#e06800]">Status</th>
+                <th className="p-3.5 text-right w-28">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -308,35 +325,35 @@ export const CreateQuotation: React.FC = () => {
                 </tr>
               ) : (
                 recentQuotations.slice(0, 6).map((quotation) => (
-                  <tr key={quotation.quotationId} className="hover:bg-slate-50 transition">
-                    <td className="p-3.5 font-bold text-gray-900 font-mono">
+                  <tr key={quotation.quotationId} className="hover:bg-[#f0f7ff] transition duration-150 min-h-[52px]">
+                    <td className="p-3.5 font-bold text-gray-900 font-mono border-r border-gray-100">
                       {quotation.quotationNumber || `QT-${quotation.quotationId}`}
-                      <span className="ml-1 text-blue-600 text-[11px]">
-                        (R{quotation.revisionNumber})
+                      <span className="ml-1.5 px-2 py-0.5 rounded-full bg-orange-50 text-[#FF7900] border border-[#FF7900]/20 text-[10px] font-bold">
+                        R{quotation.revisionNumber}
                       </span>
                     </td>
-                    <td className="p-3.5 font-semibold text-gray-800">
+                    <td className="p-3.5 font-semibold text-gray-800 border-r border-gray-100">
                       {quotation.customerName || `Customer #${quotation.customerId}`}
                     </td>
-                    <td className="p-3.5 text-gray-500 font-mono">
+                    <td className="p-3.5 text-gray-500 font-mono border-r border-gray-100">
                       {quotation.enquiryRef || "—"}
                     </td>
-                    <td className="p-3.5 text-gray-500">
+                    <td className="p-3.5 text-gray-500 border-r border-gray-100">
                       {quotation.quotationDate
                         ? new Date(quotation.quotationDate).toLocaleDateString("en-CA")
                         : "—"}
                     </td>
-                    <td className="p-3.5 text-right font-bold text-gray-900">
+                    <td className="p-3.5 text-right font-bold text-gray-900 font-mono border-r border-gray-100">
                       {formatINR(quotation.grandTotal)}
                     </td>
-                    <td className="p-3.5 text-center">
+                    <td className="p-3.5 text-center border-r border-gray-100">
                       <QuotationStatusBadge status={quotation.status} />
                     </td>
-                    <td className="p-3.5 text-right whitespace-nowrap">
+                    <td className="p-3.5 text-right space-x-1.5 whitespace-nowrap">
                       <button
                         type="button"
                         onClick={() => navigate(`/rsm/quotations/${quotation.quotationId}`)}
-                        className="p-1.5 mr-1 bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-600 rounded-lg transition"
+                        className="p-2 bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-600 rounded-lg transition shadow-xs inline-flex items-center justify-center cursor-pointer"
                         title="View quotation"
                       >
                         <Eye size={14} />
@@ -344,7 +361,7 @@ export const CreateQuotation: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => navigate(`/rsm/quotations/${quotation.quotationId}/edit`)}
-                        className="p-1.5 bg-amber-50 hover:bg-amber-600 hover:text-white text-amber-600 rounded-lg transition"
+                        className="p-2 bg-amber-50 hover:bg-amber-600 hover:text-white text-amber-600 rounded-lg transition shadow-xs inline-flex items-center justify-center cursor-pointer"
                         title="Edit quotation"
                       >
                         <Edit size={14} />

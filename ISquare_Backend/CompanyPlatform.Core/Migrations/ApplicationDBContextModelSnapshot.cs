@@ -2390,6 +2390,17 @@ namespace CompanyPlatform.Core.Migrations
                     b.Property<decimal>("GSTRate")
                         .HasColumnType("decimal(5,2)");
 
+                    b.Property<string>("Brand")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal>("GSTRate")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<string>("HsnCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -2401,10 +2412,20 @@ namespace CompanyPlatform.Core.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<string>("ProductImage")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<string>("ProductName")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<decimal?>("ProfitPercentage")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<decimal?>("PurchaseRate")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Specification")
                         .HasMaxLength(1000)
@@ -2412,6 +2433,9 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.Property<decimal>("StandardRate")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("Stock")
+                        .HasColumnType("int");
 
                     b.Property<int?>("UnitOfMeasurementId")
                         .HasColumnType("int");
@@ -2836,6 +2860,686 @@ namespace CompanyPlatform.Core.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<int?>("PaymentTermId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("QuotationValidity")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("StandardTermsAndConditions")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("StandardWarranty")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("QuotationDefaultId");
+
+                    b.ToTable("tbl_QuotationDefault");
+                });
+
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.QuotationItem", b =>
+                {
+                    b.Property<int>("QuotationItemId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("QuotationItemId"));
+
+                    b.Property<string>("Brand")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("DiscountAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("DiscountPercentage")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("GSTRate")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<bool>("IsAccessory")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ItemCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ItemName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<decimal>("LineTotal")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("ParentQuotationItemId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("decimal(18,3)");
+
+                    b.Property<int>("QuotationId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Rate")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Specification")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("TaxAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TaxableAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("UnitOfMeasurementId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("QuotationItemId");
+
+                    b.ToTable("tbl_QuotationItem");
+                });
+
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.QuotationRevision", b =>
+                {
+                    b.Property<int>("QuotationRevisionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("QuotationRevisionId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DeliveryPeriod")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<decimal>("DiscountAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("EnquiryId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("FreightCharges")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("GrandTotal")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("InstallationCharges")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal>("OtherCharges")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("PaymentTermId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("QuotationDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("QuotationId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("QuotationNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("QuotationStatus")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("RevisedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("RevisionDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("RevisionNumber")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("RevisionReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<decimal>("Subtotal")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TaxAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TaxableAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("TermsAndConditions")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ValidUntil")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Warranty")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("QuotationRevisionId");
+
+                    b.ToTable("tbl_QuotationRevision");
+                });
+
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.Quotation", b =>
+                {
+                    b.Property<int>("QuotationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("QuotationId"));
+
+                    b.Property<string>("ApprovalStatus")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DeliveryPeriod")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<decimal>("DiscountAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("EnquiryId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("FreightCharges")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("GrandTotal")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("InstallationCharges")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal>("OtherCharges")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("PaymentTermId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("QuotationDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("QuotationNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("RevisionNumber")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<decimal>("Subtotal")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TaxAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TaxableAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("TermsAndConditions")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ValidUntil")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Warranty")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("QuotationId");
+
+                    b.ToTable("tbl_Quotation");
+                });
+
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.QuotationApproval", b =>
+                {
+                    b.Property<int>("QuotationApprovalId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("QuotationApprovalId"));
+
+                    b.Property<string>("ApprovalReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("ApprovalStatus")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ApprovedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("ApproverComments")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("QuotationId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("RequestedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("RequestedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("QuotationApprovalId");
+
+                    b.ToTable("tbl_QuotationApproval");
+                });
+
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.QuotationCharge", b =>
+                {
+                    b.Property<int>("QuotationChargeId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("QuotationChargeId"));
+
+                    b.Property<decimal>("ChargeAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("ChargeName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("ChargeType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsTaxable")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("QuotationId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("TaxAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TaxRate")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("QuotationChargeId");
+
+                    b.ToTable("tbl_QuotationCharge");
+                });
+
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.QuotationDefault", b =>
+                {
+                    b.Property<int>("QuotationDefaultId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("QuotationDefaultId"));
+
+                    b.Property<string>("AccountHolderName")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("AccountNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("BankName")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("CompanyAddress")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("tbl_SalaryComponent");
+                });
+
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.SalaryStructure", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18, 2)");
+
+                    b.Property<DateTime?>("EffectiveDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("EmployeeID")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("SalaryComponentID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeID");
+
+                    b.HasIndex("SalaryComponentID");
+
+                    b.ToTable("tbl_SalaryStructure");
+                });
+
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.SalesOrder", b =>
+                {
+                    b.Property<int>("SalesOrderId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SalesOrderId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DeliveryAddress")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<decimal>("DiscountAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("ExpectedDeliveryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("FreightCharges")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("GrandTotal")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("OrderDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("OrderStatus")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal>("OtherCharges")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("PaymentTerms")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("QuotationId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Remarks")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("SalesOrderNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal>("Subtotal")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TaxAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TaxableAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("SalesOrderId");
+
+                    b.ToTable("tbl_SalesOrder");
+                });
+
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.SalesOrderItem", b =>
+                {
+                    b.Property<int>("SalesOrderItemId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SalesOrderItemId"));
+
+                    b.Property<string>("Brand")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("DiscountAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("DiscountPercentage")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("GSTRate")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<bool>("IsAccessory")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ItemCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("ItemName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<decimal>("LineTotal")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("ParentSalesOrderItemId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("decimal(18,3)");
+
+                    b.Property<decimal>("Rate")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("SalesOrderId")
+                        .HasColumnType("int");
+                    b.Property<string>("CompanyLogoPath")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("CompanyName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DefaultDeliveryPeriod")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("GSTNumber")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("IFSCCode")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Specification")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<decimal>("TaxAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TaxableAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("UnitOfMeasurement")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("SalesOrderItemId");
+
+                    b.ToTable("tbl_SalesOrderItem");
                     b.Property<int?>("PaymentTermId")
                         .HasColumnType("int");
 
@@ -3988,6 +4692,51 @@ namespace CompanyPlatform.Core.Migrations
                     b.ToTable("tbl_ContactType");
                 });
 
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Currency", b =>
+                {
+                    b.Property<int>("CurrencyId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CurrencyId"));
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime>("CurrencyCreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CurrencyDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("CurrencyIsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CurrencyIsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("CurrencyName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int?>("CurrencySortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CurrencyUpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("CurrencyId");
+
+                    b.HasIndex("CurrencyCode")
+                        .IsUnique();
+
+                    b.ToTable("Currencies");
+                });
+
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.CustomerArea.CustomerArea", b =>
                 {
                     b.Property<int>("CustomerAreaId")
@@ -4469,12 +5218,7 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("WorkLocationID");
 
-                    b.ToTable("tbl_Employees", null, t =>
-                        {
-                            t.HasTrigger("trg_tbl_Employees");
-                        });
-
-                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                    b.ToTable("tbl_Employees");
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.EnquiryPriority", b =>
@@ -4564,6 +5308,46 @@ namespace CompanyPlatform.Core.Migrations
                     b.ToTable("EnquirySources");
                 });
 
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Director.Director", b =>
+                {
+                    b.Property<int>("DirectorId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("DirectorId"));
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DirectorCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DirectorName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("DirectorId");
+
+                    b.ToTable("tbl_Director");
+                });
+
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Employee.EmployeeAddress", b =>
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.EnquiryStage", b =>
                 {
                     b.Property<int>("EnquiryStageId")
@@ -4860,6 +5644,257 @@ namespace CompanyPlatform.Core.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Gender")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("GoogleCalendarId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("LevelID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("MiddleName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MobileNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhotoPath")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PresentAddress")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("ReportingTo")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("WorkLocationID")
+                        .HasColumnType("int");
+
+                    b.HasKey("ID");
+
+                    b.HasIndex("ApplicationUserId");
+
+                    b.HasIndex("DepartmentID");
+
+                    b.HasIndex("DesignationID");
+
+                    b.HasIndex("LevelID");
+
+                    b.HasIndex("ReportingTo");
+
+                    b.HasIndex("WorkLocationID");
+
+                    b.ToTable("tbl_Employees", null, t =>
+                        {
+                            t.HasTrigger("trg_tbl_Employees");
+                        });
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                });
+
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.EnquiryPriority", b =>
+                {
+                    b.Property<int>("EnquiryPriorityId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EnquiryPriorityId"));
+
+                    b.Property<string>("EnquiryPriorityCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime>("EnquiryPriorityCreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EnquiryPriorityDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("EnquiryPriorityIsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("EnquiryPriorityIsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("EnquiryPriorityName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int?>("EnquiryPrioritySortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("EnquiryPriorityUpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("EnquiryPriorityId");
+
+                    b.HasIndex("EnquiryPriorityCode")
+                        .IsUnique();
+
+                    b.ToTable("EnquiryPriorities");
+                });
+
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.EnquirySource", b =>
+                {
+                    b.Property<int>("EnquirySourceId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EnquirySourceId"));
+
+                    b.Property<string>("EnquirySourceCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime>("EnquirySourceCreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EnquirySourceDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("EnquirySourceIsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("EnquirySourceName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int?>("EnquirySourceSortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("EnquirySourceUpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("EnquirySourceId");
+
+                    b.HasIndex("EnquirySourceCode")
+                        .IsUnique();
+
+                    b.ToTable("EnquirySources");
+                });
+
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.EnquiryStage", b =>
+                {
+                    b.Property<int>("EnquiryStageId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EnquiryStageId"));
+
+                    b.Property<string>("EnquiryStageCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime>("EnquiryStageCreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EnquiryStageDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("EnquiryStageIsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("EnquiryStageIsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("EnquiryStageName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int?>("EnquiryStageSortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("EnquiryStageUpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("EnquiryStageId");
+
+                    b.HasIndex("EnquiryStageCode")
+                        .IsUnique();
+
+                    b.ToTable("EnquiryStages");
+                });
+
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.EnquiryStatus", b =>
+                {
+                    b.Property<int>("EnquiryStatusId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EnquiryStatusId"));
+
+                    b.Property<string>("EnquiryStatusCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime>("EnquiryStatusCreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EnquiryStatusDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("EnquiryStatusIsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("EnquiryStatusIsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("EnquiryStatusName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int?>("EnquiryStatusSortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("EnquiryStatusUpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("EnquiryStatusId");
+
+                    b.HasIndex("EnquiryStatusCode")
+                        .IsUnique();
+
+                    b.ToTable("EnquiryStatuses");
+                });
+
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.EnquiryType", b =>
+                {
+                    b.Property<int>("EnquiryTypeId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EnquiryTypeId"));
+
+                    b.Property<string>("EnquiryTypeCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime>("EnquiryTypeCreatedAt")
                     b.Property<DateTime?>("ReadAt")
                         .HasColumnType("datetime2");
 
@@ -4882,16 +5917,76 @@ namespace CompanyPlatform.Core.Migrations
                     b.Property<DateTime?>("CreatedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<bool>("IsActive")
+                    b.Property<string>("EnquiryTypeDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("EnquiryTypeIsActive")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
+                    b.Property<string>("EnquiryTypeName")
                     b.Property<string>("PaymentTermCode")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
 
+                    b.Property<int?>("EnquiryTypeSortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("EnquiryTypeUpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("EnquiryTypeId");
+
+                    b.HasIndex("EnquiryTypeCode")
+                        .IsUnique();
+
+                    b.ToTable("EnquiryTypes");
+                });
+
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.LostReason", b =>
+                {
+                    b.Property<int>("LostReasonId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("LostReasonId"));
+
+                    b.Property<string>("LostReasonCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime>("LostReasonCreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LostReasonDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("LostReasonIsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("LostReasonIsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LostReasonName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int?>("LostReasonSortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("LostReasonUpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("LostReasonId");
+
+                    b.HasIndex("LostReasonCode")
+                        .IsUnique();
+
+                    b.ToTable("LostReasons");
                     b.Property<string>("PaymentTermName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -4905,6 +6000,302 @@ namespace CompanyPlatform.Core.Migrations
                     b.HasKey("PaymentTermId");
 
                     b.ToTable("tbl_PaymentTerm");
+                });
+
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.PlaceOfSupply", b =>
+                {
+                    b.Property<int>("PlaceOfSupplyId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PlaceOfSupplyId"));
+
+                    b.Property<string>("PlaceOfSupplyCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime>("PlaceOfSupplyCreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PlaceOfSupplyDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("PlaceOfSupplyIsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("PlaceOfSupplyIsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("PlaceOfSupplyName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int?>("PlaceOfSupplySortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("PlaceOfSupplyUpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("PlaceOfSupplyId");
+
+                    b.HasIndex("PlaceOfSupplyCode")
+                        .IsUnique();
+
+                    b.ToTable("PlaceOfSupplies");
+                });
+
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.ProductCategory", b =>
+                {
+                    b.Property<int>("ProductCategoryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProductCategoryId"));
+
+                    b.Property<string>("ProductCategoryCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime>("ProductCategoryCreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ProductCategoryCreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ProductCategoryDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("ProductCategoryIsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ProductCategoryIsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ProductCategoryName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int?>("ProductCategorySortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ProductCategoryUpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ProductCategoryUpdatedBy")
+                        .HasColumnType("int");
+
+                    b.HasKey("ProductCategoryId");
+
+                    b.HasIndex("ProductCategoryCode")
+                        .IsUnique();
+
+                    b.ToTable("ProductCategories");
+                });
+
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.ProductServiceItem", b =>
+                {
+                    b.Property<int>("ProductServiceId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProductServiceId"));
+
+                    b.Property<string>("ProductServiceCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime>("ProductServiceCreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ProductServiceCreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ProductServiceDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("ProductServiceIsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ProductServiceIsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ProductServiceName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int?>("ProductServiceSortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ProductServiceUpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ProductServiceUpdatedBy")
+                        .HasColumnType("int");
+
+                    b.HasKey("ProductServiceId");
+
+                    b.HasIndex("ProductServiceCode")
+                        .IsUnique();
+
+                    b.ToTable("ProductServices");
+                });
+
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.SalesAttachment", b =>
+                {
+                    b.Property<int>("SalesAttachmentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SalesAttachmentId"));
+
+                    b.Property<string>("ContentType")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int?>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DocumentType")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("EnquiryId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<long>("FileSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("SalesActivityId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("StoredFileName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int?>("UploadedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UploadedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("SalesAttachmentId");
+
+                    b.ToTable("tbl_SalesAttachment");
+                });
+
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.SalesCoordinator.SalesCoordinator", b =>
+                {
+                    b.Property<int>("SalesCoordinatorId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SalesCoordinatorId"));
+
+                    b.Property<int?>("BDEUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("SalesCoordinatorCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SalesCoordinatorName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("SalesCoordinatorId");
+
+                    b.HasIndex("BDEUserId");
+
+                    b.ToTable("tbl_SalesCoordinator");
+                });
+
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.SalesTerritory", b =>
+                {
+                    b.Property<int>("SalesTerritoryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SalesTerritoryId"));
+
+                    b.Property<string>("SalesTerritoryCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime>("SalesTerritoryCreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("SalesTerritoryDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("SalesTerritoryIsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("SalesTerritoryIsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("SalesTerritoryName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int?>("SalesTerritorySortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("SalesTerritoryUpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("SalesTerritoryId");
+
+                    b.HasIndex("SalesTerritoryCode")
+                        .IsUnique();
+
+                    b.ToTable("SalesTerritories");
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.ProductCategory", b =>
@@ -5138,6 +6529,51 @@ namespace CompanyPlatform.Core.Migrations
                     b.HasKey("ID");
 
                     b.ToTable("sales_user_manager");
+                });
+
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.UnitOfMeasure", b =>
+                {
+                    b.Property<int>("UnitOfMeasureId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UnitOfMeasureId"));
+
+                    b.Property<string>("UnitOfMeasureCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime>("UnitOfMeasureCreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UnitOfMeasureDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("UnitOfMeasureIsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("UnitOfMeasureIsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("UnitOfMeasureName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int?>("UnitOfMeasureSortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UnitOfMeasureUpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("UnitOfMeasureId");
+
+                    b.HasIndex("UnitOfMeasureCode")
+                        .IsUnique();
+
+                    b.ToTable("UnitOfMeasures");
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.Department", b =>

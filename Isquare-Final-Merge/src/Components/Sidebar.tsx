@@ -156,6 +156,11 @@ const rsmMenuConfig: MenuItem[] = [
         label: "CUSTOMERS",
         to: "/rsm/customers",
       },
+     {
+        icon: <Users />,
+        label: "Enquiry master",
+        to: "/rsm/master/enquiry-master",
+      },
       {
         icon: <Sliders />,
         label: "QUOTATION DEFAULTS",

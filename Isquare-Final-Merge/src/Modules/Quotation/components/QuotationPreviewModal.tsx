@@ -20,6 +20,7 @@ import {
   getCustomerQuotationFile,
   downloadOriginalCustomerQuotation,
 } from "../utils/customerQuotationStorage";
+import { resolveImageUrl } from "../services/quotationService";
 
 interface QuotationPreviewModalProps {
   isOpen: boolean;
@@ -58,7 +59,7 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
     window.print();
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     try {
       if (isUploadedCustomerFormat) {
         const ok = downloadOriginalCustomerQuotation(quotation.quotationId);
@@ -67,7 +68,7 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
           return;
         }
       }
-      exportQuotationToPdf(quotation, companyProfile, customer, showDiscount);
+      await exportQuotationToPdf(quotation, companyProfile, customer, showDiscount);
       toast.success("PDF exported successfully");
     } catch (e) {
       console.error("PDF export failed:", e);
@@ -123,9 +124,9 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto print:p-0 print:bg-white print:static print:inset-auto print:overflow-visible">
       <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl border border-gray-200 my-8 flex flex-col max-h-[92vh] overflow-hidden print:shadow-none print:border-none print:my-0 print:max-h-none print:overflow-visible print:w-full print:max-w-none">
         {/* Top Action Bar */}
-        <div className="p-3.5 sm:px-6 border-b border-gray-800 flex flex-wrap items-center justify-between gap-3 bg-slate-900 text-white shrink-0 print:hidden">
+        <div className="p-3.5 sm:px-6 border-b border-gray-800 flex flex-wrap items-center justify-between gap-3 bg-[#00234a] text-white shrink-0 print:hidden">
           <div className="flex items-center gap-2.5">
-            <FileText size={18} className="text-blue-400 shrink-0" />
+            <FileText size={18} className="text-[#FF7900] shrink-0" />
             <h3 className="font-bold text-sm tracking-tight text-white">
               Customer-Facing Quotation Format
             </h3>
@@ -133,12 +134,12 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
 
           <div className="flex flex-wrap items-center gap-2.5">
             {/* Show/Hide Discount Column Toggle */}
-            <label className="inline-flex items-center gap-2 cursor-pointer text-xs font-medium text-slate-200 hover:text-white select-none bg-slate-800/90 px-3 py-1.5 rounded-lg border border-slate-700 transition">
+            <label className="inline-flex items-center gap-2 cursor-pointer text-xs font-medium text-slate-200 hover:text-white select-none bg-white/10 px-3 py-1.5 rounded-xl border border-white/20 transition">
               <input
                 type="checkbox"
                 checked={showDiscount}
                 onChange={(e) => setShowDiscount(e.target.checked)}
-                className="w-4 h-4 rounded text-blue-600 focus:ring-0 focus:ring-offset-0 cursor-pointer"
+                className="w-4 h-4 rounded text-[#FF7900] focus:ring-0 focus:ring-offset-0 cursor-pointer"
               />
               <span>Show Discount Column</span>
             </label>
@@ -146,7 +147,7 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
             <button
               type="button"
               onClick={handleExportExcel}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow transition cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs transition cursor-pointer"
               title="Export quotation to Excel (.xlsx)"
             >
               <FileSpreadsheet size={14} />
@@ -156,7 +157,7 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
             <button
               type="button"
               onClick={handleExportPDF}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white shadow transition cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white shadow-xs transition cursor-pointer"
               title="Export quotation to PDF (.pdf)"
             >
               <Download size={14} />
@@ -166,7 +167,7 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
             <button
               type="button"
               onClick={handlePrint}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow transition cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#FF7900] hover:bg-[#e06800] text-white shadow-xs transition cursor-pointer"
               title="Print quotation document"
             >
               <Printer size={14} />
@@ -176,7 +177,7 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-700 hover:bg-slate-600 text-white shadow transition cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white/15 hover:bg-white/25 text-white transition cursor-pointer"
             >
               <span>Back</span>
             </button>
@@ -372,10 +373,13 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
                       item.discountPercentage,
                       item.gstRate
                     );
-                    const itemImg =
+                    const rawItemImg =
+                      (item as any).customImageUrl ||
                       (item as any).imageUrl ||
                       (item as any).image ||
-                      (item as any).productImage;
+                      (item as any).productImage ||
+                      (item as any).productImagePath;
+                    const itemImg = resolveImageUrl(rawItemImg) || rawItemImg;
                     const hsnCode =
                       (item as any).hsnCode ||
                       (item as any).hsn ||
@@ -459,8 +463,13 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
                               acc.discountPercentage,
                               acc.gstRate
                             );
-                            const accImg =
-                              (acc as any).imageUrl || (acc as any).image;
+                            const rawAccImg =
+                              (acc as any).customImageUrl ||
+                              (acc as any).imageUrl ||
+                              (acc as any).image ||
+                              (acc as any).productImage ||
+                              (acc as any).productImagePath;
+                            const accImg = resolveImageUrl(rawAccImg) || rawAccImg;
                             const accHsn =
                               (acc as any).hsnCode ||
                               (acc as any).hsn ||
@@ -621,14 +630,15 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
                     {quotation.paymentTermsName}
                   </p>
                 )}
-                {quotation.warranty && (
-                  <p>
-                    <span className="font-semibold text-slate-700">
-                      Warranty:
-                    </span>{" "}
-                    {quotation.warranty}
-                  </p>
-                )}
+                {quotation.warranty &&
+                  quotation.warranty.trim().toLowerCase() !== "1 year standard" && (
+                    <p>
+                      <span className="font-semibold text-slate-700">
+                        Warranty:
+                      </span>{" "}
+                      {quotation.warranty}
+                    </p>
+                  )}
                 {quotation.termsAndConditions && (
                   <p className="text-[11px] text-slate-500 whitespace-pre-line mt-1">
                     {quotation.termsAndConditions}
