@@ -7,7 +7,12 @@ import {
   PieChart,
   ListChecks,
   MessageSquare,
-  XCircle
+  XCircle,
+  AlertCircle,
+  Coins,
+  Building2,
+  MapPin,
+  Truck,
 } from "lucide-react";
 
 // Import your newly created sub-master component
@@ -16,16 +21,26 @@ import { EnquiryTypeMaster } from "./EnquiryType/EnquiryTypeMaster";
 import { EnquiryStatusMaster } from "./EnquiryStatus/EnquiryStatusMaster";
 import { EnquiryStageMaster } from "./EnquiryStage/EnquiryStageMaster";
 import { UnitOfMeasureMaster } from "./UnitOfMeasure/UnitOfMeasureMaster"; // Added UnitOfMeasure Import
+import { EnquiryPriorityMaster } from "./EnquiryPriority/EnquiryPriorityMaster";
 
 // import { EnquiryDocumentTypeMaster } from "./EnquiryDocumentType/EnquiryDocumentTypeMaster";
 import { LostReasonMaster } from "./LostReason/LostReasonMaster";
+import { CurrencyMaster } from "./Currency/CurrencyMaster";
+import { DepartmentMaster } from "./Department/DepartmentMaster";
+import { SalesTerritoryMaster } from "./SalesTerritory/SalesTerritoryMaster";
+import { PlaceOfSupplyMaster } from "./PlaceOfSupply/PlaceOfSupplyMaster";
 
 export type EnquiryTab =
   | "source"
   | "type"
   | "status"
   | "stage"
+  | "priority"
   | "uom"
+  | "currency"
+  | "department"
+  | "territory"
+  | "place-of-supply"
   | "document-type"
   | "lost-reason";
 
@@ -71,13 +86,43 @@ const TABS: TabConfig[] = [
     shortDesc: "Unit of Measure",
     icon: <MessageSquare className="w-4 h-4" />,
   },
- 
+   {
+    id: "currency",
+    label: "Currency",
+    shortDesc: "Accepted currencies for enquiry estimations and quotes",
+    icon: <Coins className="w-4 h-4" />,
+  },
+   {
+    id: "department",
+    label: "Department",
+    shortDesc: "Organizational departments assigned to enquiries",
+    icon: <Building2 className="w-4 h-4" />,
+  },
+  {
+    id: "territory",
+    label: "Sales Territory",
+    shortDesc: "Geographic or operational sales jurisdictions",
+    icon: <MapPin className="w-4 h-4" />,
+  },
+    {
+    id: "place-of-supply",
+    label: "Place of Supply",
+    shortDesc: "Tax jurisdictions and GST billing origins/destinations",
+    icon: <Truck className="w-4 h-4" />,
+  },
   {
     id: "lost-reason",
     label: "Lost Reason",
     shortDesc: "Standardized explanations for dropped or unsuccessful enquiries",
     icon: <XCircle className="w-4 h-4" />,
   },
+  {
+  id: "priority",
+  label: "Enquiry Priority",
+  shortDesc: "Urgency levels and priority ratings for enquiries",
+  icon: <AlertCircle className="w-4 h-4" />,
+},
+
 ];
 
 export const EnquiryMaster: React.FC<EnquiryMasterProps> = ({ initialTab }) => {
@@ -94,7 +139,12 @@ export const EnquiryMaster: React.FC<EnquiryMasterProps> = ({ initialTab }) => {
       "type",
       "status",
       "stage",
+      "priority",
       "uom",
+      "currency",
+      "department",
+      "territory",
+      "place-of-supply",
       "lost-reason",
     ];
     return validTabs.includes(rawTab) ? rawTab : "source";
@@ -180,16 +230,19 @@ export const EnquiryMaster: React.FC<EnquiryMasterProps> = ({ initialTab }) => {
         {activeTab === "stage" && (
            <EnquiryStageMaster isTab={true} />
         )}
-        
+           {activeTab === "priority" && (
+        <EnquiryPriorityMaster isTab={true} />
+      )}
        {activeTab === "uom" && (
            <UnitOfMeasureMaster isTab={true} />
         )}
 
-      
-        
-      {activeTab === "lost-reason" && (
-           <LostReasonMaster isTab={true} />
-        )}
+      {activeTab === "currency" && <CurrencyMaster isTab={true} />}
+      {activeTab === "department" && <DepartmentMaster isTab={true} />}
+      {activeTab === "territory" && <SalesTerritoryMaster isTab={true} />}
+      {activeTab === "place-of-supply" && <PlaceOfSupplyMaster isTab={true} />}
+      {activeTab === "lost-reason" && (<LostReasonMaster isTab={true} />)}
+     
       </div>
     </div>
   );
