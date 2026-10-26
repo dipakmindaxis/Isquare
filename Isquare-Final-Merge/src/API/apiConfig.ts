@@ -52,6 +52,11 @@ export interface ApiEndpoints {
   SalesCoordinators: string;
   Product: string;
   Products: string;
+  EnquiryPriorities: string;
+  Currencies: string;
+  SalesTerritories: string;
+  PlaceOfSupplies: string;
+
   [key: string]: string;
 }
 
@@ -164,5 +169,10 @@ export const API_ENDPOINTS: ApiEndpoints = {
 
   Levels: `${BASE_URL}/levels`,
   LevelMaster: `${BASE_URL}/level-master`,
+  EnquiryPriorities: `${BASE_URL}/EnquiryPriority`,
+  Currencies: `${BASE_URL}/Currency`,
+  SalesTerritories: `${BASE_URL}/SalesTerritory`,
+  PlaceOfSupplies: `${BASE_URL}/PlaceOfSupply`,
+
 };
 
