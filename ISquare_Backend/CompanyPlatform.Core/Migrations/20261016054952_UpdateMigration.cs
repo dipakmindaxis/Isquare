@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -15,9 +15,15 @@ namespace CompanyPlatform.Core.Migrations
                 name: "FK_Tbl_AccessControls_AspNetRoles_RoleId",
                 table: "Tbl_AccessControls");
 
-            migrationBuilder.DropForeignKey(
-                name: "FK_tbl_EmployeeBankDetails_tbl_Employee_EmployeeID",
-                table: "tbl_EmployeeBankDetails");
+            migrationBuilder.Sql(@"
+IF EXISTS (
+    SELECT 1 FROM sys.foreign_keys 
+    WHERE name = 'FK_tbl_EmployeeBankDetails_tbl_Employee_EmployeeID' 
+      AND parent_object_id = OBJECT_ID('tbl_EmployeeBankDetails')
+)
+BEGIN
+    ALTER TABLE [tbl_EmployeeBankDetails] DROP CONSTRAINT [FK_tbl_EmployeeBankDetails_tbl_Employee_EmployeeID];
+END");
 
             migrationBuilder.DropForeignKey(
                 name: "FK_tbl_EmployeeDocument_tbl_Employee_EmployeeID",
