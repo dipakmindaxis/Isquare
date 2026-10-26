@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CompanyPlatform.Core.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    [Migration("20261021094813_Quatation")]
-    partial class Quatation
+    [Migration("20261026073419_Final0")]
+    partial class Final0
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -147,6 +147,9 @@ namespace CompanyPlatform.Core.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("DirectorEmployeeId")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -158,6 +161,8 @@ namespace CompanyPlatform.Core.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("ID");
+
+                    b.HasIndex("DirectorEmployeeId");
 
                     b.ToTable("bde_user");
                 });
@@ -1677,7 +1682,12 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("WorkLocationID");
 
-                    b.ToTable("tbl_Employee");
+                    b.ToTable("tbl_Employee", null, t =>
+                        {
+                            t.HasTrigger("trg_tbl_Employee");
+                        });
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.FollowUp", b =>
@@ -2383,6 +2393,10 @@ namespace CompanyPlatform.Core.Migrations
                     b.Property<decimal>("GSTRate")
                         .HasColumnType("decimal(5,2)");
 
+                    b.Property<string>("HsnCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -2403,12 +2417,21 @@ namespace CompanyPlatform.Core.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<decimal?>("ProfitPercentage")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<decimal?>("PurchaseRate")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("Specification")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
                     b.Property<decimal>("StandardRate")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("Stock")
+                        .HasColumnType("int");
 
                     b.Property<int?>("UnitOfMeasurementId")
                         .HasColumnType("int");
@@ -3985,6 +4008,51 @@ namespace CompanyPlatform.Core.Migrations
                     b.ToTable("tbl_ContactType");
                 });
 
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Currency", b =>
+                {
+                    b.Property<int>("CurrencyId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CurrencyId"));
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime>("CurrencyCreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CurrencyDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("CurrencyIsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CurrencyIsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("CurrencyName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int?>("CurrencySortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CurrencyUpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("CurrencyId");
+
+                    b.HasIndex("CurrencyCode")
+                        .IsUnique();
+
+                    b.ToTable("Currencies");
+                });
+
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.CustomerArea.CustomerArea", b =>
                 {
                     b.Property<int>("CustomerAreaId")
@@ -4466,7 +4534,12 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("WorkLocationID");
 
-                    b.ToTable("tbl_Employees");
+                    b.ToTable("tbl_Employees", null, t =>
+                        {
+                            t.HasTrigger("trg_tbl_Employees");
+                        });
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.EnquiryPriority", b =>
@@ -4899,6 +4972,51 @@ namespace CompanyPlatform.Core.Migrations
                     b.ToTable("tbl_PaymentTerm");
                 });
 
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.PlaceOfSupply", b =>
+                {
+                    b.Property<int>("PlaceOfSupplyId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PlaceOfSupplyId"));
+
+                    b.Property<string>("PlaceOfSupplyCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime>("PlaceOfSupplyCreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PlaceOfSupplyDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("PlaceOfSupplyIsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("PlaceOfSupplyIsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("PlaceOfSupplyName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int?>("PlaceOfSupplySortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("PlaceOfSupplyUpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("PlaceOfSupplyId");
+
+                    b.HasIndex("PlaceOfSupplyCode")
+                        .IsUnique();
+
+                    b.ToTable("PlaceOfSupplies");
+                });
+
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.ProductCategory", b =>
                 {
                     b.Property<int>("ProductCategoryId")
@@ -5069,6 +5187,9 @@ namespace CompanyPlatform.Core.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SalesCoordinatorId"));
 
+                    b.Property<int?>("BDEUserId")
+                        .HasColumnType("int");
+
                     b.Property<int?>("CreatedBy")
                         .HasColumnType("int");
 
@@ -5097,7 +5218,54 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("SalesCoordinatorId");
 
+                    b.HasIndex("BDEUserId");
+
                     b.ToTable("tbl_SalesCoordinator");
+                });
+
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.SalesTerritory", b =>
+                {
+                    b.Property<int>("SalesTerritoryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SalesTerritoryId"));
+
+                    b.Property<string>("SalesTerritoryCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime>("SalesTerritoryCreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("SalesTerritoryDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("SalesTerritoryIsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("SalesTerritoryIsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("SalesTerritoryName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int?>("SalesTerritorySortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("SalesTerritoryUpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("SalesTerritoryId");
+
+                    b.HasIndex("SalesTerritoryCode")
+                        .IsUnique();
+
+                    b.ToTable("SalesTerritories");
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.SalesUserManager", b =>
@@ -5125,6 +5293,51 @@ namespace CompanyPlatform.Core.Migrations
                     b.HasKey("ID");
 
                     b.ToTable("sales_user_manager");
+                });
+
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.UnitOfMeasure", b =>
+                {
+                    b.Property<int>("UnitOfMeasureId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UnitOfMeasureId"));
+
+                    b.Property<string>("UnitOfMeasureCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime>("UnitOfMeasureCreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UnitOfMeasureDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("UnitOfMeasureIsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("UnitOfMeasureIsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("UnitOfMeasureName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int?>("UnitOfMeasureSortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UnitOfMeasureUpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("UnitOfMeasureId");
+
+                    b.HasIndex("UnitOfMeasureCode")
+                        .IsUnique();
+
+                    b.ToTable("UnitOfMeasures");
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.Department", b =>
@@ -5573,6 +5786,15 @@ namespace CompanyPlatform.Core.Migrations
                         .IsRequired();
 
                     b.Navigation("Employee");
+                });
+
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.BDEUser", b =>
+                {
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "DirectorEmployee")
+                        .WithMany()
+                        .HasForeignKey("DirectorEmployeeId");
+
+                    b.Navigation("DirectorEmployee");
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Call.Call", b =>
@@ -6642,6 +6864,15 @@ namespace CompanyPlatform.Core.Migrations
                     b.Navigation("ReportingToManager");
 
                     b.Navigation("WorkLocation");
+                });
+
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.SalesCoordinator.SalesCoordinator", b =>
+                {
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.BDEUser", "BDEUser")
+                        .WithMany()
+                        .HasForeignKey("BDEUserId");
+
+                    b.Navigation("BDEUser");
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.EmployeeDeclarationDetail", b =>
