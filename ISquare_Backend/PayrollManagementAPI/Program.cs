@@ -115,6 +115,7 @@ using Swashbuckle.AspNetCore.Filters;
 using System.Text;
 using CompanyEmployee =
     CompanyPlatform.Core.Models.CRM.Company.Employee;
+using CompanyPlatform.CRM.Services.Enquiry;
 var builder = WebApplication.CreateBuilder(args);
 ExcelPackage.License.SetNonCommercialOrganization("Gaxce Sensors");
 builder.Services.Configure<FormOptions>(options =>
@@ -388,6 +389,7 @@ builder.Services.AddScoped<IUnitOfMeasureService, UnitOfMeasureService>();
 builder.Services.AddScoped<ICurrencyService, CurrencyService>();
 builder.Services.AddScoped<ISalesTerritoryService, SalesTerritoryService>();
 builder.Services.AddScoped<IPlaceOfSupplyService, PlaceOfSupplyService>();
+builder.Services.AddScoped<IEnquiryService, EnquiryService>();
 
 
 

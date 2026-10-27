@@ -254,6 +254,8 @@ namespace CompanyPlatform.Core.Data
         public DbSet<SalesTerritory> SalesTerritories { get; set; }
         public DbSet<PlaceOfSupply> PlaceOfSupplies { get; set; }
 
+        public DbSet<Enquiry> Enquiries { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
