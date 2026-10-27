@@ -106,6 +106,7 @@ export const ViewSalesActivityModal: React.FC<ViewSalesActivityModalProps> = ({
   const formatPriority = (prio?: string) => {
     if (!prio) return "-";
     const upper = prio.toUpperCase();
+    if (upper.startsWith("U")) return "Urgent Priority";
     if (upper.startsWith("H")) return "High Priority";
     if (upper.startsWith("M")) return "Medium Priority";
     if (upper.startsWith("L")) return "Low Priority";
@@ -274,6 +275,14 @@ export const ViewSalesActivityModal: React.FC<ViewSalesActivityModalProps> = ({
               <DetailItem
                 label="Priority Level"
                 value={formatPriority(activity.priority)}
+              />
+              <DetailItem
+                label="Assigned Target"
+                value={
+                  activity.assignedType === "Team"
+                    ? `Team: ${activity.assignedTeamName || "Functional Team"}`
+                    : activity.assignedEmployeeName || "-"
+                }
               />
               <div className="col-span-1 sm:col-span-2 lg:col-span-3">
                 <DetailItem

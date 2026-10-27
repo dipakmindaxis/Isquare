@@ -70,13 +70,24 @@ export interface SalesActivity {
 
   // Conditional Fields
   location?: string; // For Customer Visit / Site Survey
+  workLocationId?: number | string; // Linked WorkLocation
   meetingLink?: string; // For Online Meeting
   productName?: string; // For Product Demonstration / Sample Submitted
   sampleQuantity?: string; // For Sample Submitted
   callOutcome?: string; // For Phone Call (e.g. Connected, Left Voicemail, Busy)
   callType?: string; // From Call Types Master
   meetingType?: string; // From Meeting Types Master
-  priority?: "High" | "Medium" | "Low" | string; // Follow-up Priority
+  activitySubType?: string; // Sub Type from ActivityType Master
+  priority?: "Urgent" | "High" | "Medium" | "Low" | string; // Follow-up Priority
+  priorityId?: number;
+  followUpPriorityId?: number;
+  followUpStatusId?: number;
+  assignedType?: "Employee" | "Team";
+  assignedTeamId?: number | string;
+  assignedTeamName?: string;
+  reminderAssignedTo?: number | string;
+  reminderPriorityId?: number;
+  reminderStatusId?: number;
   dueTime?: string; // Follow-up Due Time
   documentCategory?: string; // From Document Types Master
 
@@ -98,6 +109,9 @@ export interface SalesActivityCreatePayload {
   contactEmail?: string;
   assignedEmployeeId: string;
   assignedEmployeeName: string;
+  assignedType?: "Employee" | "Team";
+  assignedTeamId?: number | string;
+  assignedTeamName?: string;
   activityDate: string;
   activityTime: string;
   durationMinutes?: number;
@@ -109,22 +123,30 @@ export interface SalesActivityCreatePayload {
   nextActionDetails?: string;
   followUpDate?: string;
   followUpStatus?: string;
+  followUpPriorityId?: number;
+  followUpStatusId?: number;
   reminderTitle?: string;
   reminderDate?: string;
   reminderTime?: string;
   reminderRemarks?: string;
+  reminderAssignedTo?: number | string;
+  reminderPriorityId?: number;
+  reminderStatusId?: number;
   relatedRecordType: RelatedRecordType;
   relatedRecordId?: string;
   relatedRecordCode?: string;
   relatedRecordTitle?: string;
   location?: string;
+  workLocationId?: number | string;
   meetingLink?: string;
   productName?: string;
   sampleQuantity?: string;
   callOutcome?: string;
   callType?: string;
   meetingType?: string;
-  priority?: "High" | "Medium" | "Low" | string;
+  activitySubType?: string;
+  priority?: "Urgent" | "High" | "Medium" | "Low" | string;
+  priorityId?: number;
   dueTime?: string;
   documentCategory?: string;
   photographs?: ActivityAttachment[];
@@ -157,6 +179,7 @@ export interface ActivitySummaryStats {
 export interface CustomerOption {
   id: string;
   name: string;
+  companyName?: string;
   contactPerson: string;
   phone: string;
   email: string;
@@ -176,7 +199,7 @@ export interface RelatedRecordOption {
   type: "Enquiry" | "Quotation";
   code: string;
   title: string;
-  customerId: string;
+  customerId?: string;
   date: string;
   amount?: string;
 }

@@ -26,7 +26,8 @@ import CustomerArea from "./Modules/RSM/Pages/Master/CustomerArea/CustomerArea";
 import AddressType from "./Modules/RSM/Pages/Master/AddressType/AddressType";
 import CustomerMaster from "./Modules/RSM/Pages/Customer/CustomerMaster";
 import SalesActivities from "./Modules/RSM/Pages/SalesActivities/SalesActivities";
-import AttachmentsMaster from "./Modules/RSM/Pages/Sales/Attachments/AttachmentsMaster";
+import { CallsMaster } from "./Modules/RSM/Pages/Sales/Calls/CallsMaster";
+import { MeetingsMaster } from "./Modules/RSM/Pages/Sales/Meetings/MeetingsMaster";
 import SalesAttachmentsMaster from "./Modules/RSM/Pages/Master/SalesAttachments/SalesAttachmentsMaster";
 import FollowUpIntervals from "./Modules/RSM/Pages/Sales/Masters/FollowUpIntervals/FollowUpIntervals";
 import DocumentTypes from "./Modules/RSM/Pages/Sales/Masters/DocumentTypes/DocumentTypes";
@@ -174,19 +175,23 @@ const router = createBrowserRouter([
       },
       {
         path: "sales/calls",
-        element: <SalesActivities defaultTab="calls" />,
+        element: <CallsMaster />,
       },
       {
         path: "sales/meetings",
-        element: <SalesActivities defaultTab="meetings" />,
+        element: <MeetingsMaster />,
       },
       {
         path: "sales/follow-ups",
         element: <SalesActivities defaultTab="followups" />,
       },
       {
+        path: "sales/tasks",
+        element: <SalesActivities defaultTab="tasks" />,
+      },
+      {
         path: "sales/attachments",
-        element: <AttachmentsMaster />,
+        element: <SalesAttachmentsMaster />,
       },
       {
         path: "sales/follow-up-intervals",
@@ -302,6 +307,18 @@ const router = createBrowserRouter([
       {
         path: "master/activity-type",
         element: <FollowUpContactUpdatesMaster initialTab="activity-type" />,
+      },
+      {
+        path: "master/priority",
+        element: <FollowUpContactUpdatesMaster initialTab="priority" />,
+      },
+      {
+        path: "master/priorities",
+        element: <FollowUpContactUpdatesMaster initialTab="priority" />,
+      },
+      {
+        path: "priority",
+        element: <FollowUpContactUpdatesMaster initialTab="priority" />,
       },
       {
         path: "master/outcomes",
@@ -590,6 +607,10 @@ const router = createBrowserRouter([
       { path: "/salesusermanager", element: <SalesTeamMaster initialTab="managers" /> },
       { path: "/recruitment/sales-user-manager", element: <SalesTeamMaster initialTab="managers" /> },
       { path: "/payment-term", element: <PaymentTerm /> },
+      { path: "/priority", element: <FollowUpContactUpdatesMaster initialTab="priority" /> },
+      { path: "/priorities", element: <FollowUpContactUpdatesMaster initialTab="priority" /> },
+      { path: "/master/priority", element: <FollowUpContactUpdatesMaster initialTab="priority" /> },
+      { path: "/master/priorities", element: <FollowUpContactUpdatesMaster initialTab="priority" /> },
       { path: "/industry", element: <CustomerClassificationMaster initialTab="industry" /> },
       { path: "/customer-status", element: <CustomerClassificationMaster initialTab="status" /> },
       { path: "/customer-source", element: <CustomerClassificationMaster initialTab="source" /> },

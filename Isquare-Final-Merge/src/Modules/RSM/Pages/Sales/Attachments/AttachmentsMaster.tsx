@@ -29,38 +29,13 @@ import type {
   DocumentTypeItem,
 } from "../../SalesActivities/Services/SalesActivityService";
 
-const initialAttachments: SalesAttachmentItem[] = [
-  {
-    id: "ATT-001",
-    name: "sensor_mounting_location.jpg",
-    category: "Visit Photograph",
-    customerId: "CUST-001",
-    customerName: "Tata Steel Ltd",
-    relatedActivityCode: "ACT-2026-001",
-    fileSizeKB: 650,
-    fileType: "image/jpeg",
-    isImage: true,
-    uploadedBy: "Vishal Patil",
-    uploadedDate: "2026-10-07",
-  },
-  {
-    id: "ATT-002",
-    name: "flame_detector_proposal_copy.pdf",
-    category: "Site Survey Report",
-    customerId: "CUST-002",
-    customerName: "Reliance Industries Ltd",
-    relatedActivityCode: "ACT-2026-002",
-    fileSizeKB: 980,
-    fileType: "application/pdf",
-    isImage: false,
-    uploadedBy: "Samadhan Shinde",
-    uploadedDate: "2026-10-08",
-  },
-];
+export interface AttachmentsMasterProps {
+  isTab?: boolean;
+}
 
-export const AttachmentsMaster: React.FC = () => {
+export const AttachmentsMaster: React.FC<AttachmentsMasterProps> = ({ isTab = false }) => {
   const [attachments, setAttachments] =
-    useState<SalesAttachmentItem[]>(initialAttachments);
+    useState<SalesAttachmentItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [customers, setCustomers] = useState<CustomerOption[]>([]);
@@ -93,13 +68,7 @@ export const AttachmentsMaster: React.FC = () => {
       ]);
       setCustomers(c);
       setDocTypes(storedDocTypes.filter((d) => d.isActive));
-      if (storedAtts && storedAtts.length > 0) {
-        setAttachments(storedAtts);
-      }
-      if (c.length > 0 && !formCustomerName) {
-        setFormCustomerId(c[0].id);
-        setFormCustomerName(c[0].name);
-      }
+      setAttachments(storedAtts || []);
       if (storedDocTypes.length > 0) {
         setFormCategory(storedDocTypes[0].value);
       }
@@ -137,13 +106,8 @@ export const AttachmentsMaster: React.FC = () => {
   );
 
   const handleOpenUpload = () => {
-    if (customers.length > 0) {
-      setFormCustomerId(customers[0].id);
-      setFormCustomerName(customers[0].name);
-    } else {
-      setFormCustomerId("");
-      setFormCustomerName("");
-    }
+    setFormCustomerId("");
+    setFormCustomerName("");
     if (docTypes.length > 0) {
       setFormCategory(docTypes[0].value);
     } else {
@@ -172,11 +136,15 @@ export const AttachmentsMaster: React.FC = () => {
     }
     setIsSaving(true);
     try {
+      const matchedCust = customers.find(
+        (c) => c.name.toLowerCase() === formCustomerName.trim().toLowerCase()
+      );
+      const effectiveCustId = formCustomerId || (matchedCust ? matchedCust.id : "");
       const newItems: SalesAttachmentItem[] = uploadedFiles.map((file, idx) => ({
         id: `ATT-${Date.now()}-${idx}`,
         name: file.name,
         category: formCategory as SalesAttachmentItem["category"],
-        customerId: formCustomerId || `CUST-MANUAL-${Date.now().toString().slice(-4)}`,
+        customerId: effectiveCustId,
         customerName: formCustomerName.trim(),
         relatedActivityCode: formActivityCode.trim() || undefined,
         fileSizeKB: Math.round(file.size / 1024),
@@ -211,9 +179,9 @@ export const AttachmentsMaster: React.FC = () => {
   };
 
   return (
-    <div className="p-4 md:p-6 bg-gray-50 min-h-full">
+    <div className={isTab ? "space-y-6" : "p-4 md:p-6 bg-gray-50 min-h-full"}>
       {/* Shared Nav Tabs */}
-      <SalesNavTabs counts={getSalesModuleCounts()} />
+      {!isTab && <SalesNavTabs counts={getSalesModuleCounts()} />}
 
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white rounded-xl shadow-xs border border-gray-200 p-5 mb-6">

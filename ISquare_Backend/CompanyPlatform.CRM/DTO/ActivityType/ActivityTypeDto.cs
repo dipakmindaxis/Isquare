@@ -9,6 +9,8 @@ namespace CompanyPlatform.CRM.DTO.ActivityType
         [Required(ErrorMessage = "Activity Name is required.")]
         public string ActivityName { get; set; } = string.Empty;
 
+        public string? ActivitySubType { get; set; }
+
         public bool IsActive { get; set; }
 
         public bool IsDeleted { get; set; }

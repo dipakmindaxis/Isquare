@@ -98,16 +98,18 @@ export const SalesActivityFilterBar: React.FC<SalesActivityFilterBarProps> = ({
             Status:
           </span>
           <div className="flex bg-gray-100 p-1 rounded-lg">
-            {[
-              { id: "all", label: "All" },
-              { id: "today", label: "Due Today" },
-              { id: "overdue", label: "Overdue" },
-              { id: "completed", label: "Completed" },
-            ].map((st) => (
+            {(
+              [
+                { id: "all", label: "All" },
+                { id: "today", label: "Due Today" },
+                { id: "overdue", label: "Overdue" },
+                { id: "completed", label: "Completed" },
+              ] as const
+            ).map((st) => (
               <button
                 key={st.id}
                 type="button"
-                onClick={() => onTabChange(st.id as any)}
+                onClick={() => onTabChange(st.id)}
                 className={`px-3 py-1 text-xs font-medium rounded-md transition-all text-center cursor-pointer ${
                   activeTab === st.id
                     ? "bg-white text-[#FF7900] shadow-sm font-semibold"

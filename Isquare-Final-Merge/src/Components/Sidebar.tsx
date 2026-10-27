@@ -8,7 +8,6 @@ import {
   UserCog,
   ShieldCheck,
   LayoutDashboard,
-  BriefcaseBusiness,
   Receipt,
   Factory,
   UserCheck,
@@ -21,6 +20,7 @@ import {
   Contact,
   Users2,
   CheckCircle2,
+  CheckSquare,
   FileText,
   Plus,
   RotateCcw,
@@ -28,6 +28,7 @@ import {
   Building2,
   Package,
   GitBranch,
+  Flag,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import ISquareLogo, { ISquareIcon } from "./Common/ISquareLogo";
@@ -81,6 +82,12 @@ const masterMenu: MenuItem = {
       to: "/masters",
       formName: "BasicMasters",
     },
+    {
+      icon: <Flag />,
+      label: "Priority Master",
+      to: "/rsm/master/priority",
+      formName: "PriorityMaster",
+    },
   ],
 };
 
@@ -131,18 +138,18 @@ const rsmMenuConfig: MenuItem[] = [
   },
 
   {
-    label: "SALES",
-    icon: <BriefcaseBusiness />,
+    icon: <Layers />,
+    label: "ALL SALES ACTIVITIES",
     subMenu: [
-      {
-        icon: <Users />,
-        label: "CUSTOMERS",
-        to: "/rsm/customers",
-      },
       {
         icon: <Layers />,
         label: "ALL SALES ACTIVITIES",
         to: "/rsm/sales-activities",
+      },
+      {
+        icon: <CheckSquare />,
+        label: "TASK ASSIGNMENT",
+        to: "/rsm/sales-activities?tab=tasks",
       },
     ],
   },
@@ -152,11 +159,6 @@ const rsmMenuConfig: MenuItem[] = [
     icon: <Database />,
     subMenu: [
       {
-        icon: <Users />,
-        label: "CUSTOMERS",
-        to: "/rsm/customers",
-      },
-     {
         icon: <Users />,
         label: "Enquiry master",
         to: "/rsm/master/enquiry-master",
@@ -275,6 +277,11 @@ const rsmMenuConfig: MenuItem[] = [
         icon: <Clock />,
         label: "FOLLOW-UP",
         to: "/rsm/master/follow-up",
+      },
+      {
+        icon: <Flag />,
+        label: "PRIORITY MASTER",
+        to: "/rsm/master/priority",
       },
       {
         icon: <Paperclip />,

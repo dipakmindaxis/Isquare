@@ -94,7 +94,7 @@ export const ActivityOutcomes: React.FC = () => {
     setSelectedItem(item);
     setFormValue(item.value);
     setFormCode(item.code);
-    setFormCategory(item.category);
+    setFormCategory((item.category as "Call" | "Meeting" | "General") || "General");
     setFormIsActive(item.isActive);
     setIsModalOpen(true);
   };

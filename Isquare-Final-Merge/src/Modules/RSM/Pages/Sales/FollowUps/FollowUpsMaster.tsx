@@ -7,6 +7,7 @@ import {
   CheckCircle,
   Calendar,
   User,
+  Users,
   X,
   Loader2,
   ChevronLeft,
@@ -27,8 +28,18 @@ import {
   deleteFollowUpRecord,
   getSalesModuleCounts,
   getFollowUpIntervals,
+  getUserRoleCategory,
+  getRoleBasedAssignees,
+  getAssigneeTeams,
+  getPrioritiesWithFallback,
 } from "../../SalesActivities/Services/SalesActivityService";
-import type { FollowUpItem, FollowUpIntervalItem } from "../../SalesActivities/Services/SalesActivityService";
+import type {
+  FollowUpItem,
+  FollowUpIntervalItem,
+  AssigneeOption,
+  PriorityOptionItem,
+} from "../../SalesActivities/Services/SalesActivityService";
+import { useAuth } from "../../../../../hooks/useAuth";
 
 const getRelativeDate = (offset: number): string => {
   const d = new Date();
@@ -36,48 +47,23 @@ const getRelativeDate = (offset: number): string => {
   return d.toISOString().split("T")[0];
 };
 
-const initialFollowUps: FollowUpItem[] = [
-  {
-    id: "FU-301",
-    followUpCode: "FU-2026-001",
-    customerId: "CUST-002",
-    customerName: "Reliance Industries Ltd",
-    contactPerson: "Vikram Singhania",
-    phone: "+91 97234 11092",
-    followUpType: "Quotation Revision",
-    dueDate: getRelativeDate(-1), // Overdue!
-    dueTime: "11:00 AM",
-    assignedRep: "Samadhan Shinde",
-    priority: "High",
-    status: "Overdue",
-    relatedRecordCode: "QUO-2026-0108",
-    actionDetails: "Submit revised discount sheet for flame detector quote.",
-  },
-  {
-    id: "FU-302",
-    followUpCode: "FU-2026-002",
-    customerId: "CUST-001",
-    customerName: "Tata Steel Ltd",
-    contactPerson: "Rajesh Sharma",
-    phone: "+91 98201 44521",
-    followUpType: "Call Follow-up",
-    dueDate: getRelativeDate(2), // Upcoming!
-    dueTime: "10:30 AM",
-    assignedRep: "Vishal Patil",
-    priority: "Medium",
-    status: "Upcoming",
-    relatedRecordCode: "ENQ-2026-0042",
-    actionDetails: "Call purchase head to check sensor proposal status.",
-  },
-];
+export interface FollowUpsMasterProps {
+  isTab?: boolean;
+}
 
-export const FollowUpsMaster: React.FC = () => {
-  const [followUps, setFollowUps] = useState<FollowUpItem[]>(initialFollowUps);
+export const FollowUpsMaster: React.FC<FollowUpsMasterProps> = ({ isTab = false }) => {
+  const { user } = useAuth();
+  const userRoleCategory = getUserRoleCategory(user?.role);
+
+  const [followUps, setFollowUps] = useState<FollowUpItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatusTab, setSelectedStatusTab] = useState<"All" | "Overdue" | "Due Today" | "Upcoming" | "Completed">("All");
   const [selectedRep] = useState("All");
   const [customers, setCustomers] = useState<CustomerOption[]>([]);
   const [employees, setEmployees] = useState<EmployeeOption[]>([]);
+  const [roleAssignees, setRoleAssignees] = useState<AssigneeOption[]>([]);
+  const [teams, setTeams] = useState<AssigneeOption[]>([]);
+  const [priorityOptions, setPriorityOptions] = useState<PriorityOptionItem[]>([]);
   const [intervals, setIntervals] = useState<FollowUpIntervalItem[]>([]);
 
   // Modals
@@ -96,7 +82,11 @@ export const FollowUpsMaster: React.FC = () => {
   const [formDueDate, setFormDueDate] = useState(new Date().toISOString().split("T")[0]);
   const [formDueTime, setFormDueTime] = useState("10:30 AM");
   const [formAssignedRep, setFormAssignedRep] = useState("");
-  const [formPriority, setFormPriority] = useState<FollowUpItem["priority"]>("High");
+  const [formAssignedType, setFormAssignedType] = useState<"Employee" | "Team">("Employee");
+  const [formAssignedTeamId, setFormAssignedTeamId] = useState("");
+  const [formAssignedTeamName, setFormAssignedTeamName] = useState("");
+  const [formPriority, setFormPriority] = useState<string>("High");
+  const [formPriorityId, setFormPriorityId] = useState("");
   const [formStatus, setFormStatus] = useState<FollowUpItem["status"]>("Due Today");
   const [formRelatedCode, setFormRelatedCode] = useState("");
   const [formDetails, setFormDetails] = useState("");
@@ -108,28 +98,29 @@ export const FollowUpsMaster: React.FC = () => {
 
   useEffect(() => {
     const loadMeta = async () => {
-      const [c, e, storedFollowUps, storedIntervals] = await Promise.all([
+      const [c, e, storedFollowUps, storedIntervals, pList, rAssignees, teamList] = await Promise.all([
         getCustomerOptions(),
         getEmployeeOptions(),
         getFollowUps(),
         getFollowUpIntervals(),
+        getPrioritiesWithFallback(),
+        getRoleBasedAssignees(userRoleCategory),
+        getAssigneeTeams(),
       ]);
       setCustomers(c);
       setEmployees(e);
       setIntervals(storedIntervals.filter((i) => i.isActive));
-      if (storedFollowUps && storedFollowUps.length > 0) {
-        setFollowUps(storedFollowUps);
+      setFollowUps(storedFollowUps || []);
+      setPriorityOptions(pList);
+      if (pList.length > 0) {
+        setFormPriority(pList[0].name);
+        setFormPriorityId(String(pList[0].id));
       }
-      if (c.length > 0 && !formCustomerName) {
-        setFormCustomerId(c[0].id);
-        setFormCustomerName(c[0].name);
-        setFormContactPerson(c[0].contactPerson);
-        setFormContactPhone(c[0].phone);
-      }
-      if (e.length > 0 && !formAssignedRep) setFormAssignedRep(e[0].name);
+      setRoleAssignees(rAssignees);
+      setTeams(teamList);
     };
     loadMeta();
-  }, []);
+  }, [userRoleCategory]);
 
   const stats = {
     total: followUps.length,
@@ -185,22 +176,16 @@ export const FollowUpsMaster: React.FC = () => {
   );
 
   const handleOpenAdd = () => {
-    if (customers.length > 0) {
-      setFormCustomerId(customers[0].id);
-      setFormCustomerName(customers[0].name);
-      setFormContactPerson(customers[0].contactPerson);
-      setFormContactPhone(customers[0].phone);
-    } else {
-      setFormCustomerId("");
-      setFormCustomerName("");
-      setFormContactPerson("");
-      setFormContactPhone("");
-    }
-    if (employees.length > 0) setFormAssignedRep(employees[0].name);
+    setFormCustomerId("");
+    setFormCustomerName("");
+    setFormContactPerson("");
+    setFormContactPhone("");
+    setFormAssignedRep("");
     setFormType("Call Follow-up");
     setFormDueDate(new Date().toISOString().split("T")[0]);
     setFormDueTime("10:30 AM");
-    setFormPriority("High");
+    setFormPriority(priorityOptions[0]?.name || "");
+    setFormPriorityId(priorityOptions[0]?.id ? String(priorityOptions[0].id) : "");
     setFormStatus("Due Today");
     setFormRelatedCode("");
     setFormDetails("");
@@ -216,8 +201,14 @@ export const FollowUpsMaster: React.FC = () => {
     setFormType(f.followUpType);
     setFormDueDate(f.dueDate);
     setFormDueTime(f.dueTime);
-    setFormAssignedRep(f.assignedRep);
-    setFormPriority(f.priority);
+    setFormAssignedRep(f.assignedRep || "");
+    setFormAssignedType(f.assignedType || "Employee");
+    setFormAssignedTeamId(f.assignedTeamId || "");
+    setFormAssignedTeamName(f.assignedTeamName || "");
+    const initialPrio = f.priority || (priorityOptions[0]?.name || "");
+    setFormPriority(initialPrio);
+    const matchedPrio = priorityOptions.find((p) => p.name.toLowerCase() === initialPrio.toLowerCase());
+    setFormPriorityId(f.priorityId || (matchedPrio ? String(matchedPrio.id) : ""));
     setFormStatus(f.status);
     setFormRelatedCode(f.relatedRecordCode || "");
     setFormDetails(f.actionDetails);
@@ -249,6 +240,11 @@ export const FollowUpsMaster: React.FC = () => {
     }
     setIsSaving(true);
     try {
+      const repName =
+        formAssignedType === "Team"
+          ? formAssignedTeamName || selectedItem.assignedRep
+          : formAssignedRep.trim() || selectedItem.assignedRep;
+
       const updatedItem: FollowUpItem = {
         ...selectedItem,
         customerId: formCustomerId || selectedItem.customerId,
@@ -258,8 +254,12 @@ export const FollowUpsMaster: React.FC = () => {
         followUpType: formType,
         dueDate: formDueDate,
         dueTime: formDueTime,
-        assignedRep: formAssignedRep.trim() || selectedItem.assignedRep,
+        assignedRep: repName,
+        assignedType: formAssignedType,
+        assignedTeamId: formAssignedType === "Team" ? formAssignedTeamId : undefined,
+        assignedTeamName: formAssignedType === "Team" ? formAssignedTeamName : undefined,
         priority: formPriority,
+        priorityId: formPriorityId || undefined,
         status: formStatus,
         relatedRecordCode: formRelatedCode.trim() || undefined,
         actionDetails: formDetails.trim(),
@@ -290,9 +290,9 @@ export const FollowUpsMaster: React.FC = () => {
   };
 
   return (
-    <div className="p-4 md:p-6 bg-gray-50 min-h-full">
+    <div className={isTab ? "space-y-6" : "p-4 md:p-6 bg-gray-50 min-h-full"}>
       {/* Shared Nav Tabs */}
-      <SalesNavTabs counts={getSalesModuleCounts()} />
+      {!isTab && <SalesNavTabs counts={getSalesModuleCounts()} />}
 
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white rounded-xl shadow-xs border border-gray-200 p-5 mb-6">
@@ -487,18 +487,41 @@ export const FollowUpsMaster: React.FC = () => {
                       <div className="text-[11px] text-gray-400">{item.dueTime}</div>
                     </td>
                     <td className="px-4 py-4 text-xs font-medium text-gray-800">
-                      {item.assignedRep}
+                      {item.assignedType === "Team" ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-200 text-[11px] font-medium">
+                          <Users size={11} />
+                          <span>{item.assignedTeamName || item.assignedRep}</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-gray-800">
+                          <User size={12} className="text-gray-400" />
+                          <span>{item.assignedRep || "Unassigned"}</span>
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-4 text-center">
-                      <span
-                        className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
-                          item.priority === "High"
-                            ? "bg-red-50 text-red-700 border border-red-200"
-                            : "bg-blue-50 text-blue-700 border border-blue-200"
-                        }`}
-                      >
-                        {item.priority}
-                      </span>
+                      {(() => {
+                        const matched = priorityOptions.find(
+                          (p) => p.name.toLowerCase() === item.priority?.toLowerCase()
+                        );
+                        const c = matched?.colorCode || (
+                          item.priority?.toLowerCase() === "urgent" ? "#ef4444" :
+                          item.priority?.toLowerCase() === "high" ? "#f97316" :
+                          item.priority?.toLowerCase() === "medium" ? "#3b82f6" : "#64748b"
+                        );
+                        return (
+                          <span
+                            className="inline-block px-2.5 py-0.5 rounded text-[11px] font-semibold border"
+                            style={{
+                              backgroundColor: `${c}15`,
+                              color: c,
+                              borderColor: `${c}40`,
+                            }}
+                          >
+                            {item.priority || "Normal"}
+                          </span>
+                        );
+                      })()}
                     </td>
                     <td className="px-4 py-4 text-center">
                       <span
@@ -693,37 +716,125 @@ export const FollowUpsMaster: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block font-semibold text-gray-700 mb-1">
-                      Follow-up Type
+                <div>
+                  <label className="block font-semibold text-gray-700 mb-1">
+                    Follow-up Type
+                  </label>
+                  <select
+                    value={formType}
+                    onChange={(e) => setFormType(e.target.value as FollowUpItem["followUpType"])}
+                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-800"
+                  >
+                    <option value="Call Follow-up">Call Follow-up</option>
+                    <option value="Meeting Follow-up">Meeting Follow-up</option>
+                    <option value="Quotation Revision">Quotation Revision</option>
+                    <option value="Technical Demo">Technical Demo</option>
+                    <option value="Sample Trial Review">Sample Trial Review</option>
+                  </select>
+                </div>
+
+                {/* Work Assignment: Employee vs Functional Team */}
+                <div className="space-y-2 p-3 bg-gray-50 border border-gray-200 rounded-xl">
+                  <div className="flex items-center justify-between">
+                    <label className="block font-semibold text-gray-700 text-xs">
+                      Work Assignment <span className="text-gray-400 font-normal">({userRoleCategory || "User"})</span>
                     </label>
-                    <select
-                      value={formType}
-                      onChange={(e) => setFormType(e.target.value as FollowUpItem["followUpType"])}
-                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-800"
-                    >
-                      <option value="Call Follow-up">Call Follow-up</option>
-                      <option value="Meeting Follow-up">Meeting Follow-up</option>
-                      <option value="Quotation Revision">Quotation Revision</option>
-                      <option value="Technical Demo">Technical Demo</option>
-                      <option value="Sample Trial Review">Sample Trial Review</option>
-                    </select>
+                    <div className="flex items-center bg-white p-0.5 rounded-lg border border-gray-200 text-[11px]">
+                      <button
+                        type="button"
+                        onClick={() => setFormAssignedType("Employee")}
+                        className={`px-2.5 py-1 rounded-md font-medium transition cursor-pointer ${
+                          formAssignedType === "Employee"
+                            ? "bg-[#00234a] text-white shadow-2xs"
+                            : "text-gray-500 hover:text-gray-900"
+                        }`}
+                      >
+                        Individual
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormAssignedType("Team")}
+                        className={`px-2.5 py-1 rounded-md font-medium transition cursor-pointer ${
+                          formAssignedType === "Team"
+                            ? "bg-[#00234a] text-white shadow-2xs font-semibold"
+                            : "text-gray-500 hover:text-gray-900"
+                        }`}
+                      >
+                        Functional Team
+                      </button>
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block font-semibold text-gray-700 mb-1">
-                      Assigned Representative
-                    </label>
-                    <input
-                      type="text"
-                      list="fu-employee-list"
-                      value={formAssignedRep}
-                      onChange={(e) => setFormAssignedRep(e.target.value)}
-                      placeholder="Type or select sales rep..."
-                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-800"
-                    />
-                  </div>
+                  {formAssignedType === "Team" ? (
+                    <div>
+                      <select
+                        value={formAssignedTeamId}
+                        onChange={(e) => {
+                          const selectedId = e.target.value;
+                          setFormAssignedTeamId(selectedId);
+                          const t = teams.find((item) => item.id === selectedId);
+                          if (t) {
+                            setFormAssignedTeamName(t.name);
+                            setFormAssignedRep(t.name);
+                          }
+                        }}
+                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-800"
+                      >
+                        <option value="">-- Select Functional Team --</option>
+                        {teams.map((team) => (
+                          <option key={team.id} value={team.id}>
+                            {team.name}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="text-[10px] text-gray-500 mt-1">
+                        Supported teams: Sales Coordinator, Accounts Team, Service Team, Store Team.
+                      </p>
+                    </div>
+                  ) : (
+                    <div>
+                      {userRoleCategory === "Director" ? (
+                        <div className="p-2.5 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-900 flex items-center justify-between">
+                          <span>Director Follow-Up (Self Assigned)</span>
+                          <span className="text-[10px] bg-blue-100 font-bold px-2 py-0.5 rounded text-blue-800">
+                            Director
+                          </span>
+                        </div>
+                      ) : (
+                        <select
+                          value={
+                            roleAssignees.find((a) => a.name === formAssignedRep)?.id ||
+                            employees.find((e) => e.name === formAssignedRep)?.id ||
+                            ""
+                          }
+                          onChange={(e) => {
+                            const selectedId = e.target.value;
+                            const match =
+                              roleAssignees.find((a) => a.id === selectedId) ||
+                              employees.find((emp) => emp.id === selectedId);
+                            if (match) {
+                              setFormAssignedRep(match.name);
+                            }
+                          }}
+                          className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-800"
+                        >
+                          <option value="">-- Select Assignee --</option>
+                          {(roleAssignees.length > 0 ? roleAssignees : employees).map((emp) => (
+                            <option key={emp.id} value={emp.id}>
+                              {emp.name} {emp.role ? `(${emp.role})` : ""}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                      <p className="text-[10px] text-gray-500 mt-1">
+                        {userRoleCategory === "BDE"
+                          ? "BDE users can assign to Directors."
+                          : userRoleCategory === "SalesPerson"
+                          ? "Sales representatives can assign to BDE users."
+                          : "Role-based assignee list."}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Quick Interval Preset from Follow-up Interval Master */}
@@ -777,16 +888,27 @@ export const FollowUpsMaster: React.FC = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block font-semibold text-gray-700 mb-1">
-                      Priority
+                      Priority Level
                     </label>
                     <select
                       value={formPriority}
-                      onChange={(e) => setFormPriority(e.target.value as FollowUpItem["priority"])}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFormPriority(val);
+                        const match = priorityOptions.find((p) => p.name.toLowerCase() === val.toLowerCase());
+                        if (match) setFormPriorityId(String(match.id));
+                      }}
                       className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-800"
                     >
-                      <option value="High">High Priority</option>
-                      <option value="Medium">Medium Priority</option>
-                      <option value="Low">Low Priority</option>
+                      {priorityOptions.length > 0 ? (
+                        priorityOptions.map((opt) => (
+                          <option key={opt.id} value={opt.name}>
+                            {opt.name}
+                          </option>
+                        ))
+                      ) : (
+                        <option value="">No priorities configured in Priority Master</option>
+                      )}
                     </select>
                   </div>
 
@@ -892,7 +1014,11 @@ export const FollowUpsMaster: React.FC = () => {
                 </div>
                 <div>
                   <span className="text-gray-400 block">Assigned To:</span>
-                  <span className="font-semibold text-gray-900">{selectedItem.assignedRep}</span>
+                  <span className="font-semibold text-gray-900">
+                    {selectedItem.assignedType === "Team"
+                      ? `👥 Team: ${selectedItem.assignedTeamName || selectedItem.assignedRep}`
+                      : selectedItem.assignedRep || "Unassigned"}
+                  </span>
                 </div>
                 <div>
                   <span className="text-gray-400 block">Status:</span>
@@ -900,7 +1026,30 @@ export const FollowUpsMaster: React.FC = () => {
                 </div>
                 <div>
                   <span className="text-gray-400 block">Priority:</span>
-                  <span className="font-semibold text-gray-900">{selectedItem.priority}</span>
+                  <span className="font-semibold text-gray-900">
+                    {(() => {
+                      const matched = priorityOptions.find(
+                        (p) => p.name.toLowerCase() === selectedItem.priority?.toLowerCase()
+                      );
+                      const c = matched?.colorCode || (
+                        selectedItem.priority?.toLowerCase() === "urgent" ? "#ef4444" :
+                        selectedItem.priority?.toLowerCase() === "high" ? "#f97316" :
+                        selectedItem.priority?.toLowerCase() === "medium" ? "#3b82f6" : "#64748b"
+                      );
+                      return (
+                        <span
+                          className="inline-block px-2.5 py-0.5 rounded text-[11px] font-semibold border"
+                          style={{
+                            backgroundColor: `${c}15`,
+                            color: c,
+                            borderColor: `${c}40`,
+                          }}
+                        >
+                          {selectedItem.priority}
+                        </span>
+                      );
+                    })()}
+                  </span>
                 </div>
               </div>
               <div>

@@ -30,59 +30,55 @@ import {
   updateActivityType,
   deleteActivityType,
   type ActivityOutcomeItem,
+  type ActivityType,
 } from "./Services/ActivityTypeService";
 
 interface ActivityTypeMasterProps {
   isTab?: boolean;
 }
 
+interface FormState {
+  code: string;
+  value: string;
+  activitySubType: string;
+  isActive: boolean;
+}
+
 export const ActivityTypeMaster: React.FC<ActivityTypeMasterProps> = ({ isTab = false }) => {
   const pageTopRef = useRef<HTMLDivElement>(null);
   const [items, setItems] = useState<ActivityOutcomeItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [showWizard, setShowWizard] = useState(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [showWizard, setShowWizard] = useState<boolean>(false);
   const [editingItem, setEditingItem] = useState<ActivityOutcomeItem | null>(null);
 
   // Filters
-  const [filterText, setFilterText] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All");
-  const [selectedStatus, setSelectedStatus] = useState("All");
+  const [filterText, setFilterText] = useState<string>("");
+  const [selectedStatus, setSelectedStatus] = useState<string>("All");
 
   // View modal
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState<boolean>(false);
   const [selectedItem, setSelectedItem] = useState<ActivityOutcomeItem | null>(null);
 
   // Delete modal
-  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState<boolean>(false);
   const [itemToDelete, setItemToDelete] = useState<ActivityOutcomeItem | null>(null);
 
   // Wizard state
-  const [activeTab, setActiveTab] = useState(0);
-  const [isSaving, setIsSaving] = useState(false);
-  const [formData, setFormData] = useState({
+  const [activeTab, setActiveTab] = useState<number>(0);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [formData, setFormData] = useState<FormState>({
     code: "",
     value: "",
-    category: "General" as "Call" | "Meeting" | "General",
+    activitySubType: "",
     isActive: true,
-    description: "",
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (): Promise<void> => {
     setIsLoading(true);
     try {
-      const data = await getAllActivityTypes();
-      const list = Array.isArray(data) ? data : (data as any)?.data || [];
-      const normalized: ActivityOutcomeItem[] = list.map((item: any) => ({
-        id: item.id ?? item.ID ?? 0,
-        activityName: item.activityName ?? item.ActivityName ?? item.value ?? "",
-        value: item.activityName ?? item.ActivityName ?? item.value ?? "",
-        label: item.activityName ?? item.ActivityName ?? item.value ?? "",
-        code: item.code ?? item.Code ?? `ACT_${String(item.id ?? item.ID ?? 0).padStart(3, "0")}`,
-        category: (item.category ?? item.Category ?? "General") as "Call" | "Meeting" | "General",
-        isActive: item.isActive ?? item.IsActive ?? true,
-      }));
-      setItems(normalized);
+      const data: ActivityType[] = await getAllActivityTypes();
+      setItems(data);
     } catch {
       toast.error("Failed to load activity types.");
     } finally {
@@ -94,39 +90,37 @@ export const ActivityTypeMaster: React.FC<ActivityTypeMasterProps> = ({ isTab = 
     loadData();
   }, [loadData]);
 
-  const handleOpenAdd = () => {
+  const handleOpenAdd = (): void => {
     setEditingItem(null);
     const nextCode = `OUT_${String(items.length + 1).padStart(3, "0")}`;
     setFormData({
       code: nextCode,
       value: "",
-      category: "General",
+      activitySubType: "",
       isActive: true,
-      description: "",
     });
     setErrors({});
     setActiveTab(0);
     setShowWizard(true);
   };
 
-  const handleOpenEdit = (item: ActivityOutcomeItem) => {
+  const handleOpenEdit = (item: ActivityOutcomeItem): void => {
     setEditingItem(item);
     setFormData({
       code: item.code,
       value: item.value,
-      category: item.category,
+      activitySubType: item.activitySubType || "",
       isActive: item.isActive,
-      description: "",
     });
     setErrors({});
     setActiveTab(0);
     setShowWizard(true);
   };
 
-  const handleSave = async () => {
+  const handleSave = async (): Promise<void> => {
     const newErrors: { [key: string]: string } = {};
     if (!formData.code.trim()) newErrors.code = "Activity Code is required";
-    if (!formData.value.trim()) newErrors.value = "Outcome / Type Name is required";
+    if (!formData.value.trim()) newErrors.value = "Activity Type Name is required";
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -136,24 +130,28 @@ export const ActivityTypeMaster: React.FC<ActivityTypeMasterProps> = ({ isTab = 
 
     setIsSaving(true);
     try {
-      if (editingItem?.id) {
+      if (editingItem && editingItem.id > 0) {
         await updateActivityType(editingItem.id, {
           id: editingItem.id,
           activityName: formData.value.trim(),
+          activitySubType: formData.activitySubType.trim(),
           isActive: formData.isActive,
+          isDeleted: false,
         });
         toast.success("Activity type updated successfully.");
       } else {
         await createActivityType({
           activityName: formData.value.trim(),
+          activitySubType: formData.activitySubType.trim(),
           isActive: formData.isActive,
+          isDeleted: false,
         });
         toast.success("Activity type created successfully.");
       }
 
       setShowWizard(false);
       setEditingItem(null);
-      loadData();
+      await loadData();
     } catch {
       toast.error("Failed to save activity type.");
     } finally {
@@ -161,12 +159,12 @@ export const ActivityTypeMaster: React.FC<ActivityTypeMasterProps> = ({ isTab = 
     }
   };
 
-  const handleDeleteRequest = (item: ActivityOutcomeItem) => {
+  const handleDeleteRequest = (item: ActivityOutcomeItem): void => {
     setItemToDelete(item);
     setIsConfirmModalOpen(true);
   };
 
-  const handleConfirmDelete = async () => {
+  const handleConfirmDelete = async (): Promise<void> => {
     if (!itemToDelete) return;
     try {
       await deleteActivityType(itemToDelete.id);
@@ -180,12 +178,14 @@ export const ActivityTypeMaster: React.FC<ActivityTypeMasterProps> = ({ isTab = 
     }
   };
 
-  const handleStatusToggle = async (item: ActivityOutcomeItem) => {
+  const handleStatusToggle = async (item: ActivityOutcomeItem): Promise<void> => {
     try {
       await updateActivityType(item.id, {
         id: item.id,
         activityName: item.value || item.activityName,
+        activitySubType: item.activitySubType || "",
         isActive: !item.isActive,
+        isDeleted: false,
       });
       toast.success(`Activity type marked as ${!item.isActive ? "Active" : "Inactive"}`);
       loadData();
@@ -194,31 +194,31 @@ export const ActivityTypeMaster: React.FC<ActivityTypeMasterProps> = ({ isTab = 
     }
   };
 
-  const filteredItems = useMemo(() => {
-    return items.filter((item) => {
+  const filteredItems = useMemo((): ActivityOutcomeItem[] => {
+    const searchLower = filterText.toLowerCase();
+    return items.filter((item: ActivityOutcomeItem) => {
       const matchSearch =
-        item.value.toLowerCase().includes(filterText.toLowerCase()) ||
-        item.code.toLowerCase().includes(filterText.toLowerCase());
-      const matchCategory =
-        selectedCategory === "All" || item.category === selectedCategory;
+        item.value.toLowerCase().includes(searchLower) ||
+        item.code.toLowerCase().includes(searchLower) ||
+        (item.activitySubType || "").toLowerCase().includes(searchLower);
       const matchStatus =
         selectedStatus === "All" ||
         (selectedStatus === "Active" && item.isActive) ||
         (selectedStatus === "Inactive" && !item.isActive);
-      return matchSearch && matchCategory && matchStatus;
+      return matchSearch && matchStatus;
     });
-  }, [items, filterText, selectedCategory, selectedStatus]);
+  }, [items, filterText, selectedStatus]);
 
-  const handleExport = () => {
+  const handleExport = (): void => {
     if (items.length === 0) {
       toast.info("No data available to export.");
       return;
     }
-    const exportData = filteredItems.map((item) => ({
+    const exportData = filteredItems.map((item: ActivityOutcomeItem) => ({
       ID: item.id,
       Code: item.code,
-      "Activity Type / Outcome": item.value,
-      Category: item.category,
+      "Activity Type Name": item.value,
+      "Activity Sub Type": item.activitySubType || "",
       Status: item.isActive ? "Active" : "Inactive",
     }));
     exportToExcel(exportData, "Activity_Types_Master", "ActivityTypes");
@@ -227,7 +227,7 @@ export const ActivityTypeMaster: React.FC<ActivityTypeMasterProps> = ({ isTab = 
   const columns: TableColumn<ActivityOutcomeItem>[] = [
     {
       name: "Activity Code",
-      cell: (row) => (
+      cell: (row: ActivityOutcomeItem) => (
         <div className="flex items-center gap-2.5 py-1">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#00234a]/10 text-[#00234a]">
             <CheckCircle2 size={16} />
@@ -238,11 +238,11 @@ export const ActivityTypeMaster: React.FC<ActivityTypeMasterProps> = ({ isTab = 
         </div>
       ),
       sortable: true,
-      width: "180px",
+      width: "160px",
     },
     {
       name: "Activity Type Name",
-      cell: (row) => (
+      cell: (row: ActivityOutcomeItem) => (
         <span
           className="font-semibold text-slate-800 hover:text-[#F37021] cursor-pointer"
           onClick={() => {
@@ -257,18 +257,18 @@ export const ActivityTypeMaster: React.FC<ActivityTypeMasterProps> = ({ isTab = 
       grow: 2,
     },
     {
-      name: "Scope / Category",
-      cell: (row) => (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-[#00234a] border border-blue-200">
-          {row.category}
+      name: "Activity Sub Type",
+      cell: (row: ActivityOutcomeItem) => (
+        <span className="text-xs font-medium text-slate-700 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
+          {row.activitySubType || "-"}
         </span>
       ),
       sortable: true,
-      width: "140px",
+      grow: 2,
     },
     {
       name: "Status",
-      cell: (row) => (
+      cell: (row: ActivityOutcomeItem) => (
         <div className="flex justify-center w-full">
           <label className="relative inline-flex items-center cursor-pointer" onClick={() => handleStatusToggle(row)}>
             <input type="checkbox" checked={row.isActive} readOnly className="sr-only" />
@@ -282,7 +282,7 @@ export const ActivityTypeMaster: React.FC<ActivityTypeMasterProps> = ({ isTab = 
     },
     {
       name: "Actions",
-      cell: (row) => (
+      cell: (row: ActivityOutcomeItem) => (
         <div className="flex items-center gap-3.5">
           <button onClick={() => { setSelectedItem(row); setIsViewModalOpen(true); }} className={`${actionButtonStyles.base} ${actionButtonStyles.view}`} title="View">
             <FaEye size={15} />
@@ -347,7 +347,7 @@ export const ActivityTypeMaster: React.FC<ActivityTypeMasterProps> = ({ isTab = 
               ))}
             </div>
 
-            <div className="p-8 bg-white min-h-[350px]">
+            <div className="p-8 bg-white min-h-[300px]">
               {activeTab === 0 && (
                 <div className="grid w-full grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_260px]">
                   <div className="grid grid-cols-1 gap-x-8 gap-y-6 md:grid-cols-2">
@@ -379,27 +379,14 @@ export const ActivityTypeMaster: React.FC<ActivityTypeMasterProps> = ({ isTab = 
                       {errors.value && <p className="text-xs text-red-500 mt-1">{errors.value}</p>}
                     </div>
 
-                    <div>
-                      <label className={labelStyle}>CATEGORY / SCOPE</label>
-                      <select
-                        className={baseInputStyle}
-                        value={formData.category}
-                        onChange={(e) => setFormData((p) => ({ ...p, category: e.target.value as any }))}
-                      >
-                        <option value="General">General Activities</option>
-                        <option value="Call">Call Log Specific</option>
-                        <option value="Meeting">Meeting Specific</option>
-                      </select>
-                    </div>
-
                     <div className="md:col-span-2">
-                      <label className={labelStyle}>DESCRIPTION / LOGIC</label>
-                      <textarea
-                        rows={3}
-                        placeholder="Detailed guidance on selecting this activity outcome..."
-                        className={`${baseInputStyle} resize-none`}
-                        value={formData.description}
-                        onChange={(e) => setFormData((p) => ({ ...p, description: e.target.value }))}
+                      <label className={labelStyle}>ACTIVITY SUB TYPE</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Discovery, Cold Call, Site Audit, Demo"
+                        className={baseInputStyle}
+                        value={formData.activitySubType}
+                        onChange={(e) => setFormData((p) => ({ ...p, activitySubType: e.target.value }))}
                       />
                     </div>
                   </div>
@@ -414,6 +401,11 @@ export const ActivityTypeMaster: React.FC<ActivityTypeMasterProps> = ({ isTab = 
                         <span className="text-xs font-bold text-[#00234a] truncate max-w-[120px]">
                           {formData.value || "Activity Type Title"}
                         </span>
+                        {formData.activitySubType && (
+                          <span className="text-[10px] text-slate-500 font-medium truncate max-w-[120px]">
+                            {formData.activitySubType}
+                          </span>
+                        )}
                         <span className="text-[10px] font-mono text-slate-400 mt-0.5">
                           {formData.code || "CODE"}
                         </span>
@@ -482,27 +474,13 @@ export const ActivityTypeMaster: React.FC<ActivityTypeMasterProps> = ({ isTab = 
                 <input
                   type="text"
                   className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 shadow-sm outline-none transition focus:border-[#F37021] focus:bg-white md:w-72"
-                  placeholder="Search code or name..."
+                  placeholder="Search code, name, or sub type..."
                   value={filterText}
                   onChange={(e) => setFilterText(e.target.value)}
                 />
               </div>
 
               <div className="flex w-full items-center justify-end gap-3 md:w-auto">
-                <div className="relative">
-                  <select
-                    className="appearance-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 pr-9 text-sm text-slate-700 outline-none transition hover:bg-white focus:border-[#F37021]"
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                  >
-                    <option value="All">All Categories</option>
-                    <option value="Call">Call</option>
-                    <option value="Meeting">Meeting</option>
-                    <option value="General">General</option>
-                  </select>
-                  <ChevronDown size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500" />
-                </div>
-
                 <div className="relative">
                   <select
                     className="appearance-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 pr-9 text-sm text-slate-700 outline-none transition hover:bg-white focus:border-[#F37021]"
@@ -569,10 +547,8 @@ export const ActivityTypeMaster: React.FC<ActivityTypeMasterProps> = ({ isTab = 
                   <p className="text-base font-semibold text-slate-800">{selectedItem.value}</p>
                 </div>
                 <div>
-                  <span className="text-[10px] font-extrabold uppercase text-gray-400 block tracking-widest">Category</span>
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-[#00234a]">
-                    {selectedItem.category}
-                  </span>
+                  <span className="text-[10px] font-extrabold uppercase text-gray-400 block tracking-widest">Activity Sub Type</span>
+                  <p className="text-sm font-semibold text-[#00234a]">{selectedItem.activitySubType || "-"}</p>
                 </div>
                 <div>
                   <span className="text-[10px] font-extrabold uppercase text-gray-400 block tracking-widest">Status</span>
