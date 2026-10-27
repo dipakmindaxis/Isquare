@@ -600,6 +600,65 @@ export function resolveImageUrl(path?: string | null): string | null {
 }
 
 const PRODUCT_UOM_STORAGE_KEY = "isquare_product_uom_cache_v1";
+const PRODUCT_META_STORAGE_KEY = "isquare_product_meta_cache_v1";
+
+export interface ProductMetaData {
+  uom?: string | null;
+  purchaseRate?: number | null;
+  profitPercentage?: number | null;
+  stock?: number | null;
+}
+
+export function getAllProductMeta(): Record<string, ProductMetaData> {
+  if (typeof window === "undefined" || typeof window.localStorage === "undefined") {
+    return {};
+  }
+  try {
+    const raw = window.localStorage.getItem(PRODUCT_META_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) {
+    console.warn("Failed to get product meta cache", e);
+    return {};
+  }
+}
+
+export function saveProductMeta(key: string | number, meta: ProductMetaData): void {
+  if (!key || !meta || typeof window === "undefined" || typeof window.localStorage === "undefined") return;
+  try {
+    const all = getAllProductMeta();
+    const str = String(key).trim();
+    all[str] = { ...(all[str] || {}), ...meta };
+    all[str.toLowerCase()] = { ...(all[str.toLowerCase()] || {}), ...meta };
+    window.localStorage.setItem(PRODUCT_META_STORAGE_KEY, JSON.stringify(all));
+  } catch (e) {
+    console.warn("Failed to save product meta to cache", e);
+  }
+}
+
+export function getProductMeta(id?: string | number | null, fallback?: any): ProductMetaData | null {
+  const all = getAllProductMeta();
+  if (id != null) {
+    const str = String(id).trim();
+    if (all[str]) return all[str];
+    if (all[str.toLowerCase()]) return all[str.toLowerCase()];
+  }
+  if (fallback) {
+    if (fallback.productId && all[String(fallback.productId)]) {
+      return all[String(fallback.productId)];
+    }
+    if (fallback.itemCode) {
+      const code = String(fallback.itemCode).trim();
+      if (all[code]) return all[code];
+      if (all[code.toLowerCase()]) return all[code.toLowerCase()];
+    }
+    if (fallback.productName) {
+      const name = String(fallback.productName).trim();
+      if (all[name]) return all[name];
+      if (all[name.toLowerCase()]) return all[name.toLowerCase()];
+    }
+  }
+  return null;
+}
 
 export function getAllProductUoms(): Record<string, string> {
   try {
@@ -692,16 +751,28 @@ export function mapProductFromApi(raw: any): Product {
     (raw.specification ?? raw.Specification ?? raw.description ?? raw.Description ?? "") || "";
   const rawUom = raw.unitOfMeasurementId ?? raw.UnitOfMeasurementId;
   const unitOfMeasurementId = rawUom != null && !isNaN(Number(rawUom)) ? Number(rawUom) : 1;
+
+  const cachedMeta = getProductMeta(productId, { itemCode, productName });
+
   const rawUnitName =
     raw.unitName ??
     raw.UnitName ??
     raw.unitOfMeasurement ??
     raw.UnitOfMeasurement ??
+    raw.defaultUom ??
+    raw.DefaultUom ??
+    raw.defaultUOM ??
+    raw.DefaultUOM ??
+    raw.unitOfMeasure ??
+    raw.UnitOfMeasure ??
+    raw.uomName ??
+    raw.UomName ??
     raw.uom ??
     raw.Uom ??
     null;
   const unitName =
     (rawUnitName != null && String(rawUnitName).trim() !== "" ? String(rawUnitName).trim() : null) ||
+    cachedMeta?.uom ||
     getProductUom(productId, { itemCode, productName }) ||
     STANDARD_UOMS.find((u) => u.id === unitOfMeasurementId)?.name ||
     "Nos";
@@ -734,7 +805,7 @@ export function mapProductFromApi(raw: any): Product {
     if (typeof val === "number") return isNaN(val) ? null : val;
     if (typeof val === "string") {
       const cleaned = val.replace(/[^0-9.-]/g, "").trim();
-      if (!cleaned || cleaned === "-" || cleaned === ".") return null;
+      if (!cleaned || cleaned === "-" || cleaned === "." || cleaned === "-.") return null;
       const num = Number(cleaned);
       return isNaN(num) ? null : num;
     }
@@ -756,7 +827,8 @@ export function mapProductFromApi(raw: any): Product {
     raw.CostPrice ??
     raw.cost ??
     raw.Cost;
-  const purchaseRate = parseSafeNumeric(rawPurchaseRate);
+  const parsedPR = parseSafeNumeric(rawPurchaseRate);
+  const purchaseRate = parsedPR != null ? parsedPR : (cachedMeta?.purchaseRate ?? null);
 
   const rawProfit =
     raw.profitPercentage ??
@@ -773,7 +845,8 @@ export function mapProductFromApi(raw: any): Product {
     raw.ProfitMargin ??
     raw.margin ??
     raw.Margin;
-  const profitPercentage = parseSafeNumeric(rawProfit);
+  const parsedProfit = parseSafeNumeric(rawProfit);
+  const profitPercentage = parsedProfit != null ? parsedProfit : (cachedMeta?.profitPercentage ?? null);
 
   const rawStock =
     raw.stock ??
@@ -786,7 +859,12 @@ export function mapProductFromApi(raw: any): Product {
     raw.availableStock ??
     raw.AvailableStock;
   const parsedStock = parseSafeNumeric(rawStock);
-  const stock = parsedStock != null ? Math.round(parsedStock) : null;
+  const stock =
+    parsedStock != null
+      ? Math.round(parsedStock)
+      : cachedMeta?.stock != null
+      ? Math.round(cachedMeta.stock)
+      : null;
 
   return {
     productId,
@@ -859,8 +937,8 @@ export const productService = {
         payload.profitPercentage != null && !isNaN(Number(payload.profitPercentage))
           ? Number(payload.profitPercentage)
           : payload.profit != null && !isNaN(Number(payload.profit))
-          ? Number(payload.profit)
-          : null,
+            ? Number(payload.profit)
+            : null,
       stock:
         payload.stock != null && !isNaN(Number(payload.stock))
           ? Math.round(Number(payload.stock))
@@ -872,27 +950,60 @@ export const productService = {
     const raw = (response.data as any)?.data ?? (response.data as any)?.result ?? response.data;
     const createdProduct = mapProductFromApi(raw);
     const uomToSave = payload.unitName || payload.uom;
-    if (uomToSave && createdProduct.productId) {
-      saveProductUom(createdProduct.productId, uomToSave);
-      if (createdProduct.itemCode) saveProductUom(createdProduct.itemCode, uomToSave);
+    const metaToSave: ProductMetaData = {
+      uom: uomToSave || undefined,
+      purchaseRate: payload.purchaseRate,
+      profitPercentage: payload.profitPercentage,
+      stock: payload.stock,
+    };
+    if (createdProduct.productId) {
+      if (uomToSave) saveProductUom(createdProduct.productId, uomToSave);
+      saveProductMeta(createdProduct.productId, metaToSave);
+    }
+    if (createdProduct.itemCode) {
+      if (uomToSave) saveProductUom(createdProduct.itemCode, uomToSave);
+      saveProductMeta(createdProduct.itemCode, metaToSave);
+    }
+    if (createdProduct.productName) {
+      if (uomToSave) saveProductUom(createdProduct.productName, uomToSave);
+      saveProductMeta(createdProduct.productName, metaToSave);
+    }
+    if (uomToSave) {
       createdProduct.unitName = uomToSave;
       createdProduct.uom = uomToSave;
     }
+    if (payload.purchaseRate !== undefined && payload.purchaseRate !== null) createdProduct.purchaseRate = payload.purchaseRate;
+    if (payload.profitPercentage !== undefined && payload.profitPercentage !== null) createdProduct.profitPercentage = payload.profitPercentage;
+    if (payload.stock !== undefined && payload.stock !== null) createdProduct.stock = payload.stock;
     return createdProduct;
   },
 
   update: async (id: number, payload: Partial<Product>): Promise<Product | void> => {
     const uomToSave = payload.unitName || payload.uom;
-    if (uomToSave) {
-      saveProductUom(id, uomToSave);
-      if (payload.itemCode) saveProductUom(payload.itemCode, uomToSave);
+    const metaToSave: ProductMetaData = {
+      uom: uomToSave || undefined,
+      purchaseRate: payload.purchaseRate,
+      profitPercentage: payload.profitPercentage,
+      stock: payload.stock,
+    };
+    if (id) {
+      if (uomToSave) saveProductUom(id, uomToSave);
+      saveProductMeta(id, metaToSave);
+    }
+    if (payload.itemCode) {
+      if (uomToSave) saveProductUom(payload.itemCode, uomToSave);
+      saveProductMeta(payload.itemCode, metaToSave);
+    }
+    if (payload.productName) {
+      if (uomToSave) saveProductUom(payload.productName, uomToSave);
+      saveProductMeta(payload.productName, metaToSave);
     }
     const img =
       payload.productImage !== undefined
         ? payload.productImage
         : payload.productImagePath !== undefined
-        ? payload.productImagePath
-        : payload.imageUrl;
+          ? payload.productImagePath
+          : payload.imageUrl;
     const body: Record<string, any> = {
       productId: id,
       productName: payload.productName?.trim() || "",
@@ -920,8 +1031,8 @@ export const productService = {
           ? payload.profitPercentage != null && !isNaN(Number(payload.profitPercentage))
             ? Number(payload.profitPercentage)
             : payload.profit != null && !isNaN(Number(payload.profit))
-            ? Number(payload.profit)
-            : null
+              ? Number(payload.profit)
+              : null
           : undefined,
       stock:
         payload.stock !== undefined
@@ -938,7 +1049,17 @@ export const productService = {
     }
     const response = await apiClient.put(`${API_ENDPOINTS.Products}/${id}`, body);
     const raw = (response.data as any)?.data ?? (response.data as any)?.result ?? response.data;
-    return raw ? mapProductFromApi(raw) : undefined;
+    const updated = raw ? mapProductFromApi(raw) : undefined;
+    if (updated) {
+      if (uomToSave) {
+        updated.unitName = uomToSave;
+        updated.uom = uomToSave;
+      }
+      if (payload.purchaseRate !== undefined && payload.purchaseRate !== null) updated.purchaseRate = payload.purchaseRate;
+      if (payload.profitPercentage !== undefined && payload.profitPercentage !== null) updated.profitPercentage = payload.profitPercentage;
+      if (payload.stock !== undefined && payload.stock !== null) updated.stock = payload.stock;
+    }
+    return updated;
   },
 
   delete: async (id: number): Promise<void> => {

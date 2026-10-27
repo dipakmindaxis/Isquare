@@ -1,4 +1,4 @@
-﻿import apiClient from "../../../../../../API/apiClient";
+import apiClient from "../../../../../../API/apiClient";
 import { API_ENDPOINTS } from "../../../../../../API/apiConfig";
 
 export interface Reminder {

@@ -1,6 +1,6 @@
 import apiClient from "../../../../../../API/apiClient";
 import { API_ENDPOINTS } from "../../../../../../API/apiConfig";
-import type { Contact, CreateContactDTO } from "../Types/ContactTypes";
+import type { Contact, CreateContactDTO, UpdateContactDTO } from "../Types/ContactTypes";
 
 const ensureArray = <T>(data: any): T[] => {
   if (Array.isArray(data)) return data;
@@ -10,9 +10,13 @@ const ensureArray = <T>(data: any): T[] => {
   return [];
 };
 
+const getBaseEndpoint = (): string => {
+  return API_ENDPOINTS.Contact || API_ENDPOINTS.Contacts || `${API_ENDPOINTS.BaseUrl}/Contact`;
+};
+
 export const getAllContacts = async (): Promise<Contact[]> => {
   try {
-    const endpoint = API_ENDPOINTS.Contact || API_ENDPOINTS.Contacts || `${API_ENDPOINTS.BaseUrl}/Contact`;
+    const endpoint = getBaseEndpoint();
     const response = await apiClient.get<any>(endpoint);
     return ensureArray<Contact>(response.data);
   } catch (error) {
@@ -21,9 +25,16 @@ export const getAllContacts = async (): Promise<Contact[]> => {
   }
 };
 
+export const getContactById = async (id: number): Promise<Contact> => {
+  const endpoint = `${getBaseEndpoint()}/${id}`;
+  const response = await apiClient.get<any>(endpoint);
+  const result = response.data?.data || response.data?.result || response.data;
+  return result as Contact;
+};
+
 export const getContactsByCompanyId = async (companyId: number): Promise<Contact[]> => {
   if (!companyId || companyId <= 0) return [];
-  const baseContactUrl = API_ENDPOINTS.Contact || API_ENDPOINTS.Contacts || `${API_ENDPOINTS.BaseUrl}/Contact`;
+  const baseContactUrl = getBaseEndpoint();
 
   try {
     const endpoint = `${baseContactUrl}/company/${companyId}`;
@@ -48,8 +59,57 @@ export const getContactsByCompanyId = async (companyId: number): Promise<Contact
 };
 
 export const createContact = async (data: CreateContactDTO): Promise<Contact> => {
-  const endpoint = API_ENDPOINTS.Contact || API_ENDPOINTS.Contacts || `${API_ENDPOINTS.BaseUrl}/Contact`;
+  const endpoint = getBaseEndpoint();
   const response = await apiClient.post<any>(endpoint, data);
   const result = response.data?.data || response.data?.result || response.data;
   return result as Contact;
+};
+
+export const updateContact = async (id: number, data: UpdateContactDTO): Promise<Contact> => {
+  const baseEndpoint = getBaseEndpoint();
+  const payload = {
+    contactId: id,
+    ...data,
+  };
+  try {
+    const response = await apiClient.put<any>(`${baseEndpoint}/${id}`, payload);
+    const result = response.data?.data || response.data?.result || response.data;
+    return result as Contact;
+  } catch (err) {
+    // Fallback: some ASP.NET controllers accept PUT /api/Contact without ID in route
+    const response = await apiClient.put<any>(baseEndpoint, payload);
+    const result = response.data?.data || response.data?.result || response.data;
+    return result as Contact;
+  }
+};
+
+export const deleteContact = async (id: number): Promise<void> => {
+  const baseEndpoint = getBaseEndpoint();
+  try {
+    await apiClient.delete(`${baseEndpoint}/${id}`);
+  } catch (err) {
+    // Fallback: DELETE /api/Contact?id={id}
+    await apiClient.delete(`${baseEndpoint}?id=${id}`);
+  }
+};
+
+export const toggleContactStatus = async (
+  id: number,
+  isActive: boolean,
+  currentContact?: Partial<Contact>
+): Promise<Contact> => {
+  const payload: UpdateContactDTO = {
+    contactId: id,
+    companyId: currentContact?.companyId || 0,
+    fullName: currentContact?.fullName || "",
+    department: currentContact?.department || null,
+    designation: currentContact?.designation || null,
+    mobileNo: currentContact?.mobileNo || null,
+    altMobileNo: currentContact?.altMobileNo || null,
+    emailAddress: currentContact?.emailAddress || null,
+    altEmailAddress: currentContact?.altEmailAddress || null,
+    isActive,
+    updatedBy: 1,
+  };
+  return await updateContact(id, payload);
 };

@@ -366,7 +366,7 @@ export const EnquirySourceMaster: React.FC<EnquirySourceMasterProps> = ({ isTab 
                   </div>
                 </div>
 
-            
+
               </div>
             </div>
 
@@ -415,7 +415,7 @@ export const EnquirySourceMaster: React.FC<EnquirySourceMasterProps> = ({ isTab 
                   <ChevronDown size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500" />
                 </div>
 
-              
+
               </div>
             </div>
 
@@ -471,7 +471,7 @@ export const EnquirySourceMaster: React.FC<EnquirySourceMasterProps> = ({ isTab 
                   </div>
                 )}
                 <div className="flex items-center gap-6 pt-2">
-                   <div>
+                  <div>
                     <span className="text-[10px] font-extrabold uppercase text-gray-400 block tracking-widest">Sort Order</span>
                     <p className="text-sm font-semibold text-slate-800">{selectedItem.enquirySourceSortOrder}</p>
                   </div>

@@ -184,7 +184,7 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
 
 
   const handleRefresh = () => {
-     console.log("Refresh clicked");
+    console.log("Refresh clicked");
     window.dispatchEvent(new CustomEvent("app-refresh"));
   };
 

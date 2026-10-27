@@ -52,7 +52,7 @@ export const QuotationAccessoryRow: React.FC<QuotationAccessoryRowProps> = ({
   return (
     <tr className="bg-orange-50/20 hover:bg-orange-50/40 border-b border-gray-100 transition text-xs">
       {/* Code, Name, Suggestion & Link */}
-      <td className="p-3 pl-6 align-top border-r border-gray-100">
+      <td className="p-3 pl-6 align-top min-w-[280px] border-r border-gray-100">
         <div className="flex items-start gap-2">
           <CornerDownRight size={16} className="text-[#FF7900] shrink-0 mt-1" />
           <div className="flex-1 space-y-1.5 min-w-[200px]">
@@ -70,7 +70,7 @@ export const QuotationAccessoryRow: React.FC<QuotationAccessoryRowProps> = ({
               value={accessory.itemCode || ""}
               onChange={(e) => handleSelectPredefined(e.target.value)}
               disabled={disabled}
-              className="w-full text-xs py-1 px-2 bg-white border border-gray-200 rounded-lg focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none"
+              className="w-full text-xs h-8.5 py-1 px-2.5 bg-white border border-gray-200 rounded-lg focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none"
             >
               <option value="">Custom Accessory...</option>
               <optgroup label="Suggested for This Product">
@@ -82,7 +82,7 @@ export const QuotationAccessoryRow: React.FC<QuotationAccessoryRowProps> = ({
               </optgroup>
             </select>
 
-            <div className="grid grid-cols-2 gap-1.5">
+            <div className="grid grid-cols-2 gap-2">
               <input
                 type="text"
                 placeholder="Item Code"
@@ -91,7 +91,7 @@ export const QuotationAccessoryRow: React.FC<QuotationAccessoryRowProps> = ({
                   onUpdate({ ...accessory, itemCode: e.target.value })
                 }
                 disabled={disabled}
-                className="w-full text-xs py-1 px-2 bg-white border border-gray-200 rounded-lg font-mono focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none"
+                className="w-full text-xs h-8 py-1 px-2.5 bg-white border border-gray-200 rounded-lg font-mono focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none"
               />
               <input
                 type="text"
@@ -102,7 +102,7 @@ export const QuotationAccessoryRow: React.FC<QuotationAccessoryRowProps> = ({
                 }
                 disabled={disabled}
                 required
-                className="w-full text-xs py-1 px-2 bg-white border border-gray-200 rounded-lg font-semibold focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none"
+                className="w-full text-xs h-8 py-1 px-2.5 bg-white border border-gray-200 rounded-lg font-semibold focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none"
               />
             </div>
           </div>
@@ -110,21 +110,21 @@ export const QuotationAccessoryRow: React.FC<QuotationAccessoryRowProps> = ({
       </td>
 
       {/* Specification */}
-      <td className="p-3 align-top min-w-[180px] border-r border-gray-100">
+      <td className="p-3 align-top min-w-[340px] border-r border-gray-100">
         <textarea
           placeholder="Accessory technical specification..."
-          rows={2}
+          rows={3}
           value={accessory.specification || ""}
           onChange={(e) =>
             onUpdate({ ...accessory, specification: e.target.value })
           }
           disabled={disabled}
-          className="w-full text-xs py-1 px-2 bg-white border border-gray-200 rounded-lg focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none resize-none"
+          className="w-full min-h-[76px] text-xs leading-relaxed py-1.5 px-2.5 bg-white border border-gray-200 rounded-lg focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none resize-none"
         />
       </td>
 
       {/* 3. Accessory Image / Icon */}
-      <td className="p-3 align-top text-center w-24 min-w-[80px]">
+      <td className="p-3 align-top text-center w-20 min-w-[80px] border-r border-gray-100">
         {(() => {
           const rawAccImg =
             (accessory as any).customImageUrl ||

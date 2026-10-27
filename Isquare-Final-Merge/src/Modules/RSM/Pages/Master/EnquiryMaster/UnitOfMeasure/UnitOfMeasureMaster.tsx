@@ -363,7 +363,7 @@ export const UnitOfMeasureMaster: React.FC<UnitOfMeasureMasterProps> = ({ isTab 
                   </div>
                 </div>
 
-             
+
               </div>
             </div>
 
@@ -466,7 +466,7 @@ export const UnitOfMeasureMaster: React.FC<UnitOfMeasureMasterProps> = ({ isTab 
                   </div>
                 )}
                 <div className="flex items-center gap-6 pt-2">
-                   <div>
+                  <div>
                     <span className="text-[10px] font-extrabold uppercase text-gray-400 block tracking-widest">Sort Order</span>
                     <p className="text-sm font-semibold text-slate-800">{selectedItem.unitOfMeasureSortOrder}</p>
                   </div>
