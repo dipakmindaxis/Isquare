@@ -3,7 +3,7 @@ import { API_ENDPOINTS } from "../../../../../API/apiConfig";
 
 export interface Permission {
   id: number;
-  roleId: string;  
+  roleId: string;
   systemName: string;
   formName: string;
   canView: boolean;

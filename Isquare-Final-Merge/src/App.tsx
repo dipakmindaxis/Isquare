@@ -20,6 +20,7 @@ import SalesTeamMaster from "./Modules/RSM/Pages/Master/SalesTeam/SalesTeamMaste
 import FollowUpContactUpdatesMaster from "./Modules/RSM/Pages/Master/FollowUpContactUpdates/FollowUpContactUpdatesMaster";
 import DocumentAddressSettingsMaster from "./Modules/RSM/Pages/Master/DocumentAddressSettings/DocumentAddressSettingsMaster";
 import Industry from "./Modules/RSM/Pages/Master/Industry/Industry";
+import ContactPersonMaster from "./Modules/RSM/Pages/Master/Contact/ContactPersonMaster";
 import CustomerStatus from "./Modules/RSM/Pages/Master/CustomerStatus/CustomerStatus";
 import CustomerSource from "./Modules/RSM/Pages/Master/CustomerSource/CustomerSource";
 import CustomerArea from "./Modules/RSM/Pages/Master/CustomerArea/CustomerArea";
@@ -386,6 +387,22 @@ const router = createBrowserRouter([
       {
         path: "recruitment/bde-user",
         element: <SalesTeamMaster initialTab="bde" />,
+      },
+      {
+        path: "contact-person",
+        element: <ContactPersonMaster />,
+      },
+      {
+        path: "contacts",
+        element: <ContactPersonMaster />,
+      },
+      {
+        path: "master/contact-person",
+        element: <ContactPersonMaster />,
+      },
+      {
+        path: "master/contacts",
+        element: <ContactPersonMaster />,
       },
       {
         path: "contact-types",

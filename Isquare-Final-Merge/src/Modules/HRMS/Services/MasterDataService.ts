@@ -10,7 +10,7 @@ export interface EmployeeSelectItem {
   id: number;
   fullName: string;
   employeeCode: string;
-  firstName: string;    
+  firstName: string;
   lastName: string;
   designation: string;
 }

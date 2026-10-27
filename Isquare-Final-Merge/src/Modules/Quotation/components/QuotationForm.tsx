@@ -28,6 +28,7 @@ import {
   quotationDefaultService,
   companyProfileService,
   resolveImageUrl,
+  getProductUom,
 } from "../services/quotationService";
 
 interface QuotationFormProps {
@@ -109,6 +110,12 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
       const uomMatch = STANDARD_UOMS.find(
         (u) => u.id === defaultProd.unitOfMeasurementId
       );
+      const defaultUom =
+        defaultProd.unitName?.trim() ||
+        (defaultProd as any).uom?.trim() ||
+        getProductUom(defaultProd.productId, defaultProd) ||
+        uomMatch?.name ||
+        "Nos";
       const rawProdImg =
         defaultProd.imageUrl ||
         defaultProd.productImage ||
@@ -118,6 +125,22 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
       const rate = defaultProd.standardRate || 45000;
       const gst = defaultProd.gstRate ?? 18;
       const taxAmount = (rate * gst) / 100;
+      const pRate =
+        defaultProd.purchaseRate != null && !isNaN(Number(defaultProd.purchaseRate))
+          ? Number(defaultProd.purchaseRate)
+          : null;
+      const masterProfit =
+        defaultProd.profitPercentage != null && !isNaN(Number(defaultProd.profitPercentage))
+          ? Number(defaultProd.profitPercentage)
+          : null;
+      const profit =
+        masterProfit != null
+          ? masterProfit
+          : calculateProfitPercentage(rate, 1, pRate);
+      const stock =
+        defaultProd.stock != null && !isNaN(Number(defaultProd.stock))
+          ? Math.round(Number(defaultProd.stock))
+          : null;
 
       return [
         {
@@ -132,7 +155,7 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
           specification: defaultProd.specification || "",
           quantity: 1,
           unitOfMeasurementId: defaultProd.unitOfMeasurementId || 1,
-          unitName: uomMatch?.name || "Nos",
+          unitName: defaultUom,
           rate: rate,
           discountPercentage: 0,
           discountAmount: 0,
@@ -144,18 +167,10 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
           isActive: true,
           isDeleted: false,
           accessories: [],
-          purchaseRate: defaultProd.purchaseRate ?? null,
-          profitPercentage: calculateProfitPercentage(
-            rate,
-            1,
-            defaultProd.purchaseRate
-          ),
-          profit: calculateProfitPercentage(
-            rate,
-            1,
-            defaultProd.purchaseRate
-          ),
-          stock: defaultProd.stock ?? null,
+          purchaseRate: pRate,
+          profitPercentage: profit,
+          profit: profit,
+          stock: stock,
           productImage:
             defaultProd.productImage || defaultProd.productImagePath || null,
           productImagePath:
@@ -251,11 +266,23 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
             }
           }
 
+          // Synchronize UOM from master
+          const masterUom =
+            prod.unitName?.trim() ||
+            (prod as any).uom?.trim() ||
+            getProductUom(prod.productId, prod) ||
+            STANDARD_UOMS.find((u) => u.id === prod.unitOfMeasurementId)?.name ||
+            "Nos";
+          if (!item.unitName || (item.unitName === "Nos" && masterUom !== "Nos")) {
+            updates.unitName = masterUom;
+            hasChanges = true;
+          }
+
           const prodPR =
             prod.purchaseRate != null && !isNaN(Number(prod.purchaseRate))
               ? Number(prod.purchaseRate)
               : null;
-          if (item.purchaseRate == null && prodPR != null) {
+          if (item.purchaseRate === undefined || (item.purchaseRate === null && prodPR !== null)) {
             updates.purchaseRate = prodPR;
             hasChanges = true;
           }
@@ -264,19 +291,23 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
             prod.stock != null && !isNaN(Number(prod.stock))
               ? Math.round(Number(prod.stock))
               : null;
-          if (item.stock == null && prodStock != null) {
+          if (item.stock === undefined || (item.stock === null && prodStock !== null)) {
             updates.stock = prodStock;
             hasChanges = true;
           }
 
-          const effPR = updates.purchaseRate ?? item.purchaseRate ?? prodPR;
+          const effPR = updates.purchaseRate !== undefined ? updates.purchaseRate : item.purchaseRate;
           const currentQty = Math.max(0, Number(item.quantity) || 1);
           const taxableAmt = item.taxableAmount ?? (Number(item.rate || 0) * currentQty);
           const dynamicProfit = calculateProfitPercentage(taxableAmt, currentQty, effPR);
+          const masterProfit =
+            prod.profitPercentage != null && !isNaN(Number(prod.profitPercentage))
+              ? Number(prod.profitPercentage)
+              : dynamicProfit;
 
-          if (item.profitPercentage !== dynamicProfit) {
-            updates.profitPercentage = dynamicProfit;
-            updates.profit = dynamicProfit;
+          if (item.profitPercentage === undefined || (item.profitPercentage === null && masterProfit !== null)) {
+            updates.profitPercentage = masterProfit;
+            updates.profit = masterProfit;
             hasChanges = true;
           }
 
@@ -294,15 +325,35 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
   // Real-time synchronization event listener for Product Master updates
   useEffect(() => {
     const handleProductUpdated = (e: any) => {
-      const { productId, specification } = e.detail || {};
+      const { productId, specification, unitName, uom, purchaseRate, profitPercentage, stock } = e.detail || {};
       if (!productId) return;
 
       setItems((prevItems) => {
         let changed = false;
         const updated = prevItems.map((item) => {
-          if (item.productId === productId && !item.hasCustomSpecification) {
-            changed = true;
-            return { ...item, specification: specification || "" };
+          if (item.productId === productId) {
+            const updates: Partial<QuotationItem> = {};
+            if (!item.hasCustomSpecification && specification !== undefined && item.specification !== specification) {
+              updates.specification = specification;
+            }
+            const newUom = unitName || uom;
+            if (newUom && item.unitName !== newUom) {
+              updates.unitName = newUom;
+            }
+            if (purchaseRate !== undefined && (item.purchaseRate === null || item.purchaseRate === undefined)) {
+              updates.purchaseRate = purchaseRate;
+            }
+            if (profitPercentage !== undefined && (item.profitPercentage === null || item.profitPercentage === undefined)) {
+              updates.profitPercentage = profitPercentage;
+              updates.profit = profitPercentage;
+            }
+            if (stock !== undefined && (item.stock === null || item.stock === undefined)) {
+              updates.stock = stock;
+            }
+            if (Object.keys(updates).length > 0) {
+              changed = true;
+              return { ...item, ...updates };
+            }
           }
           return item;
         });

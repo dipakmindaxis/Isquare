@@ -1,4 +1,4 @@
-﻿import apiClient from "../../../../../../API/apiClient";
+import apiClient from "../../../../../../API/apiClient";
 import { API_ENDPOINTS } from "../../../../../../API/apiConfig";
 import type {
   CallType,
@@ -26,8 +26,8 @@ export const getAllCallTypes = async (): Promise<CallType[]> => {
       item.isActive !== undefined
         ? Boolean(item.isActive)
         : item.IsActive !== undefined
-        ? Boolean(item.IsActive)
-        : true,
+          ? Boolean(item.IsActive)
+          : true,
   }));
 };
 
@@ -41,8 +41,8 @@ export const getCallTypeById = async (id: number): Promise<CallType> => {
       data?.isActive !== undefined
         ? Boolean(data.isActive)
         : data?.IsActive !== undefined
-        ? Boolean(data.IsActive)
-        : true,
+          ? Boolean(data.IsActive)
+          : true,
   };
 };
 

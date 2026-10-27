@@ -111,8 +111,8 @@ const normalizeDirectorRecord = (emp: RawEmployeeRecord): DirectorEmployeeOption
     fromParts.length > 0
       ? fromParts
       : cleanedFullName.length > 0
-      ? cleanedFullName
-      : `Director #${id}`;
+        ? cleanedFullName
+        : `Director #${id}`;
 
   const code: string = (
     emp.employeeCode ??
@@ -168,9 +168,8 @@ export const getDirectorEmployees = async (): Promise<DirectorEmployeeOption[]> 
 
   // 3rd priority: CRM Employees active endpoint (/api/employees/active)
   try {
-    const activeUrl: string = `${
-      API_ENDPOINTS.CRMEmployees || `${API_ENDPOINTS.BaseUrl}/employees`
-    }/active`;
+    const activeUrl: string = `${API_ENDPOINTS.CRMEmployees || `${API_ENDPOINTS.BaseUrl}/employees`
+      }/active`;
     const response = await apiClient.get<EmployeeApiResponseType>(activeUrl);
     const list: RawEmployeeRecord[] = ensureEmployeeArray(response.data);
     if (list.length > 0) {
@@ -187,9 +186,8 @@ export const getDirectorEmployees = async (): Promise<DirectorEmployeeOption[]> 
 
   // 4th priority: CRM Employees by designation (/api/employees/by-designation/director)
   try {
-    const designatedUrl: string = `${
-      API_ENDPOINTS.CRMEmployees || `${API_ENDPOINTS.BaseUrl}/employees`
-    }/by-designation/director`;
+    const designatedUrl: string = `${API_ENDPOINTS.CRMEmployees || `${API_ENDPOINTS.BaseUrl}/employees`
+      }/by-designation/director`;
     const response = await apiClient.get<EmployeeApiResponseType>(designatedUrl);
     const list: RawEmployeeRecord[] = ensureEmployeeArray(response.data);
     if (list.length > 0) {

@@ -79,7 +79,7 @@ const CustomerAddressSection: React.FC<CustomerAddressSectionProps> = ({
       const result = await validateCustomerAddress(customerId, addr.addressId);
       const isSuccess = result.isValid !== false && result.status !== "Failed";
       const message = result.message || (isSuccess ? "Address is valid." : "Address validation failed.");
-      
+
       setValidationResults((prev) => ({
         ...prev,
         [index]: { success: isSuccess, message },
@@ -181,11 +181,10 @@ const CustomerAddressSection: React.FC<CustomerAddressSectionProps> = ({
               {/* Validation Result Banner */}
               {validationResults[idx] && (
                 <div
-                  className={`flex items-center gap-2 p-2.5 rounded-lg text-xs ${
-                    validationResults[idx].success
+                  className={`flex items-center gap-2 p-2.5 rounded-lg text-xs ${validationResults[idx].success
                       ? "bg-green-50 text-green-800 border border-green-200"
                       : "bg-red-50 text-red-800 border border-red-200"
-                  }`}
+                    }`}
                 >
                   {validationResults[idx].success ? (
                     <CheckCircle size={14} className="text-green-600 shrink-0" />

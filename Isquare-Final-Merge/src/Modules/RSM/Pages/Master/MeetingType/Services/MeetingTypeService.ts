@@ -1,4 +1,4 @@
-﻿import apiClient from "../../../../../../API/apiClient";
+import apiClient from "../../../../../../API/apiClient";
 import { API_ENDPOINTS } from "../../../../../../API/apiConfig";
 
 export interface MeetingType {
@@ -56,8 +56,8 @@ export const getAllMeetingTypes = async (): Promise<MeetingType[]> => {
             item.isActive !== undefined
               ? Boolean(item.isActive)
               : item.IsActive !== undefined
-              ? Boolean(item.IsActive)
-              : true,
+                ? Boolean(item.IsActive)
+                : true,
           isDeleted: Boolean(item.isDeleted ?? item.IsDeleted ?? false),
         };
       })

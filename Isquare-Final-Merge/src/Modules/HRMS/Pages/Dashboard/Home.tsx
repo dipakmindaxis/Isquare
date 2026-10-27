@@ -174,7 +174,7 @@ const Home: React.FC = () => {
       }
 
       // 5. Set State
-    
+
     } catch (error: unknown) {
       console.error("Dashboard Fetch Error:", error);
     } finally {

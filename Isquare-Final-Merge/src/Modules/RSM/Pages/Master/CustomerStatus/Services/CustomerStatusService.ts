@@ -47,8 +47,8 @@ export const getAllCustomerStatuses = async (): Promise<CustomerStatus[]> => {
           item.isActive !== undefined
             ? Boolean(item.isActive)
             : item.IsActive !== undefined
-            ? Boolean(item.IsActive)
-            : true,
+              ? Boolean(item.IsActive)
+              : true,
         isDeleted: Boolean(item.isDeleted ?? item.IsDeleted ?? false),
       }))
       .filter((item: any) => !item.isDeleted);
