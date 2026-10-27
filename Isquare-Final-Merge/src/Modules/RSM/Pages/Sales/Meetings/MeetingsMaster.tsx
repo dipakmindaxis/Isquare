@@ -35,45 +35,12 @@ import type {
   ActivityOutcomeItem,
 } from "../../SalesActivities/Services/SalesActivityService";
 
-const initialMeetings: MeetingRecord[] = [
-  {
-    id: "MTG-201",
-    meetingCode: "MTG-2026-001",
-    customerId: "CUST-001",
-    customerName: "Tata Steel Ltd",
-    meetingType: "Site Audit",
-    assignedUser: "Vishal Patil",
-    meetingStatus: "Completed",
-    meetingDate: "2026-10-06",
-    meetingTime: "11:00 AM",
-    durationMinutes: 60,
-    location: "Plant Safety Office, Jamshedpur",
-    agenda: "Plant survey of gas detectors & calibration review.",
-    outcome: "Client agreed to replace 12 obsolete sensors. Requested quotation.",
-    nextFollowUpDate: "2026-10-12",
-    attendees: "Rajesh Sharma, Vishal Patil",
-  },
-  {
-    id: "MTG-202",
-    meetingCode: "MTG-2026-002",
-    customerId: "CUST-002",
-    customerName: "Reliance Industries Ltd",
-    meetingType: "Technical Review",
-    assignedUser: "Samadhan Shinde",
-    meetingStatus: "Scheduled",
-    meetingDate: "2026-10-11",
-    meetingTime: "02:30 PM",
-    durationMinutes: 45,
-    location: "Microsoft Teams (Online)",
-    agenda: "Flame sensor technical review and response time discussion.",
-    outcome: "Scheduled session with instrumentation leads.",
-    nextFollowUpDate: "2026-10-13",
-    attendees: "Vikram Singhania, Samadhan Shinde",
-  },
-];
+export interface MeetingsMasterProps {
+  isTab?: boolean;
+}
 
-export const MeetingsMaster: React.FC = () => {
-  const [meetings, setMeetings] = useState<MeetingRecord[]>(initialMeetings);
+export const MeetingsMaster: React.FC<MeetingsMasterProps> = ({ isTab = false }) => {
+  const [meetings, setMeetings] = useState<MeetingRecord[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState("All");
   const [selectedStatus, setSelectedStatus] = useState("All");
@@ -126,15 +93,7 @@ export const MeetingsMaster: React.FC = () => {
           (o) => o.isActive && (o.category === "Meeting" || o.category === "General")
         )
       );
-      if (storedMeetings && storedMeetings.length > 0) {
-        setMeetings(storedMeetings);
-      }
-      if (c.length > 0 && !formCustomerName) {
-        setFormCustomerId(c[0].id);
-        setFormCustomerName(c[0].name);
-      }
-      if (e.length > 0 && !formAssignedUser) setFormAssignedUser(e[0].name);
-      if (mTypes.length > 0) setFormMeetingType(mTypes[0].value);
+      setMeetings(storedMeetings || []);
     };
     loadMeta();
   }, []);
@@ -156,20 +115,15 @@ export const MeetingsMaster: React.FC = () => {
   );
 
   const handleOpenAdd = () => {
-    if (customers.length > 0) {
-      setFormCustomerId(customers[0].id);
-      setFormCustomerName(customers[0].name);
-    } else {
-      setFormCustomerId("");
-      setFormCustomerName("");
-    }
-    if (employees.length > 0) setFormAssignedUser(employees[0].name);
-    setFormMeetingType("Follow-up");
+    setFormCustomerId("");
+    setFormCustomerName("");
+    setFormAssignedUser("");
+    setFormMeetingType(meetingTypes.length > 0 ? meetingTypes[0].value : "Follow-up");
     setFormMeetingStatus("Scheduled");
     setFormMeetingDate(new Date().toISOString().split("T")[0]);
     setFormMeetingTime("11:00 AM");
     setFormDuration(60);
-    setFormLocation("Client Conference Room / Teams Link");
+    setFormLocation("");
     setFormAgenda("");
     setFormOutcome("");
     setFormNextFollowUp("");
@@ -246,9 +200,9 @@ export const MeetingsMaster: React.FC = () => {
   };
 
   return (
-    <div className="p-4 md:p-6 bg-gray-50 min-h-full">
+    <div className={isTab ? "space-y-6" : "p-4 md:p-6 bg-gray-50 min-h-full"}>
       {/* Shared Nav Tabs */}
-      <SalesNavTabs counts={getSalesModuleCounts()} />
+      {!isTab && <SalesNavTabs counts={getSalesModuleCounts()} />}
 
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white rounded-xl shadow-xs border border-gray-200 p-5 mb-6">
@@ -503,7 +457,7 @@ export const MeetingsMaster: React.FC = () => {
                         setFormCustomerId(found.id);
                       }
                     }}
-                    placeholder="Type or select customer name (e.g. Tata Steel Ltd)"
+                    placeholder="Type or select customer name..."
                     className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   />

@@ -1,6 +1,17 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Layers, PhoneCall, Video, Clock } from "lucide-react";
+import {
+  Layers,
+  Clock,
+  CheckSquare,
+  RefreshCw,
+  CheckCircle2,
+  UserCheck,
+  PieChart,
+  Flag,
+  Paperclip,
+} from "lucide-react";
+import { FaPlus, FaFileExcel } from "react-icons/fa";
 import { toast } from "sonner";
 import type {
   ActivityStatus,
@@ -18,7 +29,6 @@ import {
   getEmployeeOptions,
   getSalesModuleCounts,
 } from "./Services/SalesActivityService";
-import { SalesActivityHeader } from "./Components/SalesActivityHeader";
 import { SalesActivityStatsCards } from "./Components/SalesActivityStatsCards";
 import { SalesActivityFilterBar } from "./Components/SalesActivityFilterBar";
 import { SalesActivityTable } from "./Components/SalesActivityTable";
@@ -26,36 +36,120 @@ import { AddSalesActivityModal } from "./Components/AddSalesActivityModal";
 import { EditSalesActivityModal } from "./Components/EditSalesActivityModal";
 import { ViewSalesActivityModal } from "./Components/ViewSalesActivityModal";
 import ConfirmationModal from "../../../../Components/Common/ConfirmationModal";
-import SalesNavTabs from "../Sales/Components/SalesNavTabs";
-import { CallsMaster } from "../Sales/Calls/CallsMaster";
-import { MeetingsMaster } from "../Sales/Meetings/MeetingsMaster";
 import { FollowUpsMaster } from "../Sales/FollowUps/FollowUpsMaster";
+import { TasksMaster } from "./Components/TasksMaster";
 import { exportToExcel } from "../../../../Utils/exportToExcel";
+import ActivityTypeMaster from "../Master/ActivityType/ActivityTypeMaster";
+import BdeUsers from "../Master/BdeUsers/Pages/BdeUsers";
+import CustomerStatus from "../Master/CustomerStatus/CustomerStatus";
+import PriorityMaster from "../Master/Priority/PriorityMaster";
+import DocumentTypeMaster from "../Master/DocumentType/DocumentTypeMaster";
 
-interface SalesActivitiesProps {
-  defaultTab?: "all" | "calls" | "meetings" | "followups";
+export type SalesActivityMasterTab =
+  | "all"
+  | "followups"
+  | "tasks"
+  | "activity-types"
+  | "customer-status"
+  | "bde-users"
+  | "priority"
+  | "document-types";
+
+export interface SalesActivitiesProps {
+  defaultTab?: SalesActivityMasterTab;
 }
 
 export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const urlTab = searchParams.get("tab") as
-    | "all"
-    | "calls"
-    | "meetings"
-    | "followups"
-    | null;
+  const urlTab = searchParams.get("tab") as SalesActivityMasterTab | null;
 
-  const [mainView, setMainView] = useState<
-    "all" | "calls" | "meetings" | "followups"
-  >(urlTab || defaultTab || "all");
+  const validTabs: SalesActivityMasterTab[] = useMemo(
+    () => [
+      "all",
+      "followups",
+      "tasks",
+      "activity-types",
+      "customer-status",
+      "bde-users",
+      "priority",
+      "document-types",
+    ],
+    []
+  );
+
+  const resolveTab = useCallback(
+    (tabParam: string | null): SalesActivityMasterTab => {
+      if (!tabParam) return "all";
+      const lower = tabParam.toLowerCase().trim();
+      if (lower === "all" || lower === "activities") return "all";
+      if (
+        lower === "followups" ||
+        lower === "follow-up" ||
+        lower === "follow-ups" ||
+        lower === "followup"
+      )
+        return "followups";
+      if (
+        lower === "tasks" ||
+        lower === "approvals" ||
+        lower === "task" ||
+        lower === "task-assignment" ||
+        lower === "taskassignment" ||
+        lower === "task-assignments" ||
+        lower === "tasks-assignment" ||
+        lower === "task_assignment" ||
+        lower === "assignment"
+      )
+        return "tasks";
+      if (
+        lower === "activity-types" ||
+        lower === "activity-type" ||
+        lower === "activitytype" ||
+        lower === "activity"
+      )
+        return "activity-types";
+      if (
+        lower === "customer-status" ||
+        lower === "customerstatus" ||
+        lower === "status"
+      )
+        return "customer-status";
+      if (
+        lower === "bde-users" ||
+        lower === "bde-user" ||
+        lower === "bde" ||
+        lower === "sales-rep" ||
+        lower === "assigned-sales-rep"
+      )
+        return "bde-users";
+      if (lower === "priority" || lower === "priorities")
+        return "priority";
+      if (
+        lower === "document-types" ||
+        lower === "document-type" ||
+        lower === "documenttype" ||
+        lower === "doc-type" ||
+        lower === "attachments"
+      )
+        return "document-types";
+      return "all";
+    },
+    []
+  );
+
+  const [mainView, setMainView] = useState<SalesActivityMasterTab>(() => {
+    if (urlTab) return resolveTab(urlTab);
+    if (defaultTab && validTabs.includes(defaultTab)) return defaultTab;
+    return "all";
+  });
 
   useEffect(() => {
-    if (urlTab && ["all", "calls", "meetings", "followups"].includes(urlTab)) {
-      setMainView(urlTab);
+    if (urlTab) {
+      setMainView(resolveTab(urlTab));
     }
-  }, [urlTab]);
+  }, [urlTab, resolveTab]);
 
-  const handleSwitchMainView = (tab: "all" | "calls" | "meetings" | "followups") => {
+  const handleSwitchMainView = (tab: SalesActivityMasterTab) => {
     setMainView(tab);
     setSearchParams(tab === "all" ? {} : { tab });
   };
@@ -72,6 +166,7 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
   const [customers, setCustomers] = useState<CustomerOption[]>([]);
   const [employees, setEmployees] = useState<EmployeeOption[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [moduleCounts, setModuleCounts] = useState(() => getSalesModuleCounts());
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -89,12 +184,11 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
 
   // Modal states
   const [isAddOpen, setIsAddOpen] = useState<boolean>(false);
+  const [taskAddRequested, setTaskAddRequested] = useState<boolean>(false);
   const [isEditOpen, setIsEditOpen] = useState<boolean>(false);
   const [isViewOpen, setIsViewOpen] = useState<boolean>(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState<boolean>(false);
-  const [selectedActivity, setSelectedActivity] = useState<SalesActivity | null>(
-    null
-  );
+  const [selectedActivity, setSelectedActivity] = useState<SalesActivity | null>(null);
 
   // Fetch activities and summary stats
   const loadData = useCallback(async () => {
@@ -118,6 +212,7 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
       setStats(statData);
       setCustomers(custData);
       setEmployees(empData);
+      setModuleCounts(getSalesModuleCounts());
     } catch {
       toast.error("Failed to load sales activities.");
     } finally {
@@ -150,6 +245,13 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
     activeTab,
   ]);
 
+  const handleTabChange = (
+    tab: "all" | "today" | "upcoming" | "overdue" | "completed"
+  ) => {
+    setActiveTab(tab);
+    setCurrentPage(1);
+  };
+
   const handleResetFilters = () => {
     setSearchQuery("");
     setSelectedType("All");
@@ -157,13 +259,6 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
     setSelectedCustomerId("All");
     setSelectedEmployeeId("All");
     setActiveTab("all");
-    setCurrentPage(1);
-  };
-
-  const handleTabChange = (
-    tab: "all" | "today" | "upcoming" | "overdue" | "completed"
-  ) => {
-    setActiveTab(tab);
     setCurrentPage(1);
   };
 
@@ -188,7 +283,7 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
       const success = await deleteSalesActivity(selectedActivity.id);
       if (success) {
         toast.success(
-          `Activity "${selectedActivity.subject}" deleted successfully.`
+          `Activity ${selectedActivity.activityCode} deleted successfully.`
         );
         loadData();
       } else {
@@ -211,13 +306,15 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
       "Sr No": idx + 1,
       "Activity Code": a.activityCode,
       "Activity Type": a.activityType,
-      "Subject": a.subject,
-      "Customer": a.customerName,
+      Subject: a.subject,
+      Customer: a.customerName,
       "Contact Person": a.contactPerson,
+      "Contact Phone": a.contactPhone || "-",
+      "Email ID": a.contactEmail || "-",
       "Assigned Rep": a.assignedEmployeeName,
-      "Date": a.activityDate,
-      "Time": a.activityTime,
-      "Status": a.status,
+      Date: a.activityDate,
+      Time: a.activityTime,
+      Status: a.status,
       "Next Action Date": a.nextActionDate || "-",
       "Next Action Details": a.nextActionDetails || "-",
     }));
@@ -225,102 +322,186 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
     toast.success("Sales activities exported to Excel.");
   };
 
+  const SALES_TABS = [
+    {
+      id: "all" as const,
+      label: "All Activities",
+      icon: <Layers size={16} />,
+      count: stats.total,
+    },
+    {
+      id: "followups" as const,
+      label: "Follow-Up Tracker",
+      icon: <Clock size={16} />,
+      count: moduleCounts.followUps,
+    },
+    {
+      id: "tasks" as const,
+      label: "Task Assignment",
+      icon: <CheckSquare size={16} />,
+    },
+    {
+      id: "activity-types" as const,
+      label: "Activity Type",
+      icon: <CheckCircle2 size={16} />,
+    },
+    {
+      id: "customer-status" as const,
+      label: "Customer Status",
+      icon: <PieChart size={16} />,
+    },
+    {
+      id: "bde-users" as const,
+      label: "Assigned Sales Rep / BDE User",
+      icon: <UserCheck size={16} />,
+    },
+    {
+      id: "priority" as const,
+      label: "Priority Master",
+      icon: <Flag size={16} />,
+    },
+    {
+      id: "document-types" as const,
+      label: "Document Types",
+      icon: <Paperclip size={16} />,
+    },
+  ];
+
   return (
-    <div className="p-4 md:p-6 bg-gray-50 min-h-full">
-      {/* Top Sales Nav Tabs */}
-      <SalesNavTabs counts={getSalesModuleCounts()} />
+    <div className="p-4 md:p-6 bg-gray-50 min-h-full space-y-6">
+      {/* Unified Master Header Card matching CustomerMaster */}
+      <div className="bg-white rounded-xl shadow-xs border border-gray-200 p-5 pb-0">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-gray-100">
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 bg-orange-50 border border-[#FF7900]/30 text-[#FF7900] rounded-xl flex items-center justify-center shrink-0 shadow-xs">
+              <Layers className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl md:text-2xl font-bold text-gray-900">
+                  Sales Activities
+                </h1>
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-orange-50 text-[#FF7900] border border-[#FF7900]/20">
+                  Unified Master
+                </span>
+              </div>
+              <p className="text-gray-500 mt-1 text-xs md:text-sm">
+                Unified master management for sales activities, follow-ups, tasks, activity types, customer statuses, BDE users, priorities, and document types.
+              </p>
+            </div>
+          </div>
+        </div>
 
-      {/* Unified Module Views Switcher */}
-      <div className="flex flex-wrap items-center gap-2 bg-white p-2 rounded-xl border border-gray-200 shadow-xs mb-5">
-        <button
-          type="button"
-          onClick={() => handleSwitchMainView("all")}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-            mainView === "all"
-              ? "bg-[#FF7900] text-white shadow-sm"
-              : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-          }`}
-        >
-          <Layers size={15} />
-          <span>ALL ACTIVITIES</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handleSwitchMainView("calls")}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-            mainView === "calls"
-              ? "bg-[#FF7900] text-white shadow-sm"
-              : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-          }`}
-        >
-          <PhoneCall size={15} />
-          <span>CALLS MASTER</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handleSwitchMainView("meetings")}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-            mainView === "meetings"
-              ? "bg-[#FF7900] text-white shadow-sm"
-              : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-          }`}
-        >
-          <Video size={15} />
-          <span>MEETINGS MASTER</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handleSwitchMainView("followups")}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-            mainView === "followups"
-              ? "bg-[#FF7900] text-white shadow-sm"
-              : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-          }`}
-        >
-          <Clock size={15} />
-          <span>FOLLOW-UP TRACKER</span>
-        </button>
+        {/* Tab Navigation: Only Operational Sales Activities Tabs */}
+        <div className="flex items-center gap-1 overflow-x-auto scrollbar-none pt-2">
+          {SALES_TABS.map((tab) => {
+            const isActive = mainView === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => handleSwitchMainView(tab.id)}
+                className={`flex items-center gap-2 px-4 py-3 text-xs sm:text-sm font-medium border-b-2 whitespace-nowrap transition-all cursor-pointer ${
+                  isActive
+                    ? "border-[#FF7900] text-[#FF7900] font-semibold bg-orange-50/50 rounded-t-lg"
+                    : "border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300"
+                }`}
+              >
+                <span className={isActive ? "text-[#FF7900]" : "text-gray-400"}>
+                  {tab.icon}
+                </span>
+                <span>{tab.label}</span>
+                {typeof tab.count === "number" && (
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+                      isActive
+                        ? "bg-[#FF7900] text-white"
+                        : "bg-gray-100 text-gray-600"
+                    }`}
+                  >
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* RENDER VIEW ACCORDING TO ACTIVE VIEW */}
-      {mainView === "calls" && <CallsMaster />}
-      {mainView === "meetings" && <MeetingsMaster />}
-      {mainView === "followups" && <FollowUpsMaster />}
-
+      {/* Main View Display */}
       {mainView === "all" && (
-        <>
-          {/* Header Card & Stats Bar - hidden when Add Form is open, matching CustomerMaster */}
+        <div className="space-y-6">
+          {/* Listing Action Header matching CustomerMaster */}
           {!isAddOpen && (
-            <>
-              {/* 1. Header Card */}
-              <SalesActivityHeader
-                onAddNew={() => {
-                  setIsAddOpen(true);
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }}
-                onExport={handleExportClick}
-              />
-
-              {/* 2. KPI / Summary Cards */}
-              <SalesActivityStatsCards
-                stats={stats}
-                activeTab={activeTab}
-                onSelectTab={handleTabChange}
-              />
-            </>
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <h2 className="border-b-2 border-[#FF7900] pb-2 text-2xl sm:text-3xl font-bold tracking-tight text-[#00234a]">
+                  All Activities
+                </h2>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={loadData}
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer"
+                >
+                  <RefreshCw size={15} className={isLoading ? "animate-spin" : ""} />
+                  <span>Refresh</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleExportClick}
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer"
+                >
+                  <FaFileExcel className="text-emerald-600" />
+                  <span>Export</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleSwitchMainView("tasks");
+                    setTaskAddRequested(true);
+                  }}
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#00234a] hover:bg-[#003366] text-white px-4 py-2.5 text-xs sm:text-sm font-semibold shadow-sm transition cursor-pointer"
+                >
+                  <FaPlus size={12} />
+                  <span>Add Task</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAddOpen(true);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#FF7900] hover:bg-[#e06800] text-white px-5 py-2.5 text-xs sm:text-sm font-semibold shadow-md shadow-orange-500/25 transition cursor-pointer"
+                >
+                  <FaPlus size={12} />
+                  <span>Record Activity</span>
+                </button>
+              </div>
+            </div>
           )}
 
-          {/* Add Sales Activity Form Component - Opens at the top like Customer Module */}
+          {/* KPI / Summary Cards */}
+          {!isAddOpen && (
+            <SalesActivityStatsCards
+              stats={stats}
+              activeTab={activeTab}
+              onSelectTab={handleTabChange}
+            />
+          )}
+
+          {/* Add Sales Activity Form Component */}
           <AddSalesActivityModal
             isOpen={isAddOpen}
             onClose={() => setIsAddOpen(false)}
-            onSuccess={loadData}
+            onSuccess={() => {
+              setIsAddOpen(false);
+              loadData();
+            }}
           />
 
-          {/* 3. Filters & Quick Status Tabs */}
+          {/* Filters & Quick Status Tabs */}
           <SalesActivityFilterBar
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
@@ -339,7 +520,7 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
             employees={employees}
           />
 
-          {/* 4. Table with Pagination */}
+          {/* Sales Activities Data Table without Related Link */}
           <SalesActivityTable
             activities={activities}
             isLoading={isLoading}
@@ -356,7 +537,7 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
             }}
           />
 
-          {/* 5. Edit Modal - Fixed Centered Modal Popup */}
+          {/* Edit Modal */}
           {isEditOpen && (
             <EditSalesActivityModal
               isOpen={isEditOpen}
@@ -366,7 +547,11 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
                 setIsEditOpen(false);
                 setSelectedActivity(null);
               }}
-              onSuccess={loadData}
+              onSuccess={() => {
+                setIsEditOpen(false);
+                setSelectedActivity(null);
+                loadData();
+              }}
             />
           )}
 
@@ -397,8 +582,22 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
             message={`Are you sure you want to delete "${selectedActivity?.subject}" (${selectedActivity?.activityCode})? This action cannot be undone.`}
             confirmButtonVariant="danger"
           />
-        </>
+        </div>
       )}
+
+      {/* Operations & Master Views matching EnquiryMaster layout */}
+      {mainView === "followups" && <FollowUpsMaster isTab={true} />}
+      {mainView === "tasks" && (
+        <TasksMaster
+          initialAddOpen={taskAddRequested}
+          onAddClosed={() => setTaskAddRequested(false)}
+        />
+      )}
+      {mainView === "activity-types" && <ActivityTypeMaster isTab={true} />}
+      {mainView === "customer-status" && <CustomerStatus isTab={true} />}
+      {mainView === "bde-users" && <BdeUsers isTab={true} />}
+      {mainView === "priority" && <PriorityMaster isTab={true} />}
+      {mainView === "document-types" && <DocumentTypeMaster isTab={true} />}
     </div>
   );
 };

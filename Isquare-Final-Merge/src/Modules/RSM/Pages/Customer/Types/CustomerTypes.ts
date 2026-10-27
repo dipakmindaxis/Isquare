@@ -27,6 +27,11 @@ export interface Customer {
   companyName?: string;
   companyGroup?: string;
   plantCode?: string;
+  email?: string;
+  emailAddress?: string;
+  phone?: string;
+  mobile?: string;
+  contactPerson?: string;
 
   // Business Information
   industryId?: number;

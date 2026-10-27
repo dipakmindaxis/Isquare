@@ -169,6 +169,12 @@ export const API_ENDPOINTS: ApiEndpoints = {
 
   Levels: `${BASE_URL}/levels`,
   LevelMaster: `${BASE_URL}/level-master`,
+  Task: `${BASE_URL}/Task`,
+  Tasks: `${BASE_URL}/Task`,
+  TaskStatus: `${BASE_URL}/TaskStatus`,
+  TaskStatuses: `${BASE_URL}/TaskStatus`,
+  TaskAssignment: `${BASE_URL}/TaskAssignment`,
+  TaskAssignments: `${BASE_URL}/TaskAssignment`,
   EnquiryPriorities: `${BASE_URL}/EnquiryPriority`,
   Currencies: `${BASE_URL}/Currency`,
   SalesTerritories: `${BASE_URL}/SalesTerritory`,

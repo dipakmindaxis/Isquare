@@ -36,45 +36,12 @@ import type {
   ActivityOutcomeItem,
 } from "../../SalesActivities/Services/SalesActivityService";
 
-const initialCalls: CallRecord[] = [
-  {
-    id: "CALL-101",
-    callCode: "CALL-2026-001",
-    customerId: "CUST-001",
-    customerName: "Tata Steel Ltd",
-    contactPerson: "Rajesh Sharma",
-    phone: "+91 98201 44521",
-    callType: "Follow-up",
-    assignedTo: "Vishal Patil",
-    callDate: "2026-10-07",
-    callTime: "11:30 AM",
-    durationMinutes: 15,
-    status: "Done",
-    callOutcome: "Connected - Interested",
-    nextFollowUpDate: "2026-10-12",
-    remarks: "Discussed proposal for gas monitoring upgrade.",
-  },
-  {
-    id: "CALL-102",
-    callCode: "CALL-2026-002",
-    customerId: "CUST-002",
-    customerName: "Reliance Industries Ltd",
-    contactPerson: "Vikram Singhania",
-    phone: "+91 97234 11092",
-    callType: "Follow-up",
-    assignedTo: "Samadhan Shinde",
-    callDate: "2026-10-08",
-    callTime: "03:30 PM",
-    durationMinutes: 10,
-    status: "Done",
-    callOutcome: "Connected - Follow-up Required",
-    nextFollowUpDate: "2026-10-10",
-    remarks: "Follow-up on flame detector quotation QUO-2026-0108.",
-  },
-];
+export interface CallsMasterProps {
+  isTab?: boolean;
+}
 
-export const CallsMaster: React.FC = () => {
-  const [calls, setCalls] = useState<CallRecord[]>(initialCalls);
+export const CallsMaster: React.FC<CallsMasterProps> = ({ isTab = false }) => {
+  const [calls, setCalls] = useState<CallRecord[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<string>("All");
   const [selectedStatus, setSelectedStatus] = useState<string>("All");
@@ -127,18 +94,7 @@ export const CallsMaster: React.FC = () => {
           (o) => o.isActive && (o.category === "Call" || o.category === "General")
         )
       );
-      if (storedCalls && storedCalls.length > 0) {
-        setCalls(storedCalls);
-      }
-      if (c.length > 0 && !formCustomerName) {
-        setFormCustomerId(c[0].id);
-        setFormCustomerName(c[0].name);
-        setFormContactPerson(c[0].contactPerson);
-        setFormContactPhone(c[0].phone);
-      }
-      if (e.length > 0 && !formAssignedTo) setFormAssignedTo(e[0].name);
-      if (cTypes.length > 0) setFormCallType(cTypes[0].value);
-      if (actOutcomes.length > 0) setFormCallOutcome(actOutcomes[0].value);
+      setCalls(storedCalls || []);
     };
     loadMeta();
   }, []);
@@ -262,9 +218,9 @@ export const CallsMaster: React.FC = () => {
   };
 
   return (
-    <div className="p-4 md:p-6 bg-gray-50 min-h-full">
+    <div className={isTab ? "space-y-6" : "p-4 md:p-6 bg-gray-50 min-h-full"}>
       {/* Shared Navigation Tabs */}
-      <SalesNavTabs counts={getSalesModuleCounts()} />
+      {!isTab && <SalesNavTabs counts={getSalesModuleCounts()} />}
 
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white rounded-xl shadow-xs border border-gray-200 p-5 mb-6">
@@ -560,7 +516,7 @@ export const CallsMaster: React.FC = () => {
                         if (!formContactPhone) setFormContactPhone(found.phone);
                       }
                     }}
-                    placeholder="Type or select customer name (e.g. Tata Steel Ltd)"
+                    placeholder="Type or select customer name..."
                     className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   />

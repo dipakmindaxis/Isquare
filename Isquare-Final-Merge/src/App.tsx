@@ -27,7 +27,8 @@ import CustomerArea from "./Modules/RSM/Pages/Master/CustomerArea/CustomerArea";
 import AddressType from "./Modules/RSM/Pages/Master/AddressType/AddressType";
 import CustomerMaster from "./Modules/RSM/Pages/Customer/CustomerMaster";
 import SalesActivities from "./Modules/RSM/Pages/SalesActivities/SalesActivities";
-import AttachmentsMaster from "./Modules/RSM/Pages/Sales/Attachments/AttachmentsMaster";
+import { CallsMaster } from "./Modules/RSM/Pages/Sales/Calls/CallsMaster";
+import { MeetingsMaster } from "./Modules/RSM/Pages/Sales/Meetings/MeetingsMaster";
 import SalesAttachmentsMaster from "./Modules/RSM/Pages/Master/SalesAttachments/SalesAttachmentsMaster";
 import FollowUpIntervals from "./Modules/RSM/Pages/Sales/Masters/FollowUpIntervals/FollowUpIntervals";
 import DocumentTypes from "./Modules/RSM/Pages/Sales/Masters/DocumentTypes/DocumentTypes";
@@ -68,6 +69,232 @@ import ErrorPage from "./Modules/HRMS/Pages/Error/ErrorPage";
   import ForgotPassword from "./Modules/HRMS/Pages/Auth/ForgotPassword";
   import ErrorPage from "./Modules/HRMS/Pages/Error/ErrorPage";
 
+import Dashboard from "./Modules/HRMS/Pages/Dashboard/Dashboard";
+import RSMDashboard from "./Modules/RSM/Dashboard/RSMDashboard";
+import VMSDashboard from "./Modules/VMS/Pages/Dashboard/VMSDashboard";
+import Home from "./Modules/HRMS/Pages/Dashboard/Home";
+import quotationRoutes from "./Modules/Quotation/routes/quotationRoutes";
+import EnquiryMaster from "./Modules/RSM/Pages/Master/EnquiryMaster/EnquiryMaster";
+ 
+const router = createBrowserRouter([
+  {
+    path: "/login",
+    element: <Login />,
+  },
+  {
+    path: "/forgot-password",
+    element: <ForgotPassword />,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/reset-password",
+    element: <ResetPassword />,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/",
+    element: (
+      <ProtectedRoute>
+        <HomeHub />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/hrms",
+    element: (
+      <ProtectedRoute>
+        <Dashboard />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        path: "",
+        element: <Home />,
+      },
+      {
+        path: "employees",
+        element: <EmployeeMaster />,
+      },
+      {
+        path: "employee",
+        element: <EmployeeMaster />,
+      },
+      {
+        path: "master/employee",
+        element: <EmployeeMaster />,
+      },
+      {
+        path: "master/employees",
+        element: <EmployeeMaster />,
+      },
+      {
+        path: "locations",
+        element: <MultiLocation />,
+      },
+      {
+        path: "masters",
+        element: <BasicMasters />,
+      },
+      {
+        path: "basimasters",
+        element: <BasicMasters />,
+      },
+      {
+        path: "basicmasters",
+        element: <BasicMasters />,
+      },
+      {
+        path: "masters/departments",
+        element: <Departments />,
+      },
+      {
+        path: "masters/designations",
+        element: <Designation />,
+      },
+      {
+        path: "masters/roles",
+        element: <Role />,
+      },
+      {
+        path: "masters/access-control",
+        element: <AccessControlManagement />,
+      },
+      {
+        path: "access-control",
+        element: <AccessControlManagement />,
+      },
+    ],
+  },
+  {
+    path: "/rsm",
+    element: (
+      <ProtectedRoute>
+        <Dashboard />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        path: "",
+        element: <RSMDashboard />,
+      },
+      ...quotationRoutes,
+      {
+        path: "customers",
+        element: <CustomerMaster />,
+      },
+      {
+        path: "customer",
+        element: <CustomerMaster />,
+      },
+      {
+        path: "sales/customers",
+        element: <CustomerMaster />,
+      },
+      {
+        path: "sales/customer",
+        element: <CustomerMaster />,
+      },
+      {
+        path: "sales-activities",
+        element: <SalesActivities />,
+      },
+      {
+        path: "sales/activities",
+        element: <SalesActivities />,
+      },
+      {
+        path: "sales/calls",
+        element: <CallsMaster />,
+      },
+      {
+        path: "sales/meetings",
+        element: <MeetingsMaster />,
+      },
+      {
+        path: "sales/follow-ups",
+        element: <SalesActivities defaultTab="followups" />,
+      },
+      {
+        path: "sales/tasks",
+        element: <SalesActivities defaultTab="tasks" />,
+      },
+      {
+        path: "sales/attachments",
+        element: <SalesAttachmentsMaster />,
+      },
+      {
+        path: "sales/follow-up-intervals",
+        element: <FollowUpIntervals />,
+      },
+      {
+        path: "sales/document-types",
+        element: <DocumentTypes />,
+      },
+      {
+        path: "sales/call-types",
+        element: <CallTypes />,
+      },
+      {
+        path: "sales/meeting-types",
+        element: <MeetingTypes />,
+      },
+      {
+        path: "sales/activity-outcomes",
+        element: <ActivityOutcomes />,
+      },
+      {
+        path: "sales/outcomes",
+        element: <ActivityOutcomes />,
+      },
+      {
+        path: "master/enquiry-master",
+        element: <EnquiryMaster />,
+      },
+      // Consolidated Master Routes
+      {
+        path: "master/customer-classification",
+        element: <CustomerClassificationMaster />,
+      },
+      {
+        path: "customer-classification",
+        element: <CustomerClassificationMaster />,
+      },
+      {
+        path: "master/sales-team",
+        element: <SalesTeamMaster />,
+      },
+      {
+        path: "sales-team",
+        element: <SalesTeamMaster />,
+      },
+      {
+        path: "master/sales-assignment",
+        element: <CustomerMaster initialTab="assignment" />,
+      },
+      {
+        path: "sales-assignment",
+        element: <CustomerMaster initialTab="assignment" />,
+      },
+      {
+        path: "hierarchy-management",
+        element: <CustomerMaster initialTab="assignment" />,
+      },
+      {
+        path: "master/follow-up-contact-updates",
+        element: <FollowUpContactUpdatesMaster />,
+      },
+      {
+        path: "follow-up-contact-updates",
+        element: <FollowUpContactUpdatesMaster />,
+      },
+      {
+        path: "master/document-address-settings",
+        element: <DocumentAddressSettingsMaster />,
+      },
+      {
+        path: "document-address-settings",
+        element: <DocumentAddressSettingsMaster />,
+      },
   import Dashboard from "./Modules/HRMS/Pages/Dashboard/Dashboard";
   import RSMDashboard from "./Modules/RSM/Dashboard/RSMDashboard";
   import VMSDashboard from "./Modules/VMS/Pages/Dashboard/VMSDashboard";
@@ -331,6 +558,18 @@ import ErrorPage from "./Modules/HRMS/Pages/Error/ErrorPage";
       {
         path: "master/activity-type",
         element: <FollowUpContactUpdatesMaster initialTab="activity-type" />,
+      },
+      {
+        path: "master/priority",
+        element: <FollowUpContactUpdatesMaster initialTab="priority" />,
+      },
+      {
+        path: "master/priorities",
+        element: <FollowUpContactUpdatesMaster initialTab="priority" />,
+      },
+      {
+        path: "priority",
+        element: <FollowUpContactUpdatesMaster initialTab="priority" />,
       },
       {
         path: "master/outcomes",
@@ -898,6 +1137,53 @@ import ErrorPage from "./Modules/HRMS/Pages/Error/ErrorPage";
         { path: "/document-address-settings", element: <DocumentAddressSettingsMaster /> },
         { path: "/master/document-address-settings", element: <DocumentAddressSettingsMaster /> },
 
+      // Legacy and Category mappings
+      { path: "/bde-users", element: <SalesTeamMaster initialTab="bde" /> },
+      { path: "/bde-user", element: <SalesTeamMaster initialTab="bde" /> },
+      { path: "/de-user", element: <SalesTeamMaster initialTab="bde" /> },
+      { path: "/deUser", element: <SalesTeamMaster initialTab="bde" /> },
+      { path: "/recruitment/bde-users", element: <SalesTeamMaster initialTab="bde" /> },
+      { path: "/recruitment/bde-user", element: <SalesTeamMaster initialTab="bde" /> },
+      { path: "/contact-types", element: <FollowUpContactUpdatesMaster initialTab="contact-types" /> },
+      { path: "/contact-type", element: <FollowUpContactUpdatesMaster initialTab="contact-types" /> },
+      { path: "/recruitment/contact-types", element: <FollowUpContactUpdatesMaster initialTab="contact-types" /> },
+      { path: "/recruitment/contact-type", element: <FollowUpContactUpdatesMaster initialTab="contact-types" /> },
+      { path: "/sales-user-manager", element: <SalesTeamMaster initialTab="managers" /> },
+      { path: "/sales-user-managers", element: <SalesTeamMaster initialTab="managers" /> },
+      { path: "/salesusermanager", element: <SalesTeamMaster initialTab="managers" /> },
+      { path: "/recruitment/sales-user-manager", element: <SalesTeamMaster initialTab="managers" /> },
+      { path: "/payment-term", element: <PaymentTerm /> },
+      { path: "/priority", element: <FollowUpContactUpdatesMaster initialTab="priority" /> },
+      { path: "/priorities", element: <FollowUpContactUpdatesMaster initialTab="priority" /> },
+      { path: "/master/priority", element: <FollowUpContactUpdatesMaster initialTab="priority" /> },
+      { path: "/master/priorities", element: <FollowUpContactUpdatesMaster initialTab="priority" /> },
+      { path: "/industry", element: <CustomerClassificationMaster initialTab="industry" /> },
+      { path: "/customer-status", element: <CustomerClassificationMaster initialTab="status" /> },
+      { path: "/customer-source", element: <CustomerClassificationMaster initialTab="source" /> },
+      { path: "/customer-area", element: <CustomerClassificationMaster initialTab="area" /> },
+      { path: "/address-type", element: <DocumentAddressSettingsMaster initialTab="address-type" /> },
+      { path: "/director", element: <Director /> },
+      { path: "/directors", element: <Director /> },
+      { path: "/master/director", element: <Director /> },
+      { path: "/master/directors", element: <Director /> },
+      { path: "/sales-coordinator", element: <SalesCoordinator /> },
+      { path: "/sales-coordinators", element: <SalesCoordinator /> },
+      { path: "/master/sales-coordinator", element: <SalesCoordinator /> },
+      { path: "/master/sales-coordinators", element: <SalesCoordinator /> },
+      { path: "/customers", element: <CustomerMaster /> },
+      { path: "/customer", element: <CustomerMaster /> },
+      { path: "/rsm/customers", element: <CustomerMaster /> },
+      { path: "/rsm/customer", element: <CustomerMaster /> },
+      { path: "/rsm/sales/customers", element: <CustomerMaster /> },
+      { path: "/sales-assignment", element: <CustomerMaster initialTab="assignment" /> },
+      { path: "/master/sales-assignment", element: <CustomerMaster initialTab="assignment" /> },
+      { path: "/hierarchy-management", element: <CustomerMaster initialTab="assignment" /> },
+      { path: "/employees", element: <EmployeeMaster /> },
+      { path: "/employee", element: <EmployeeMaster /> },
+      { path: "/master/employee", element: <EmployeeMaster /> },
+      { path: "/master/employees", element: <EmployeeMaster /> },
+    ],
+  },
         // Legacy and Category mappings
         { path: "/bde-users", element: <SalesTeamMaster initialTab="bde" /> },
         { path: "/bde-user", element: <SalesTeamMaster initialTab="bde" /> },

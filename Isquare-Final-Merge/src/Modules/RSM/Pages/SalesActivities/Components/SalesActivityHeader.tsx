@@ -3,11 +3,13 @@ import { FaPlus, FaFileExcel, FaTasks } from "react-icons/fa";
 
 interface SalesActivityHeaderProps {
   onAddNew: () => void;
+  onAddTask?: () => void;
   onExport?: () => void;
 }
 
 export const SalesActivityHeader: React.FC<SalesActivityHeaderProps> = ({
   onAddNew,
+  onAddTask,
   onExport,
 }) => {
   return (
@@ -22,7 +24,7 @@ export const SalesActivityHeader: React.FC<SalesActivityHeaderProps> = ({
               Sales Activities
             </h1>
             <p className="text-xs sm:text-[13px] text-slate-500 font-medium mt-0.5">
-              Manage customer visits, calls, meetings, and sales activities
+              Manage customer visits, calls, meetings, follow-ups, and director approval tasks
             </p>
           </div>
         </div>
@@ -37,6 +39,16 @@ export const SalesActivityHeader: React.FC<SalesActivityHeaderProps> = ({
           >
             <FaFileExcel className="text-emerald-600 text-sm" />
             <span>Export</span>
+          </button>
+        )}
+        {onAddTask && (
+          <button
+            type="button"
+            onClick={onAddTask}
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-[#154068] hover:bg-[#0f2d4a] text-white rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-sm active:scale-95 min-h-[40px] cursor-pointer"
+          >
+            <FaPlus size={12} />
+            <span>Add Task / Request</span>
           </button>
         )}
         <button

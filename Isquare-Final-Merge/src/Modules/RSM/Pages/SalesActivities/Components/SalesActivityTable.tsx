@@ -5,7 +5,7 @@ import {
   ChevronLeft,
   ChevronRight,
   AlertCircle,
-  ExternalLink,
+  Mail,
 } from "lucide-react";
 import { FaEye, FaEdit, FaTrash, FaTasks } from "react-icons/fa";
 import type { SalesActivity } from "../Types/SalesActivityTypes";
@@ -85,13 +85,13 @@ export const SalesActivityTable: React.FC<SalesActivityTableProps> = ({
                   Customer & Contact
                 </th>
                 <th className="px-4 py-3.5 text-left text-[12px] font-bold uppercase tracking-[0.5px]">
+                  Email ID
+                </th>
+                <th className="px-4 py-3.5 text-left text-[12px] font-bold uppercase tracking-[0.5px]">
                   Assigned Rep
                 </th>
                 <th className="px-4 py-3.5 text-left text-[12px] font-bold uppercase tracking-[0.5px]">
                   Date & Time
-                </th>
-                <th className="px-4 py-3.5 text-left text-[12px] font-bold uppercase tracking-[0.5px]">
-                  Related Link
                 </th>
                 <th className="px-4 py-3.5 text-center text-[12px] font-bold uppercase tracking-[0.5px]">
                   Status
@@ -151,13 +151,30 @@ export const SalesActivityTable: React.FC<SalesActivityTableProps> = ({
                     {/* Subject & Notes */}
                     <td className="px-4 py-3.5 align-middle max-w-xs">
                       <div>
-                        <button
-                          type="button"
-                          onClick={() => onView(item)}
-                          className="text-left font-semibold text-gray-900 hover:text-[#154068] hover:underline cursor-pointer line-clamp-1 text-xs"
-                        >
-                          {item.subject}
-                        </button>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <button
+                            type="button"
+                            onClick={() => onView(item)}
+                            className="text-left font-semibold text-gray-900 hover:text-[#154068] hover:underline cursor-pointer line-clamp-1 text-xs"
+                          >
+                            {item.subject}
+                          </button>
+                          {item.priority && (
+                            <span
+                              className={`text-[9px] font-bold px-1.5 py-0.2 rounded border uppercase tracking-wider shrink-0 ${
+                                item.priority.toLowerCase() === "urgent"
+                                  ? "bg-rose-50 text-rose-700 border-rose-200"
+                                  : item.priority.toLowerCase() === "high"
+                                  ? "bg-orange-50 text-orange-700 border-orange-200"
+                                  : item.priority.toLowerCase() === "medium"
+                                  ? "bg-blue-50 text-blue-700 border-blue-200"
+                                  : "bg-slate-50 text-slate-600 border-slate-200"
+                              }`}
+                            >
+                              {item.priority}
+                            </span>
+                          )}
+                        </div>
                         <p className="text-xs text-gray-400 line-clamp-1 mt-0.5">
                           {item.discussionNotes || "-"}
                         </p>
@@ -178,9 +195,31 @@ export const SalesActivityTable: React.FC<SalesActivityTableProps> = ({
                       </div>
                     </td>
 
-                    {/* Assigned Sales Representative */}
+                    {/* Contact Email / Email ID */}
+                    <td className="px-4 py-3.5 align-middle max-w-[180px]">
+                      {item.contactEmail ? (
+                        <a
+                          href={`mailto:${item.contactEmail}`}
+                          className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 hover:underline max-w-[170px] truncate"
+                          title={item.contactEmail}
+                        >
+                          <Mail size={12} className="shrink-0 text-gray-400" />
+                          <span className="truncate">{item.contactEmail}</span>
+                        </a>
+                      ) : (
+                        <span className="text-gray-400 text-xs">—</span>
+                      )}
+                    </td>
+
+                    {/* Assigned Sales Representative / Functional Team */}
                     <td className="px-4 py-3.5 align-middle text-xs text-gray-700">
-                      {item.assignedEmployeeName || "-"}
+                      {item.assignedType === "Team" && item.assignedTeamName ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                          {item.assignedTeamName}
+                        </span>
+                      ) : (
+                        <span>{item.assignedEmployeeName || "-"}</span>
+                      )}
                     </td>
 
                     {/* Activity Date & Time */}
@@ -193,26 +232,6 @@ export const SalesActivityTable: React.FC<SalesActivityTableProps> = ({
                         <Clock size={12} className="text-gray-400" />
                         <span>{item.activityTime}</span>
                       </div>
-                    </td>
-
-                    {/* Related Enquiry / Quotation */}
-                    <td className="px-4 py-3.5 align-middle">
-                      {item.relatedRecordType !== "None" &&
-                      item.relatedRecordCode ? (
-                        <span
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium border ${
-                            item.relatedRecordType === "Enquiry"
-                              ? "bg-purple-50 text-purple-700 border-purple-200"
-                              : "bg-teal-50 text-teal-700 border-teal-200"
-                          }`}
-                          title={item.relatedRecordTitle}
-                        >
-                          <ExternalLink size={11} />
-                          <span>{item.relatedRecordCode}</span>
-                        </span>
-                      ) : (
-                        <span className="text-gray-400 text-xs">—</span>
-                      )}
                     </td>
 
                     {/* Status */}

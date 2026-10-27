@@ -19,6 +19,8 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         [Required]
         public string ActivityName { get; set; }
 
+        public string? ActivitySubType { get; set; }
+
         [DefaultValue(true)]
         public bool IsActive { get; set; }
 

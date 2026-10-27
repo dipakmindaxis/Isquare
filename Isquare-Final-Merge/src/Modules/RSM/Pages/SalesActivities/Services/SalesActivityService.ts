@@ -9,7 +9,11 @@ import type {
   SalesActivityUpdatePayload,
 } from "../Types/SalesActivityTypes";
 import { getAllCustomers } from "../../Customer/Services/CustomerService";
-import { getAllBdeUsers } from "../../Master/BdeUsers/Services/BdeUserService";
+import {
+  getAllBdeUsers,
+  getDirectorEmployees,
+  type BdeUser,
+} from "../../Master/BdeUsers/Services/BdeUserService";
 import { getAllDocumentTypes } from "../../Master/DocumentType/Services/DocumentTypeService";
 import { getAllCallTypes } from "../../Master/CallType/Services/CallTypeService";
 import {
@@ -22,11 +26,33 @@ import {
   type CustomerStatus,
 } from "../../Master/CustomerStatus/Services/CustomerStatusService";
 import { getAllReminders } from "../../Master/Reminder/Services/ReminderService";
+import { getAllFollowUps } from "../../Master/FollowUp/Services/FollowUpService";
+import { getAllDirectors } from "../../Master/Director/Services/DirectorService";
+import { getDepartments } from "../../../../HRMS/Services/MasterDataService";
+import { getAllPriorities } from "../../Master/Priority/Services/PriorityService";
+import {
+  getAllContacts,
+  getContactsByCompanyId,
+  createContact,
+} from "../../Master/Contact/Services/ContactService";
+import apiClient from "../../../../../API/apiClient";
+import { API_ENDPOINTS } from "../../../../../API/apiConfig";
+import type { Contact } from "../../Master/Contact/Types/ContactTypes";
+import { getAllEnquiryTypes } from "../../Master/EnquiryMaster/EnquiryType/EnquiryTypeService";
 
-export { getAllActivityTypes, getAllMeetingTypes, getAllCustomerStatuses };
+export {
+  getAllActivityTypes,
+  getAllMeetingTypes,
+  getAllCustomerStatuses,
+  getAllContacts,
+  getContactsByCompanyId,
+  createContact,
+  getAllDirectors,
+  getDirectorEmployees,
+};
 export const getActivityTypes = getAllActivityTypes;
 export const getCustomerStatuses = getAllCustomerStatuses;
-export type { MasterActivityType, CustomerStatus };
+export type { MasterActivityType, CustomerStatus, Contact };
 
 // Storage Keys
 const ACTIVITIES_STORAGE_KEY = "isquare_sales_activities_v3";
@@ -102,11 +128,17 @@ export interface FollowUpItem {
   dueDate: string;
   dueTime: string;
   assignedRep: string;
+  assignedType?: "Employee" | "Team";
+  assignedTeamId?: string;
+  assignedTeamName?: string;
   priority: string;
+  priorityId?: string;
   status: string;
   relatedRecordCode?: string;
   actionDetails: string;
   completionNotes?: string;
+  reminderDateTime?: string;
+  reminderDetails?: string;
 }
 
 export interface SalesAttachmentItem {
@@ -144,7 +176,7 @@ export interface ActivityOutcomeItem {
   value: string;
   label?: string;
   code: string;
-  category: "Call" | "Meeting" | "General";
+  category?: string;
   isActive: boolean;
 }
 
@@ -168,13 +200,38 @@ export interface DocumentTypeItem {
 // Sales Activities Store & CRUD
 // ==========================================
 
+const isMockOrStaticItem = (p: any): boolean => {
+  if (!p) return true;
+  if (p.isMock === true) return true;
+  const id = String(p.id || "");
+  if (
+    id === "ACT-001" ||
+    id === "ACT-002" ||
+    id === "CALL-101" ||
+    id === "CALL-102" ||
+    id === "MTG-201" ||
+    id === "MTG-202" ||
+    id === "FU-301" ||
+    id === "FU-302" ||
+    id === "ATT-001" ||
+    id === "ATT-002"
+  ) {
+    return true;
+  }
+  return false;
+};
+
 export const getStoredActivities = (): SalesActivity[] => {
   const raw = safeGet(ACTIVITIES_STORAGE_KEY);
   if (raw) {
     try {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {
-        return parsed.filter((p: any) => !p.isMock);
+        const cleaned = parsed.filter((p: any) => !isMockOrStaticItem(p));
+        if (cleaned.length !== parsed.length) {
+          saveActivities(cleaned);
+        }
+        return cleaned;
       }
     } catch {}
   }
@@ -197,22 +254,31 @@ export const getSalesActivities = async (
       new Promise<any[]>((_, reject) => setTimeout(() => reject(new Error("timeout")), 400)),
     ]);
     const backendReminders = await fetchWithTimeout;
-    if (Array.isArray(backendReminders)) {
+    if (Array.isArray(backendReminders) && backendReminders.length > 0) {
+      const custOptions = await getCustomerOptions().catch(() => []);
+      const empOptions = await getEmployeeOptions().catch(() => []);
       for (const r of backendReminders) {
+        if (!r.reminderId) continue;
         const idStr = `REM-${r.reminderId}`;
         const alreadyInList = items.some((it) => it.id === idStr || it.activityCode === idStr);
         if (!alreadyInList) {
+          const matchedCust = custOptions.find((c) => String(c.id) === String(r.companyId));
+          const matchedEmp = empOptions.find((e) => String(e.id) === String(r.assignedTo));
           const rDate = r.reminderDate ? r.reminderDate.split("T")[0] : "";
+          const resolvedCustName = matchedCust ? (matchedCust.companyName || matchedCust.name) : "";
+          if (!resolvedCustName) continue;
           items.push({
             id: idStr,
             activityCode: `REM-${String(r.reminderId).padStart(3, "0")}`,
             activityType: "Phone Call",
-            subject: r.title || "Sales Activity Reminder",
+            subject: r.title || `Follow-up: ${resolvedCustName}`,
             customerId: String(r.companyId || ""),
-            customerName: `Customer #${r.companyId || ""}`,
-            contactPerson: "",
+            customerName: resolvedCustName,
+            contactPerson: matchedCust?.contactPerson || "",
+            contactPhone: matchedCust?.phone || "",
+            contactEmail: matchedCust?.email || "",
             assignedEmployeeId: String(r.assignedTo || ""),
-            assignedEmployeeName: `Rep #${r.assignedTo || ""}`,
+            assignedEmployeeName: matchedEmp ? matchedEmp.name : "-",
             activityDate: rDate || new Date().toISOString().split("T")[0],
             activityTime: "10:00 AM",
             durationMinutes: 15,
@@ -225,6 +291,56 @@ export const getSalesActivities = async (
             documents: [],
             createdAt: r.createdDate || new Date().toISOString(),
             updatedAt: r.createdDate || new Date().toISOString(),
+          });
+        }
+      }
+    }
+  } catch {}
+
+  // Gracefully merge backend follow-ups (max 400ms timeout) for complete activity visibility
+  try {
+    const fetchFollowUps = Promise.race([
+      getAllFollowUps(),
+      new Promise<any[]>((_, reject) => setTimeout(() => reject(new Error("timeout")), 400)),
+    ]);
+    const backendFollowUps = await fetchFollowUps;
+    if (Array.isArray(backendFollowUps) && backendFollowUps.length > 0) {
+      const custOptions = await getCustomerOptions().catch(() => []);
+      const empOptions = await getEmployeeOptions().catch(() => []);
+      for (const f of backendFollowUps) {
+        if (!f.followUpId) continue;
+        const idStr = `FU-${f.followUpId}`;
+        const alreadyInList = items.some((it) => it.id === idStr || it.activityCode === idStr);
+        if (!alreadyInList) {
+          const matchedCust = custOptions.find((c) => String(c.id) === String(f.companyId));
+          const matchedEmp = empOptions.find((e) => String(e.id) === String(f.userId));
+          const fDate = f.followUpDate ? f.followUpDate.split("T")[0] : "";
+          const resolvedCustName = matchedCust ? (matchedCust.companyName || matchedCust.name) : "";
+          if (!resolvedCustName) continue;
+          items.push({
+            id: idStr,
+            activityCode: `FU-${String(f.followUpId).padStart(3, "0")}`,
+            activityType: "Discussion Notes",
+            subject: f.remarks ? `Follow-up: ${f.remarks.slice(0, 45)}` : `Follow-up: ${resolvedCustName}`,
+            customerId: String(f.companyId || ""),
+            customerName: resolvedCustName,
+            contactPerson: matchedCust?.contactPerson || "",
+            contactPhone: matchedCust?.phone || "",
+            contactEmail: matchedCust?.email || "",
+            assignedEmployeeId: String(f.userId || ""),
+            assignedEmployeeName: matchedEmp ? matchedEmp.name : "Sales Team",
+            activityDate: fDate || new Date().toISOString().split("T")[0],
+            activityTime: "10:30 AM",
+            durationMinutes: 20,
+            status: f.isActive ? "Scheduled" : "Completed",
+            discussionNotes: f.remarks || "",
+            nextActionDate: f.nextFollowUpDate ? f.nextFollowUpDate.split("T")[0] : fDate,
+            nextActionDetails: f.remarks,
+            relatedRecordType: "None",
+            photographs: [],
+            documents: [],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
           });
         }
       }
@@ -346,7 +462,14 @@ export const createSalesActivity = async (
   const items = getStoredActivities();
   const timestamp = Date.now();
   const newId = `ACT-${timestamp}`;
-  const activityCode = `ACT-${new Date().getFullYear()}-${String(items.length + 1).padStart(3, "0")}`;
+  const existingNums = items
+    .map((a) => {
+      const m = (a.activityCode || "").match(/ACT-\d{4}-(\d+)/i);
+      return m ? parseInt(m[1], 10) : 0;
+    })
+    .filter((n) => !isNaN(n));
+  const nextNum = existingNums.length > 0 ? Math.max(...existingNums) + 1 : items.length + 1;
+  const activityCode = `ACT-${new Date().getFullYear()}-${String(nextNum).padStart(3, "0")}`;
 
   const newActivity: SalesActivity = {
     ...payload,
@@ -364,20 +487,27 @@ export const createSalesActivity = async (
   // Auto-sync into calls
   if (payload.activityType === "Phone Call") {
     const calls = getStoredCalls();
+    const existingCallNums = calls
+      .map((c) => {
+        const m = (c.callCode || "").match(/CALL-\d{4}-(\d+)/i);
+        return m ? parseInt(m[1], 10) : 0;
+      })
+      .filter((n) => !isNaN(n));
+    const nextCallNum = existingCallNums.length > 0 ? Math.max(...existingCallNums) + 1 : calls.length + 1;
     const callItem: CallRecord = {
       id: `CALL-${timestamp}`,
-      callCode: `CALL-2026-${String(calls.length + 1).padStart(3, "0")}`,
+      callCode: `CALL-${new Date().getFullYear()}-${String(nextCallNum).padStart(3, "0")}`,
       customerId: payload.customerId,
       customerName: payload.customerName,
       contactPerson: payload.contactPerson,
       phone: payload.contactPhone || "",
-      callType: (payload.callType as any) || "Follow-up",
+      callType: payload.callType || "Follow-up",
       assignedTo: payload.assignedEmployeeName,
       callDate: payload.activityDate,
       callTime: payload.activityTime,
       durationMinutes: payload.durationMinutes || 15,
       status: payload.status === "Completed" ? "Done" : "Pending",
-      callOutcome: (payload.callOutcome as any) || "Connected - Follow-up Required",
+      callOutcome: payload.callOutcome || "Connected - Follow-up Required",
       nextFollowUpDate: payload.nextActionDate,
       remarks: payload.discussionNotes,
     };
@@ -393,12 +523,19 @@ export const createSalesActivity = async (
     payload.activityType === "Sample Submitted"
   ) {
     const meetings = getStoredMeetings();
+    const existingMtgNums = meetings
+      .map((m) => {
+        const match = (m.meetingCode || "").match(/MTG-\d{4}-(\d+)/i);
+        return match ? parseInt(match[1], 10) : 0;
+      })
+      .filter((n) => !isNaN(n));
+    const nextMtgNum = existingMtgNums.length > 0 ? Math.max(...existingMtgNums) + 1 : meetings.length + 1;
     const meetingItem: MeetingRecord = {
       id: `MTG-${timestamp}`,
-      meetingCode: `MTG-2026-${String(meetings.length + 1).padStart(3, "0")}`,
+      meetingCode: `MTG-${new Date().getFullYear()}-${String(nextMtgNum).padStart(3, "0")}`,
       customerId: payload.customerId,
       customerName: payload.customerName,
-      meetingType: (payload.meetingType as any) || (payload.activityType === "Customer Visit" ? "Site Audit" : "Technical Review"),
+      meetingType: payload.meetingType || (payload.activityType === "Customer Visit" ? "Site Audit" : "Technical Review"),
       assignedUser: payload.assignedEmployeeName,
       meetingStatus: payload.status === "Completed" ? "Completed" : "Scheduled",
       meetingDate: payload.activityDate,
@@ -416,9 +553,16 @@ export const createSalesActivity = async (
   // Auto-sync into followups
   if (payload.nextActionDate) {
     const followUps = getStoredFollowUps();
+    const existingFuNums = followUps
+      .map((f) => {
+        const m = (f.followUpCode || "").match(/FU-\d{4}-(\d+)/i);
+        return m ? parseInt(m[1], 10) : 0;
+      })
+      .filter((n) => !isNaN(n));
+    const nextFuNum = existingFuNums.length > 0 ? Math.max(...existingFuNums) + 1 : followUps.length + 1;
     const fuItem: FollowUpItem = {
       id: `FU-${timestamp}`,
-      followUpCode: `FU-2026-${String(followUps.length + 1).padStart(3, "0")}`,
+      followUpCode: `FU-${new Date().getFullYear()}-${String(nextFuNum).padStart(3, "0")}`,
       customerId: payload.customerId,
       customerName: payload.customerName,
       contactPerson: payload.contactPerson,
@@ -474,7 +618,11 @@ export const getStoredCalls = (): CallRecord[] => {
     try {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {
-        return parsed.filter((c: any) => !c.isMock);
+        const cleaned = parsed.filter((c: any) => !isMockOrStaticItem(c));
+        if (cleaned.length !== parsed.length) {
+          saveCalls(cleaned);
+        }
+        return cleaned;
       }
     } catch {}
   }
@@ -518,7 +666,11 @@ export const getStoredMeetings = (): MeetingRecord[] => {
     try {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {
-        return parsed.filter((m: any) => !m.isMock);
+        const cleaned = parsed.filter((m: any) => !isMockOrStaticItem(m));
+        if (cleaned.length !== parsed.length) {
+          saveMeetings(cleaned);
+        }
+        return cleaned;
       }
     } catch {}
   }
@@ -562,7 +714,11 @@ export const getStoredFollowUps = (): FollowUpItem[] => {
     try {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {
-        return parsed.filter((f: any) => !f.isMock);
+        const cleaned = parsed.filter((f: any) => !isMockOrStaticItem(f));
+        if (cleaned.length !== parsed.length) {
+          saveFollowUps(cleaned);
+        }
+        return cleaned;
       }
     } catch {}
   }
@@ -574,7 +730,41 @@ export const saveFollowUps = (followUps: FollowUpItem[]): void => {
 };
 
 export const getFollowUps = async (): Promise<FollowUpItem[]> => {
-  return getStoredFollowUps();
+  const stored = getStoredFollowUps();
+  try {
+    const fetchBackend = Promise.race([
+      getAllFollowUps(),
+      new Promise<any[]>((_, reject) => setTimeout(() => reject(new Error("timeout")), 500)),
+    ]);
+    const backend = await fetchBackend;
+    if (Array.isArray(backend) && backend.length > 0) {
+      const customers = await getCustomerOptions().catch(() => []);
+      for (const f of backend) {
+        if (!f.followUpId) continue;
+        const idStr = `FU-${f.followUpId}`;
+        if (!stored.some((s) => s.id === idStr || s.followUpCode === idStr)) {
+          const cust = customers.find((c) => String(c.id) === String(f.companyId));
+          const fDate = f.followUpDate ? f.followUpDate.split("T")[0] : new Date().toISOString().split("T")[0];
+          stored.push({
+            id: idStr,
+            followUpCode: `FU-${String(f.followUpId).padStart(3, "0")}`,
+            customerId: String(f.companyId || ""),
+            customerName: cust ? (cust.companyName || cust.name) : `Company #${f.companyId}`,
+            contactPerson: cust?.contactPerson || "-",
+            phone: cust?.phone || "",
+            followUpType: "Sales Follow-up",
+            dueDate: fDate,
+            dueTime: "11:00 AM",
+            assignedRep: "Sales Team",
+            priority: f.priorityId === 1 ? "Urgent" : f.priorityId === 2 ? "High" : "Medium",
+            status: f.isActive ? "Upcoming" : "Completed",
+            actionDetails: f.remarks || "Sales activity follow-up",
+          });
+        }
+      }
+    }
+  } catch {}
+  return stored;
 };
 
 export const createFollowUpRecord = async (item: FollowUpItem): Promise<FollowUpItem> => {
@@ -606,7 +796,11 @@ export const getStoredAttachments = (): SalesAttachmentItem[] => {
     try {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {
-        return parsed.filter((a: any) => !a.isMock);
+        const cleaned = parsed.filter((a: any) => !isMockOrStaticItem(a));
+        if (cleaned.length !== parsed.length) {
+          saveAttachments(cleaned);
+        }
+        return cleaned;
       }
     } catch {}
   }
@@ -661,27 +855,45 @@ export const getSalesModuleCounts = (): {
 
 export const getCustomerOptions = async (): Promise<CustomerOption[]> => {
   try {
-    const list = await getAllCustomers();
-    const data = Array.isArray(list) ? list : (list as any)?.data || [];
+    const data = await getAllCustomers();
     return data.map((c: any) => ({
       id: String(c.customerId || c.id || ""),
-      name: c.customerName || "",
+      name: c.customerName || c.companyName || "",
+      companyName: c.companyName || c.customerName || "",
       contactPerson: c.contactPerson || c.customerName || "",
-      phone: c.phone || "",
-      email: c.email || "",
+      phone: c.phone || c.mobile || "",
+      email: c.email || c.emailAddress || "",
       industry: c.industryName || "",
-      city: c.cityName || "",
+      city: c.cityName || c.city || "",
     }));
   } catch {
     return [];
   }
 };
 
+export const getContactsForCustomer = async (
+  customerIdOrCompanyId: number | string
+): Promise<Contact[]> => {
+  const numericId = Number(customerIdOrCompanyId);
+  if (!numericId || isNaN(numericId) || numericId <= 0) return [];
+
+  try {
+    const list = await getContactsByCompanyId(numericId);
+    if (Array.isArray(list) && list.length > 0) return list;
+  } catch {}
+
+  try {
+    const all = await getAllContacts();
+    return all.filter((c: Contact) => Number(c.companyId) === numericId);
+  } catch {}
+
+  return [];
+};
+
 export const getEmployeeOptions = async (): Promise<EmployeeOption[]> => {
   try {
-    const list = await getAllBdeUsers();
-    const data = Array.isArray(list) ? list : (list as any)?.data || [];
-    return data.map((u: any) => ({
+    const data = await getAllBdeUsers();
+    return data.map((u: BdeUser) => ({
       id: String(u.id || ""),
       name: u.value || "",
       role: "Sales Representative",
@@ -692,10 +904,335 @@ export const getEmployeeOptions = async (): Promise<EmployeeOption[]> => {
   }
 };
 
-export const getRelatedRecordOptions = async (
-  _customerId?: string
-): Promise<RelatedRecordOption[]> => {
+export type UserRoleCategory =
+  | "Director"
+  | "BDE"
+  | "SalesPerson"
+  | "Admin"
+  | "SalesCoordinator"
+  | "Other";
+
+export interface AssigneeOption {
+  id: string;
+  name: string;
+  role?: string;
+  type: "Employee" | "Team";
+}
+
+export const getUserRoleCategory = (role?: string): UserRoleCategory => {
+  if (!role) return "Admin";
+  const r = role.toLowerCase().trim();
+  if (r.includes("director")) return "Director";
+  if (r.includes("bde")) return "BDE";
+  if (r.includes("sales coord") || r.includes("coordinator")) return "SalesCoordinator";
+  if (r.includes("sales") || r.includes("rep")) return "SalesPerson";
+  if (r.includes("admin") || r.includes("hr")) return "Admin";
+  return "Other";
+};
+
+/**
+ * Role-based employee assignment as per client requirement:
+ * - Director: hide the Assigned To person field when creating their own activity/task
+ * - BDE User: Assigned To must list only Directors
+ * - Sales Person: Assigned To must list only BDE Users
+ * - System Admin / Other: show the employees/teams permitted by existing access rules
+ */
+export const getRoleBasedAssignees = async (
+  roleCategory: UserRoleCategory
+): Promise<AssigneeOption[]> => {
+  if (roleCategory === "Director") {
+    // Director hides person field when creating their own activity/task
+    return [];
+  }
+
+  if (roleCategory === "BDE") {
+    // BDE User: Assigned To must list ONLY Directors
+    try {
+      const [directorEmployees, allDirectors] = await Promise.all([
+        getDirectorEmployees().catch(() => []),
+        getAllDirectors().catch(() => []),
+      ]);
+
+      const seen = new Set<string>();
+      const list: AssigneeOption[] = [];
+
+      directorEmployees.forEach((d) => {
+        if (d && d.id && !seen.has(String(d.id))) {
+          seen.add(String(d.id));
+          list.push({
+            id: String(d.id),
+            name: d.name,
+            role: "Director",
+            type: "Employee",
+          });
+        }
+      });
+
+      allDirectors.forEach((d) => {
+        if (d && d.directorId && !seen.has(String(d.directorId))) {
+          seen.add(String(d.directorId));
+          list.push({
+            id: String(d.directorId),
+            name: d.directorName,
+            role: "Director",
+            type: "Employee",
+          });
+        }
+      });
+
+      return list;
+    } catch {
+      return [];
+    }
+  }
+
+  if (roleCategory === "SalesPerson") {
+    // Sales Person: Assigned To must list ONLY BDE Users
+    try {
+      const bdes = await getAllBdeUsers();
+      return bdes
+        .filter((b) => b.isActive !== false)
+        .map((b) => ({
+          id: String(b.id),
+          name: b.value || b.code || `BDE User #${b.id}`,
+          role: "BDE",
+          type: "Employee",
+        }));
+    } catch {
+      return [];
+    }
+  }
+
+  // System Admin / Sales Coordinator / Other:
+  // Shows all permitted employees (Directors + BDE Users)
+  try {
+    const [bdes, directors] = await Promise.all([
+      getAllBdeUsers().catch(() => []),
+      getAllDirectors().catch(() => []),
+    ]);
+
+    const list: AssigneeOption[] = [];
+    const seen = new Set<string>();
+
+    directors.forEach((d) => {
+      if (d && d.directorId && !seen.has(`dir-${d.directorId}`)) {
+        seen.add(`dir-${d.directorId}`);
+        list.push({
+          id: String(d.directorId),
+          name: `${d.directorName} (Director)`,
+          role: "Director",
+          type: "Employee",
+        });
+      }
+    });
+
+    bdes.forEach((b) => {
+      if (b && b.id && !seen.has(`bde-${b.id}`)) {
+        seen.add(`bde-${b.id}`);
+        list.push({
+          id: String(b.id),
+          name: `${b.value || b.code} (BDE)`,
+          role: "BDE",
+          type: "Employee",
+        });
+      }
+    });
+
+    return list;
+  } catch {
+    return [];
+  }
+};
+
+/**
+ * Team assignment: Sales Coordinator, Accounts Team, Service Team, Store Team
+ * Cleanly typed as "Team" to avoid mixing up team and employee IDs.
+ */
+export const getAssigneeTeams = async (): Promise<AssigneeOption[]> => {
+  try {
+    const depts = await getDepartments();
+    const activeDepts: AssigneeOption[] = (depts || []).map((d) => ({
+      id: String(d.id),
+      name: d.name,
+      role: "Department / Team",
+      type: "Team",
+    }));
+
+    const requiredTeams = [
+      "Sales Coordinator",
+      "Accounts Team",
+      "Service Team",
+      "Store Team",
+    ];
+
+    const result = [...activeDepts];
+    requiredTeams.forEach((teamName, idx) => {
+      const exists = result.some(
+        (t) =>
+          t.name.toLowerCase().includes(teamName.toLowerCase()) ||
+          teamName.toLowerCase().includes(t.name.toLowerCase())
+      );
+      if (!exists) {
+        result.push({
+          id: `team-${idx + 1}`,
+          name: teamName,
+          role: "Team",
+          type: "Team",
+        });
+      }
+    });
+
+    return result;
+  } catch {
+    return [
+      { id: "team-1", name: "Sales Coordinator", role: "Team", type: "Team" },
+      { id: "team-2", name: "Accounts Team", role: "Team", type: "Team" },
+      { id: "team-3", name: "Service Team", role: "Team", type: "Team" },
+      { id: "team-4", name: "Store Team", role: "Team", type: "Team" },
+    ];
+  }
+};
+
+export interface PriorityOptionItem {
+  id: number | string;
+  name: "Urgent" | "High" | "Medium" | "Low" | string;
+  colorCode: string;
+}
+
+/**
+ * Priority helper: Urgent, High, Medium, Low
+ * Reuses existing Priority Master (/api/priority) and supports fallback
+ */
+export const getPrioritiesWithFallback = async (): Promise<PriorityOptionItem[]> => {
+  try {
+    const list = await getAllPriorities();
+    if (Array.isArray(list) && list.length > 0) {
+      const active = list.filter((p) => p.isActive && !p.isDeleted);
+      if (active.length > 0) {
+        return active.map((p) => ({
+          id: p.id,
+          name: p.priorityName,
+          colorCode: p.colorCode || "#00234a",
+        }));
+      }
+    }
+  } catch (err) {
+    console.warn("Failed to load priorities from Priority Master (/api/priority):", err);
+  }
+
   return [];
+};
+
+export const getRelatedRecordOptions = async (
+  customerId?: string
+): Promise<RelatedRecordOption[]> => {
+  const records: RelatedRecordOption[] = [];
+  const seenCodes = new Set<string>();
+
+  // 1. Fetch from Master Enquiry Types (/api/EnquiryType)
+  try {
+    const enquiryTypes = await getAllEnquiryTypes();
+    if (Array.isArray(enquiryTypes)) {
+      enquiryTypes.forEach((et) => {
+        if (et && et.enquiryTypeIsActive !== false) {
+          const code =
+            et.enquiryTypeCode ||
+            (et.enquiryTypeId ? `ET-${et.enquiryTypeId}` : "");
+          if (code && !seenCodes.has(String(code))) {
+            seenCodes.add(String(code));
+            records.push({
+              id: String(et.enquiryTypeId || code),
+              type: "Enquiry",
+              code: String(code),
+              title: et.enquiryTypeName ? `${code} - ${et.enquiryTypeName}` : String(code),
+              customerId: "",
+              date: et.enquiryTypeCreatedAt || new Date().toISOString().split("T")[0],
+            });
+          }
+        }
+      });
+    }
+  } catch (err) {
+    console.warn("Could not fetch enquiry types:", err);
+  }
+
+  // 2. Try real Enquiry endpoints (/enquiry) if available
+  try {
+    const res = await apiClient.get("/enquiry");
+    const list = Array.isArray(res.data)
+      ? res.data
+      : Array.isArray(res.data?.data)
+      ? res.data.data
+      : Array.isArray(res.data?.result)
+      ? res.data.result
+      : [];
+    list.forEach((enq: any) => {
+      const code =
+        enq.enquiryNumber ||
+        enq.enquiryCode ||
+        enq.enquiryNo ||
+        (enq.enquiryId ? `ENQ-${enq.enquiryId}` : (enq.id ? `ENQ-${enq.id}` : null));
+      if (code && !seenCodes.has(String(code))) {
+        seenCodes.add(String(code));
+        const titleText =
+          enq.enquiryTypeName ||
+          enq.enquiryTitle ||
+          enq.subject ||
+          enq.companyName ||
+          enq.customerName;
+        records.push({
+          id: String(enq.enquiryId || enq.id || code),
+          type: "Enquiry",
+          code: String(code),
+          title: titleText ? `${code} - ${titleText}` : String(code),
+          customerId: String(enq.companyId || enq.customerId || ""),
+          date: enq.enquiryDate || enq.createdDate || new Date().toISOString().split("T")[0],
+        });
+      }
+    });
+  } catch {}
+
+  // 3. Try Quotation endpoint (extract linked Enquiry IDs)
+  try {
+    const res = await apiClient.get(API_ENDPOINTS.Quotations || "/quotation");
+    const list = Array.isArray(res.data)
+      ? res.data
+      : Array.isArray(res.data?.data)
+      ? res.data.data
+      : Array.isArray(res.data?.result)
+      ? res.data.result
+      : [];
+    list.forEach((q: any) => {
+      const enqCode = q.enquiryRef || (q.enquiryId ? `ENQ-${q.enquiryId}` : null);
+      if (enqCode && !seenCodes.has(String(enqCode))) {
+        seenCodes.add(String(enqCode));
+        records.push({
+          id: String(q.enquiryId || enqCode),
+          type: "Enquiry",
+          code: String(enqCode),
+          title: `Enquiry #${enqCode} - ${q.customerName || "Customer"}`,
+          customerId: String(q.customerId || ""),
+          date: q.quotationDate || new Date().toISOString().split("T")[0],
+          amount: q.grandTotal ? `₹${q.grandTotal}` : undefined,
+        });
+      }
+    });
+  } catch (err) {
+    console.warn("Could not fetch quotations for enquiry options:", err);
+  }
+
+  // NO static dummy fallback data - purely dynamic from Master & API
+
+  if (customerId) {
+    const customerSpecific = records.filter(
+      (r) => String(r.customerId) === String(customerId)
+    );
+    if (customerSpecific.length > 0) {
+      return customerSpecific;
+    }
+  }
+
+  return records;
 };
 
 export const getCallTypes = async (): Promise<CallTypeItem[]> => {
@@ -754,16 +1291,18 @@ export const getActivityOutcomes = async (): Promise<ActivityOutcomeItem[]> => {
   try {
     const list = await getAllActivityTypes();
     if (Array.isArray(list) && list.length > 0) {
-      return list.map((t) => ({
+      return list.map((t: MasterActivityType): ActivityOutcomeItem => ({
         id: t.id,
         value: t.activityName,
         label: t.activityName,
         code: t.code || `ACT_${String(t.id).padStart(3, "0")}`,
-        category: (t.category as any) || "General",
+        category: (t as any).category || "General",
         isActive: t.isActive,
       }));
     }
-  } catch {}
+  } catch {
+    return [];
+  }
   return [];
 };
 
@@ -835,3 +1374,63 @@ export const saveDocumentType = async (
 export const deleteDocumentType = async (_id: number): Promise<boolean> => {
   return true;
 };
+
+export interface RawWorkLocationDto {
+  id?: number;
+  workLocationID?: number;
+  workLocationId?: number;
+  locationName?: string;
+  workLocationName?: string;
+  name?: string;
+  locationCode?: string;
+  code?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  isActive?: boolean;
+}
+
+export interface WorkLocationsApiResponse {
+  data?: RawWorkLocationDto[];
+  result?: RawWorkLocationDto[];
+}
+
+export interface WorkLocationItem {
+  id: number;
+  locationName: string;
+  locationCode: string;
+  address: string;
+  city: string;
+  state: string;
+  isActive: boolean;
+}
+
+export const getWorkLocations = async (): Promise<WorkLocationItem[]> => {
+  try {
+    const response = await apiClient.get<RawWorkLocationDto[] | WorkLocationsApiResponse>(API_ENDPOINTS.WorkLocations);
+    const data = response.data;
+    let list: RawWorkLocationDto[] = [];
+    if (Array.isArray(data)) {
+      list = data;
+    } else if (data && Array.isArray(data.data)) {
+      list = data.data;
+    } else if (data && Array.isArray(data.result)) {
+      list = data.result;
+    }
+    return list
+      .map((item: RawWorkLocationDto): WorkLocationItem => ({
+        id: item.id || item.workLocationID || item.workLocationId || 0,
+        locationName: item.locationName || item.workLocationName || item.name || "",
+        locationCode: item.locationCode || item.code || "",
+        address: item.address || "",
+        city: item.city || "",
+        state: item.state || "",
+        isActive: typeof item.isActive === "boolean" ? item.isActive : true,
+      }))
+      .filter((l: WorkLocationItem) => l.isActive && Boolean(l.locationName));
+  } catch (error) {
+    console.warn("getWorkLocations error:", error);
+    return [];
+  }
+};
+

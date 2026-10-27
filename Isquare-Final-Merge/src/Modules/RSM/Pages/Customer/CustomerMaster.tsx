@@ -21,6 +21,7 @@ import {
   MapPin,
   Receipt,
   RefreshCw,
+  Mail,
 } from "lucide-react";
 import { toast } from "sonner";
 import { exportToExcel } from "../../../../Utils/exportToExcel";
@@ -38,6 +39,7 @@ import type {
   IndustryItem,
   CustomerAreaItem,
 } from "./Types/CustomerTypes";
+import { getAllContacts } from "../Master/Contact/Services/ContactService";
 import AddCustomerModal from "./AddCustomerModal";
 import EditCustomerModal from "./EditCustomerModal";
 import ViewCustomerModal from "./ViewCustomerModal";
@@ -221,6 +223,7 @@ const CustomerMaster: React.FC<CustomerMasterProps> = ({
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [industries, setIndustries] = useState<IndustryItem[]>([]);
   const [areas, setAreas] = useState<CustomerAreaItem[]>([]);
+  const [contactEmailMap, setContactEmailMap] = useState<Record<number, string>>({});
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [filterText, setFilterText] = useState<string>("");
   const [selectedStatus, setSelectedStatus] = useState<string>("All");
@@ -259,8 +262,23 @@ const CustomerMaster: React.FC<CustomerMasterProps> = ({
   const fetchCustomers = useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await getCustomers();
+      const [data, contacts] = await Promise.all([
+        getCustomers(),
+        getAllContacts().catch(() => []),
+      ]);
       setCustomers(Array.isArray(data) ? data : []);
+      if (Array.isArray(contacts)) {
+        const emailMap: Record<number, string> = {};
+        for (const ct of contacts) {
+          if (ct.companyId && (ct.emailAddress || (ct as any).email)) {
+            const compId = Number(ct.companyId);
+            if (!emailMap[compId]) {
+              emailMap[compId] = ct.emailAddress || (ct as any).email;
+            }
+          }
+        }
+        setContactEmailMap(emailMap);
+      }
     } catch (err: unknown) {
       console.error("Failed to load customer records:", err);
       setCustomers([]);
@@ -357,10 +375,19 @@ const CustomerMaster: React.FC<CustomerMasterProps> = ({
       const area = getAreaName(cust).toLowerCase();
       const industry = getIndustryName(cust).toLowerCase();
 
+      const email = (
+        cust.email ||
+        cust.emailAddress ||
+        contactEmailMap[cust.customerId] ||
+        contactEmailMap[Number(cust.companyId || 0)] ||
+        ""
+      ).toLowerCase();
+
       const matchesSearch =
         name.includes(search) ||
         code.includes(search) ||
         company.includes(search) ||
+        email.includes(search) ||
         gstin.includes(search) ||
         pan.includes(search) ||
         area.includes(search) ||
@@ -373,7 +400,7 @@ const CustomerMaster: React.FC<CustomerMasterProps> = ({
 
       return matchesSearch && matchesStatus;
     });
-  }, [customers, filterText, selectedStatus, getIndustryName, getAreaName]);
+  }, [customers, filterText, selectedStatus, getIndustryName, getAreaName, contactEmailMap]);
 
   // Statistics
   const stats = useMemo(() => {
@@ -437,6 +464,12 @@ const CustomerMaster: React.FC<CustomerMasterProps> = ({
       "Customer Name": c.customerName,
       "Short Name": c.customerShortName || "-",
       "Company Name": c.companyName || "-",
+      "Email ID":
+        c.email ||
+        c.emailAddress ||
+        contactEmailMap[c.customerId] ||
+        contactEmailMap[Number(c.companyId || 0)] ||
+        "-",
       "Company Group": c.companyGroup || "-",
       "Plant Code": c.plantCode || "-",
       Industry: getIndustryName(c),
@@ -498,6 +531,36 @@ const CustomerMaster: React.FC<CustomerMasterProps> = ({
     {
       name: "Company Name",
       selector: (row) => row.companyName || "-",
+      sortable: true,
+      grow: 1,
+    },
+    {
+      name: "Email ID",
+      selector: (row) =>
+        row.email ||
+        row.emailAddress ||
+        contactEmailMap[row.customerId] ||
+        contactEmailMap[Number(row.companyId || 0)] ||
+        "-",
+      cell: (row) => {
+        const email =
+          row.email ||
+          row.emailAddress ||
+          contactEmailMap[row.customerId] ||
+          contactEmailMap[Number(row.companyId || 0)];
+        return email ? (
+          <a
+            href={`mailto:${email}`}
+            className="text-xs text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1.5 truncate"
+            title={email}
+          >
+            <Mail size={12} className="shrink-0 text-gray-400" />
+            <span className="truncate">{email}</span>
+          </a>
+        ) : (
+          <span className="text-gray-400 text-xs">—</span>
+        );
+      },
       sortable: true,
       grow: 1,
     },
