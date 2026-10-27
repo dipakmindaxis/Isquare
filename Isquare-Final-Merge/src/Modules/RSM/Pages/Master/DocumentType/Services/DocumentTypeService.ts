@@ -1,4 +1,4 @@
-﻿import apiClient from "../../../../../../API/apiClient";
+import apiClient from "../../../../../../API/apiClient";
 import { API_ENDPOINTS } from "../../../../../../API/apiConfig";
 
 export interface DocumentType {
@@ -33,8 +33,8 @@ export const normalizeDocumentType = (raw: any): DocumentType => {
     raw.isActive !== undefined
       ? Boolean(raw.isActive)
       : raw.IsActive !== undefined
-      ? Boolean(raw.IsActive)
-      : true;
+        ? Boolean(raw.IsActive)
+        : true;
   const isDeleted = Boolean(raw.isDeleted ?? raw.IsDeleted ?? false);
 
   return { id, documentName, code, isActive, isDeleted };

@@ -264,6 +264,11 @@ const rsmMenuConfig: MenuItem[] = [
         to: "/rsm/sales-user-manager",
       },
       {
+        icon: <Users />,
+        label: "CONTACT PERSON",
+        to: "/rsm/master/contact-person",
+      },
+      {
         icon: <Contact />,
         label: "CONTACT TYPES",
         to: "/rsm/contact-types",

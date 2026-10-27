@@ -94,6 +94,15 @@ export const getAllActivityTypes = async (): Promise<ActivityType[]> => {
           code: item.code || item.Code || `ACT_${String(idVal).padStart(3, "0")}`,
           isActive: active,
           isDeleted: deleted,
+          isActive:
+            item.isActive !== undefined
+              ? Boolean(item.isActive)
+              : item.IsActive !== undefined
+                ? Boolean(item.IsActive)
+                : true,
+          code: item.code ?? item.Code ?? `ACT_${String(item.id ?? item.Id ?? 0).padStart(3, "0")}`,
+          category: item.category ?? item.Category ?? "General",
+          isDeleted: Boolean(item.isDeleted ?? item.IsDeleted ?? false),
         };
       })
       .filter((item: ActivityType) => !item.isDeleted);

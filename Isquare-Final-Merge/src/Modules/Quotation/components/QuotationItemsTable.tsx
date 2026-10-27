@@ -46,23 +46,23 @@ export const QuotationItemsTable: React.FC<QuotationItemsTableProps> = ({
 
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1300px] text-left border-collapse">
+          <table className="w-full min-w-[1450px] text-left border-collapse">
             <thead>
               <tr className="bg-[#FF7900] text-white text-[11px] font-bold uppercase tracking-wider">
-                <th className="p-3 min-w-[240px] border-r border-[#e06800]">Select / Code / Brand</th>
-                <th className="p-3 min-w-[200px] border-r border-[#e06800]">Technical Specification</th>
-                <th className="p-3 w-24 text-center border-r border-[#e06800]">Image</th>
-                <th className="p-3 w-24 text-center border-r border-[#e06800]">HSN CODE</th>
-                <th className="p-3 w-20 text-center border-r border-[#e06800]">Qty</th>
-                <th className="p-3 w-24 border-r border-[#e06800]">UOM</th>
-                <th className="p-3 w-28 text-right border-r border-[#e06800]">Rate (₹)</th>
-                <th className="p-3 w-20 text-center border-r border-[#e06800]">Disc (%)</th>
-                <th className="p-3 w-20 text-center border-r border-[#e06800]">GST (%)</th>
-                <th className="p-3 w-28 text-right border-r border-[#e06800]">Total (₹)</th>
-                <th className="p-3 w-28 text-right border-r border-[#e06800]">Purchase Rate</th>
-                <th className="p-3 w-20 text-center border-r border-[#e06800]">Profit %</th>
-                <th className="p-3 w-20 text-center border-r border-[#e06800]">Stock</th>
-                <th className="p-3 w-12 text-center"></th>
+                <th className="p-3.5 min-w-[280px] border-r border-[#e06800]">Select / Code / Brand</th>
+                <th className="p-3.5 min-w-[340px] border-r border-[#e06800]">Technical Specification</th>
+                <th className="p-3.5 w-20 min-w-[80px] text-center border-r border-[#e06800]">Image</th>
+                <th className="p-3.5 w-24 min-w-[90px] text-center border-r border-[#e06800]">HSN CODE</th>
+                <th className="p-3.5 w-20 min-w-[70px] text-center border-r border-[#e06800]">Qty</th>
+                <th className="p-3.5 w-24 min-w-[80px] text-center border-r border-[#e06800]">UOM</th>
+                <th className="p-3.5 w-28 min-w-[100px] text-right border-r border-[#e06800]">Rate (₹)</th>
+                <th className="p-3.5 w-20 min-w-[75px] text-center border-r border-[#e06800]">Disc (%)</th>
+                <th className="p-3.5 w-20 min-w-[75px] text-center border-r border-[#e06800]">GST (%)</th>
+                <th className="p-3.5 w-28 min-w-[110px] text-right border-r border-[#e06800]">Total (₹)</th>
+                <th className="p-3.5 w-28 min-w-[110px] text-right border-r border-[#e06800]">Purchase Rate</th>
+                <th className="p-3.5 w-20 min-w-[80px] text-center border-r border-[#e06800]">Profit %</th>
+                <th className="p-3.5 w-20 min-w-[75px] text-center border-r border-[#e06800]">Stock</th>
+                <th className="p-3.5 w-12 min-w-[48px] text-center"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">

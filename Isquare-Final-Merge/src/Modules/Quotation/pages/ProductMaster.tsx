@@ -7,6 +7,7 @@ import {
   resolveImageUrl,
   saveProductImageCache,
   saveProductUom,
+  saveProductMeta,
   getProductUom,
   resolveUomId,
 } from "../services/quotationService";
@@ -305,6 +306,16 @@ export const ProductMaster: React.FC = () => {
         if (payload.itemCode) saveProductUom(payload.itemCode, enteredUom);
         saveProductUom(payload.productName || editingProduct.productName, enteredUom);
 
+        const metaToSave = {
+          uom: enteredUom,
+          purchaseRate: payload.purchaseRate,
+          profitPercentage: payload.profitPercentage,
+          stock: payload.stock,
+        };
+        saveProductMeta(editingProduct.productId, metaToSave);
+        if (payload.itemCode) saveProductMeta(payload.itemCode, metaToSave);
+        saveProductMeta(payload.productName || editingProduct.productName, metaToSave);
+
         window.dispatchEvent(
           new CustomEvent("isquare_product_updated", {
             detail: {
@@ -315,6 +326,9 @@ export const ProductMaster: React.FC = () => {
               unitName: enteredUom,
               uom: enteredUom,
               unitOfMeasurementId: uomId,
+              purchaseRate: payload.purchaseRate,
+              profitPercentage: payload.profitPercentage,
+              stock: payload.stock,
             },
           })
         );
@@ -327,11 +341,42 @@ export const ProductMaster: React.FC = () => {
           productImage: imgToSend,
           productImagePath: imgToSend,
         });
-        if (created?.productId) {
-          saveProductUom(created.productId, enteredUom);
+        const createdId = created?.productId;
+        const metaToSave = {
+          uom: enteredUom,
+          purchaseRate: payload.purchaseRate,
+          profitPercentage: payload.profitPercentage,
+          stock: payload.stock,
+        };
+        if (createdId) {
+          saveProductUom(createdId, enteredUom);
+          saveProductMeta(createdId, metaToSave);
         }
-        if (payload.itemCode) saveProductUom(payload.itemCode, enteredUom);
-        if (payload.productName) saveProductUom(payload.productName, enteredUom);
+        if (payload.itemCode) {
+          saveProductUom(payload.itemCode, enteredUom);
+          saveProductMeta(payload.itemCode, metaToSave);
+        }
+        if (payload.productName) {
+          saveProductUom(payload.productName, enteredUom);
+          saveProductMeta(payload.productName, metaToSave);
+        }
+
+        window.dispatchEvent(
+          new CustomEvent("isquare_product_updated", {
+            detail: {
+              productId: createdId,
+              itemCode: payload.itemCode,
+              productName: payload.productName,
+              specification: payload.specification || "",
+              unitName: enteredUom,
+              uom: enteredUom,
+              unitOfMeasurementId: uomId,
+              purchaseRate: payload.purchaseRate,
+              profitPercentage: payload.profitPercentage,
+              stock: payload.stock,
+            },
+          })
+        );
 
         toast.success(`Product '${productName}' created`);
       }
@@ -738,62 +783,60 @@ export const ProductMaster: React.FC = () => {
                 </div>
               </div>
 
-              {/* Row: Edit-only fields (Purchase Rate, Profit %, Stock Quantity) */}
-              {editingProduct && (
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
-                  <div>
-                    <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
-                      Purchase Rate (₹)
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="any"
-                      value={purchaseRate}
-                      onChange={(e) => {
-                        const newP = e.target.value;
-                        setPurchaseRate(newP);
-                        const pRate = parseFloat(newP) || 0;
-                        const sRate = parseFloat(String(standardRate)) || 0;
-                        if (pRate > 0 && sRate > 0) {
-                          setProfitPercentage(parseFloat((((sRate - pRate) / pRate) * 100).toFixed(1)));
-                        }
-                      }}
-                      placeholder="e.g. 175"
-                      className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-800 text-right font-semibold transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs font-mono"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
-                      Profit %
-                    </label>
-                    <input
-                      type="number"
-                      step="any"
-                      value={profitPercentage}
-                      onChange={(e) => setProfitPercentage(e.target.value)}
-                      placeholder="e.g. 1.7"
-                      className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-800 text-center font-semibold transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
-                      Stock Quantity
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="1"
-                      value={stock}
-                      onChange={(e) => setStock(e.target.value)}
-                      placeholder="e.g. 50"
-                      className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-800 text-center font-semibold transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs font-mono"
-                    />
-                  </div>
+              {/* Row: Commercial & Stock fields (Purchase Rate, Profit %, Stock Quantity) */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+                <div>
+                  <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
+                    Purchase Rate (₹)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={purchaseRate}
+                    onChange={(e) => {
+                      const newP = e.target.value;
+                      setPurchaseRate(newP);
+                      const pRate = parseFloat(newP) || 0;
+                      const sRate = parseFloat(String(standardRate)) || 0;
+                      if (pRate > 0 && sRate > 0) {
+                        setProfitPercentage(parseFloat((((sRate - pRate) / pRate) * 100).toFixed(1)));
+                      }
+                    }}
+                    placeholder="e.g. 175"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-800 text-right font-semibold transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs font-mono"
+                  />
                 </div>
-              )}
+
+                <div>
+                  <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
+                    Profit %
+                  </label>
+                  <input
+                    type="number"
+                    step="any"
+                    value={profitPercentage}
+                    onChange={(e) => setProfitPercentage(e.target.value)}
+                    placeholder="e.g. 1.7"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-800 text-center font-semibold transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
+                    Stock Quantity
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={stock}
+                    onChange={(e) => setStock(e.target.value)}
+                    placeholder="e.g. 50"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-800 text-center font-semibold transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs font-mono"
+                  />
+                </div>
+              </div>
 
               <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-gray-100">
                 <button

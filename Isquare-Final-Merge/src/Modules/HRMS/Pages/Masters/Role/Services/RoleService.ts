@@ -24,15 +24,15 @@ export const createRole = async (payload: RoleCreatePayload): Promise<Role> => {
   return response.data.role;
 };
 export const updateRole = async (id: string, payload: RoleUpdatePayload): Promise<void> => {
-    try {
-        await apiClient.put(`${API_ENDPOINTS.Roles}/${id}`, payload);
-    } catch (error: unknown) {
-        if (error instanceof AxiosError && error.response?.data?.errors) {
-            const messages = error.response.data.errors.join(', ');
-            throw new Error(messages);
-        }
-        throw new Error("An unexpected error occurred while updating the role.");
+  try {
+    await apiClient.put(`${API_ENDPOINTS.Roles}/${id}`, payload);
+  } catch (error: unknown) {
+    if (error instanceof AxiosError && error.response?.data?.errors) {
+      const messages = error.response.data.errors.join(', ');
+      throw new Error(messages);
     }
+    throw new Error("An unexpected error occurred while updating the role.");
+  }
 };
 
 

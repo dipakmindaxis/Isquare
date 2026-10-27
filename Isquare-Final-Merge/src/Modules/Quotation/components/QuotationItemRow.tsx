@@ -9,7 +9,12 @@ import {
   formatINR,
   STANDARD_UOMS,
 } from "../utils/quotationCalculations";
-import { productService, resolveImageUrl } from "../services/quotationService";
+import {
+  productService,
+  resolveImageUrl,
+  getProductUom,
+  resolveUomId,
+} from "../services/quotationService";
 
 interface QuotationItemRowProps {
   item: QuotationItem;
@@ -50,28 +55,32 @@ function getProductPurchaseRate(src: any): number | null {
     src.buyingPrice ??
     src.BuyingPrice;
   const parsed = parseSafeNumeric(val);
-  if (parsed != null && Number.isFinite(parsed) && parsed > 0) {
+  if (parsed != null && Number.isFinite(parsed) && parsed >= 0) {
     return parsed;
   }
-  // If direct purchase rate is missing but standardRate / rate and profitPercentage exist, calculate derived purchase rate
-  const sRate = parseSafeNumeric(src.standardRate ?? src.StandardRate ?? src.rate ?? src.Rate);
-  const profit = parseSafeNumeric(
+  return null;
+}
+
+function getProductProfit(src: any): number | null {
+  if (!src) return null;
+  const val =
     src.profitPercentage ??
     src.ProfitPercentage ??
     src.profit_percentage ??
     src.Profit_Percentage ??
     src.profitpercentage ??
+    src.PROFITPERCENTAGE ??
     src.profitPercent ??
+    src.ProfitPercent ??
     src.profit ??
-    src.Profit
-  );
-  if (sRate != null && sRate > 0 && profit != null && profit > 0 && profit < 1000) {
-    const derived = Number((sRate / (1 + profit / 100)).toFixed(2));
-    if (Number.isFinite(derived) && derived > 0) return derived;
-  }
-  return parsed != null && Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+    src.Profit ??
+    src.profitMargin ??
+    src.ProfitMargin ??
+    src.margin ??
+    src.Margin;
+  const num = parseSafeNumeric(val);
+  return num != null && Number.isFinite(num) ? Number(num.toFixed(2)) : null;
 }
-
 
 function getProductStock(src: any): number | null {
   if (!src) return null;
@@ -86,7 +95,7 @@ function getProductStock(src: any): number | null {
     src.availableStock ??
     src.AvailableStock;
   const num = parseSafeNumeric(val);
-  return num != null && Number.isFinite(num) ? Math.round(num) : null;
+  return num != null && Number.isFinite(num) && num >= 0 ? Math.round(num) : null;
 }
 
 function findProductInAvailable(
@@ -273,59 +282,144 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
     (selectedProduct as any)?.hsn ||
     "—";
 
-  // 11. Purchase Rate lookup
-  const rawPurchaseRate = useMemo(() => {
-    const fromItem = getProductPurchaseRate(item);
-    if (fromItem != null && Number.isFinite(fromItem) && fromItem > 0) {
-      return fromItem;
+  // 6. UOM resolution
+  const displayUom = useMemo(() => {
+    const prod = targetProduct || selectedProduct;
+    const masterUom =
+      prod?.unitName?.trim() ||
+      (prod as any)?.uom?.trim() ||
+      (prod ? getProductUom(prod.productId, prod) : null);
+    if (masterUom) return masterUom;
+
+    if (item.unitName && item.unitName.trim() !== "") {
+      return item.unitName.trim();
     }
-    const fromTarget = getProductPurchaseRate(targetProduct);
-    if (fromTarget != null && Number.isFinite(fromTarget) && fromTarget > 0) {
-      return fromTarget;
+    const itemCached = getProductUom(item.productId, item);
+    if (itemCached) return itemCached;
+
+    const stdMatch = STANDARD_UOMS.find((u) => u.id === item.unitOfMeasurementId);
+    if (stdMatch) return stdMatch.name;
+
+    return "Nos";
+  }, [
+    item.unitName,
+    item.unitOfMeasurementId,
+    item.productId,
+    item.itemCode,
+    item.itemName,
+    targetProduct,
+    selectedProduct,
+  ]);
+
+  // Synchronize item fields with selected/target master product
+  useEffect(() => {
+    const prod = targetProduct || selectedProduct;
+    if (!prod) return;
+
+    let needsUpdate = false;
+    const updates: Partial<QuotationItem> = {};
+
+    const prodUom =
+      prod.unitName?.trim() ||
+      (prod as any).uom?.trim() ||
+      getProductUom(prod.productId, prod) ||
+      STANDARD_UOMS.find((u) => u.id === prod.unitOfMeasurementId)?.name ||
+      "Nos";
+    if (!item.unitName || (item.unitName === "Nos" && prodUom !== "Nos")) {
+      updates.unitName = prodUom;
+      updates.unitOfMeasurementId = prod.unitOfMeasurementId || resolveUomId(prodUom);
+      needsUpdate = true;
     }
-    const fromRefreshed = getProductPurchaseRate(refreshedProduct);
-    if (fromRefreshed != null && Number.isFinite(fromRefreshed) && fromRefreshed > 0) {
-      return fromRefreshed;
+
+    const pRate = getProductPurchaseRate(prod);
+    if (item.purchaseRate === undefined && pRate != null) {
+      updates.purchaseRate = pRate;
+      needsUpdate = true;
     }
-    const fromSelected = getProductPurchaseRate(selectedProduct);
-    if (fromSelected != null && Number.isFinite(fromSelected) && fromSelected > 0) {
-      return fromSelected;
+
+    const pStock = getProductStock(prod);
+    if (item.stock === undefined && pStock != null) {
+      updates.stock = pStock;
+      needsUpdate = true;
     }
-    return fromItem ?? fromTarget ?? fromRefreshed ?? fromSelected ?? null;
-  }, [item, targetProduct, refreshedProduct, selectedProduct]);
 
-  const purchaseRateDisplay =
-    rawPurchaseRate != null && Number.isFinite(rawPurchaseRate) && rawPurchaseRate > 0
-      ? formatINR(rawPurchaseRate)
-      : "—";
+    const masterProfit = getProductProfit(prod);
+    if (item.profitPercentage === undefined && masterProfit != null) {
+      updates.profitPercentage = masterProfit;
+      updates.profit = masterProfit;
+      needsUpdate = true;
+    }
 
-  // 12. Profit % lookup / calculation
-  const rawProfit = useMemo(() => {
-    return calculateProfitPercentage(calc.taxableAmount, item.quantity, rawPurchaseRate);
-  }, [calc.taxableAmount, item.quantity, rawPurchaseRate]);
+    if (needsUpdate) {
+      onUpdate({
+        ...item,
+        ...updates,
+      });
+    }
+  }, [targetProduct, selectedProduct]);
 
-  let profitDisplay = "—";
-  if (rawProfit != null && !isNaN(Number(rawProfit)) && Number.isFinite(Number(rawProfit))) {
-    profitDisplay = `${Number(rawProfit).toFixed(2)}%`;
-  }
+  // Handlers for editable fields in Section 2
+  const handlePurchaseRateChange = (rawValue: string) => {
+    if (rawValue.trim() === "") {
+      onUpdate({
+        ...item,
+        purchaseRate: null,
+        basePurchaseRate: null,
+        profitPercentage: null,
+        profit: null,
+      } as any);
+      return;
+    }
+    const parsed = parseFloat(rawValue);
+    const pRate = isNaN(parsed) ? null : parsed;
+    const currentQty = Math.max(0, Number(item.quantity) || 1);
+    const grossBase = Number(((Number(item.rate) || 0) * currentQty).toFixed(2));
+    const grossGst = Number((grossBase * ((Number(item.gstRate) || 0) / 100)).toFixed(2));
+    const grossTotal = Number((grossBase + grossGst).toFixed(2));
+    const profitPct = calculateProfitPercentage(grossTotal, currentQty, pRate);
 
-  // 13. Stock lookup
-  const rawStock = useMemo(() => {
-    const fromItem = getProductStock(item);
-    if (fromItem != null) return fromItem;
-    const fromTarget = getProductStock(targetProduct);
-    if (fromTarget != null) return fromTarget;
-    const fromRefreshed = getProductStock(refreshedProduct);
-    if (fromRefreshed != null) return fromRefreshed;
-    const fromSelected = getProductStock(selectedProduct);
-    if (fromSelected != null) return fromSelected;
-    return null;
-  }, [item, targetProduct, refreshedProduct, selectedProduct]);
+    onUpdate({
+      ...item,
+      purchaseRate: pRate,
+      basePurchaseRate: pRate,
+      profitPercentage: profitPct,
+      profit: profitPct,
+    } as any);
+  };
 
-  const stockDisplay =
-    rawStock != null && !isNaN(Number(rawStock)) && Number.isFinite(Number(rawStock))
-      ? String(Math.round(Number(rawStock)))
-      : "—";
+  const handleProfitPercentageChange = (rawValue: string) => {
+    if (rawValue.trim() === "") {
+      onUpdate({
+        ...item,
+        profitPercentage: null,
+        profit: null,
+      });
+      return;
+    }
+    const parsed = parseFloat(rawValue);
+    const profitPct = isNaN(parsed) ? null : parsed;
+    onUpdate({
+      ...item,
+      profitPercentage: profitPct,
+      profit: profitPct,
+    });
+  };
+
+  const handleStockChange = (rawValue: string) => {
+    if (rawValue.trim() === "") {
+      onUpdate({
+        ...item,
+        stock: null,
+      });
+      return;
+    }
+    const parsed = parseFloat(rawValue);
+    const stockQty = isNaN(parsed) ? null : Math.round(parsed);
+    onUpdate({
+      ...item,
+      stock: stockQty,
+    });
+  };
 
   // Unified calculation and field change handler for product row inputs
   const handleFieldChange = (
@@ -352,28 +446,15 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
     const currentGst =
       field === "gstRate" ? Math.max(0, parsed) : Math.max(0, Number(item.gstRate) || 0);
 
-    const effectivePurchaseRate =
-      (rawPurchaseRate != null && Number.isFinite(rawPurchaseRate) && rawPurchaseRate > 0
-        ? Number(rawPurchaseRate)
-        : null) ??
-      getProductPurchaseRate(item) ??
-      getProductPurchaseRate(targetProduct) ??
-      getProductPurchaseRate(refreshedProduct) ??
-      getProductPurchaseRate(selectedProduct);
+    // 1. Gross Total before discount (e.g., Total 206.50 for Rate=175, Qty=1, GST=18%)
+    const grossBase = Number((currentRate * currentQty).toFixed(2));
+    const grossGst = Number((grossBase * (currentGst / 100)).toFixed(2));
+    const grossTotal = Number((grossBase + grossGst).toFixed(2));
 
-    const effectiveStock =
-      rawStock ??
-      getProductStock(item) ??
-      getProductStock(targetProduct) ??
-      getProductStock(refreshedProduct) ??
-      getProductStock(selectedProduct);
-
-    // 1. Base Amount: baseAmount = rate * qty
-    const baseAmount = Number((currentRate * currentQty).toFixed(2));
-
-    // 2. Taxable Amount After Discount: taxableAmount = baseAmount - (baseAmount * discountPercent / 100)
-    const discountAmount = Number((baseAmount * (currentDisc / 100)).toFixed(2));
-    const taxableAmount = Number((baseAmount - discountAmount).toFixed(2));
+    // 2. Base Amount & Taxable Amount after discount:
+    // taxableAmount = baseAmount - (baseAmount * discountPercent / 100)
+    const discountAmount = Number((grossBase * (currentDisc / 100)).toFixed(2));
+    const taxableAmount = Number((grossBase - discountAmount).toFixed(2));
 
     // 3. GST Amount: gstAmount = taxableAmount * gstPercent / 100
     const gstAmount = Number((taxableAmount * (currentGst / 100)).toFixed(2));
@@ -381,8 +462,42 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
     // 4. Total Including GST: total = taxableAmount + gstAmount
     const lineTotal = Number((taxableAmount + gstAmount).toFixed(2));
 
-    // 5. Profit Percentage: ((Taxable Amount / Qty - Purchase Rate) / Purchase Rate) * 100
-    const profitPercent = calculateProfitPercentage(taxableAmount, currentQty, effectivePurchaseRate);
+    // 5. Dynamic Purchase Rate and Profit % based on user-entered discount:
+    // Requirement 1: When a discount percentage (e.g., 4%) is applied, calculate the discount amount dynamically
+    // (e.g., Total 206.50 * 4 / 100 = 8.26).
+    // Requirement 2: Subtract this discount from the total to derive the Purchase Rate dynamically
+    // (e.g., 206.50 - 8.26 = 198.24).
+    // Requirement 3: Compute the Profit % dynamically based on this actual calculated value rather than using static values.
+    let dynamicPurchaseRate: number | null = null;
+    let dynamicProfit: number | null = null;
+
+    if (currentDisc > 0) {
+      const discountOnTotal = Number((grossTotal * (currentDisc / 100)).toFixed(2));
+      const discountedTotal = Number((grossTotal - discountOnTotal).toFixed(2));
+      dynamicPurchaseRate =
+        currentQty > 0
+          ? Number((discountedTotal / currentQty).toFixed(2))
+          : discountedTotal;
+      dynamicProfit = calculateProfitPercentage(grossTotal, currentQty, dynamicPurchaseRate);
+    } else {
+      dynamicPurchaseRate =
+        item.purchaseRate != null && !isNaN(Number(item.purchaseRate))
+          ? Number(item.purchaseRate)
+          : null;
+      dynamicProfit =
+        item.profitPercentage != null && !isNaN(Number(item.profitPercentage))
+          ? Number(item.profitPercentage)
+          : null;
+    }
+
+    // 6. Stock preservation (clean null if not available)
+    const currentStock =
+      item.stock != null && !isNaN(Number(item.stock))
+        ? Math.round(Number(item.stock))
+        : (getProductStock(targetProduct) ??
+          getProductStock(refreshedProduct) ??
+          getProductStock(selectedProduct) ??
+          null);
 
     onUpdate({
       ...item,
@@ -402,11 +517,12 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
       taxableAmount,
       taxAmount: gstAmount,
       lineTotal,
-      purchaseRate: effectivePurchaseRate,
-      profitPercentage: profitPercent,
-      profit: profitPercent,
-      stock: effectiveStock,
-    });
+      purchaseRate: dynamicPurchaseRate,
+      basePurchaseRate: dynamicPurchaseRate,
+      profitPercentage: dynamicProfit,
+      profit: dynamicProfit,
+      stock: currentStock,
+    } as any);
   };
 
   const handleProductSelect = async (selectedId: string) => {
@@ -436,17 +552,41 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
       const currentQty = Math.max(0, Number(item.quantity) || 1);
       const currentGst = prod.gstRate ?? 18;
 
-      const baseAmount = Number((sRate * currentQty).toFixed(2));
-      const discountAmount = Number((baseAmount * (currentDisc / 100)).toFixed(2));
-      const taxableAmount = Number((baseAmount - discountAmount).toFixed(2));
+      const grossBase = Number((sRate * currentQty).toFixed(2));
+      const grossGst = Number((grossBase * (currentGst / 100)).toFixed(2));
+      const grossTotal = Number((grossBase + grossGst).toFixed(2));
+
+      const discountAmount = Number((grossBase * (currentDisc / 100)).toFixed(2));
+      const taxableAmount = Number((grossBase - discountAmount).toFixed(2));
       const gstAmount = Number((taxableAmount * (currentGst / 100)).toFixed(2));
       const lineTotal = Number((taxableAmount + gstAmount).toFixed(2));
 
-      const profitPct = calculateProfitPercentage(taxableAmount, currentQty, pRate);
+      let dynamicPurchaseRate: number | null = null;
+      let profitPct: number | null = null;
+
+      if (currentDisc > 0) {
+        const discountOnTotal = Number((grossTotal * (currentDisc / 100)).toFixed(2));
+        const discountedTotal = Number((grossTotal - discountOnTotal).toFixed(2));
+        dynamicPurchaseRate = currentQty > 0
+          ? Number((discountedTotal / currentQty).toFixed(2))
+          : discountedTotal;
+        profitPct = calculateProfitPercentage(grossTotal, currentQty, dynamicPurchaseRate);
+      } else {
+        dynamicPurchaseRate = pRate ?? null;
+        profitPct = getProductProfit(prod) ?? null;
+      }
+
       const stockQty = getProductStock(prod);
       const hasRetainedOverride = Boolean(hasCustomOverride && item.customImageUrl);
 
-      const immediateItem: QuotationItem = {
+      const productUom =
+        prod.unitName?.trim() ||
+        (prod as any).uom?.trim() ||
+        getProductUom(prod.productId, prod) ||
+        STANDARD_UOMS.find((u) => u.id === prod.unitOfMeasurementId)?.name ||
+        "Nos";
+
+      const immediateItem: any = {
         ...item,
         productId: prod.productId,
         itemCode: prod.itemCode || "",
@@ -455,7 +595,8 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
         specification: prod.specification || "",
         hasCustomSpecification: false,
         hsnCode: prod.hsnCode || null,
-        purchaseRate: pRate,
+        purchaseRate: dynamicPurchaseRate,
+        basePurchaseRate: dynamicPurchaseRate,
         profitPercentage: profitPct,
         profit: profitPct,
         stock: stockQty,
@@ -467,9 +608,8 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
         taxAmount: gstAmount,
         lineTotal,
         gstRate: currentGst,
-        unitOfMeasurementId: prod.unitOfMeasurementId || 1,
-        unitName:
-          STANDARD_UOMS.find((u) => u.id === prod.unitOfMeasurementId)?.name || "Nos",
+        unitOfMeasurementId: prod.unitOfMeasurementId || resolveUomId(productUom),
+        unitName: productUom,
         productImage: prod.productImage || prod.productImagePath || null,
         productImagePath: prod.productImagePath || prod.productImage || null,
         ...(hasRetainedOverride
@@ -502,17 +642,6 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
             Number(selectedId)
         ) {
           setRefreshedProduct(fetched);
-          const freshPRate = getProductPurchaseRate(fetched) ?? pRate;
-          const freshStock = getProductStock(fetched) ?? stockQty;
-          if (freshPRate !== pRate || freshStock !== stockQty) {
-            onUpdate({
-              ...immediateItem,
-              purchaseRate: freshPRate,
-              stock: freshStock,
-              profitPercentage: calculateProfitPercentage(taxableAmount, currentQty, freshPRate),
-              profit: calculateProfitPercentage(taxableAmount, currentQty, freshPRate),
-            });
-          }
         }
       } catch (error) {
         if (productSelectionRequest.current === requestId) {
@@ -611,14 +740,14 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
     <>
       <tr className="hover:bg-[#f0f7ff] border-b border-gray-100 transition text-xs min-h-[52px]">
         {/* 1. Select / Code / Brand */}
-        <td className="p-3 align-top min-w-[240px] border-r border-gray-100">
-          <div className="space-y-1.5">
+        <td className="p-3 align-top min-w-[280px] border-r border-gray-100">
+          <div className="space-y-2">
             {/* Predefined product select dropdown */}
             <select
               value={item.productId ? String(item.productId) : ""}
               onChange={(e) => handleProductSelect(e.target.value)}
               disabled={disabled}
-              className="w-full text-xs py-1.5 px-2 bg-white border border-gray-200 rounded-lg font-semibold text-gray-800 focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none cursor-pointer"
+              className="w-full text-xs h-9 py-1.5 px-2.5 bg-white border border-gray-200 rounded-lg font-semibold text-gray-800 focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none cursor-pointer truncate shadow-2xs"
             >
               <option value="">-- Choose Existing Product or Custom --</option>
               {availableProducts.map((p: any) => {
@@ -633,7 +762,7 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
               })}
             </select>
 
-            <div className="grid grid-cols-2 gap-1.5">
+            <div className="grid grid-cols-2 gap-2">
               <input
                 type="text"
                 placeholder="Code (e.g. PRD-01)"
@@ -642,7 +771,7 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
                   onUpdate({ ...item, itemCode: e.target.value })
                 }
                 disabled={disabled}
-                className="w-full text-xs py-1 px-2 bg-white border border-gray-200 rounded-lg font-mono focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none"
+                className="w-full text-xs h-8 py-1.5 px-2.5 bg-white border border-gray-200 rounded-lg font-mono text-gray-800 placeholder:text-gray-400 focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none shadow-2xs truncate"
               />
               <input
                 type="text"
@@ -652,7 +781,7 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
                   onUpdate({ ...item, brand: e.target.value })
                 }
                 disabled={disabled}
-                className="w-full text-xs py-1 px-2 bg-white border border-gray-200 rounded-lg text-gray-700 focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none"
+                className="w-full text-xs h-8 py-1.5 px-2.5 bg-white border border-gray-200 rounded-lg text-gray-700 placeholder:text-gray-400 focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none shadow-2xs truncate"
               />
             </div>
 
@@ -665,16 +794,16 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
               }
               disabled={disabled}
               required
-              className="w-full text-xs py-1 px-2 bg-white border border-gray-200 rounded-lg font-semibold focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none"
+              className="w-full text-xs h-8 py-1.5 px-2.5 bg-white border border-gray-200 rounded-lg font-semibold text-gray-900 placeholder:text-gray-400 focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none shadow-2xs truncate"
             />
           </div>
         </td>
 
         {/* 2. Technical Specification */}
-        <td className="p-3 align-top min-w-[200px] border-r border-gray-100">
+        <td className="p-3 align-top min-w-[340px] border-r border-gray-100">
           <textarea
             placeholder="Technical Specification..."
-            rows={3}
+            rows={5}
             value={item.specification || ""}
             onChange={(e) =>
               onUpdate({
@@ -684,12 +813,12 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
               })
             }
             disabled={disabled}
-            className="w-full text-xs py-1.5 px-2 bg-white border border-gray-200 rounded-lg focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none resize-none"
+            className="w-full h-[114px] text-xs leading-relaxed py-2 px-2.5 bg-white border border-gray-200 rounded-lg placeholder:text-gray-400 focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none resize-none transition shadow-2xs overflow-y-auto"
           />
         </td>
 
         {/* 3. Image with Quotation-Specific Change Control */}
-        <td className="p-3 align-top text-center w-24 min-w-[80px] border-r border-gray-100">
+        <td className="p-3 align-top text-center w-20 min-w-[80px] border-r border-gray-100">
           <div className="w-12 h-12 rounded-xl bg-orange-50/50 border border-orange-100 flex items-center justify-center p-1 text-center shadow-xs overflow-hidden mx-auto mt-1 relative group">
             {productImageUrl && !imageError ? (
               <img
@@ -738,8 +867,8 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
         </td>
 
         {/* 4. HSN Code */}
-        <td className="p-3 align-top text-center w-24 min-w-[85px] border-r border-gray-100">
-          <div className="py-1.5 px-2 bg-gray-50 border border-gray-200 rounded text-center font-mono text-xs font-semibold text-gray-800">
+        <td className="p-3 align-top text-center w-24 min-w-[90px] border-r border-gray-100">
+          <div className="py-2 px-2 bg-gray-50 border border-gray-200 rounded-lg text-center font-mono text-xs font-semibold text-gray-800">
             {hsnCodeValue}
           </div>
         </td>
@@ -753,32 +882,15 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
             value={item.quantity ?? 1}
             onChange={(e) => handleFieldChange("quantity", e.target.value)}
             disabled={disabled}
-            className="w-full text-xs py-1.5 px-2 text-center bg-white border border-gray-200 rounded-lg font-bold text-gray-900 focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none"
+            className="w-full text-xs h-9 py-1.5 px-2 text-center bg-white border border-gray-200 rounded-lg font-bold text-gray-900 focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none shadow-2xs"
           />
         </td>
 
         {/* 6. UOM */}
-        <td className="p-3 align-top w-24 min-w-[80px] border-r border-gray-100">
-          <select
-            value={item.unitOfMeasurementId || 1}
-            onChange={(e) => {
-              const uId = parseInt(e.target.value, 10);
-              const uMatch = STANDARD_UOMS.find((u) => u.id === uId);
-              onUpdate({
-                ...item,
-                unitOfMeasurementId: uId,
-                unitName: uMatch?.name || "Nos",
-              });
-            }}
-            disabled={disabled}
-            className="w-full text-xs py-1.5 px-2 bg-white border border-gray-200 rounded-lg text-gray-700 font-medium focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none cursor-pointer"
-          >
-            {STANDARD_UOMS.map((uom) => (
-              <option key={uom.id} value={uom.id}>
-                {uom.name}
-              </option>
-            ))}
-          </select>
+        <td className="p-3 align-top text-center w-24 min-w-[80px] border-r border-gray-100">
+          <div className="py-2 px-2 bg-gray-50 border border-gray-200 rounded-lg text-center text-xs font-semibold text-gray-800">
+            {displayUom}
+          </div>
         </td>
 
         {/* 7. Rate (₹) */}
@@ -790,12 +902,12 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
             value={item.rate ?? 0}
             onChange={(e) => handleFieldChange("rate", e.target.value)}
             disabled={disabled}
-            className="w-full text-xs py-1.5 px-2 bg-white border border-gray-200 rounded-lg font-semibold text-right focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none"
+            className="w-full text-xs h-9 py-1.5 px-2 bg-white border border-gray-200 rounded-lg font-semibold text-right focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none font-mono shadow-2xs"
           />
         </td>
 
         {/* 8. Disc (%) */}
-        <td className="p-3 align-top w-20 min-w-[70px] border-r border-gray-100">
+        <td className="p-3 align-top w-20 min-w-[75px] border-r border-gray-100">
           <input
             type="number"
             min="0"
@@ -804,7 +916,7 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
             value={item.discountPercentage ?? 0}
             onChange={(e) => handleFieldChange("discountPercentage", e.target.value)}
             disabled={disabled}
-            className="w-full text-xs py-1.5 px-2 text-center bg-white border border-gray-200 rounded-lg focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none"
+            className="w-full text-xs h-9 py-1.5 px-2 text-center bg-white border border-gray-200 rounded-lg focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none font-mono shadow-2xs"
           />
           {item.discountPercentage > 15 && (
             <div className="text-[9px] text-amber-600 font-bold mt-0.5 text-center" title="Requires Approval">
@@ -814,7 +926,7 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
         </td>
 
         {/* 9. GST (%) */}
-        <td className="p-3 align-top w-20 min-w-[70px] border-r border-gray-100">
+        <td className="p-3 align-top w-20 min-w-[75px] border-r border-gray-100">
           <input
             type="number"
             min="0"
@@ -823,13 +935,13 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
             value={item.gstRate ?? 18}
             onChange={(e) => handleFieldChange("gstRate", e.target.value)}
             disabled={disabled}
-            className="w-full text-xs py-1.5 px-2 text-center bg-white border border-gray-200 rounded-lg focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none"
+            className="w-full text-xs h-9 py-1.5 px-2 text-center bg-white border border-gray-200 rounded-lg focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none font-mono shadow-2xs"
           />
         </td>
 
         {/* 10. Total (₹) */}
         <td className="p-3 align-top w-28 min-w-[110px] text-right border-r border-gray-100">
-          <div className="text-xs font-bold text-gray-900 font-mono">
+          <div className="text-xs font-bold text-gray-900 font-mono py-1">
             {formatINR(combinedTotal)}
           </div>
           {item.accessories && item.accessories.length > 0 ? (
@@ -848,24 +960,44 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
         </td>
 
         {/* 11. Purchase Rate */}
-        <td className="p-3 align-top w-28 min-w-[100px] text-right border-r border-gray-100">
-          <div className="py-1.5 px-2 bg-gray-50 border border-gray-200 rounded text-right font-medium text-xs text-gray-800 font-mono">
-            {purchaseRateDisplay}
-          </div>
+        <td className="p-3 align-top w-28 min-w-[110px] border-r border-gray-100">
+          <input
+            type="number"
+            min="0"
+            step="any"
+            value={item.purchaseRate != null ? item.purchaseRate : ""}
+            onChange={(e) => handlePurchaseRateChange(e.target.value)}
+            disabled={disabled}
+            placeholder=""
+            className="w-full text-xs h-9 py-1.5 px-2 bg-white border border-gray-200 rounded-lg font-medium text-right font-mono focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none shadow-2xs"
+          />
         </td>
 
         {/* 12. Profit % */}
-        <td className="p-3 align-top w-20 min-w-[75px] text-center border-r border-gray-100">
-          <div className="py-1.5 px-2 bg-gray-50 border border-gray-200 rounded text-center font-medium text-xs text-gray-800 font-mono">
-            {profitDisplay}
-          </div>
+        <td className="p-3 align-top w-20 min-w-[80px] border-r border-gray-100">
+          <input
+            type="number"
+            step="any"
+            value={item.profitPercentage != null ? item.profitPercentage : ""}
+            onChange={(e) => handleProfitPercentageChange(e.target.value)}
+            disabled={disabled}
+            placeholder=""
+            className="w-full text-xs h-9 py-1.5 px-2 text-center bg-white border border-gray-200 rounded-lg font-medium font-mono focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none shadow-2xs"
+          />
         </td>
 
         {/* 13. Stock */}
-        <td className="p-3 align-top w-20 min-w-[70px] text-center border-r border-gray-100">
-          <div className="py-1.5 px-2 bg-gray-50 border border-gray-200 rounded text-center font-medium text-xs text-gray-800 font-mono">
-            {stockDisplay}
-          </div>
+        <td className="p-3 align-top w-20 min-w-[75px] border-r border-gray-100">
+          <input
+            type="number"
+            min="0"
+            step="1"
+            value={item.stock != null ? item.stock : ""}
+            onChange={(e) => handleStockChange(e.target.value)}
+            disabled={disabled}
+            placeholder=""
+            className="w-full text-xs h-9 py-1.5 px-2 text-center bg-white border border-gray-200 rounded-lg font-medium font-mono focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none shadow-2xs"
+          />
         </td>
 
         {/* Actions (Delete Row) */}
@@ -874,7 +1006,7 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
             <button
               type="button"
               onClick={onRemove}
-              className="p-2 rounded-lg bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-600 transition shadow-xs inline-flex items-center justify-center cursor-pointer"
+              className="p-2 rounded-lg bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-600 transition shadow-xs inline-flex items-center justify-center cursor-pointer mt-0.5"
               title="Remove product"
             >
               <Trash2 size={15} />
