@@ -73,10 +73,6 @@ export interface DynamicBdeUser {
 }
 
 export const ASSIGNMENT_ROLES: RoleType[] = [
-  // "System Admin",
-  // "Director",
-  // "BDE User",
-  // "Sales Person",
 ];
 
 export interface SalesAssignmentFormValues {
@@ -146,16 +142,7 @@ const formatEmployeeDisplay = (name: string, code?: string): string => {
   return `${name} (${trimmed})`;
 };
 
-/**
- * CRM Sales Assignment & Organization Hierarchy Module
- * Dynamic API-Driven Employee Role & Reporting Hierarchy
- *
- * Rules:
- * - System Admin: No Reporting To required (hidden completely)
- * - Director: No Reporting To required (hidden completely)
- * - BDE User: Reporting To shown, lists ONLY Directors
- * - Sales Person: Reporting To shown, lists ONLY BDE Users
- */
+
 const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
   values: propValues,
   onChange,
