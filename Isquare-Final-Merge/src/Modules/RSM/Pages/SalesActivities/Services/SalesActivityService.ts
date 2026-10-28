@@ -38,7 +38,6 @@ import {
 import apiClient from "../../../../../API/apiClient";
 import { API_ENDPOINTS } from "../../../../../API/apiConfig";
 import type { Contact } from "../../Master/Contact/Types/ContactTypes";
-import { getAllEnquiryTypes } from "../../Master/EnquiryMaster/EnquiryType/EnquiryTypeService";
 
 export {
   getAllActivityTypes,
@@ -1129,36 +1128,10 @@ export const getRelatedRecordOptions = async (
   const records: RelatedRecordOption[] = [];
   const seenCodes = new Set<string>();
 
-  // 1. Fetch from Master Enquiry Types (/api/EnquiryType)
+  // 1. Fetch from Master / CRM Enquiry API (/api/Enquiry)
   try {
-    const enquiryTypes = await getAllEnquiryTypes();
-    if (Array.isArray(enquiryTypes)) {
-      enquiryTypes.forEach((et) => {
-        if (et && et.enquiryTypeIsActive !== false) {
-          const code =
-            et.enquiryTypeCode ||
-            (et.enquiryTypeId ? `ET-${et.enquiryTypeId}` : "");
-          if (code && !seenCodes.has(String(code))) {
-            seenCodes.add(String(code));
-            records.push({
-              id: String(et.enquiryTypeId || code),
-              type: "Enquiry",
-              code: String(code),
-              title: et.enquiryTypeName ? `${code} - ${et.enquiryTypeName}` : String(code),
-              customerId: "",
-              date: et.enquiryTypeCreatedAt || new Date().toISOString().split("T")[0],
-            });
-          }
-        }
-      });
-    }
-  } catch (err) {
-    console.warn("Could not fetch enquiry types:", err);
-  }
-
-  // 2. Try real Enquiry endpoints (/enquiry) if available
-  try {
-    const res = await apiClient.get("/enquiry");
+    const enquiryUrl = API_ENDPOINTS.Enquiries || `${API_ENDPOINTS.BaseUrl}/Enquiry`;
+    const res = await apiClient.get(enquiryUrl);
     const list = Array.isArray(res.data)
       ? res.data
       : Array.isArray(res.data?.data)
@@ -1169,30 +1142,38 @@ export const getRelatedRecordOptions = async (
     list.forEach((enq: any) => {
       const code =
         enq.enquiryNumber ||
-        enq.enquiryCode ||
         enq.enquiryNo ||
+        enq.enquiryCode ||
         (enq.enquiryId ? `ENQ-${enq.enquiryId}` : (enq.id ? `ENQ-${enq.id}` : null));
       if (code && !seenCodes.has(String(code))) {
         seenCodes.add(String(code));
-        const titleText =
-          enq.enquiryTypeName ||
-          enq.enquiryTitle ||
+        const customerName = enq.customerName || enq.companyName || "";
+        const subject =
+          enq.requirementSubject ||
           enq.subject ||
-          enq.companyName ||
-          enq.customerName;
+          enq.enquiryTitle ||
+          enq.customerRequirement ||
+          "";
+        const titleText = customerName
+          ? `${code} - ${customerName}${subject ? ` (${subject})` : ""}`
+          : subject
+          ? `${code} - ${subject}`
+          : String(code);
         records.push({
           id: String(enq.enquiryId || enq.id || code),
           type: "Enquiry",
           code: String(code),
-          title: titleText ? `${code} - ${titleText}` : String(code),
-          customerId: String(enq.companyId || enq.customerId || ""),
+          title: titleText,
+          customerId: String(enq.customerId || enq.companyId || ""),
           date: enq.enquiryDate || enq.createdDate || new Date().toISOString().split("T")[0],
         });
       }
     });
-  } catch {}
+  } catch (err) {
+    console.warn("Could not fetch enquiries from /api/Enquiry:", err);
+  }
 
-  // 3. Try Quotation endpoint (extract linked Enquiry IDs)
+  // 2. Try Quotation endpoint (extract linked Enquiry IDs)
   try {
     const res = await apiClient.get(API_ENDPOINTS.Quotations || "/quotation");
     const list = Array.isArray(res.data)
@@ -1220,8 +1201,6 @@ export const getRelatedRecordOptions = async (
   } catch (err) {
     console.warn("Could not fetch quotations for enquiry options:", err);
   }
-
-  // NO static dummy fallback data - purely dynamic from Master & API
 
   if (customerId) {
     const customerSpecific = records.filter(

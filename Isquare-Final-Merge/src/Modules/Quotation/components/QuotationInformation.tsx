@@ -6,72 +6,18 @@ import {
   getContactsByCompanyId,
   getAllContacts,
 } from "../../RSM/Pages/Master/Contact/Services/ContactService";
-import { quotationService } from "../services/quotationService";
+import apiClient from "../../../API/apiClient";
+import { API_ENDPOINTS } from "../../../API/apiConfig";
 import AddQuotationContactModal from "./AddQuotationContactModal";
 
 export interface EnquiryOption {
+  enquiryId?: number;
   enquiryNumber: string;
+  customerId?: number | null;
   companyName: string;
   productName: string;
   displayLabel: string;
 }
-
-export const DEFAULT_ENQUIRIES: EnquiryOption[] = [
-  {
-    enquiryNumber: "ENQ-2026-739",
-    companyName: "Thermax",
-    productName: "3M 11850 Goggle",
-    displayLabel: "ENQ-2026-739 - Thermax - 3M 11850 Goggle",
-  },
-  {
-    enquiryNumber: "ENQ-2026-0042",
-    companyName: "Tata Steel Ltd",
-    productName: "Multi-Gas Detector System (4-Gas Portable)",
-    displayLabel: "ENQ-2026-0042 - Tata Steel Ltd - Multi-Gas Detector System (4-Gas Portable)",
-  },
-  {
-    enquiryNumber: "ENQ-2026-0108",
-    companyName: "Reliance Industries Ltd",
-    productName: "Fixed IR Flame Detectors & Control Panels",
-    displayLabel: "ENQ-2026-0108 - Reliance Industries Ltd - Fixed IR Flame Detectors & Control Panels",
-  },
-  {
-    enquiryNumber: "ENQ-2026-0178",
-    companyName: "Siemens India",
-    productName: "CNC Spindle Motor 5kW",
-    displayLabel: "ENQ-2026-0178 - Siemens India - CNC Spindle Motor 5kW",
-  },
-  {
-    enquiryNumber: "ENQ-2026-0245",
-    companyName: "Larsen & Toubro",
-    productName: "Gas Leak Detection Controller",
-    displayLabel: "ENQ-2026-0245 - Larsen & Toubro - Gas Leak Detection Controller",
-  },
-  {
-    enquiryNumber: "ENQ-2026-0389",
-    companyName: "Bharat Petroleum",
-    productName: "Industrial Safety Helmet & Harness",
-    displayLabel: "ENQ-2026-0389 - Bharat Petroleum - Industrial Safety Helmet & Harness",
-  },
-  {
-    enquiryNumber: "ENQ-2026-0512",
-    companyName: "Mahindra & Mahindra",
-    productName: "Safety Optical Glasses IP55",
-    displayLabel: "ENQ-2026-0512 - Mahindra & Mahindra - Safety Optical Glasses IP55",
-  },
-  {
-    enquiryNumber: "ENQ-2026-0644",
-    companyName: "JSW Steel",
-    productName: "Flameproof Control Station",
-    displayLabel: "ENQ-2026-0644 - JSW Steel - Flameproof Control Station",
-  },
-  {
-    enquiryNumber: "ENQ-2026-0820",
-    companyName: "Adani Ports",
-    productName: "Emergency Eye Wash & Shower Station",
-    displayLabel: "ENQ-2026-0820 - Adani Ports - Emergency Eye Wash & Shower Station",
-  },
-];
 
 interface QuotationInformationProps {
   quotationNumber?: string | null;
@@ -116,7 +62,8 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
   // Enquiry Reference Searchable Dropdown state
   const [enquirySearch, setEnquirySearch] = useState<string>(enquiryRef || "");
   const [isEnquiryDropdownOpen, setIsEnquiryDropdownOpen] = useState<boolean>(false);
-  const [enquiriesList, setEnquiriesList] = useState<EnquiryOption[]>(DEFAULT_ENQUIRIES);
+  const [enquiriesList, setEnquiriesList] = useState<EnquiryOption[]>([]);
+  const [isLoadingEnquiries, setIsLoadingEnquiries] = useState<boolean>(false);
   const enquiryDropdownRef = useRef<HTMLDivElement>(null);
 
   const onChangeRef = useRef(onChange);
@@ -126,43 +73,85 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
     setEnquirySearch(enquiryRef || "");
   }, [enquiryRef]);
 
-  // Load existing quotations to extract any additional unique enquiry references
+  // Fetch real Enquiries from database via API
   useEffect(() => {
-    quotationService
-      .getAll()
-      .then((quotes) => {
-        if (!quotes || quotes.length === 0) return;
-        const extra: EnquiryOption[] = [];
-        quotes.forEach((q) => {
-          if (q.enquiryRef && q.enquiryRef.trim()) {
-            const trimmed = q.enquiryRef.trim();
-            const exists = DEFAULT_ENQUIRIES.some(
-              (d) => d.enquiryNumber === trimmed || d.displayLabel === trimmed
+    let isMounted = true;
+    setIsLoadingEnquiries(true);
+
+    const fetchDatabaseEnquiries = async () => {
+      try {
+        const endpoint =
+          API_ENDPOINTS.Enquiry ||
+          API_ENDPOINTS.Enquiries ||
+          `${API_ENDPOINTS.BaseUrl}/Enquiry`;
+        const response = await apiClient.get<any>(endpoint);
+        const data = response.data;
+        const list: any[] = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.data)
+          ? data.data
+          : Array.isArray(data?.Data)
+          ? data.Data
+          : Array.isArray(data?.result)
+          ? data.result
+          : [];
+
+        if (!isMounted) return;
+
+        const options: EnquiryOption[] = list.map((eq: any) => {
+          const eqId = eq.enquiryId ? Number(eq.enquiryId) : undefined;
+          const eqNo =
+            eq.enquiryNumber ||
+            eq.enquiryNo ||
+            (eqId ? `ENQ-${String(eqId).padStart(3, "0")}` : "");
+
+          let compName = eq.customerName || eq.companyName || "";
+          if (!compName && eq.customerId) {
+            const foundCust = customers.find(
+              (c) => Number(c.customerId || c.companyId) === Number(eq.customerId)
             );
-            if (!exists && !extra.some((e) => e.enquiryNumber === trimmed || e.displayLabel === trimmed)) {
-              extra.push({
-                enquiryNumber: trimmed,
-                companyName: q.customerName || "Customer",
-                productName: "Industrial Equipment",
-                displayLabel: `${trimmed} - ${q.customerName || "Customer"} - Industrial Equipment`,
-              });
+            if (foundCust) {
+              compName = foundCust.companyName || foundCust.customerName || "";
             }
           }
+          if (!compName) {
+            compName = eq.contactName ? `Client: ${eq.contactName}` : "Client";
+          }
+
+          const product =
+            eq.requirementSubject ||
+            eq.customerRequirement ||
+            eq.productCategoryName ||
+            eq.technicalSpecificationNotes ||
+            "Industrial Requirement";
+
+          const label = `${eqNo || (eqId ? `ENQ-${eqId}` : "ENQ")} - ${compName} - ${product}`;
+
+          return {
+            enquiryId: eqId,
+            enquiryNumber: eqNo,
+            customerId: eq.customerId ? Number(eq.customerId) : null,
+            companyName: compName,
+            productName: product,
+            displayLabel: label,
+          };
         });
-        if (extra.length > 0) {
-          setEnquiriesList((prev) => {
-            const combined = [...prev];
-            extra.forEach((e) => {
-              if (!combined.some((c) => c.enquiryNumber === e.enquiryNumber)) {
-                combined.push(e);
-              }
-            });
-            return combined;
-          });
-        }
-      })
-      .catch(() => {});
-  }, []);
+
+        setEnquiriesList(options);
+      } catch (err) {
+        console.error("Failed to fetch enquiries from database:", err);
+        if (isMounted) setEnquiriesList([]);
+      } finally {
+        if (isMounted) setIsLoadingEnquiries(false);
+      }
+    };
+
+    fetchDatabaseEnquiries();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [customers]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -183,34 +172,41 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
   const filteredEnquiries = useMemo(() => {
     if (!enquirySearch || !enquirySearch.trim()) return enquiriesList;
     const q = enquirySearch.toLowerCase().trim();
-    return enquiriesList.filter(
-      (item) =>
-        item.displayLabel.toLowerCase().includes(q) ||
-        item.enquiryNumber.toLowerCase().includes(q) ||
-        item.companyName.toLowerCase().includes(q) ||
-        item.productName.toLowerCase().includes(q)
-    );
+    return enquiriesList.filter((item) => {
+      const matchLabel = item.displayLabel?.toLowerCase().includes(q);
+      const matchNum = item.enquiryNumber?.toLowerCase().includes(q);
+      const matchId = item.enquiryId ? String(item.enquiryId).includes(q) : false;
+      const matchComp = item.companyName?.toLowerCase().includes(q);
+      const matchProd = item.productName?.toLowerCase().includes(q);
+      return matchLabel || matchNum || matchId || matchComp || matchProd;
+    });
   }, [enquiriesList, enquirySearch]);
 
   const handleSelectEnquiry = (item: EnquiryOption) => {
     setEnquirySearch(item.displayLabel);
     setIsEnquiryDropdownOpen(false);
 
-    // If matching company exists in customers list and no company selected, auto-select it
-    const matchedCustomer = customers.find((c) => {
-      const cName = (c.companyName || c.customerName || "").toLowerCase();
-      return (
-        cName.includes(item.companyName.toLowerCase()) ||
-        item.companyName.toLowerCase().includes(cName)
-      );
-    });
+    let matchedCustId: number | null = null;
+    if (item.customerId && item.customerId > 0) {
+      matchedCustId = item.customerId;
+    } else if (item.companyName) {
+      const matchedCustomer = customers.find((c) => {
+        const cName = (c.companyName || c.customerName || "").toLowerCase();
+        return (
+          cName.includes(item.companyName.toLowerCase()) ||
+          item.companyName.toLowerCase().includes(cName)
+        );
+      });
+      if (matchedCustomer) {
+        matchedCustId = Number(matchedCustomer.customerId || matchedCustomer.companyId);
+      }
+    }
 
-    if (matchedCustomer && (!customerId || customerId === 0)) {
-      const newCustId = Number(matchedCustomer.customerId || matchedCustomer.companyId);
-      handleCompanyChange(newCustId);
+    if (matchedCustId && (!customerId || customerId === 0)) {
+      handleCompanyChange(matchedCustId);
       onChangeRef.current({
         enquiryRef: item.displayLabel,
-        customerId: newCustId,
+        customerId: matchedCustId,
       });
     } else {
       onChangeRef.current({ enquiryRef: item.displayLabel });
@@ -314,10 +310,22 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
     });
   };
 
-  const handleContactCreated = async (created: Contact) => {
-    // If contact created for a different company, switch company
-    if (Number(created.companyId) !== Number(customerId)) {
-      onChangeRef.current({ customerId: created.companyId });
+  const handleContactCreated = async (createdPayload: any) => {
+    const created: Contact =
+      createdPayload?.data ||
+      createdPayload?.Data ||
+      createdPayload?.result ||
+      createdPayload?.Result ||
+      createdPayload ||
+      {};
+
+    const newCompanyId = Number(created.companyId || customerId);
+    const newContactId = Number(created.contactId);
+    const newFullName = created.fullName || "";
+
+    // 1. If contact created for a different company, switch company selection
+    if (newCompanyId && newCompanyId !== Number(customerId)) {
+      onChangeRef.current({ customerId: newCompanyId });
     }
 
     try {
@@ -328,14 +336,40 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
       // ignore
     }
 
-    // Refresh contacts and auto-select newly created contact
-    await fetchContactsForCompany(created.companyId, created.contactId);
-    setSelectedContactId(created.contactId);
-    onChangeRef.current({
-      customerId: created.companyId,
-      contactId: created.contactId,
-      contactPerson: created.fullName,
-    });
+    // 2. Refresh contacts from backend and ensure newly added contact is retained alongside existing contacts
+    if (newCompanyId) {
+      await fetchContactsForCompany(newCompanyId, newContactId);
+      setContacts((prev) => {
+        const exists = prev.some((c) => Number(c.contactId) === newContactId);
+        if (exists) return prev;
+        return [
+          ...prev,
+          {
+            ...created,
+            contactId: newContactId,
+            companyId: newCompanyId,
+            fullName: newFullName,
+          },
+        ];
+      });
+      setSelectedContactId(newContactId);
+      onChangeRef.current({
+        customerId: newCompanyId,
+        contactId: newContactId,
+        contactPerson: newFullName,
+      });
+    }
+
+    // 3. Dispatch update events so ContactPersonMaster displays the new record alongside existing records
+    if (typeof window !== "undefined") {
+      try {
+        window.dispatchEvent(new CustomEvent("contact-created", { detail: created }));
+        window.dispatchEvent(new Event("contacts-updated"));
+        localStorage.setItem("contacts_updated_at", Date.now().toString());
+      } catch {
+        // ignore
+      }
+    }
   };
 
   const selectedContact = contacts.find(
@@ -518,21 +552,30 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
                 <span>Select Existing Enquiry ({filteredEnquiries.length})</span>
                 <span className="text-[9px] font-normal text-gray-400">Enquiry No · Company · Product</span>
               </div>
-              {filteredEnquiries.length === 0 ? (
+              {isLoadingEnquiries ? (
+                <div className="p-5 text-center flex items-center justify-center gap-2 text-xs text-gray-500">
+                  <Loader2 size={16} className="animate-spin text-[#FF7900]" />
+                  <span>Loading enquiries from database...</span>
+                </div>
+              ) : filteredEnquiries.length === 0 ? (
                 <div className="p-4 text-center">
                   <p className="text-xs text-gray-500 font-medium">
-                    No matching enquiries found for "{enquirySearch}"
+                    {enquirySearch
+                      ? `No matching enquiries found for "${enquirySearch}"`
+                      : "No enquiries found in database"}
                   </p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onChangeRef.current({ enquiryRef: enquirySearch });
-                      setIsEnquiryDropdownOpen(false);
-                    }}
-                    className="mt-2 text-xs font-semibold text-[#FF7900] hover:text-[#e06800] underline cursor-pointer"
-                  >
-                    Use "{enquirySearch}" as custom reference
-                  </button>
+                  {enquirySearch && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onChangeRef.current({ enquiryRef: enquirySearch });
+                        setIsEnquiryDropdownOpen(false);
+                      }}
+                      className="mt-2 text-xs font-semibold text-[#FF7900] hover:text-[#e06800] underline cursor-pointer"
+                    >
+                      Use "{enquirySearch}" as custom reference
+                    </button>
+                  )}
                 </div>
               ) : (
                 filteredEnquiries.map((eq) => {

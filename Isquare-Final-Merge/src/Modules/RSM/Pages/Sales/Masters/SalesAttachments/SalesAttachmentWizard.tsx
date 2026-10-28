@@ -12,6 +12,7 @@ import {
   getDocumentTypesDropdown,
   getActivitiesDropdown,
 } from "./Services/SalesAttachmentService";
+import { getRelatedRecordOptions } from "../../../SalesActivities/Services/SalesActivityService";
 import type {
   CustomerOption,
   ActivityOption,
@@ -47,20 +48,23 @@ const SalesAttachmentWizard: React.FC<SalesAttachmentWizardProps> = ({
   const [customers, setCustomers] = useState<CustomerOption[]>([]);
   const [docTypes, setDocTypes] = useState<DocumentTypeOption[]>([]);
   const [activities, setActivities] = useState<ActivityOption[]>([]);
+  const [enquiries, setEnquiries] = useState<{ code: string; title?: string }[]>([]);
 
   const detailsTabRef = useRef<SalesAttachmentDetailsTabRef>(null);
 
   useEffect(() => {
     const loadDropdowns = async () => {
       try {
-        const [cList, dList, aList] = await Promise.all([
+        const [cList, dList, aList, eList] = await Promise.all([
           getCustomersDropdown(),
           getDocumentTypesDropdown(),
           getActivitiesDropdown(),
+          getRelatedRecordOptions(),
         ]);
         setCustomers(cList);
         setDocTypes(dList);
         setActivities(aList);
+        setEnquiries(eList);
         if (dList.length > 0 && !formData.documentType) {
           setFormData((prev) => ({ ...prev, documentType: dList[0].value }));
         }
@@ -172,6 +176,7 @@ const SalesAttachmentWizard: React.FC<SalesAttachmentWizardProps> = ({
             customers={customers}
             docTypes={docTypes}
             activities={activities}
+            enquiries={enquiries}
             errors={errors}
           />
         )}
