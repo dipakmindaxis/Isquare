@@ -950,27 +950,6 @@ export const EditSalesActivityModal: React.FC<EditSalesActivityModalProps> = ({
                   />
                 </div>
 
-                {/* Master Linked Enquiry ID */}
-                <div className="relative">
-                  <label className={labelStyle}>Enquiry Type / ID</label>
-                  <select
-                    value={enquiryRef}
-                    onChange={(e) => setEnquiryRef(e.target.value)}
-                    className={baseInputStyle}
-                  >
-                    <option value="">Select Enquiry Type / ID...</option>
-                    {relatedOptions.map((opt) => (
-                      <option key={opt.code} value={opt.code}>
-                        {opt.title || opt.code}
-                      </option>
-                    ))}
-                    {enquiryRef &&
-                      !relatedOptions.some((opt) => opt.code === enquiryRef) && (
-                        <option value={enquiryRef}>{enquiryRef}</option>
-                      )}
-                  </select>
-                </div>
-
                 {/* Subject / Purpose */}
                 <div className="relative">
                   <label className={labelStyle}>Subject / Purpose</label>
@@ -1054,13 +1033,13 @@ export const EditSalesActivityModal: React.FC<EditSalesActivityModalProps> = ({
 
                   {/* Master Linked Enquiry ID */}
                   <div className="relative">
-                    <label className={labelStyle}>Enquiry Type / ID</label>
+                    <label className={labelStyle}>Enquiry ID</label>
                     <select
                       value={enquiryRef}
                       onChange={(e) => setEnquiryRef(e.target.value)}
                       className={baseInputStyle}
                     >
-                      <option value="">Select Enquiry Type / ID...</option>
+                      <option value="">Select Enquiry ID...</option>
                       {relatedOptions.map((opt) => (
                         <option key={opt.code} value={opt.code}>
                           {opt.title || opt.code}

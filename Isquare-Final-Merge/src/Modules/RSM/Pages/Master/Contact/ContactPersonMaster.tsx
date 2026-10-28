@@ -96,6 +96,36 @@ export const ContactPersonMaster: React.FC<ContactPersonMasterProps> = ({
 
   useEffect(() => {
     fetchItems();
+
+    const handleUpdate = () => {
+      fetchItems();
+    };
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === "contacts_updated_at") {
+        fetchItems();
+      }
+    };
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        fetchItems();
+      }
+    };
+
+    window.addEventListener("contacts-updated", handleUpdate);
+    window.addEventListener("contact-created", handleUpdate);
+    window.addEventListener("focus", handleUpdate);
+    window.addEventListener("storage", handleStorage);
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      window.removeEventListener("contacts-updated", handleUpdate);
+      window.removeEventListener("contact-created", handleUpdate);
+      window.removeEventListener("focus", handleUpdate);
+      window.removeEventListener("storage", handleStorage);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
   }, [fetchItems]);
 
   const filteredItems = useMemo((): Contact[] => {

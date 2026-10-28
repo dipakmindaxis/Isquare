@@ -309,7 +309,7 @@ export const ViewSalesActivityModal: React.FC<ViewSalesActivityModalProps> = ({
 
           {/* SECTION 5 - ACTIVITY SPECIFICS & REFERENCES */}
           <div>
-            <SectionHeader icon={MapPin} title="Activity Specifics & References" />
+            <SectionHeader icon={MapPin} title="Activity Specifics & Details" />
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
               <DetailItem label="Site / Location" value={activity.location} />
               <DetailItem label="Meeting Link" value={activity.meetingLink} />
@@ -321,30 +321,24 @@ export const ViewSalesActivityModal: React.FC<ViewSalesActivityModalProps> = ({
                 label="Sample Quantity"
                 value={activity.sampleQuantity}
               />
-              <DetailItem
-                label="Linked Record Type"
-                value={
-                  activity.relatedRecordType &&
-                  activity.relatedRecordType !== "None"
-                    ? activity.relatedRecordType
-                    : null
-                }
-              />
-              <DetailItem
-                label="Record Reference Code"
-                value={activity.relatedRecordCode}
-              />
             </div>
           </div>
 
           {/* SECTION 6 - ATTACHMENTS & PHOTOGRAPHS */}
           <div>
-            <SectionHeader
-              icon={FileCheck}
-              title={`Attachments & Photographs (${
-                activity.photographs.length + activity.documents.length
-              })`}
-            />
+            <div className="flex items-center justify-between mb-2">
+              <SectionHeader
+                icon={FileCheck}
+                title={`Attachments & Photographs (${
+                  activity.photographs.length + activity.documents.length
+                })`}
+              />
+              {activity.relatedRecordCode && (
+                <span className="text-xs font-semibold px-2.5 py-1 bg-orange-50 text-[#FF7900] border border-orange-200 rounded-lg">
+                  Enquiry ID: {activity.relatedRecordCode}
+                </span>
+              )}
+            </div>
             {activity.photographs.length === 0 &&
             activity.documents.length === 0 ? (
               <div className="bg-gray-50/80 border border-dashed border-gray-300 rounded-xl p-6 text-center text-gray-500">

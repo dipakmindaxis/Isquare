@@ -22,6 +22,7 @@ interface SalesAttachmentDetailsTabProps {
   customers: CustomerOption[];
   docTypes: DocumentTypeOption[];
   activities: ActivityOption[];
+  enquiries?: { code: string; title?: string }[];
   errors?: { [key: string]: string[] };
 }
 
@@ -32,7 +33,7 @@ export interface SalesAttachmentDetailsTabRef {
 const SalesAttachmentDetailsTab = forwardRef<
   SalesAttachmentDetailsTabRef,
   SalesAttachmentDetailsTabProps
->(({ formData, setFormData, customers, docTypes, activities, errors = {} }, ref) => {
+>(({ formData, setFormData, customers, docTypes, activities, enquiries = [], errors = {} }, ref) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const docInputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -166,6 +167,7 @@ const SalesAttachmentDetailsTab = forwardRef<
             <label className={labelStyle}>ENQUIRY ID / NO.</label>
             <input
               type="text"
+              list="enquiry-id-datalist"
               placeholder="e.g. ENQ-2026-089"
               className={`${baseInputStyle} ${getInputBorderClass("enquiryId")}`}
               value={formData.enquiryId}
@@ -173,6 +175,15 @@ const SalesAttachmentDetailsTab = forwardRef<
                 setFormData((prev) => ({ ...prev, enquiryId: e.target.value }))
               }
             />
+            {enquiries && enquiries.length > 0 && (
+              <datalist id="enquiry-id-datalist">
+                {enquiries.map((enq) => (
+                  <option key={enq.code} value={enq.code}>
+                    {enq.title || enq.code}
+                  </option>
+                ))}
+              </datalist>
+            )}
             {errors.enquiryId && (
               <p className="text-xs text-red-500 mt-1">{errors.enquiryId[0]}</p>
             )}

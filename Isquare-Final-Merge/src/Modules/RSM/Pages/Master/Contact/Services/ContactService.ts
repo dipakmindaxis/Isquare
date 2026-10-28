@@ -5,9 +5,24 @@ import type { Contact, CreateContactDTO, UpdateContactDTO } from "../Types/Conta
 const ensureArray = <T>(data: any): T[] => {
   if (Array.isArray(data)) return data;
   if (data && Array.isArray(data.data)) return data.data;
+  if (data && Array.isArray(data.Data)) return data.Data;
   if (data && Array.isArray(data.result)) return data.result;
+  if (data && Array.isArray(data.Result)) return data.Result;
   if (data && Array.isArray(data.items)) return data.items;
+  if (data && Array.isArray(data.Items)) return data.Items;
   return [];
+};
+
+const notifyContactsUpdated = (contact?: any) => {
+  if (typeof window !== "undefined") {
+    try {
+      window.dispatchEvent(new CustomEvent("contact-created", { detail: contact }));
+      window.dispatchEvent(new Event("contacts-updated"));
+      localStorage.setItem("contacts_updated_at", Date.now().toString());
+    } catch {
+      // Ignore
+    }
+  }
 };
 
 const getBaseEndpoint = (): string => {
@@ -28,7 +43,12 @@ export const getAllContacts = async (): Promise<Contact[]> => {
 export const getContactById = async (id: number): Promise<Contact> => {
   const endpoint = `${getBaseEndpoint()}/${id}`;
   const response = await apiClient.get<any>(endpoint);
-  const result = response.data?.data || response.data?.result || response.data;
+  const result =
+    response.data?.data ||
+    response.data?.Data ||
+    response.data?.result ||
+    response.data?.Result ||
+    response.data;
   return result as Contact;
 };
 
@@ -61,7 +81,13 @@ export const getContactsByCompanyId = async (companyId: number): Promise<Contact
 export const createContact = async (data: CreateContactDTO): Promise<Contact> => {
   const endpoint = getBaseEndpoint();
   const response = await apiClient.post<any>(endpoint, data);
-  const result = response.data?.data || response.data?.result || response.data;
+  const result =
+    response.data?.data ||
+    response.data?.Data ||
+    response.data?.result ||
+    response.data?.Result ||
+    response.data;
+  notifyContactsUpdated(result);
   return result as Contact;
 };
 
@@ -71,16 +97,27 @@ export const updateContact = async (id: number, data: UpdateContactDTO): Promise
     contactId: id,
     ...data,
   };
+  let result: any;
   try {
     const response = await apiClient.put<any>(`${baseEndpoint}/${id}`, payload);
-    const result = response.data?.data || response.data?.result || response.data;
-    return result as Contact;
+    result =
+      response.data?.data ||
+      response.data?.Data ||
+      response.data?.result ||
+      response.data?.Result ||
+      response.data;
   } catch (err) {
     // Fallback: some ASP.NET controllers accept PUT /api/Contact without ID in route
     const response = await apiClient.put<any>(baseEndpoint, payload);
-    const result = response.data?.data || response.data?.result || response.data;
-    return result as Contact;
+    result =
+      response.data?.data ||
+      response.data?.Data ||
+      response.data?.result ||
+      response.data?.Result ||
+      response.data;
   }
+  notifyContactsUpdated(result);
+  return result as Contact;
 };
 
 export const deleteContact = async (id: number): Promise<void> => {
@@ -91,6 +128,7 @@ export const deleteContact = async (id: number): Promise<void> => {
     // Fallback: DELETE /api/Contact?id={id}
     await apiClient.delete(`${baseEndpoint}?id=${id}`);
   }
+  notifyContactsUpdated();
 };
 
 export const toggleContactStatus = async (

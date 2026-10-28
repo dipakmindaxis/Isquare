@@ -179,6 +179,7 @@ export const API_ENDPOINTS: ApiEndpoints = {
   Currencies: `${BASE_URL}/Currency`,
   SalesTerritories: `${BASE_URL}/SalesTerritory`,
   PlaceOfSupplies: `${BASE_URL}/PlaceOfSupply`,
-
+  Enquiry: `${BASE_URL}/Enquiry`,
+  Enquiries: `${BASE_URL}/Enquiry`,
 };
 
