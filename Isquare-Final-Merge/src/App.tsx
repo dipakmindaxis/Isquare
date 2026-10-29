@@ -47,6 +47,7 @@ import VMSDashboard from "./Modules/VMS/Pages/Dashboard/VMSDashboard";
 import Home from "./Modules/HRMS/Pages/Dashboard/Home";
 import quotationRoutes from "./Modules/Quotation/routes/quotationRoutes";
 import EnquiryMaster from "./Modules/RSM/Pages/Master/EnquiryMaster/EnquiryMaster";
+import EnquiriesList from "./Modules/RSM/Pages/Enquiry/EnquiryMaster";
 
   const router = createBrowserRouter([
     {
@@ -157,6 +158,10 @@ import EnquiryMaster from "./Modules/RSM/Pages/Master/EnquiryMaster/EnquiryMaste
         {
           path: "customer",
           element: <CustomerMaster />,
+        },
+           {
+          path: "enquiries",
+        element: <EnquiriesList />, 
         },
         {
           path: "sales/customers",

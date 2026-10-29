@@ -13,6 +13,7 @@ import {
   Building2,
   MapPin,
   Truck,
+  Package 
 } from "lucide-react";
 
 // Import your newly created sub-master component
@@ -29,6 +30,7 @@ import { CurrencyMaster } from "./Currency/CurrencyMaster";
 import { DepartmentMaster } from "./Department/DepartmentMaster";
 import { SalesTerritoryMaster } from "./SalesTerritory/SalesTerritoryMaster";
 import { PlaceOfSupplyMaster } from "./PlaceOfSupply/PlaceOfSupplyMaster";
+import { ProductCategoryMaster } from "./ProductCategory/ProductCategoryMaster"; 
 
 export type EnquiryTab =
   | "source"
@@ -37,6 +39,7 @@ export type EnquiryTab =
   | "stage"
   | "priority"
   | "uom"
+  | "product-category"
   | "currency"
   | "department"
   | "territory"
@@ -79,6 +82,12 @@ const TABS: TabConfig[] = [
     label: "Enquiry Stage",
     shortDesc: "Lifecycle phases and funnel milestones for enquiries",
     icon: <ListChecks className="w-4 h-4" />,
+  },
+   {
+    id: "product-category",
+    label: "Product Category",
+    shortDesc: "Manage master list of product categories",
+    icon: <Package className="w-4 h-4" />,
   },
   {
     id: "uom",
@@ -141,6 +150,7 @@ export const EnquiryMaster: React.FC<EnquiryMasterProps> = ({ initialTab }) => {
       "stage",
       "priority",
       "uom",
+      "product-category",
       "currency",
       "department",
       "territory",
@@ -236,7 +246,7 @@ export const EnquiryMaster: React.FC<EnquiryMasterProps> = ({ initialTab }) => {
        {activeTab === "uom" && (
            <UnitOfMeasureMaster isTab={true} />
         )}
-
+      {activeTab === "product-category" && <ProductCategoryMaster isTab={true} />}
       {activeTab === "currency" && <CurrencyMaster isTab={true} />}
       {activeTab === "department" && <DepartmentMaster isTab={true} />}
       {activeTab === "territory" && <SalesTerritoryMaster isTab={true} />}
