@@ -79,9 +79,22 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
   const [contactPerson, setContactPerson] = useState<string>(
     initialQuotation?.contactPerson || ""
   );
+  const [enquiryId, setEnquiryId] = useState<number | null>(
+    initialQuotation?.enquiryId ?? null
+  );
   const [enquiryRef, setEnquiryRef] = useState<string>(
     initialQuotation?.enquiryRef || ""
   );
+
+  useEffect(() => {
+    if (initialQuotation) {
+      if (initialQuotation.customerId) setCustomerId(initialQuotation.customerId);
+      if (initialQuotation.contactPersonId !== undefined) setContactId(initialQuotation.contactPersonId);
+      if (initialQuotation.contactPerson) setContactPerson(initialQuotation.contactPerson);
+      if (initialQuotation.enquiryId !== undefined) setEnquiryId(initialQuotation.enquiryId);
+      if (initialQuotation.enquiryRef !== undefined) setEnquiryRef(initialQuotation.enquiryRef || "");
+    }
+  }, [initialQuotation]);
   const [quotationDate, setQuotationDate] = useState<string>(
     initialQuotation?.quotationDate || new Date().toISOString()
   );
@@ -418,7 +431,7 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
   );
   const [termsAndConditions, setTermsAndConditions] = useState<string>(
     initialQuotation?.termsAndConditions ||
-      "1. Taxes extra as applicable.\n2. Prices firm for validity period.\n3. Goods once sold will not be taken back.\n4. Subject to Mumbai Jurisdiction."
+      "1. Taxes extra as applicable.\n2. Prices firm for validity period.\n3. Goods once sold will not be taken back.\n4. Subject to Pune Jurisdiction."
   );
 
   // Fetch company profile & default terms on load
@@ -545,9 +558,13 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
         quotationId: initialQuotation?.quotationId || 0,
         quotationNumber: quotationNumber || undefined,
         customerId: customerId,
-        customerName: selectedCustomer?.customerName || selectedCustomer?.companyName,
-        enquiryId: initialQuotation?.enquiryId || null,
-        enquiryRef: enquiryRef,
+        customerName:
+          selectedCustomer?.companyName ||
+          selectedCustomer?.customerName ||
+          (selectedCustomer as any)?.clientName ||
+          `Customer #${customerId}`,
+        enquiryId: enquiryId || null,
+        enquiryRef: enquiryRef || null,
         quotationDate: quotationDate,
         revisionNumber: revisionNumber,
         status: status,
@@ -588,7 +605,7 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
     quotationNumber: quotationNumber || "QT-2026-DRAFT",
     customerId: customerId,
     customerName: selectedCustomer?.customerName || selectedCustomer?.companyName,
-    enquiryId: initialQuotation?.enquiryId || null,
+    enquiryId: enquiryId || null,
     enquiryRef: enquiryRef,
     quotationDate: quotationDate,
     revisionNumber: revisionNumber,
@@ -676,6 +693,7 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
               quotationNumber={quotationNumber}
               customerId={customerId}
               contactId={contactId}
+              enquiryId={enquiryId}
               enquiryRef={enquiryRef}
               quotationDate={quotationDate}
               revisionNumber={revisionNumber}
@@ -685,6 +703,7 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
                 if (f.customerId !== undefined) setCustomerId(f.customerId);
                 if (f.contactId !== undefined) setContactId(f.contactId);
                 if (f.contactPerson !== undefined) setContactPerson(f.contactPerson || "");
+                if (f.enquiryId !== undefined) setEnquiryId(f.enquiryId);
                 if (f.enquiryRef !== undefined) setEnquiryRef(f.enquiryRef);
                 if (f.quotationDate !== undefined) setQuotationDate(f.quotationDate);
                 if (f.status !== undefined) setStatus(f.status);

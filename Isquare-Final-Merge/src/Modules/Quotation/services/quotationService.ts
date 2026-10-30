@@ -58,11 +58,143 @@ export const getApiErrorMessage = (data: unknown): string | undefined => {
 // ==========================================
 // 1. QUOTATION SERVICE
 // ==========================================
+// ==========================================
+// 0. QUOTATION ENRICHMENT CACHE & HELPERS
+// ==========================================
+export const QUOTATION_ENRICHMENT_KEY = "isquare_quotation_enrichment_cache_v2";
+
+export interface QuotationEnrichmentData {
+  customerName?: string | null;
+  enquiryRef?: string | null;
+  enquiryId?: number | null;
+  customerId?: number | null;
+}
+
+export function getQuotationEnrichmentCache(): Record<string, QuotationEnrichmentData> {
+  if (typeof window === "undefined" || !window.localStorage) return {};
+  try {
+    const raw = window.localStorage.getItem(QUOTATION_ENRICHMENT_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function saveQuotationEnrichment(
+  quotationIdOrNum: string | number,
+  data: QuotationEnrichmentData
+): void {
+  if (!quotationIdOrNum || typeof window === "undefined" || !window.localStorage) return;
+  try {
+    const cache = getQuotationEnrichmentCache();
+    const key = String(quotationIdOrNum).trim();
+    cache[key] = { ...(cache[key] || {}), ...data };
+    window.localStorage.setItem(QUOTATION_ENRICHMENT_KEY, JSON.stringify(cache));
+  } catch (e) {
+    console.warn("Failed to save quotation enrichment to cache:", e);
+  }
+}
+
+export async function enrichQuotations(quotations: Quotation[]): Promise<Quotation[]> {
+  if (!quotations || quotations.length === 0) return quotations;
+
+  // 1. Synchronous enrichment from local cache
+  const localCache = getQuotationEnrichmentCache();
+  for (const q of quotations) {
+    const cached =
+      localCache[String(q.quotationId)] ||
+      (q.quotationNumber ? localCache[q.quotationNumber] : undefined);
+    if (cached) {
+      if (!q.customerName && cached.customerName) q.customerName = cached.customerName;
+      if (!q.enquiryRef && cached.enquiryRef) q.enquiryRef = cached.enquiryRef;
+      if (!q.enquiryId && cached.enquiryId) q.enquiryId = cached.enquiryId;
+    }
+  }
+
+  // 2. Fetch master data in parallel
+  let customers: Customer[] = [];
+  let enquiries: any[] = [];
+  try {
+    const [custsRes, enqsRes] = await Promise.allSettled([
+      masterDataService.getCustomers(),
+      masterDataService.getEnquiries(),
+    ]);
+    if (custsRes.status === "fulfilled") customers = custsRes.value;
+    if (enqsRes.status === "fulfilled") enquiries = enqsRes.value;
+  } catch (err) {
+    console.warn("Enrichment master data fetch error:", err);
+  }
+
+  const customerMap = new Map<number, string>();
+  for (const c of customers) {
+    const id = Number(c.customerId || (c as any).companyId || 0);
+    const name = c.companyName || c.customerName || (c as any).clientName || "";
+    if (id && name) {
+      customerMap.set(id, name);
+    }
+  }
+
+  const enquiryMap = new Map<number, string>();
+  for (const e of enquiries) {
+    const id = Number(e.enquiryId || (e as any).id || 0);
+    const no =
+      e.enquiryNumber ||
+      e.enquiryNo ||
+      (id ? `ENQ-${String(id).padStart(3, "0")}` : "");
+    if (id && no) {
+      enquiryMap.set(id, no);
+    }
+  }
+
+  // 3. Map customerName and enquiryRef
+  for (const q of quotations) {
+    if (!q.customerName && q.customerId) {
+      const matchName = customerMap.get(Number(q.customerId));
+      if (matchName) {
+        q.customerName = matchName;
+      }
+    }
+
+    if (!q.enquiryRef && q.enquiryId) {
+      const matchEnq = enquiryMap.get(Number(q.enquiryId));
+      if (matchEnq) {
+        q.enquiryRef = matchEnq;
+      } else {
+        q.enquiryRef = `ENQ-${String(q.enquiryId).padStart(3, "0")}`;
+      }
+    } else if (q.enquiryRef && q.enquiryRef.includes(" - ")) {
+      const match = q.enquiryRef.match(/(ENQ-[A-Za-z0-9-]+)/i);
+      if (match) q.enquiryRef = match[1];
+    }
+
+    // Persist enrichment
+    if (q.quotationId && (q.customerName || q.enquiryRef)) {
+      saveQuotationEnrichment(q.quotationId, {
+        customerName: q.customerName,
+        enquiryRef: q.enquiryRef,
+        enquiryId: q.enquiryId,
+        customerId: q.customerId,
+      });
+      if (q.quotationNumber) {
+        saveQuotationEnrichment(q.quotationNumber, {
+          customerName: q.customerName,
+          enquiryRef: q.enquiryRef,
+          enquiryId: q.enquiryId,
+          customerId: q.customerId,
+        });
+      }
+    }
+  }
+
+  return quotations;
+}
+
 export const quotationService = {
   getAll: async (): Promise<Quotation[]> => {
     try {
       const response = await apiClient.get(API_ENDPOINTS.Quotations);
-      return normalizeArray<Quotation>(response.data);
+      const list = normalizeArray<Quotation>(response.data);
+      return await enrichQuotations(list);
     } catch (error) {
       console.warn("Failed to fetch quotations:", error);
       throw error;
@@ -71,16 +203,50 @@ export const quotationService = {
 
   getById: async (id: number): Promise<Quotation> => {
     const response = await apiClient.get<Quotation>(`${API_ENDPOINTS.Quotations}/${id}`);
-    return response.data;
+    const [enriched] = await enrichQuotations([response.data]);
+    return enriched || response.data;
   },
 
   create: async (payload: Partial<Quotation>): Promise<Quotation> => {
     const response = await apiClient.post<Quotation>(API_ENDPOINTS.Quotations, payload);
-    return response.data;
+    const created = response.data;
+    if (created && created.quotationId) {
+      const cleanRef = payload.enquiryRef
+        ? payload.enquiryRef.match(/(ENQ-[A-Za-z0-9-]+)/i)?.[1] ||
+          payload.enquiryRef.split(" - ")[0].trim()
+        : null;
+      saveQuotationEnrichment(created.quotationId, {
+        customerName: payload.customerName,
+        enquiryRef: cleanRef,
+        enquiryId: payload.enquiryId,
+        customerId: payload.customerId,
+      });
+      if (created.quotationNumber) {
+        saveQuotationEnrichment(created.quotationNumber, {
+          customerName: payload.customerName,
+          enquiryRef: cleanRef,
+          enquiryId: payload.enquiryId,
+          customerId: payload.customerId,
+        });
+      }
+    }
+    return created;
   },
 
   update: async (id: number, payload: Partial<Quotation>): Promise<Quotation | void> => {
     const response = await apiClient.put(`${API_ENDPOINTS.Quotations}/${id}`, payload);
+    if (id) {
+      const cleanRef = payload.enquiryRef
+        ? payload.enquiryRef.match(/(ENQ-[A-Za-z0-9-]+)/i)?.[1] ||
+          payload.enquiryRef.split(" - ")[0].trim()
+        : null;
+      saveQuotationEnrichment(id, {
+        customerName: payload.customerName,
+        enquiryRef: cleanRef,
+        enquiryId: payload.enquiryId,
+        customerId: payload.customerId,
+      });
+    }
     return response.data;
   },
 
@@ -1087,6 +1253,20 @@ export const masterDataService = {
       return normalizeArray<PaymentTerm>(response.data);
     } catch (error) {
       console.warn("Failed to fetch payment terms:", error);
+      return [];
+    }
+  },
+
+  getEnquiries: async (): Promise<any[]> => {
+    try {
+      const endpoint =
+        API_ENDPOINTS.Enquiry ||
+        API_ENDPOINTS.Enquiries ||
+        `${API_ENDPOINTS.BaseUrl}/Enquiry`;
+      const response = await apiClient.get<any>(endpoint);
+      return normalizeArray<any>(response.data);
+    } catch (error) {
+      console.warn("Failed to fetch enquiries:", error);
       return [];
     }
   },

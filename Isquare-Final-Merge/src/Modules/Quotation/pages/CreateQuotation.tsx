@@ -333,10 +333,26 @@ export const CreateQuotation: React.FC = () => {
                       </span>
                     </td>
                     <td className="p-3.5 font-semibold text-gray-800 border-r border-gray-100">
-                      {quotation.customerName || `Customer #${quotation.customerId}`}
+                      {quotation.customerName ||
+                        customers.find(
+                          (c) =>
+                            Number(c.customerId || (c as any).companyId) ===
+                            Number(quotation.customerId)
+                        )?.companyName ||
+                        customers.find(
+                          (c) =>
+                            Number(c.customerId || (c as any).companyId) ===
+                            Number(quotation.customerId)
+                        )?.customerName ||
+                        `Customer #${quotation.customerId}`}
                     </td>
                     <td className="p-3.5 text-gray-500 font-mono border-r border-gray-100">
-                      {quotation.enquiryRef || "—"}
+                      {quotation.enquiryRef
+                        ? quotation.enquiryRef.match(/(ENQ-[A-Za-z0-9-]+)/i)?.[1] ||
+                          quotation.enquiryRef.split(" - ")[0].trim()
+                        : quotation.enquiryId
+                        ? `ENQ-${String(quotation.enquiryId).padStart(3, "0")}`
+                        : "—"}
                     </td>
                     <td className="p-3.5 text-gray-500 border-r border-gray-100">
                       {quotation.quotationDate

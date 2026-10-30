@@ -23,9 +23,11 @@ import {
   quotationApprovalService,
   quotationRevisionService,
   salesOrderService,
+  masterDataService,
   getApiErrorMessage,
 } from "../services/quotationService";
 import type { Quotation, QuotationApproval, SalesOrder } from "../models/quotationModels";
+import type { Customer } from "../../RSM/Pages/Customer/Types/CustomerTypes";
 import { formatINR, getEffectiveApprovalStatus } from "../utils/quotationCalculations";
 import QuotationStatusBadge from "../components/QuotationStatusBadge";
 import ConfirmationModal from "../../../Components/Common/ConfirmationModal";
@@ -40,7 +42,36 @@ export const QuotationList: React.FC = () => {
   const navigate = useNavigate();
   const [quotations, setQuotations] = useState<Quotation[]>([]);
   const [approvals, setApprovals] = useState<QuotationApproval[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  const resolveCustomerName = (q: Quotation): string => {
+    if (q.customerName && !q.customerName.startsWith("Customer #")) {
+      return q.customerName;
+    }
+    const match = customers.find(
+      (c) => Number(c.customerId || (c as any).companyId) === Number(q.customerId)
+    );
+    return (
+      match?.companyName ||
+      match?.customerName ||
+      (match as any)?.clientName ||
+      q.customerName ||
+      `Customer #${q.customerId}`
+    );
+  };
+
+  const resolveEnquiryRef = (q: Quotation): string => {
+    if (q.enquiryRef && q.enquiryRef.trim()) {
+      const match = q.enquiryRef.match(/(ENQ-[A-Za-z0-9-]+)/i);
+      if (match) return match[1];
+      return q.enquiryRef.split(" - ")[0].trim();
+    }
+    if (q.enquiryId && Number(q.enquiryId) > 0) {
+      return `ENQ-${String(q.enquiryId).padStart(3, "0")}`;
+    }
+    return "—";
+  };
 
   // Filters & Search
   const [searchText, setSearchText] = useState<string>("");
@@ -65,12 +96,14 @@ export const QuotationList: React.FC = () => {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const [quotes, allApprovals] = await Promise.all([
+      const [quotes, allApprovals, custs] = await Promise.all([
         quotationService.getAll(),
         quotationApprovalService.getAll(),
+        masterDataService.getCustomers(),
       ]);
       setQuotations(quotes);
       setApprovals(allApprovals);
+      setCustomers(custs);
     } catch (e) {
       console.error("Failed to load quotations:", e);
       toast.error("Failed to fetch quotations from API");
@@ -87,8 +120,8 @@ export const QuotationList: React.FC = () => {
   const filteredQuotations = useMemo(() => {
     return quotations.filter((q) => {
       const qNum = (q.quotationNumber || `QT-${q.quotationId}`).toLowerCase();
-      const custName = (q.customerName || "").toLowerCase();
-      const enq = (q.enquiryRef || "").toLowerCase();
+      const custName = resolveCustomerName(q).toLowerCase();
+      const enq = resolveEnquiryRef(q).toLowerCase();
       const matchesSearch =
         qNum.includes(searchText.toLowerCase()) ||
         custName.includes(searchText.toLowerCase()) ||
@@ -100,7 +133,7 @@ export const QuotationList: React.FC = () => {
 
       return matchesSearch && matchesStatus;
     });
-  }, [quotations, searchText, statusFilter]);
+  }, [quotations, customers, searchText, statusFilter]);
 
   // Paginated List
   const totalPages = Math.ceil(filteredQuotations.length / itemsPerPage) || 1;
@@ -227,8 +260,8 @@ export const QuotationList: React.FC = () => {
     const dataToExport = filteredQuotations.map((q) => ({
       "Quotation Number": q.quotationNumber || `QT-${q.quotationId}`,
       Revision: `R${q.revisionNumber}`,
-      Customer: q.customerName || `Customer #${q.customerId}`,
-      "Enquiry Reference": q.enquiryRef || "—",
+      Customer: resolveCustomerName(q),
+      "Enquiry Reference": resolveEnquiryRef(q),
       Date: q.quotationDate ? new Date(q.quotationDate).toLocaleDateString("en-IN") : "—",
       "Taxable Amount": q.taxableAmount,
       "GST Amount": q.taxAmount,
@@ -414,10 +447,10 @@ export const QuotationList: React.FC = () => {
                       </span>
                     </td>
                     <td className="p-3.5 font-semibold text-gray-800 border-r border-gray-100">
-                      {q.customerName || `Customer #${q.customerId}`}
+                      {resolveCustomerName(q)}
                     </td>
                     <td className="p-3.5 text-gray-500 font-mono border-r border-gray-100">
-                      {q.enquiryRef || "—"}
+                      {resolveEnquiryRef(q)}
                     </td>
                     <td className="p-3.5 text-gray-500 border-r border-gray-100">
                       {q.quotationDate

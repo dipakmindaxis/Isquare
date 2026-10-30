@@ -115,7 +115,9 @@ export const QuotationDetails: React.FC = () => {
         // Fetch customer details if available
         if (q.customerId) {
           masterDataService.getCustomers().then((custs) => {
-            const match = custs.find((c) => c.customerId === q.customerId);
+            const match = custs.find(
+              (c) => Number(c.customerId || (c as any).companyId) === Number(q.customerId)
+            );
             if (match) setCustomer(match);
           });
         }
@@ -380,8 +382,8 @@ export const QuotationDetails: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="p-12 text-center text-gray-400">
-        <div className="inline-block animate-spin w-8 h-8 border-4 border-[#00234a] border-t-transparent rounded-full mb-3" />
+      <div className="p-12 text-center text-[#64748B] bg-[#F1F4F1] min-h-screen">
+        <div className="inline-block animate-spin w-8 h-8 border-4 border-[#052B50] border-t-transparent rounded-full mb-3" />
         <p className="text-xs font-semibold">Loading proposal details from API...</p>
       </div>
     );
@@ -389,11 +391,11 @@ export const QuotationDetails: React.FC = () => {
 
   if (!quotation) {
     return (
-      <div className="p-8 text-center text-gray-500 bg-white rounded-2xl border border-gray-200">
-        <p className="text-sm font-bold text-gray-700">Quotation not found</p>
+      <div className="p-8 text-center text-[#64748B] bg-white rounded-xl border border-[#E2E8F0] m-6">
+        <p className="text-sm font-bold text-[#172B4D]">Quotation not found</p>
         <Link
           to="/rsm/quotations"
-          className="mt-3 inline-block px-4 py-2 bg-blue-50 text-blue-700 font-semibold text-xs rounded-xl"
+          className="mt-3 inline-block px-4 py-2 bg-[#052B50] text-white font-semibold text-xs rounded-xl hover:bg-[#FF7900] transition"
         >
           Back to Quotations List
         </Link>
@@ -407,24 +409,43 @@ export const QuotationDetails: React.FC = () => {
     charges,
   };
 
+  const customerDisplayName =
+    quotation.customerName ||
+    customer?.companyName ||
+    customer?.customerName ||
+    (customer as any)?.clientName ||
+    (quotation.customerId ? `Customer #${quotation.customerId}` : "Valued Customer");
+
+  const enquiryDisplayRef = quotation.enquiryRef
+    ? quotation.enquiryRef.match(/(ENQ-[A-Za-z0-9-]+)/i)?.[1] ||
+      quotation.enquiryRef.split(" - ")[0].trim()
+    : quotation.enquiryId
+    ? `ENQ-${String(quotation.enquiryId).padStart(3, "0")}`
+    : null;
+
+  const termsDisplay = quotation.termsAndConditions && quotation.termsAndConditions.trim()
+    ? quotation.termsAndConditions.replace(/Mumbai/gi, "Pune")
+    : "1. Taxes extra as applicable.\n2. Prices firm for validity period.\n3. Goods once sold will not be taken back.\n4. Subject to Pune Jurisdiction.";
+
   return (
-    <div className="space-y-6">
+    <div className="p-4 md:p-6 bg-[#F1F4F1] min-h-screen space-y-6 text-[#172B4D] font-sans">
       {/* Top Breadcrumb & Action Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <button
+            type="button"
             onClick={() => navigate("/rsm/quotations")}
-            className="p-2 text-gray-500 hover:text-gray-800 bg-white border border-gray-200 rounded-xl transition"
+            className="p-2.5 text-[#64748B] hover:text-[#052B50] bg-white border border-[#E2E8F0] rounded-xl transition shadow-xs cursor-pointer hover:bg-slate-50"
             title="Back to Quotations"
           >
             <ArrowLeft size={16} />
           </button>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-extrabold text-[#00234a] tracking-tight font-mono">
+              <h1 className="text-2xl font-extrabold text-[#052B50] tracking-tight font-mono">
                 {quotation.quotationNumber || `QT-${quotation.quotationId}`}
               </h1>
-              <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-mono font-bold text-xs">
+              <span className="px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 font-mono font-bold text-xs">
                 R{quotation.revisionNumber}
               </span>
               <QuotationStatusBadge status={quotation.status} />
@@ -433,12 +454,14 @@ export const QuotationDetails: React.FC = () => {
                 type="approval"
               />
             </div>
-            <p className="text-xs text-gray-500 mt-0.5">
+            <p className="text-xs text-[#64748B] mt-1">
               Target Customer:{" "}
-              <span className="font-bold text-gray-800">
-                {quotation.customerName || customer?.customerName || `Customer #${quotation.customerId}`}
-              </span>{" "}
-              {quotation.enquiryRef && `· Enquiry: ${quotation.enquiryRef}`}
+              <span className="font-bold text-[#172B4D]">{customerDisplayName}</span>
+              {enquiryDisplayRef && (
+                <span className="ml-1 text-[#64748B]">
+                  {" "}· Enquiry: <span className="font-mono font-semibold text-[#172B4D]">{enquiryDisplayRef}</span>
+                </span>
+              )}
             </p>
           </div>
         </div>
@@ -450,19 +473,20 @@ export const QuotationDetails: React.FC = () => {
               type="button"
               onClick={handleMarkAsWon}
               disabled={isMarkingWon}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-purple-600 px-3.5 py-2 text-xs font-semibold text-white shadow transition hover:bg-purple-700 disabled:cursor-wait disabled:opacity-60"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-purple-600 px-3.5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-purple-700 disabled:cursor-wait disabled:opacity-60 cursor-pointer"
             >
               <CheckCircle size={14} />
               <span>{isMarkingWon ? "Updating..." : "Mark as Won"}</span>
             </button>
           )}
+
           <button
             type="button"
             onClick={() => setIsPreviewOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 rounded-xl transition shadow-xs cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-white hover:bg-slate-50 text-[#172B4D] border border-[#E2E8F0] rounded-xl transition shadow-xs cursor-pointer"
             title="Preview customer-facing quotation"
           >
-            <Printer size={14} />
+            <Printer size={14} className="text-[#052B50]" />
             <span>Preview / Print</span>
           </button>
 
@@ -479,10 +503,10 @@ export const QuotationDetails: React.FC = () => {
               exportQuotationToCustomerExcel(fullQuoteForPreview, true);
               toast.success("Excel exported successfully");
             }}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl transition shadow-xs cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl transition shadow-xs cursor-pointer"
             title="Export Quotation to Excel (.xlsx)"
           >
-            <FileSpreadsheet size={14} />
+            <FileSpreadsheet size={14} className="text-emerald-700" />
             <span>Export Excel</span>
           </button>
 
@@ -504,19 +528,19 @@ export const QuotationDetails: React.FC = () => {
                 toast.error("Failed to generate PDF");
               }
             }}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 rounded-xl transition shadow-xs cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 rounded-xl transition shadow-xs cursor-pointer"
             title="Export Quotation to PDF (.pdf)"
           >
-            <Download size={14} />
+            <Download size={14} className="text-rose-700" />
             <span>Export PDF</span>
           </button>
 
           <button
             type="button"
             onClick={() => setRevisionModalOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl transition"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl transition shadow-xs cursor-pointer"
           >
-            <RotateCcw size={14} />
+            <RotateCcw size={14} className="text-indigo-600" />
             <span>Create Revision (+R)</span>
           </button>
 
@@ -526,9 +550,9 @@ export const QuotationDetails: React.FC = () => {
             <button
               type="button"
               onClick={() => setApprovalModalOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-xl transition"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-xl transition shadow-xs cursor-pointer"
             >
-              <CheckCircle size={14} />
+              <CheckCircle size={14} className="text-amber-600" />
               <span>Record Approval Decision</span>
             </button>
           )}
@@ -540,10 +564,10 @@ export const QuotationDetails: React.FC = () => {
             <button
               type="button"
               onClick={() => setRequestApprovalModalOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-xl transition"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-xl transition shadow-xs cursor-pointer"
               title="Submit for management approval"
             >
-              <ShieldAlert size={14} />
+              <ShieldAlert size={14} className="text-amber-600" />
               <span>Request Approval</span>
             </button>
           )}
@@ -552,7 +576,7 @@ export const QuotationDetails: React.FC = () => {
             type="button"
             onClick={handleConvertToOrder}
             disabled={isConvertingToOrder}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow transition"
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-xs transition cursor-pointer disabled:opacity-50"
           >
             <ShoppingCart size={14} />
             <span>{isConvertingToOrder ? "Converting..." : "Convert to Sales Order"}</span>
@@ -560,7 +584,7 @@ export const QuotationDetails: React.FC = () => {
 
           <Link
             to={`/rsm/quotations/${quotation.quotationId}/edit`}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold bg-[#00234a] hover:bg-[#003366] text-white rounded-xl shadow transition"
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-[#052B50] hover:bg-[#FF7900] text-white rounded-xl shadow-xs transition cursor-pointer"
           >
             <Edit size={14} />
             <span>Edit</span>
@@ -569,7 +593,7 @@ export const QuotationDetails: React.FC = () => {
           <button
             type="button"
             onClick={() => setIsDeleteModalOpen(true)}
-            className="p-2 text-rose-600 hover:bg-rose-50 border border-rose-200 rounded-xl transition"
+            className="p-2 text-rose-600 hover:bg-rose-50 border border-rose-200 rounded-xl transition shadow-xs cursor-pointer"
             title="Delete"
           >
             <Trash2 size={16} />
@@ -579,7 +603,7 @@ export const QuotationDetails: React.FC = () => {
 
       {/* Uploaded Customer-Formatted Quotation Banner */}
       {isCustomerFormatQuotation(quotation.quotationId, quotation) && (
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-amber-900 shadow-xs">
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-amber-900 shadow-xs">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-amber-100 rounded-xl text-amber-700">
               <FileSpreadsheet size={22} />
@@ -611,12 +635,12 @@ export const QuotationDetails: React.FC = () => {
         {/* Left 2 Columns: Items, Specifications & Accessories */}
         <div className="lg:col-span-2 space-y-6">
           {/* Line Items Card */}
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-            <div className="p-4 border-b border-gray-200 bg-slate-50 flex items-center justify-between">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-gray-700">
+          <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-xs overflow-hidden">
+            <div className="p-4 border-b border-[#E2E8F0] bg-white flex items-center justify-between">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-[#172B4D]">
                 Itemized Products &amp; Accessories ({items.length})
               </h3>
-              <span className="text-xs font-semibold text-blue-600">
+              <span className="text-xs font-semibold text-[#FF7900] font-mono">
                 Total Taxable: {formatINR(quotation.taxableAmount)}
               </span>
             </div>
@@ -624,20 +648,20 @@ export const QuotationDetails: React.FC = () => {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="bg-[#154068] text-white font-bold uppercase text-[10px] tracking-wider">
-                    <th className="p-3 w-8">#</th>
+                  <tr className="bg-[#FF7900] text-white font-bold uppercase text-[10px] tracking-wider">
+                    <th className="p-3 w-8 text-center">#</th>
                     <th className="p-3">Product Name &amp; Spec</th>
                     <th className="p-3 w-20 text-center">Qty</th>
                     <th className="p-3 w-24 text-right">Rate (₹)</th>
                     <th className="p-3 w-16 text-center">Disc %</th>
                     <th className="p-3 w-16 text-center">GST %</th>
-                    <th className="p-3 w-28 text-right">Total (₹)</th>
+                    <th className="p-3 w-28 text-right pr-4">Total (₹)</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-[#E2E8F0] bg-white">
                   {items.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="p-8 text-center text-gray-400">
+                      <td colSpan={7} className="p-8 text-center text-[#64748B]">
                         No product items recorded for this quotation.
                       </td>
                     </tr>
@@ -652,35 +676,35 @@ export const QuotationDetails: React.FC = () => {
                       return (
                         <React.Fragment key={idx}>
                           <tr className="hover:bg-slate-50/50 transition">
-                            <td className="p-3 align-top font-bold text-gray-400">{idx + 1}</td>
+                            <td className="p-3 align-top font-bold text-center text-[#64748B]">{idx + 1}</td>
                             <td className="p-3 align-top">
-                              <div className="font-bold text-gray-900">
+                              <div className="font-bold text-[#172B4D]">
                                 {item.itemName} {item.brand ? `· ${item.brand}` : ""}
                               </div>
                               {item.itemCode && (
-                                <div className="text-[10px] font-mono text-blue-600">
+                                <div className="text-[10px] font-mono text-blue-600 font-semibold mt-0.5">
                                   Code: {item.itemCode}
                                 </div>
                               )}
                               {item.specification && (
-                                <div className="text-[11px] text-gray-500 mt-0.5 leading-snug">
+                                <div className="text-[11px] text-[#64748B] mt-1 leading-relaxed">
                                   {item.specification}
                                 </div>
                               )}
                             </td>
-                            <td className="p-3 align-top text-center font-bold">
+                            <td className="p-3 align-top text-center font-bold text-[#172B4D]">
                               {item.quantity} {item.unitName || "Nos"}
                             </td>
-                            <td className="p-3 align-top text-right font-medium">
+                            <td className="p-3 align-top text-right font-medium text-[#172B4D] font-mono">
                               {formatINR(item.rate)}
                             </td>
-                            <td className="p-3 align-top text-center text-gray-600">
+                            <td className="p-3 align-top text-center text-[#64748B]">
                               {item.discountPercentage}%
                             </td>
-                            <td className="p-3 align-top text-center text-gray-600">
+                            <td className="p-3 align-top text-center text-[#64748B]">
                               {item.gstRate}%
                             </td>
-                            <td className="p-3 align-top text-right font-bold text-gray-900 font-mono">
+                            <td className="p-3 align-top text-right font-bold text-[#172B4D] font-mono pr-4">
                               {formatINR(calc.lineTotal)}
                             </td>
                           </tr>
@@ -696,26 +720,26 @@ export const QuotationDetails: React.FC = () => {
                               );
                               return (
                                 <tr key={`acc-${aIdx}`} className="bg-blue-50/40 text-[11px]">
-                                  <td className="p-2.5 text-right text-blue-500">↳</td>
+                                  <td className="p-2.5 text-center text-blue-500 font-bold">↳</td>
                                   <td className="p-2.5">
-                                    <span className="font-semibold text-gray-800">
+                                    <span className="font-semibold text-[#172B4D]">
                                       [Accessory] {acc.itemName}
                                     </span>
                                     {acc.specification && (
-                                      <span className="text-gray-500 ml-1">
+                                      <span className="text-[#64748B] ml-1">
                                         — {acc.specification}
                                       </span>
                                     )}
                                   </td>
-                                  <td className="p-2.5 text-center font-medium">
+                                  <td className="p-2.5 text-center font-medium text-[#172B4D]">
                                     {acc.quantity} {acc.unitName || "Nos"}
                                   </td>
-                                  <td className="p-2.5 text-right font-medium">
+                                  <td className="p-2.5 text-right font-medium text-[#172B4D] font-mono">
                                     {formatINR(acc.rate)}
                                   </td>
-                                  <td className="p-2.5 text-center">{acc.discountPercentage}%</td>
-                                  <td className="p-2.5 text-center">{acc.gstRate}%</td>
-                                  <td className="p-2.5 text-right font-bold text-gray-800 font-mono">
+                                  <td className="p-2.5 text-center text-[#64748B]">{acc.discountPercentage}%</td>
+                                  <td className="p-2.5 text-center text-[#64748B]">{acc.gstRate}%</td>
+                                  <td className="p-2.5 text-right font-bold text-[#172B4D] font-mono pr-4">
                                     {formatINR(aCalc.lineTotal)}
                                   </td>
                                 </tr>
@@ -730,69 +754,67 @@ export const QuotationDetails: React.FC = () => {
             </div>
           </div>
 
-          {/* Commercial Terms & Conditions */}
-          <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-700">
+          {/* Commercial Terms & Legal Conditions */}
+          <div className="bg-white p-5 rounded-xl border border-[#E2E8F0] shadow-xs space-y-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-[#172B4D]">
               Commercial Terms &amp; Legal Conditions
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs bg-slate-50 p-3 rounded-xl border border-slate-100">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs bg-[#F5F7F8] p-4 rounded-xl border border-[#E2E8F0]">
               <div>
-                <span className="text-gray-400 block text-[10px] uppercase font-bold">
+                <span className="text-[#64748B] block text-[10px] uppercase font-bold tracking-wider">
                   Delivery Period
                 </span>
-                <span className="font-bold text-gray-800">{quotation.deliveryPeriod || "2-3 Weeks"}</span>
+                <span className="font-bold text-[#172B4D] mt-0.5 block">{quotation.deliveryPeriod || "2-3 Weeks"}</span>
               </div>
               <div>
-                <span className="text-gray-400 block text-[10px] uppercase font-bold">
+                <span className="text-[#64748B] block text-[10px] uppercase font-bold tracking-wider">
                   Payment Terms
                 </span>
-                <span className="font-bold text-gray-800">{quotation.paymentTermsName || "Standard as agreed"}</span>
+                <span className="font-bold text-[#172B4D] mt-0.5 block">{quotation.paymentTermsName || "Standard as agreed"}</span>
               </div>
               <div>
-                <span className="text-gray-400 block text-[10px] uppercase font-bold">
+                <span className="text-[#64748B] block text-[10px] uppercase font-bold tracking-wider">
                   Valid Until
                 </span>
-                <span className="font-bold text-gray-800">
+                <span className="font-bold text-[#172B4D] mt-0.5 block">
                   {quotation.validUntil
-                    ? new Date(quotation.validUntil).toLocaleDateString("en-IN")
+                    ? new Date(quotation.validUntil).toLocaleDateString("en-GB")
                     : "30 Days"}
                 </span>
               </div>
             </div>
 
-            {quotation.termsAndConditions && (
-              <div className="pt-2 text-xs text-gray-600 whitespace-pre-line font-mono bg-white p-3 rounded-xl border border-gray-100">
-                {quotation.termsAndConditions}
-              </div>
-            )}
+            <div className="pt-1 text-xs text-[#172B4D] font-mono leading-relaxed bg-[#F5F7F8] p-4 rounded-xl border border-[#E2E8F0] whitespace-pre-line">
+              {termsDisplay}
+            </div>
           </div>
 
           {/* Revisions History Log */}
           {revisions.length > 0 && (
-            <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm space-y-3">
+            <div className="bg-white p-5 rounded-xl border border-[#E2E8F0] shadow-xs space-y-3">
               <div className="flex items-center gap-2">
-                <History size={16} className="text-indigo-600" />
-                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-700">
+                <History size={16} className="text-[#FF7900]" />
+                <h3 className="text-xs font-bold uppercase tracking-wider text-[#172B4D]">
                   Revision History ({revisions.length})
                 </h3>
               </div>
 
-              <div className="divide-y divide-gray-100 text-xs">
+              <div className="divide-y divide-[#E2E8F0] text-xs">
                 {revisions.map((rev) => (
                   <div key={rev.quotationRevisionId} className="py-2.5 flex items-center justify-between">
                     <div>
-                      <span className="font-bold font-mono text-indigo-700 mr-2">
+                      <span className="font-bold font-mono px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-xs mr-2">
                         R{rev.revisionNumber}
                       </span>
-                      <span className="text-gray-700">{rev.revisionReason || "Proposal Revised"}</span>
+                      <span className="text-[#172B4D] font-medium">{rev.revisionReason || "Proposal Revised"}</span>
                       {rev.revisionDate && (
-                        <span className="text-gray-400 text-[11px] block mt-0.5">
+                        <span className="text-[#64748B] text-[11px] block mt-0.5">
                           {new Date(rev.revisionDate).toLocaleString("en-IN")}
                         </span>
                       )}
                     </div>
                     {rev.grandTotal && (
-                      <span className="font-bold font-mono text-gray-900">
+                      <span className="font-bold font-mono text-[#052B50]">
                         {formatINR(rev.grandTotal)}
                       </span>
                     )}
@@ -805,16 +827,16 @@ export const QuotationDetails: React.FC = () => {
 
         {/* Right 1 Column: Summary, Approvals & Bank Details */}
         <div className="space-y-6">
-          {/* Financial Breakdown Card */}
-          <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+          {/* Commercial Totals Card */}
+          <div className="bg-white p-5 rounded-xl border border-[#E2E8F0] shadow-xs space-y-3">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-[#172B4D] mb-1">
               Commercial Totals
             </h3>
 
-            <div className="space-y-2 text-xs border-b border-gray-100 pb-3">
-              <div className="flex justify-between text-gray-600">
+            <div className="space-y-2 text-xs border-b border-[#E2E8F0] pb-3 text-[#64748B]">
+              <div className="flex justify-between">
                 <span>Gross Subtotal:</span>
-                <span className="font-mono">{formatINR(quotation.subtotal)}</span>
+                <span className="font-mono text-[#172B4D]">{formatINR(quotation.subtotal)}</span>
               </div>
               {quotation.discountAmount > 0 && (
                 <div className="flex justify-between text-emerald-600 font-semibold">
@@ -822,115 +844,124 @@ export const QuotationDetails: React.FC = () => {
                   <span className="font-mono">- {formatINR(quotation.discountAmount)}</span>
                 </div>
               )}
-              <div className="flex justify-between text-gray-600">
+              <div className="flex justify-between">
                 <span>Taxable Amount:</span>
-                <span className="font-mono font-medium">{formatINR(quotation.taxableAmount)}</span>
+                <span className="font-mono font-medium text-[#172B4D]">{formatINR(quotation.taxableAmount)}</span>
               </div>
-              <div className="flex justify-between text-gray-600">
+              <div className="flex justify-between">
                 <span>Total GST:</span>
-                <span className="font-mono font-medium">{formatINR(quotation.taxAmount)}</span>
+                <span className="font-mono font-medium text-[#172B4D]">{formatINR(quotation.taxAmount)}</span>
               </div>
               {quotation.freightCharges > 0 && (
-                <div className="flex justify-between text-gray-600">
+                <div className="flex justify-between">
                   <span>Freight Charges:</span>
-                  <span className="font-mono">{formatINR(quotation.freightCharges)}</span>
+                  <span className="font-mono text-[#172B4D]">{formatINR(quotation.freightCharges)}</span>
                 </div>
               )}
               {quotation.installationCharges > 0 && (
-                <div className="flex justify-between text-gray-600">
+                <div className="flex justify-between">
                   <span>Installation Charges:</span>
-                  <span className="font-mono">{formatINR(quotation.installationCharges)}</span>
+                  <span className="font-mono text-[#172B4D]">{formatINR(quotation.installationCharges)}</span>
                 </div>
               )}
               {quotation.otherCharges > 0 && (
-                <div className="flex justify-between text-gray-600">
+                <div className="flex justify-between">
                   <span>Other Charges:</span>
-                  <span className="font-mono">{formatINR(quotation.otherCharges)}</span>
+                  <span className="font-mono text-[#172B4D]">{formatINR(quotation.otherCharges)}</span>
                 </div>
               )}
+              {(charges || []).map((ch, idx) => (
+                <div key={idx} className="flex justify-between">
+                  <span>{ch.chargeName}:</span>
+                  <span className="font-mono text-[#172B4D]">{formatINR(ch.totalAmount || ch.chargeAmount)}</span>
+                </div>
+              ))}
             </div>
 
-            <div className="flex justify-between items-baseline pt-1">
-              <span className="text-xs font-bold uppercase text-gray-500">Grand Total:</span>
-              <span className="text-2xl font-extrabold text-[#00234a] font-mono">
+            <div className="flex justify-between items-baseline pt-2">
+              <span className="text-xs font-bold uppercase text-[#64748B]">Grand Total:</span>
+              <span className="text-2xl font-extrabold text-[#052B50] font-mono">
                 {formatINR(quotation.grandTotal)}
               </span>
             </div>
           </div>
 
-          {/* Customer Card */}
-          <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm space-y-2 text-xs">
-            <div className="flex items-center gap-2 text-gray-700 font-bold uppercase text-[10px] tracking-wider">
-              <Building size={14} className="text-blue-600" />
+          {/* Customer Information Card */}
+          <div className="bg-white p-5 rounded-xl border border-[#E2E8F0] shadow-xs space-y-2 text-xs">
+            <div className="flex items-center gap-2 text-[#172B4D] font-bold uppercase text-[10px] tracking-wider">
+              <Building size={14} className="text-[#FF7900]" />
               <span>Customer Information</span>
             </div>
-            <p className="font-bold text-sm text-gray-900">
-              {quotation.customerName || customer?.customerName || customer?.companyName || `Customer #${quotation.customerId}`}
+            <p className="font-bold text-sm text-[#172B4D] pt-0.5">
+              {customerDisplayName}
             </p>
             {customer?.contactPerson && (
-              <p className="text-gray-600">Contact: {customer.contactPerson}</p>
+              <p className="text-[#64748B]">Contact: {customer.contactPerson}</p>
             )}
-            {customer?.email && <p className="text-gray-500">{customer.email}</p>}
-            {customer?.phone && <p className="text-gray-500">{customer.phone}</p>}
-            {customer?.city && <p className="text-gray-500">{customer.city}, India</p>}
+            {customer?.email && <p className="text-[#64748B]">{customer.email}</p>}
+            {customer?.phone && <p className="text-[#64748B]">{customer.phone}</p>}
+            {customer?.city && <p className="text-[#64748B]">{customer.city}, India</p>}
             {customer?.gstin && (
-              <p className="font-mono text-gray-600 text-[11px]">GSTIN: {customer.gstin}</p>
+              <p className="font-mono text-[#64748B] text-[11px]">GSTIN: {customer.gstin}</p>
             )}
           </div>
 
           {/* Bank Remittance Details */}
-          <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2 text-xs text-slate-700">
-            <div className="flex items-center gap-2 text-slate-800 font-bold uppercase text-[10px] tracking-wider">
-              <CreditCard size={14} className="text-[#00234a]" />
+          <div className="bg-white p-5 rounded-xl border border-[#E2E8F0] shadow-xs space-y-2 text-xs text-[#64748B]">
+            <div className="flex items-center gap-2 text-[#172B4D] font-bold uppercase text-[10px] tracking-wider">
+              <CreditCard size={14} className="text-[#FF7900]" />
               <span>Bank Remittance Details</span>
             </div>
-            <p className="font-bold text-slate-900">{companyProfile?.bankName || "HDFC Bank Ltd"}</p>
+            <p className="font-bold text-[#172B4D] pt-0.5">{companyProfile?.bankName || "HDFC Bank Ltd"}</p>
             <p>
               Account Number:{" "}
-              <span className="font-mono font-semibold text-slate-900">
-                {companyProfile?.accountNumber || "50200012345678"}
+              <span className="font-mono font-semibold text-[#172B4D]">
+                {companyProfile?.accountNumber || "20252548605789"}
               </span>
             </p>
             <p>
               IFSC Code:{" "}
-              <span className="font-mono font-semibold text-slate-900">
+              <span className="font-mono font-semibold text-[#172B4D]">
                 {companyProfile?.ifscCode || "HDFC0000123"}
               </span>
             </p>
-            {companyProfile?.branchName && (
-              <p>Branch: {companyProfile.branchName}</p>
-            )}
+            <p>
+              Branch:{" "}
+              <span className="font-medium text-[#172B4D]">
+                {companyProfile?.branchName || "pune Branch"}
+              </span>
+            </p>
           </div>
 
-          {/* Approval Log Card */}
+          {/* Approval Logs Card */}
           {approvals.length > 0 && (
-            <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm space-y-3">
+            <div className="bg-white p-5 rounded-xl border border-[#E2E8F0] shadow-xs space-y-3">
               <div className="flex items-center gap-2">
-                <ShieldCheck size={16} className="text-amber-600" />
-                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-700">
+                <ShieldCheck size={16} className="text-[#FF7900]" />
+                <h3 className="text-xs font-bold uppercase tracking-wider text-[#172B4D]">
                   Approval Logs ({approvals.length})
                 </h3>
               </div>
 
               <div className="space-y-2.5 text-xs">
                 {approvals.map((app) => (
-                  <div key={app.quotationApprovalId} className="p-2.5 bg-gray-50 rounded-xl space-y-1">
+                  <div key={app.quotationApprovalId} className="p-3 bg-[#F5F7F8] rounded-xl border border-[#E2E8F0] space-y-1">
                     <div className="flex items-center justify-between">
-                      <span className="font-semibold text-gray-800">
+                      <span className="font-semibold text-[#172B4D]">
                         Request #{app.quotationApprovalId}
                       </span>
                       <QuotationStatusBadge status={app.approvalStatus} type="approval" />
                     </div>
                     {app.approvalReason && (
-                      <p className="text-gray-500 text-[11px]">Reason: {app.approvalReason}</p>
+                      <p className="text-[#64748B] text-[11px]">Reason: {app.approvalReason}</p>
                     )}
                     {app.approverComments && (
-                      <p className="text-gray-700 text-[11px] font-medium">
+                      <p className="text-[#172B4D] text-[11px] font-medium">
                         Comments: {app.approverComments}
                       </p>
                     )}
                     {app.requestedAt && (
-                      <p className="text-gray-400 text-[10px]">
+                      <p className="text-[#64748B] text-[10px]">
                         {new Date(app.requestedAt).toLocaleString("en-IN")}
                       </p>
                     )}
@@ -969,16 +1000,16 @@ export const QuotationDetails: React.FC = () => {
       {/* Create Revision Modal */}
       {revisionModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-md rounded-2xl shadow-xl border border-gray-200 p-6 space-y-4">
-            <h3 className="text-base font-bold text-gray-900 border-b border-gray-100 pb-2">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-xl border border-[#E2E8F0] p-6 space-y-4">
+            <h3 className="text-base font-bold text-[#172B4D] border-b border-[#E2E8F0] pb-2">
               Create New Revision Snapshot
             </h3>
-            <p className="text-xs text-gray-600">
+            <p className="text-xs text-[#64748B]">
               This will record a snapshot of current quotation terms (Revision R{quotation.revisionNumber}) before applying further modifications.
             </p>
             <form onSubmit={handleCreateRevision} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#172B4D] mb-1">
                   Revision Reason <span className="text-rose-500">*</span>
                 </label>
                 <textarea
@@ -987,7 +1018,7 @@ export const QuotationDetails: React.FC = () => {
                   placeholder="e.g. Scope adjustment or discount revision requested by client"
                   value={revisionReason}
                   onChange={(e) => setRevisionReason(e.target.value)}
-                  className="w-full text-xs p-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:bg-white focus:outline-none"
+                  className="w-full text-xs p-2.5 bg-[#F5F7F8] border border-[#E2E8F0] rounded-xl focus:bg-white focus:outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]"
                 />
               </div>
 
@@ -995,14 +1026,14 @@ export const QuotationDetails: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setRevisionModalOpen(false)}
-                  className="px-4 py-2 text-xs font-semibold text-gray-600 bg-gray-100 rounded-lg"
+                  className="px-4 py-2 text-xs font-semibold text-[#64748B] bg-slate-100 hover:bg-slate-200 rounded-xl transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmittingRevision}
-                  className="px-4 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg"
+                  className="px-4 py-2 text-xs font-bold text-white bg-[#052B50] hover:bg-[#FF7900] rounded-xl transition cursor-pointer shadow-xs disabled:opacity-50"
                 >
                   {isSubmittingRevision ? "Saving..." : "Confirm Revision"}
                 </button>
@@ -1015,19 +1046,19 @@ export const QuotationDetails: React.FC = () => {
       {/* Approval Decision Modal */}
       {approvalModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-md rounded-2xl shadow-xl border border-gray-200 p-6 space-y-4">
-            <h3 className="text-base font-bold text-gray-900 border-b border-gray-100 pb-2">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-xl border border-[#E2E8F0] p-6 space-y-4">
+            <h3 className="text-base font-bold text-[#172B4D] border-b border-[#E2E8F0] pb-2">
               Record Approval Decision
             </h3>
             <form onSubmit={handleApprovalDecision} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#172B4D] mb-1">
                   Manager Decision
                 </label>
                 <select
                   value={approvalDecision}
                   onChange={(e) => setApprovalDecision(e.target.value as "Approved" | "Rejected")}
-                  className="w-full text-xs py-2 px-3 border border-gray-300 rounded-lg font-bold"
+                  className="w-full text-xs py-2 px-3 border border-[#E2E8F0] rounded-xl font-bold bg-[#F5F7F8] focus:bg-white focus:border-[#FF7900]"
                 >
                   <option value="Approved">Approved</option>
                   <option value="Rejected">Rejected</option>
@@ -1035,7 +1066,7 @@ export const QuotationDetails: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#172B4D] mb-1">
                   Approver Comments
                 </label>
                 <textarea
@@ -1043,7 +1074,7 @@ export const QuotationDetails: React.FC = () => {
                   placeholder="e.g. Approved within commercial discretion limits."
                   value={approverComments}
                   onChange={(e) => setApproverComments(e.target.value)}
-                  className="w-full text-xs p-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:bg-white focus:outline-none"
+                  className="w-full text-xs p-2.5 bg-[#F5F7F8] border border-[#E2E8F0] rounded-xl focus:bg-white focus:outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]"
                 />
               </div>
 
@@ -1051,14 +1082,14 @@ export const QuotationDetails: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setApprovalModalOpen(false)}
-                  className="px-4 py-2 text-xs font-semibold text-gray-600 bg-gray-100 rounded-lg"
+                  className="px-4 py-2 text-xs font-semibold text-[#64748B] bg-slate-100 hover:bg-slate-200 rounded-xl transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmittingDecision}
-                  className="px-4 py-2 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-lg"
+                  className="px-4 py-2 text-xs font-bold text-white bg-[#052B50] hover:bg-[#FF7900] rounded-xl transition cursor-pointer shadow-xs disabled:opacity-50"
                 >
                   {isSubmittingDecision ? "Submitting..." : "Save Decision"}
                 </button>
@@ -1071,13 +1102,13 @@ export const QuotationDetails: React.FC = () => {
       {/* Request Approval Modal */}
       {requestApprovalModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-md rounded-2xl shadow-xl border border-gray-200 p-6 space-y-4">
-            <h3 className="text-base font-bold text-gray-900 border-b border-gray-100 pb-2">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-xl border border-[#E2E8F0] p-6 space-y-4">
+            <h3 className="text-base font-bold text-[#172B4D] border-b border-[#E2E8F0] pb-2">
               Request Quotation Approval
             </h3>
             <form onSubmit={handleRequestApproval} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#172B4D] mb-1">
                   Approval Reason / Justification
                 </label>
                 <textarea
@@ -1086,7 +1117,7 @@ export const QuotationDetails: React.FC = () => {
                   placeholder="e.g. Special customer concession, discount >15%, or payment term variance."
                   value={approvalReason}
                   onChange={(e) => setApprovalReason(e.target.value)}
-                  className="w-full text-xs p-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:bg-white focus:outline-none"
+                  className="w-full text-xs p-2.5 bg-[#F5F7F8] border border-[#E2E8F0] rounded-xl focus:bg-white focus:outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]"
                 />
               </div>
 
@@ -1094,14 +1125,14 @@ export const QuotationDetails: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setRequestApprovalModalOpen(false)}
-                  className="px-4 py-2 text-xs font-semibold text-gray-600 bg-gray-100 rounded-lg"
+                  className="px-4 py-2 text-xs font-semibold text-[#64748B] bg-slate-100 hover:bg-slate-200 rounded-xl transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmittingApprovalRequest}
-                  className="px-4 py-2 text-xs font-bold text-white bg-[#00234a] hover:bg-[#003366] rounded-lg"
+                  className="px-4 py-2 text-xs font-bold text-white bg-[#052B50] hover:bg-[#FF7900] rounded-xl transition cursor-pointer shadow-xs disabled:opacity-50"
                 >
                   {isSubmittingApprovalRequest ? "Submitting..." : "Submit Request"}
                 </button>

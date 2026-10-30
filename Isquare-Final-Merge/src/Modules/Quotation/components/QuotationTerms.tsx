@@ -149,7 +149,7 @@ export const QuotationTerms: React.FC<QuotationTermsProps> = ({
           value={termsAndConditions || ""}
           onChange={(e) => onChange({ termsAndConditions: e.target.value })}
           disabled={disabled}
-          placeholder="1. Taxes extra as applicable.&#10;2. Prices firm for validity period.&#10;3. Goods once sold will not be returned.&#10;4. Subject to Mumbai Jurisdiction."
+          placeholder="1. Taxes extra as applicable.&#10;2. Prices firm for validity period.&#10;3. Goods once sold will not be returned.&#10;4. Subject to Pune Jurisdiction."
           className="w-full rounded-xl border border-gray-300 bg-white px-3.5 py-3 text-xs font-mono text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
         />
       </div>

@@ -20,7 +20,7 @@ export const QuotationDefaults: React.FC = () => {
   const [standardWarranty, setStandardWarranty] = useState<string>("1 Year Standard");
   const [quotationValidity, setQuotationValidity] = useState<string>("30 Days");
   const [standardTermsAndConditions, setStandardTermsAndConditions] = useState<string>(
-    "1. Taxes extra as applicable.\n2. Prices firm for validity period.\n3. Goods once sold will not be taken back.\n4. Subject to Mumbai Jurisdiction."
+    "1. Taxes extra as applicable.\n2. Prices firm for validity period.\n3. Goods once sold will not be taken back.\n4. Subject to Pune Jurisdiction."
   );
   const [companyName, setCompanyName] = useState<string>("ISQUARE Technologies");
   const [gstNumber, setGstNumber] = useState<string>("27AAAAA0000A1Z5");
