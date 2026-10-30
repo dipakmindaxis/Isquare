@@ -144,6 +144,61 @@ namespace CompanyPlatform.CRM.Services.Customer
             return candidateCode;
         }
 
+        private async Task<(int countryId, int stateId, int cityId)> EnsureDefaultLocationMastersAsync(
+            List<CountryModel> validCountries,
+            List<StateModel> validStates,
+            List<CityModel> validCities)
+        {
+            if (!validCountries.Any())
+            {
+                var defaultCountry = new CountryModel
+                {
+                    CountryName = "India",
+                    CountryCode = "IN",
+                    ISOCode = "IND",
+                    IsActive = true,
+                    CreatedDate = DateTime.UtcNow
+                };
+                await _countryRepository.Create(defaultCountry);
+                validCountries.Add(defaultCountry);
+            }
+
+            int countryId = validCountries.First().CountryId;
+
+            if (!validStates.Any(s => s.CountryId == countryId))
+            {
+                var defaultState = new StateModel
+                {
+                    CountryId = countryId,
+                    StateName = "Maharashtra",
+                    StateCode = "MH",
+                    IsActive = true,
+                    CreatedDate = DateTime.UtcNow
+                };
+                await _stateRepository.Create(defaultState);
+                validStates.Add(defaultState);
+            }
+
+            int stateId = validStates.First(s => s.CountryId == countryId).StateId;
+
+            if (!validCities.Any(c => c.StateId == stateId))
+            {
+                var defaultCity = new CityModel
+                {
+                    StateId = stateId,
+                    CityName = "Mumbai",
+                    IsActive = true,
+                    CreatedDate = DateTime.UtcNow
+                };
+                await _cityRepository.Create(defaultCity);
+                validCities.Add(defaultCity);
+            }
+
+            int cityId = validCities.First(c => c.StateId == stateId).CityId;
+
+            return (countryId, stateId, cityId);
+        }
+
         public async Task<IEnumerable<CustomerDto>> GetAllCustomersAsync()
         {
             _logger.LogInformation("Fetching all active customers.");
@@ -214,6 +269,85 @@ namespace CompanyPlatform.CRM.Services.Customer
                     code = await GenerateNextCustomerCodeInternalAsync();
                 }
 
+                // Sanitize Foreign Keys against tbl_Employee and master tables to prevent FK constraint crashes
+                var employees = (await _employeeRepository.GetAll()).ToList();
+                var validEmployeeIds = new HashSet<int>(employees.Where(e => !e.IsDeleted).Select(e => e.ID));
+                var allBdes = (await _bdeUserRepository.GetAll()).ToList();
+
+                int? validDirectorId = null;
+                if (dto.DirectorId.HasValue && dto.DirectorId.Value > 0)
+                {
+                    if (validEmployeeIds.Contains(dto.DirectorId.Value))
+                    {
+                        validDirectorId = dto.DirectorId.Value;
+                    }
+                    else if (!string.IsNullOrWhiteSpace(dto.DirectorName))
+                    {
+                        var matchedDir = employees.FirstOrDefault(e => !e.IsDeleted &&
+                            (e.FirstName + " " + e.LastName).Trim().Equals(dto.DirectorName.Trim(), StringComparison.OrdinalIgnoreCase));
+                        if (matchedDir != null) validDirectorId = matchedDir.ID;
+                    }
+                }
+
+                int? validBdeUserId = null;
+                if (dto.BDEUserId.HasValue && dto.BDEUserId.Value > 0)
+                {
+                    if (validEmployeeIds.Contains(dto.BDEUserId.Value))
+                    {
+                        validBdeUserId = dto.BDEUserId.Value;
+                    }
+                    else
+                    {
+                        var bdeUserRec = allBdes.FirstOrDefault(b => b.ID == dto.BDEUserId.Value);
+                        string targetName = dto.BDEUserName ?? bdeUserRec?.Value ?? "";
+                        if (!string.IsNullOrWhiteSpace(targetName))
+                        {
+                            var matchedEmp = employees.FirstOrDefault(e => !e.IsDeleted &&
+                                ((e.FirstName + " " + e.LastName).Trim().Equals(targetName.Trim(), StringComparison.OrdinalIgnoreCase) ||
+                                 (e.FirstName ?? "").Trim().Equals(targetName.Trim(), StringComparison.OrdinalIgnoreCase)));
+                            if (matchedEmp != null) validBdeUserId = matchedEmp.ID;
+                        }
+                    }
+                }
+
+                int? validSalesCoordinatorId = null;
+                if (dto.SalesCoordinatorId.HasValue && dto.SalesCoordinatorId.Value > 0)
+                {
+                    if (validEmployeeIds.Contains(dto.SalesCoordinatorId.Value))
+                    {
+                        validSalesCoordinatorId = dto.SalesCoordinatorId.Value;
+                    }
+                    else if (!string.IsNullOrWhiteSpace(dto.SalesCoordinatorName))
+                    {
+                        var matchedSc = employees.FirstOrDefault(e => !e.IsDeleted &&
+                            ((e.FirstName + " " + e.LastName).Trim().Equals(dto.SalesCoordinatorName.Trim(), StringComparison.OrdinalIgnoreCase) ||
+                             (e.FirstName ?? "").Trim().Equals(dto.SalesCoordinatorName.Trim(), StringComparison.OrdinalIgnoreCase)));
+                        if (matchedSc != null) validSalesCoordinatorId = matchedSc.ID;
+                    }
+                }
+
+                int? validCustomerOwnerId = null;
+                if (dto.CustomerOwnerId.HasValue && dto.CustomerOwnerId.Value > 0 && validEmployeeIds.Contains(dto.CustomerOwnerId.Value))
+                {
+                    validCustomerOwnerId = dto.CustomerOwnerId.Value;
+                }
+
+                var industries = (await _industryRepository.GetAll()).ToList();
+                int? validIndustryId = (dto.IndustryId.HasValue && dto.IndustryId.Value > 0 && industries.Any(i => i.IndustryId == dto.IndustryId.Value)) ? dto.IndustryId.Value : null;
+
+                var statuses = (await _statusRepository.GetAll()).ToList();
+                int? validStatusId = (dto.CustomerStatusId.HasValue && dto.CustomerStatusId.Value > 0 && statuses.Any(s => s.CustomerStatusId == dto.CustomerStatusId.Value)) ? dto.CustomerStatusId.Value : null;
+
+                var sources = (await _sourceRepository.GetAll()).ToList();
+                int? validSourceId = (dto.CustomerSourceId.HasValue && dto.CustomerSourceId.Value > 0 && sources.Any(s => s.CustomerSourceId == dto.CustomerSourceId.Value)) ? dto.CustomerSourceId.Value : null;
+
+                var areas = (await _areaRepository.GetAll()).ToList();
+                int? validAreaId = (dto.CustomerAreaId.HasValue && dto.CustomerAreaId.Value > 0 && areas.Any(a => a.CustomerAreaId == dto.CustomerAreaId.Value)) ? dto.CustomerAreaId.Value : null;
+
+                var paymentTerms = (await _paymentTermRepository.GetAll()).ToList();
+                int? pTermId = dto.PaymentTermsId ?? dto.PaymentTermId;
+                int? validPaymentTermsId = (pTermId.HasValue && pTermId.Value > 0 && paymentTerms.Any(p => p.PaymentTermId == pTermId.Value)) ? pTermId.Value : null;
+
             var entity = new CompanyModel
             {
                 CompanyCode = code,
@@ -223,11 +357,11 @@ namespace CompanyPlatform.CRM.Services.Customer
                 CompanyGroup = dto.CompanyGroup,
                 PlantCode = dto.PlantCode,
 
-                IndustryId = dto.IndustryId > 0 ? dto.IndustryId : null,
-                CompanyStatusId = dto.CustomerStatusId > 0 ? dto.CustomerStatusId : null,
-                CustomerSourceId = dto.CustomerSourceId > 0 ? dto.CustomerSourceId : null,
-                CustomerAreaId = dto.CustomerAreaId > 0 ? dto.CustomerAreaId : null,
-                PaymentTermsId = (dto.PaymentTermsId ?? dto.PaymentTermId) > 0 ? (dto.PaymentTermsId ?? dto.PaymentTermId) : null,
+                IndustryId = validIndustryId,
+                CompanyStatusId = validStatusId,
+                CustomerSourceId = validSourceId,
+                CustomerAreaId = validAreaId,
+                PaymentTermsId = validPaymentTermsId,
 
                 PAN = dto.PAN,
                 TAN = dto.TAN,
@@ -235,11 +369,11 @@ namespace CompanyPlatform.CRM.Services.Customer
                 CIN = dto.CIN,
                 MSMENumber = dto.MSMENumber,
 
-                DirectorId = dto.DirectorId > 0 ? dto.DirectorId : null,
-                BDEUserId = dto.BDEUserId > 0 ? dto.BDEUserId : null,
-                SalesCoordinatorId = dto.SalesCoordinatorId > 0 ? dto.SalesCoordinatorId : null,
+                DirectorId = validDirectorId,
+                BDEUserId = validBdeUserId,
+                SalesCoordinatorId = validSalesCoordinatorId,
                 SalesCoordinatorName = dto.SalesCoordinatorName,
-                CustomerOwnerId = dto.CustomerOwnerId > 0 ? dto.CustomerOwnerId : null,
+                CustomerOwnerId = validCustomerOwnerId,
 
                 RegistrationDate = dto.RegistrationDate,
                 VisitedDate = dto.VisitedDate,
@@ -249,13 +383,22 @@ namespace CompanyPlatform.CRM.Services.Customer
                 CreatedDate = DateTime.UtcNow
             };
 
+            var validCountries = (await _countryRepository.GetAll()).ToList();
+            var validStates = (await _stateRepository.GetAll()).ToList();
+            var validCities = (await _cityRepository.GetAll()).ToList();
+
+            int defaultCreatedBy = validEmployeeIds.FirstOrDefault(id => id > 0);
+            if (defaultCreatedBy <= 0) defaultCreatedBy = employees.FirstOrDefault()?.ID ?? 1;
+
             if (dto.Addresses != null && dto.Addresses.Any())
             {
+                var (defaultCountryId, defaultStateId, defaultCityId) = await EnsureDefaultLocationMastersAsync(validCountries, validStates, validCities);
+
                 var pri = dto.Addresses.FirstOrDefault(a => a.IsPrimary) ?? dto.Addresses.First();
                 entity.Address = pri.Address;
-                entity.CountryId = pri.CountryId > 0 ? pri.CountryId : null;
-                entity.StateId = pri.StateId > 0 ? pri.StateId : null;
-                entity.CityId = pri.CityId > 0 ? pri.CityId : null;
+                entity.CountryId = pri.CountryId > 0 && validCountries.Any(c => c.CountryId == pri.CountryId) ? pri.CountryId : defaultCountryId;
+                entity.StateId = pri.StateId > 0 && validStates.Any(s => s.StateId == pri.StateId) ? pri.StateId : defaultStateId;
+                entity.CityId = pri.CityId > 0 && validCities.Any(c => c.CityId == pri.CityId) ? pri.CityId : defaultCityId;
                 entity.Pincode = string.IsNullOrWhiteSpace(pri.Pincode) ? "000000" : pri.Pincode.Trim();
             }
 
@@ -271,21 +414,28 @@ namespace CompanyPlatform.CRM.Services.Customer
             // Handle addresses if provided
             if (dto.Addresses != null && dto.Addresses.Any())
             {
+                var (defaultCountryId, defaultStateId, defaultCityId) = await EnsureDefaultLocationMastersAsync(validCountries, validStates, validCities);
+
                 foreach (var addr in dto.Addresses)
                 {
+                    int cId = addr.CountryId > 0 && validCountries.Any(c => c.CountryId == addr.CountryId) ? addr.CountryId : defaultCountryId;
+                    int sId = addr.StateId > 0 && validStates.Any(s => s.StateId == addr.StateId) ? addr.StateId : defaultStateId;
+                    int cityId = addr.CityId > 0 && validCities.Any(c => c.CityId == addr.CityId) ? addr.CityId : defaultCityId;
+                    int createdBy = (addr.CreatedBy > 0 && validEmployeeIds.Contains(addr.CreatedBy)) ? addr.CreatedBy : defaultCreatedBy;
+
                     var addressEntity = new CompanyAddressModel
                     {
                         CompanyId = entity.CompanyId,
                         AddressType = string.IsNullOrWhiteSpace(addr.AddressType) ? "Registered" : addr.AddressType,
                         Address = addr.Address ?? string.Empty,
-                        CountryId = addr.CountryId > 0 ? addr.CountryId : 1,
-                        StateId = addr.StateId > 0 ? addr.StateId : 1,
-                        CityId = addr.CityId > 0 ? addr.CityId : 1,
+                        CountryId = cId,
+                        StateId = sId,
+                        CityId = cityId,
                         Pincode = string.IsNullOrWhiteSpace(addr.Pincode) ? "000000" : addr.Pincode.Trim(),
                         IsPrimary = addr.IsPrimary,
                         IsActive = true,
                         IsDeleted = false,
-                        CreatedBy = addr.CreatedBy > 0 ? addr.CreatedBy : 1,
+                        CreatedBy = createdBy,
                         CreatedDate = DateTime.UtcNow
                     };
                     await _addressRepository.Create(addressEntity);
@@ -328,17 +478,96 @@ namespace CompanyPlatform.CRM.Services.Customer
             }
             // Ensure Customer Code remains unchanged when an existing customer is edited
 
+            // Sanitize Foreign Keys against tbl_Employee and master tables
+            var employees = (await _employeeRepository.GetAll()).ToList();
+            var validEmployeeIds = new HashSet<int>(employees.Where(e => !e.IsDeleted).Select(e => e.ID));
+            var allBdes = (await _bdeUserRepository.GetAll()).ToList();
+
+            int? validDirectorId = null;
+            if (dto.DirectorId.HasValue && dto.DirectorId.Value > 0)
+            {
+                if (validEmployeeIds.Contains(dto.DirectorId.Value))
+                {
+                    validDirectorId = dto.DirectorId.Value;
+                }
+                else if (!string.IsNullOrWhiteSpace(dto.DirectorName))
+                {
+                    var matchedDir = employees.FirstOrDefault(e => !e.IsDeleted &&
+                        (e.FirstName + " " + e.LastName).Trim().Equals(dto.DirectorName.Trim(), StringComparison.OrdinalIgnoreCase));
+                    if (matchedDir != null) validDirectorId = matchedDir.ID;
+                }
+            }
+
+            int? validBdeUserId = null;
+            if (dto.BDEUserId.HasValue && dto.BDEUserId.Value > 0)
+            {
+                if (validEmployeeIds.Contains(dto.BDEUserId.Value))
+                {
+                    validBdeUserId = dto.BDEUserId.Value;
+                }
+                else
+                {
+                    var bdeUserRec = allBdes.FirstOrDefault(b => b.ID == dto.BDEUserId.Value);
+                    string targetName = dto.BDEUserName ?? bdeUserRec?.Value ?? "";
+                    if (!string.IsNullOrWhiteSpace(targetName))
+                    {
+                        var matchedEmp = employees.FirstOrDefault(e => !e.IsDeleted &&
+                            ((e.FirstName + " " + e.LastName).Trim().Equals(targetName.Trim(), StringComparison.OrdinalIgnoreCase) ||
+                             (e.FirstName ?? "").Trim().Equals(targetName.Trim(), StringComparison.OrdinalIgnoreCase)));
+                        if (matchedEmp != null) validBdeUserId = matchedEmp.ID;
+                    }
+                }
+            }
+
+            int? validSalesCoordinatorId = null;
+            if (dto.SalesCoordinatorId.HasValue && dto.SalesCoordinatorId.Value > 0)
+            {
+                if (validEmployeeIds.Contains(dto.SalesCoordinatorId.Value))
+                {
+                    validSalesCoordinatorId = dto.SalesCoordinatorId.Value;
+                }
+                else if (!string.IsNullOrWhiteSpace(dto.SalesCoordinatorName))
+                {
+                    var matchedSc = employees.FirstOrDefault(e => !e.IsDeleted &&
+                        ((e.FirstName + " " + e.LastName).Trim().Equals(dto.SalesCoordinatorName.Trim(), StringComparison.OrdinalIgnoreCase) ||
+                         (e.FirstName ?? "").Trim().Equals(dto.SalesCoordinatorName.Trim(), StringComparison.OrdinalIgnoreCase)));
+                    if (matchedSc != null) validSalesCoordinatorId = matchedSc.ID;
+                }
+            }
+
+            int? validCustomerOwnerId = null;
+            if (dto.CustomerOwnerId.HasValue && dto.CustomerOwnerId.Value > 0 && validEmployeeIds.Contains(dto.CustomerOwnerId.Value))
+            {
+                validCustomerOwnerId = dto.CustomerOwnerId.Value;
+            }
+
+            var industries = (await _industryRepository.GetAll()).ToList();
+            int? validIndustryId = (dto.IndustryId.HasValue && dto.IndustryId.Value > 0 && industries.Any(i => i.IndustryId == dto.IndustryId.Value)) ? dto.IndustryId.Value : null;
+
+            var statuses = (await _statusRepository.GetAll()).ToList();
+            int? validStatusId = (dto.CustomerStatusId.HasValue && dto.CustomerStatusId.Value > 0 && statuses.Any(s => s.CustomerStatusId == dto.CustomerStatusId.Value)) ? dto.CustomerStatusId.Value : null;
+
+            var sources = (await _sourceRepository.GetAll()).ToList();
+            int? validSourceId = (dto.CustomerSourceId.HasValue && dto.CustomerSourceId.Value > 0 && sources.Any(s => s.CustomerSourceId == dto.CustomerSourceId.Value)) ? dto.CustomerSourceId.Value : null;
+
+            var areas = (await _areaRepository.GetAll()).ToList();
+            int? validAreaId = (dto.CustomerAreaId.HasValue && dto.CustomerAreaId.Value > 0 && areas.Any(a => a.CustomerAreaId == dto.CustomerAreaId.Value)) ? dto.CustomerAreaId.Value : null;
+
+            var paymentTerms = (await _paymentTermRepository.GetAll()).ToList();
+            int? pTermId = dto.PaymentTermsId ?? dto.PaymentTermId;
+            int? validPaymentTermsId = (pTermId.HasValue && pTermId.Value > 0 && paymentTerms.Any(p => p.PaymentTermId == pTermId.Value)) ? pTermId.Value : null;
+
             entity.CustomerName = dto.CustomerName;
             entity.CompanyName = !string.IsNullOrWhiteSpace(dto.CompanyName) ? dto.CompanyName : dto.CustomerName;
             entity.CustomerShortName = dto.CustomerShortName;
             entity.CompanyGroup = dto.CompanyGroup;
             entity.PlantCode = dto.PlantCode;
 
-            entity.IndustryId = dto.IndustryId > 0 ? dto.IndustryId : null;
-            entity.CompanyStatusId = dto.CustomerStatusId > 0 ? dto.CustomerStatusId : null;
-            entity.CustomerSourceId = dto.CustomerSourceId > 0 ? dto.CustomerSourceId : null;
-            entity.CustomerAreaId = dto.CustomerAreaId > 0 ? dto.CustomerAreaId : null;
-            entity.PaymentTermsId = (dto.PaymentTermsId ?? dto.PaymentTermId) > 0 ? (dto.PaymentTermsId ?? dto.PaymentTermId) : null;
+            entity.IndustryId = validIndustryId;
+            entity.CompanyStatusId = validStatusId;
+            entity.CustomerSourceId = validSourceId;
+            entity.CustomerAreaId = validAreaId;
+            entity.PaymentTermsId = validPaymentTermsId;
 
             entity.PAN = dto.PAN;
             entity.TAN = dto.TAN;
@@ -346,19 +575,28 @@ namespace CompanyPlatform.CRM.Services.Customer
             entity.CIN = dto.CIN;
             entity.MSMENumber = dto.MSMENumber;
 
-            entity.DirectorId = dto.DirectorId > 0 ? dto.DirectorId : null;
-            entity.BDEUserId = dto.BDEUserId > 0 ? dto.BDEUserId : null;
-            entity.SalesCoordinatorId = dto.SalesCoordinatorId > 0 ? dto.SalesCoordinatorId : null;
+            entity.DirectorId = validDirectorId;
+            entity.BDEUserId = validBdeUserId;
+            entity.SalesCoordinatorId = validSalesCoordinatorId;
             entity.SalesCoordinatorName = dto.SalesCoordinatorName;
-            entity.CustomerOwnerId = dto.CustomerOwnerId > 0 ? dto.CustomerOwnerId : null;
+            entity.CustomerOwnerId = validCustomerOwnerId;
+
+            var validCountries = (await _countryRepository.GetAll()).ToList();
+            var validStates = (await _stateRepository.GetAll()).ToList();
+            var validCities = (await _cityRepository.GetAll()).ToList();
+
+            int defaultCreatedBy = validEmployeeIds.FirstOrDefault(id => id > 0);
+            if (defaultCreatedBy <= 0) defaultCreatedBy = employees.FirstOrDefault()?.ID ?? 1;
 
             if (dto.Addresses != null && dto.Addresses.Any())
             {
+                var (defaultCountryId, defaultStateId, defaultCityId) = await EnsureDefaultLocationMastersAsync(validCountries, validStates, validCities);
+
                 var pri = dto.Addresses.FirstOrDefault(a => a.IsPrimary) ?? dto.Addresses.First();
                 entity.Address = pri.Address;
-                entity.CountryId = pri.CountryId > 0 ? pri.CountryId : null;
-                entity.StateId = pri.StateId > 0 ? pri.StateId : null;
-                entity.CityId = pri.CityId > 0 ? pri.CityId : null;
+                entity.CountryId = pri.CountryId > 0 && validCountries.Any(c => c.CountryId == pri.CountryId) ? pri.CountryId : defaultCountryId;
+                entity.StateId = pri.StateId > 0 && validStates.Any(s => s.StateId == pri.StateId) ? pri.StateId : defaultStateId;
+                entity.CityId = pri.CityId > 0 && validCities.Any(c => c.CityId == pri.CityId) ? pri.CityId : defaultCityId;
                 entity.Pincode = pri.Pincode;
             }
 
@@ -373,19 +611,26 @@ namespace CompanyPlatform.CRM.Services.Customer
             // Handle updated addresses if supplied
             if (dto.Addresses != null && dto.Addresses.Any())
             {
+                var (defaultCountryId, defaultStateId, defaultCityId) = await EnsureDefaultLocationMastersAsync(validCountries, validStates, validCities);
+
                 foreach (var addr in dto.Addresses)
                 {
+                    int cId = addr.CountryId > 0 && validCountries.Any(c => c.CountryId == addr.CountryId) ? addr.CountryId : defaultCountryId;
+                    int sId = addr.StateId > 0 && validStates.Any(s => s.StateId == addr.StateId) ? addr.StateId : defaultStateId;
+                    int cityId = addr.CityId > 0 && validCities.Any(c => c.CityId == addr.CityId) ? addr.CityId : defaultCityId;
+                    int createdBy = (addr.CreatedBy > 0 && validEmployeeIds.Contains(addr.CreatedBy)) ? addr.CreatedBy : defaultCreatedBy;
+
                     if (addr.AddressId > 0)
                     {
                         var existingAddr = await _addressRepository.GetByIdAsync(addr.AddressId);
                         if (existingAddr != null && existingAddr.CompanyId == id)
                         {
-                            existingAddr.AddressType = addr.AddressType;
-                            existingAddr.Address = addr.Address;
-                            existingAddr.CountryId = addr.CountryId;
-                            existingAddr.StateId = addr.StateId;
-                            existingAddr.CityId = addr.CityId;
-                            existingAddr.Pincode = addr.Pincode;
+                            existingAddr.AddressType = string.IsNullOrWhiteSpace(addr.AddressType) ? "Registered" : addr.AddressType;
+                            existingAddr.Address = addr.Address ?? string.Empty;
+                            existingAddr.CountryId = cId;
+                            existingAddr.StateId = sId;
+                            existingAddr.CityId = cityId;
+                            existingAddr.Pincode = addr.Pincode ?? string.Empty;
                             existingAddr.IsPrimary = addr.IsPrimary;
                             existingAddr.IsActive = addr.IsActive;
                             await _addressRepository.Update(existingAddr);
@@ -398,14 +643,14 @@ namespace CompanyPlatform.CRM.Services.Customer
                             CompanyId = id,
                             AddressType = string.IsNullOrWhiteSpace(addr.AddressType) ? "Registered" : addr.AddressType,
                             Address = addr.Address ?? string.Empty,
-                            CountryId = addr.CountryId > 0 ? addr.CountryId : 1,
-                            StateId = addr.StateId > 0 ? addr.StateId : 1,
-                            CityId = addr.CityId > 0 ? addr.CityId : 1,
+                            CountryId = cId,
+                            StateId = sId,
+                            CityId = cityId,
                             Pincode = addr.Pincode ?? string.Empty,
                             IsPrimary = addr.IsPrimary,
                             IsActive = true,
                             IsDeleted = false,
-                            CreatedBy = addr.CreatedBy > 0 ? addr.CreatedBy : 1,
+                            CreatedBy = createdBy,
                             CreatedDate = DateTime.UtcNow
                         };
                         await _addressRepository.Create(newAddr);
