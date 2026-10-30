@@ -1,14 +1,12 @@
-import React, { useEffect, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ShieldCheck, UserCheck, UserCog, Users } from "lucide-react";
 import BdeUsers from "../BdeUsers/Pages/BdeUsers";
 import SalesUserManager from "../SalesUserManager/Pages/SalesUserManager";
-
-import Director from "../Director/Director";
 import SalesCoordinator from "../SalesCoordinator/SalesCoordinator";
 import RoleMaster from "../Role/RoleMaster";
 
-export type SalesTeamTab = "bde" | "managers" | "directors" | "coordinators" | "roles";
+export type SalesTeamTab = "bde" | "managers" | "coordinators" | "roles";
 
 interface SalesTeamMasterProps {
   initialTab?: SalesTeamTab;
@@ -35,12 +33,6 @@ const TABS: TabConfig[] = [
     icon: <UserCog className="w-4 h-4" />,
   },
   {
-    id: "directors",
-    label: "Directors",
-    shortDesc: "Executive directors & leadership assignments",
-    icon: <UserCheck className="w-4 h-4" />,
-  },
-  {
     id: "coordinators",
     label: "Sales Coordinators",
     shortDesc: "Sales operations & client coordinators",
@@ -54,28 +46,43 @@ const TABS: TabConfig[] = [
   },
 ];
 
+const TAB_ROUTES: Record<SalesTeamTab, string> = {
+  bde: "/rsm/bde-users",
+  managers: "/rsm/sales-user-manager",
+  coordinators: "/rsm/sales-coordinator",
+  roles: "/rsm/role",
+};
+
 export const SalesTeamMaster: React.FC<SalesTeamMasterProps> = ({
   initialTab,
 }) => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const rawTab = (searchParams.get("tab") || initialTab || "bde").toLowerCase() as SalesTeamTab;
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const queryTab = searchParams.get("tab")?.toLowerCase() as SalesTeamTab | undefined;
 
-  const activeTab: SalesTeamTab = useMemo(() => {
-    if (rawTab === "managers") return "managers";
-    if (rawTab === "directors") return "directors";
-    if (rawTab === "coordinators") return "coordinators";
-    if (rawTab === "roles") return "roles";
+  const validTabs: SalesTeamTab[] = ["bde", "managers", "coordinators", "roles"];
+
+  const [activeTab, setActiveTab] = useState<SalesTeamTab>(() => {
+    if (queryTab && validTabs.includes(queryTab)) return queryTab;
+    if (initialTab && validTabs.includes(initialTab)) return initialTab;
     return "bde";
-  }, [rawTab]);
+  });
 
   useEffect(() => {
-    if (initialTab && searchParams.get("tab") !== initialTab) {
-      setSearchParams({ tab: initialTab }, { replace: true });
+    if (initialTab && validTabs.includes(initialTab)) {
+      setActiveTab(initialTab);
     }
-  }, [initialTab, searchParams, setSearchParams]);
+  }, [initialTab]);
+
+  useEffect(() => {
+    if (queryTab && validTabs.includes(queryTab) && queryTab !== activeTab) {
+      setActiveTab(queryTab);
+    }
+  }, [queryTab]);
 
   const handleSelectTab = (tabId: SalesTeamTab) => {
-    setSearchParams({ tab: tabId });
+    setActiveTab(tabId);
+    navigate(TAB_ROUTES[tabId]);
   };
 
   return (
@@ -97,7 +104,7 @@ export const SalesTeamMaster: React.FC<SalesTeamMasterProps> = ({
                 </span>
               </div>
               <p className="text-gray-500 mt-1 text-xs md:text-sm">
-                Unified administration for Business Development Executives (BDEs), Sales Managers, Directors, Coordinators, and Roles.
+                Unified administration for Business Development Executives (BDEs), Sales Managers, Coordinators, and Roles.
               </p>
             </div>
           </div>
@@ -132,7 +139,6 @@ export const SalesTeamMaster: React.FC<SalesTeamMasterProps> = ({
       <div className="w-full">
         {activeTab === "bde" && <BdeUsers isTab={true} />}
         {activeTab === "managers" && <SalesUserManager isTab={true} />}
-        {activeTab === "directors" && <Director isTab={true} />}
         {activeTab === "coordinators" && <SalesCoordinator isTab={true} />}
         {activeTab === "roles" && <RoleMaster isTab={true} />}
       </div>
