@@ -351,27 +351,36 @@ namespace CompanyPlatform.CRM.Services.Tasks
             _logger.LogInformation("Fetching all active tasks.");
 
             var items = await _repository.GetAll();
+            var employees = await _employeeRepository.GetAll();
 
             return items
                 .Where(x => !x.IsDeleted)
-                .Select(x => new TaskDto
+                .Select(x =>
                 {
-                    TaskId = x.TaskId,
-                    CompanyId = x.CompanyId,
-                    TaskTitle = x.TaskTitle,
-                    Description = x.Description,
-                    AssignedTo = x.AssignedTo,
-                    AssignedBy = x.AssignedBy,
-                    PriorityId = x.PriorityId,
-                    TaskStatusId = x.TaskStatusId,
-                    StartDate = x.StartDate,
-                    DueDate = x.DueDate,
-                    CompletionDate = x.CompletionDate,
-                    ReminderId = x.ReminderId,
-                    Remarks = x.Remarks,
-                    CreatedBy = x.CreatedBy,
-                    UpdatedBy = x.UpdatedBy,
-                    IsDeleted = x.IsDeleted
+                    var assignedByEmp = employees.FirstOrDefault(e => e.ID == x.AssignedBy && !e.IsDeleted);
+                    var assignedToEmp = employees.FirstOrDefault(e => e.ID == x.AssignedTo && !e.IsDeleted);
+
+                    return new TaskDto
+                    {
+                        TaskId = x.TaskId,
+                        CompanyId = x.CompanyId,
+                        TaskTitle = x.TaskTitle,
+                        Description = x.Description,
+                        AssignedTo = x.AssignedTo,
+                        AssignedToName = assignedToEmp != null ? $"{assignedToEmp.FirstName} {assignedToEmp.LastName}".Trim() : null,
+                        AssignedBy = x.AssignedBy,
+                        AssignedByName = assignedByEmp != null ? $"{assignedByEmp.FirstName} {assignedByEmp.LastName}".Trim() : null,
+                        PriorityId = x.PriorityId,
+                        TaskStatusId = x.TaskStatusId,
+                        StartDate = x.StartDate,
+                        DueDate = x.DueDate,
+                        CompletionDate = x.CompletionDate,
+                        ReminderId = x.ReminderId,
+                        Remarks = x.Remarks,
+                        CreatedBy = x.CreatedBy,
+                        UpdatedBy = x.UpdatedBy,
+                        IsDeleted = x.IsDeleted
+                    };
                 });
         }
 
@@ -389,6 +398,9 @@ namespace CompanyPlatform.CRM.Services.Tasks
             if (item == null || item.IsDeleted)
                 return null;
 
+            var assignedByEmp = item.AssignedBy > 0 ? await _employeeRepository.GetByIdAsync(item.AssignedBy) : null;
+            var assignedToEmp = item.AssignedTo > 0 ? await _employeeRepository.GetByIdAsync(item.AssignedTo) : null;
+
             return new TaskDto
             {
                 TaskId = item.TaskId,
@@ -396,7 +408,9 @@ namespace CompanyPlatform.CRM.Services.Tasks
                 TaskTitle = item.TaskTitle,
                 Description = item.Description,
                 AssignedTo = item.AssignedTo,
+                AssignedToName = assignedToEmp != null ? $"{assignedToEmp.FirstName} {assignedToEmp.LastName}".Trim() : null,
                 AssignedBy = item.AssignedBy,
+                AssignedByName = assignedByEmp != null ? $"{assignedByEmp.FirstName} {assignedByEmp.LastName}".Trim() : null,
                 PriorityId = item.PriorityId,
                 TaskStatusId = item.TaskStatusId,
                 StartDate = item.StartDate,
@@ -657,23 +671,32 @@ namespace CompanyPlatform.CRM.Services.Tasks
             _logger.LogInformation("Fetching Task List");
 
             var tasks = await _repository.GetAll();
+            var employees = await _employeeRepository.GetAll();
 
             return tasks
                 .Where(x => !x.IsDeleted)
-                .Select(x => new TaskListDto
+                .Select(x =>
                 {
-                    TaskId = x.TaskId,
-                    CompanyId = x.CompanyId,
-                    TaskTitle = x.TaskTitle,
-                    Description = x.Description,
-                    AssignedTo = x.AssignedTo,
-                    AssignedBy = x.AssignedBy,
-                    PriorityId = x.PriorityId,
-                    TaskStatusId = x.TaskStatusId,
-                    StartDate = x.StartDate,
-                    DueDate = x.DueDate,
-                    CompletionDate = x.CompletionDate,
-                    IsCompleted = x.CompletionDate != null
+                    var assignedByEmp = employees.FirstOrDefault(e => e.ID == x.AssignedBy && !e.IsDeleted);
+                    var assignedToEmp = employees.FirstOrDefault(e => e.ID == x.AssignedTo && !e.IsDeleted);
+
+                    return new TaskListDto
+                    {
+                        TaskId = x.TaskId,
+                        CompanyId = x.CompanyId,
+                        TaskTitle = x.TaskTitle,
+                        Description = x.Description,
+                        AssignedTo = x.AssignedTo,
+                        AssignedToName = assignedToEmp != null ? $"{assignedToEmp.FirstName} {assignedToEmp.LastName}".Trim() : null,
+                        AssignedBy = x.AssignedBy,
+                        AssignedByName = assignedByEmp != null ? $"{assignedByEmp.FirstName} {assignedByEmp.LastName}".Trim() : null,
+                        PriorityId = x.PriorityId,
+                        TaskStatusId = x.TaskStatusId,
+                        StartDate = x.StartDate,
+                        DueDate = x.DueDate,
+                        CompletionDate = x.CompletionDate,
+                        IsCompleted = x.CompletionDate != null
+                    };
                 });
         }
 
@@ -694,6 +717,8 @@ namespace CompanyPlatform.CRM.Services.Tasks
 
             var comments = await _taskCommentRepository.GetAll();
             var checklists = await _taskChecklistRepository.GetAll();
+            var assignedByEmp = task.AssignedBy > 0 ? await _employeeRepository.GetByIdAsync(task.AssignedBy) : null;
+            var assignedToEmp = task.AssignedTo > 0 ? await _employeeRepository.GetByIdAsync(task.AssignedTo) : null;
 
             return new TaskDetailsDto
             {
@@ -702,7 +727,9 @@ namespace CompanyPlatform.CRM.Services.Tasks
                 TaskTitle = task.TaskTitle,
                 Description = task.Description,
                 AssignedTo = task.AssignedTo,
+                AssignedToName = assignedToEmp != null ? $"{assignedToEmp.FirstName} {assignedToEmp.LastName}".Trim() : null,
                 AssignedBy = task.AssignedBy,
+                AssignedByName = assignedByEmp != null ? $"{assignedByEmp.FirstName} {assignedByEmp.LastName}".Trim() : null,
                 PriorityId = task.PriorityId,
                 TaskStatusId = task.TaskStatusId,
                 StartDate = task.StartDate,

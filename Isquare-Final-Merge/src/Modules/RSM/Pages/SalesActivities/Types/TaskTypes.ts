@@ -31,6 +31,7 @@ export interface TaskItem {
 export interface TaskCreatePayload {
   taskId?: number;
   companyId: number;
+  companyName?: string;
   taskTitle: string;
   taskType?: string;
   description?: string;
