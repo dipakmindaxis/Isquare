@@ -11,7 +11,7 @@ import type {
 } from "../Types/TaskTypes";
 import { getAllPriorities } from "../../Master/Priority/Services/PriorityService";
 import { createReminder } from "../../Master/Reminder/Services/ReminderService";
-import { getAllDirectors } from "../../Master/Director/Services/DirectorService";
+const getAllDirectors = getDirectorEmployees;
 import { getDirectorEmployees } from "../../Master/BdeUsers/Services/BdeUserService";
 import { getAllCustomers } from "../../Customer/Services/CustomerService";
 
@@ -141,9 +141,10 @@ export const getAllTasks = async (filters?: TaskFilterParams): Promise<TaskItem[
 
     items = items.map((task) => {
       const matchedDirectorEmp = directorsEmp.find((d) => d.id === task.assignedTo);
-      const matchedDirector = directList.find((d) => d.directorId === task.assignedTo);
+      const matchedDirector = (directList as any[]).find((d: any) => (d.id || d.directorId) === task.assignedTo);
       const assignedToName =
         matchedDirectorEmp?.name ||
+        (matchedDirector as any)?.name ||
         matchedDirector?.directorName ||
         (task.assignedTo > 0 ? `Director #${task.assignedTo}` : "Unassigned");
 

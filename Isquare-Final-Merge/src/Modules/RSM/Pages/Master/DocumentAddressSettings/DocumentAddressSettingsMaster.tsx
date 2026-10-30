@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Paperclip, FileText, Home } from "lucide-react";
 import { DocumentTypeMaster } from "../DocumentType/DocumentTypeMaster";
 import AddressType from "../AddressType/AddressType";
@@ -32,24 +32,41 @@ const TABS: TabConfig[] = [
   },
 ];
 
+const TAB_ROUTES: Record<DocumentAddressTab, string> = {
+  "document-type": "/rsm/master/document-type",
+  "address-type": "/rsm/address-type",
+};
+
 export const DocumentAddressSettingsMaster: React.FC<DocumentAddressSettingsMasterProps> = ({
   initialTab,
 }) => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const rawTab = (searchParams.get("tab") || initialTab || "document-type").toLowerCase() as DocumentAddressTab;
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const queryTab = searchParams.get("tab")?.toLowerCase() as DocumentAddressTab | undefined;
 
-  const activeTab: DocumentAddressTab = useMemo(() => {
-    return rawTab === "address-type" ? "address-type" : "document-type";
-  }, [rawTab]);
+  const validTabs: DocumentAddressTab[] = ["document-type", "address-type"];
+
+  const [activeTab, setActiveTab] = useState<DocumentAddressTab>(() => {
+    if (queryTab && validTabs.includes(queryTab)) return queryTab;
+    if (initialTab && validTabs.includes(initialTab)) return initialTab;
+    return "document-type";
+  });
 
   useEffect(() => {
-    if (initialTab && searchParams.get("tab") !== initialTab) {
-      setSearchParams({ tab: initialTab }, { replace: true });
+    if (initialTab && validTabs.includes(initialTab)) {
+      setActiveTab(initialTab);
     }
-  }, [initialTab, searchParams, setSearchParams]);
+  }, [initialTab]);
+
+  useEffect(() => {
+    if (queryTab && validTabs.includes(queryTab) && queryTab !== activeTab) {
+      setActiveTab(queryTab);
+    }
+  }, [queryTab]);
 
   const handleSelectTab = (tabId: DocumentAddressTab) => {
-    setSearchParams({ tab: tabId });
+    setActiveTab(tabId);
+    navigate(TAB_ROUTES[tabId]);
   };
 
   return (

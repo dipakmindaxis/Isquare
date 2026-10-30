@@ -188,11 +188,6 @@ const rsmMenuConfig: MenuItem[] = [
       },
       {
         icon: <UserCheck />,
-        label: "DIRECTOR",
-        to: "/rsm/director",
-      },
-      {
-        icon: <UserCheck />,
         label: "SALES COORDINATOR",
         to: "/rsm/sales-coordinator",
       },

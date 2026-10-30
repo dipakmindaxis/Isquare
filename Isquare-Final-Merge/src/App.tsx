@@ -1,18 +1,17 @@
-  // Inside App.tsx
-  import { createBrowserRouter, RouterProvider } from "react-router-dom";
-  import Login from "./Modules/HRMS/Pages/Auth/Login";
-  import ProtectedRoute from "./Modules/HRMS/Pages/Auth/ProtectedRoute";
-  import HomeHub from "./Pages/HomeHub";
-  import EmployeeMaster from "./Modules/HRMS/Pages/Employee/EmployeeMaster";
-  import Role from "./Modules/HRMS/Pages/Masters/Role/Role";
-  import AccessControlManagement from "./Modules/HRMS/Pages/Masters/AccessControl/AccessControlManagement";
-  import Designation from "./Modules/HRMS/Pages/Masters/Designation/Designation";
-  import Departments from "./Modules/HRMS/Pages/Masters/Department/Departments";
-  import MultiLocation from "./Modules/HRMS/Pages/Location/MultiLocation";
+// Inside App.tsx
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import Login from "./Modules/HRMS/Pages/Auth/Login";
+import ProtectedRoute from "./Modules/HRMS/Pages/Auth/ProtectedRoute";
+import HomeHub from "./Pages/HomeHub";
+import EmployeeMaster from "./Modules/HRMS/Pages/Employee/EmployeeMaster";
+import Role from "./Modules/HRMS/Pages/Masters/Role/Role";
+import AccessControlManagement from "./Modules/HRMS/Pages/Masters/AccessControl/AccessControlManagement";
+import Designation from "./Modules/HRMS/Pages/Masters/Designation/Designation";
+import Departments from "./Modules/HRMS/Pages/Masters/Department/Departments";
+import MultiLocation from "./Modules/HRMS/Pages/Location/MultiLocation";
 
 import BasicMasters from "./Modules/HRMS/Pages/Masters/BasicMasters/BasicMastersPage";
 import PaymentTerm from "./Modules/RSM/Pages/Master/PaymentTerm/PaymentTerm";
-import Director from "./Modules/RSM/Pages/Master/Director/Director";
 import SalesCoordinator from "./Modules/RSM/Pages/Master/SalesCoordinator/SalesCoordinator";
 import RoleMaster from "./Modules/RSM/Pages/Master/Role/RoleMaster";
 import CustomerClassificationMaster from "./Modules/RSM/Pages/Master/CustomerClassification/CustomerClassificationMaster";
@@ -49,238 +48,238 @@ import quotationRoutes from "./Modules/Quotation/routes/quotationRoutes";
 import EnquiryMaster from "./Modules/RSM/Pages/Master/EnquiryMaster/EnquiryMaster";
 import EnquiriesList from "./Modules/RSM/Pages/Enquiry/EnquiryMaster";
 
-  const router = createBrowserRouter([
-    {
-      path: "/login",
-      element: <Login />,
-    },
-    {
-      path: "/forgot-password",
-      element: <ForgotPassword />,
-      errorElement: <ErrorPage />,
-    },
-    {
-      path: "/reset-password",
-      element: <ResetPassword />,
-      errorElement: <ErrorPage />,
-    },
-    {
-      path: "/",
-      element: (
-        <ProtectedRoute>
-          <HomeHub />
-        </ProtectedRoute>
-      ),
-    },
-    {
-      path: "/hrms",
-      element: (
-        <ProtectedRoute>
-          <Dashboard />
-        </ProtectedRoute>
-      ),
-      children: [
-        {
-          path: "",
-          element: <Home />,
-        },
-        {
-          path: "employees",
-          element: <EmployeeMaster />,
-        },
-        {
-          path: "employee",
-          element: <EmployeeMaster />,
-        },
-        {
-          path: "master/employee",
-          element: <EmployeeMaster />,
-        },
-        {
-          path: "master/employees",
-          element: <EmployeeMaster />,
-        },
-        {
-          path: "locations",
-          element: <MultiLocation />,
-        },
-        {
-          path: "masters",
-          element: <BasicMasters />,
-        },
-        {
-          path: "basimasters",
-          element: <BasicMasters />,
-        },
-        {
-          path: "basicmasters",
-          element: <BasicMasters />,
-        },
-        {
-          path: "masters/departments",
-          element: <Departments />,
-        },
-        {
-          path: "masters/designations",
-          element: <Designation />,
-        },
-        {
-          path: "masters/roles",
-          element: <Role />,
-        },
-        {
-          path: "masters/access-control",
-          element: <AccessControlManagement />,
-        },
-        {
-          path: "access-control",
-          element: <AccessControlManagement />,
-        },
-      ],
-    },
-    {
-      path: "/rsm",
-      element: (
-        <ProtectedRoute>
-          <Dashboard />
-        </ProtectedRoute>
-      ),
-      children: [
-        {
-          path: "",
-          element: <RSMDashboard />,
-        },
-        ...quotationRoutes,
-        {
-          path: "customers",
-          element: <CustomerMaster />,
-        },
-        {
-          path: "customer",
-          element: <CustomerMaster />,
-        },
-           {
-          path: "enquiries",
-        element: <EnquiriesList />, 
-        },
-        {
-          path: "sales/customers",
-          element: <CustomerMaster />,
-        },
-        {
-          path: "sales/customer",
-          element: <CustomerMaster />,
-        },
-        {
-          path: "sales-activities",
-          element: <SalesActivities />,
-        },
-        {
-          path: "task-assignment",
-          element: <SalesActivities defaultTab="tasks" />,
-        },
-        {
-          path: "sales/activities",
-          element: <SalesActivities />,
-        },
-        {
-          path: "sales/calls",
-          element: <CallsMaster />,
-        },
-        {
-          path: "sales/meetings",
-          element: <MeetingsMaster />,
-        },
-        {
-          path: "sales/follow-ups",
-          element: <SalesActivities defaultTab="followups" />,
-        },
-        {
-          path: "sales/tasks",
-          element: <SalesActivities defaultTab="tasks" />,
-        },
-        {
-          path: "sales/attachments",
-          element: <SalesAttachmentsMaster />,
-        },
-        {
-          path: "sales/follow-up-intervals",
-          element: <FollowUpIntervals />,
-        },
-        {
-          path: "sales/document-types",
-          element: <DocumentTypes />,
-        },
-        {
-          path: "sales/call-types",
-          element: <CallTypes />,
-        },
-        {
-          path: "sales/meeting-types",
-          element: <MeetingTypes />,
-        },
-        {
-          path: "sales/activity-outcomes",
-          element: <ActivityOutcomes />,
-        },
-        {
-          path: "sales/outcomes",
-          element: <ActivityOutcomes />,
-        },
-        {
-          path: "master/enquiry-master",
-          element: <EnquiryMaster />,
-        },
-        // Consolidated Master Routes
-        {
-          path: "master/customer-classification",
-          element: <CustomerClassificationMaster />,
-        },
-        {
-          path: "customer-classification",
-          element: <CustomerClassificationMaster />,
-        },
-        {
-          path: "master/sales-team",
-          element: <SalesTeamMaster />,
-        },
-        {
-          path: "sales-team",
-          element: <SalesTeamMaster />,
-        },
-        {
-          path: "master/sales-assignment",
-          element: <CustomerMaster initialTab="assignment" />,
-        },
-        {
-          path: "sales-assignment",
-          element: <CustomerMaster initialTab="assignment" />,
-        },
-        {
-          path: "hierarchy-management",
-          element: <CustomerMaster initialTab="assignment" />,
-        },
-        {
-          path: "master/follow-up-contact-updates",
-          element: <FollowUpContactUpdatesMaster />,
-        },
-        {
-          path: "follow-up-contact-updates",
-          element: <FollowUpContactUpdatesMaster />,
-        },
-        {
-          path: "master/document-address-settings",
-          element: <DocumentAddressSettingsMaster />,
-        },
-        {
-          path: "document-address-settings",
-          element: <DocumentAddressSettingsMaster />,
-        },
+const router = createBrowserRouter([
+  {
+    path: "/login",
+    element: <Login />,
+  },
+  {
+    path: "/forgot-password",
+    element: <ForgotPassword />,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/reset-password",
+    element: <ResetPassword />,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/",
+    element: (
+      <ProtectedRoute>
+        <HomeHub />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/hrms",
+    element: (
+      <ProtectedRoute>
+        <Dashboard />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        path: "",
+        element: <Home />,
+      },
+      {
+        path: "employees",
+        element: <EmployeeMaster />,
+      },
+      {
+        path: "employee",
+        element: <EmployeeMaster />,
+      },
+      {
+        path: "master/employee",
+        element: <EmployeeMaster />,
+      },
+      {
+        path: "master/employees",
+        element: <EmployeeMaster />,
+      },
+      {
+        path: "locations",
+        element: <MultiLocation />,
+      },
+      {
+        path: "masters",
+        element: <BasicMasters />,
+      },
+      {
+        path: "basimasters",
+        element: <BasicMasters />,
+      },
+      {
+        path: "basicmasters",
+        element: <BasicMasters />,
+      },
+      {
+        path: "masters/departments",
+        element: <Departments />,
+      },
+      {
+        path: "masters/designations",
+        element: <Designation />,
+      },
+      {
+        path: "masters/roles",
+        element: <Role />,
+      },
+      {
+        path: "masters/access-control",
+        element: <AccessControlManagement />,
+      },
+      {
+        path: "access-control",
+        element: <AccessControlManagement />,
+      },
+    ],
+  },
+  {
+    path: "/rsm",
+    element: (
+      <ProtectedRoute>
+        <Dashboard />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        path: "",
+        element: <RSMDashboard />,
+      },
+      ...quotationRoutes,
+      {
+        path: "customers",
+        element: <CustomerMaster />,
+      },
+      {
+        path: "customer",
+        element: <CustomerMaster />,
+      },
+      {
+        path: "enquiries",
+        element: <EnquiriesList />,
+      },
+      {
+        path: "sales/customers",
+        element: <CustomerMaster />,
+      },
+      {
+        path: "sales/customer",
+        element: <CustomerMaster />,
+      },
+      {
+        path: "sales-activities",
+        element: <SalesActivities />,
+      },
+      {
+        path: "task-assignment",
+        element: <SalesActivities defaultTab="tasks" />,
+      },
+      {
+        path: "sales/activities",
+        element: <SalesActivities />,
+      },
+      {
+        path: "sales/calls",
+        element: <CallsMaster />,
+      },
+      {
+        path: "sales/meetings",
+        element: <MeetingsMaster />,
+      },
+      {
+        path: "sales/follow-ups",
+        element: <SalesActivities defaultTab="followups" />,
+      },
+      {
+        path: "sales/tasks",
+        element: <SalesActivities defaultTab="tasks" />,
+      },
+      {
+        path: "sales/attachments",
+        element: <SalesAttachmentsMaster />,
+      },
+      {
+        path: "sales/follow-up-intervals",
+        element: <FollowUpContactUpdatesMaster initialTab="follow-up" />,
+      },
+      {
+        path: "sales/document-types",
+        element: <DocumentAddressSettingsMaster initialTab="document-type" />,
+      },
+      {
+        path: "sales/call-types",
+        element: <FollowUpContactUpdatesMaster initialTab="call-type" />,
+      },
+      {
+        path: "sales/meeting-types",
+        element: <FollowUpContactUpdatesMaster initialTab="meeting-type" />,
+      },
+      {
+        path: "sales/activity-outcomes",
+        element: <ActivityOutcomes />,
+      },
+      {
+        path: "sales/outcomes",
+        element: <ActivityOutcomes />,
+      },
+      {
+        path: "master/enquiry-master",
+        element: <EnquiryMaster />,
+      },
+      // Consolidated Master Routes
+      {
+        path: "master/customer-classification",
+        element: <CustomerClassificationMaster />,
+      },
+      {
+        path: "customer-classification",
+        element: <CustomerClassificationMaster />,
+      },
+      {
+        path: "master/sales-team",
+        element: <SalesTeamMaster />,
+      },
+      {
+        path: "sales-team",
+        element: <SalesTeamMaster />,
+      },
+      {
+        path: "master/sales-assignment",
+        element: <CustomerMaster initialTab="assignment" />,
+      },
+      {
+        path: "sales-assignment",
+        element: <CustomerMaster initialTab="assignment" />,
+      },
+      {
+        path: "hierarchy-management",
+        element: <CustomerMaster initialTab="assignment" />,
+      },
+      {
+        path: "master/follow-up-contact-updates",
+        element: <FollowUpContactUpdatesMaster />,
+      },
+      {
+        path: "follow-up-contact-updates",
+        element: <FollowUpContactUpdatesMaster />,
+      },
+      {
+        path: "master/document-address-settings",
+        element: <DocumentAddressSettingsMaster />,
+      },
+      {
+        path: "document-address-settings",
+        element: <DocumentAddressSettingsMaster />,
+      },
 
       // Sub-master / tab / category direct routes
       {
         path: "master/follow-up-intervals",
-        element: <FollowUpIntervals />,
+        element: <FollowUpContactUpdatesMaster initialTab="follow-up" />,
       },
       {
         path: "master/follow-up",
@@ -288,7 +287,7 @@ import EnquiriesList from "./Modules/RSM/Pages/Enquiry/EnquiryMaster";
       },
       {
         path: "master/document-types",
-        element: <DocumentTypes />,
+        element: <DocumentAddressSettingsMaster initialTab="document-type" />,
       },
       {
         path: "master/document-type",
@@ -296,7 +295,7 @@ import EnquiriesList from "./Modules/RSM/Pages/Enquiry/EnquiryMaster";
       },
       {
         path: "master/call-types",
-        element: <CallTypes />,
+        element: <FollowUpContactUpdatesMaster initialTab="call-type" />,
       },
       {
         path: "master/call-type",
@@ -304,7 +303,7 @@ import EnquiriesList from "./Modules/RSM/Pages/Enquiry/EnquiryMaster";
       },
       {
         path: "master/meeting-types",
-        element: <MeetingTypes />,
+        element: <FollowUpContactUpdatesMaster initialTab="meeting-type" />,
       },
       {
         path: "master/meeting-type",
@@ -535,86 +534,70 @@ import EnquiriesList from "./Modules/RSM/Pages/Enquiry/EnquiryMaster";
         element: <CustomerMaster />,
       },
       {
-        path: "director",
-        element: <Director />,
-      },
-      {
-        path: "directors",
-        element: <Director />,
-      },
-      {
-        path: "master/director",
-        element: <Director />,
-      },
-      {
-        path: "master/directors",
-        element: <Director />,
-      },
-      {
         path: "sales-coordinator",
-        element: <SalesCoordinator />,
+        element: <SalesTeamMaster initialTab="coordinators" />,
       },
       {
         path: "sales-coordinators",
-        element: <SalesCoordinator />,
+        element: <SalesTeamMaster initialTab="coordinators" />,
       },
       {
         path: "master/sales-coordinator",
-        element: <SalesCoordinator />,
+        element: <SalesTeamMaster initialTab="coordinators" />,
       },
       {
         path: "master/sales-coordinators",
-        element: <SalesCoordinator />,
+        element: <SalesTeamMaster initialTab="coordinators" />,
       },
       {
         path: "role",
-        element: <RoleMaster />,
+        element: <SalesTeamMaster initialTab="roles" />,
       },
       {
         path: "roles",
-        element: <RoleMaster />,
+        element: <SalesTeamMaster initialTab="roles" />,
       },
       {
         path: "master/role",
-        element: <RoleMaster />,
+        element: <SalesTeamMaster initialTab="roles" />,
       },
       {
         path: "master/roles",
-        element: <RoleMaster />,
+        element: <SalesTeamMaster initialTab="roles" />,
       },
     ],
   },
-    {
-      path: "/vms",
-      element: (
-        <ProtectedRoute>
-          <Dashboard />
-        </ProtectedRoute>
-      ),
-      children: [
-        {
-          path: "",
-          element: <VMSDashboard />,
-        },
-      ],
-    },
+  {
+    path: "/vms",
+    element: (
+      <ProtectedRoute>
+        <Dashboard />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        path: "",
+        element: <VMSDashboard />,
+      },
+    ],
+  },
 
-    {
-      element: (
-        <ProtectedRoute>
-          <Dashboard />
-        </ProtectedRoute>
-      ),
-      children: [
-        // Consolidated Masters (Root paths)
-        { path: "/customer-classification", element: <CustomerClassificationMaster /> },
-        { path: "/master/customer-classification", element: <CustomerClassificationMaster /> },
-        { path: "/sales-team", element: <SalesTeamMaster /> },
-        { path: "/master/sales-team", element: <SalesTeamMaster /> },
-        { path: "/follow-up-contact-updates", element: <FollowUpContactUpdatesMaster /> },
-        { path: "/master/follow-up-contact-updates", element: <FollowUpContactUpdatesMaster /> },
-        { path: "/document-address-settings", element: <DocumentAddressSettingsMaster /> },
-        { path: "/master/document-address-settings", element: <DocumentAddressSettingsMaster /> },
+  {
+    element: (
+      <ProtectedRoute>
+        <Dashboard />
+      </ProtectedRoute>
+    ),
+    children: [
+      // Consolidated Masters (Root paths)
+      { path: "/customer-classification", element: <CustomerClassificationMaster /> },
+      { path: "/master/customer-classification", element: <CustomerClassificationMaster /> },
+      { path: "/sales-team", element: <SalesTeamMaster /> },
+      { path: "/master/sales-team", element: <SalesTeamMaster /> },
+      { path: "/follow-up-contact-updates", element: <FollowUpContactUpdatesMaster /> },
+      { path: "/master/follow-up-contact-updates", element: <FollowUpContactUpdatesMaster /> },
+      { path: "/document-address-settings", element: <DocumentAddressSettingsMaster /> },
+      { path: "/master/document-address-settings", element: <DocumentAddressSettingsMaster /> },
 
       // Legacy and Category mappings
       { path: "/bde-users", element: <SalesTeamMaster initialTab="bde" /> },
@@ -641,14 +624,10 @@ import EnquiriesList from "./Modules/RSM/Pages/Enquiry/EnquiryMaster";
       { path: "/customer-source", element: <CustomerClassificationMaster initialTab="source" /> },
       { path: "/customer-area", element: <CustomerClassificationMaster initialTab="area" /> },
       { path: "/address-type", element: <DocumentAddressSettingsMaster initialTab="address-type" /> },
-      { path: "/director", element: <Director /> },
-      { path: "/directors", element: <Director /> },
-      { path: "/master/director", element: <Director /> },
-      { path: "/master/directors", element: <Director /> },
-      { path: "/sales-coordinator", element: <SalesCoordinator /> },
-      { path: "/sales-coordinators", element: <SalesCoordinator /> },
-      { path: "/master/sales-coordinator", element: <SalesCoordinator /> },
-      { path: "/master/sales-coordinators", element: <SalesCoordinator /> },
+      { path: "/sales-coordinator", element: <SalesTeamMaster initialTab="coordinators" /> },
+      { path: "/sales-coordinators", element: <SalesTeamMaster initialTab="coordinators" /> },
+      { path: "/master/sales-coordinator", element: <SalesTeamMaster initialTab="coordinators" /> },
+      { path: "/master/sales-coordinators", element: <SalesTeamMaster initialTab="coordinators" /> },
       { path: "/customers", element: <CustomerMaster /> },
       { path: "/customer", element: <CustomerMaster /> },
       { path: "/rsm/customers", element: <CustomerMaster /> },
@@ -664,18 +643,18 @@ import EnquiriesList from "./Modules/RSM/Pages/Enquiry/EnquiryMaster";
     ],
   },
 
-    {
-      path: "*",
-      element: <NotFoundPage />,
-    },
-  ],
+  {
+    path: "*",
+    element: <NotFoundPage />,
+  },
+],
   {
     basename: "/frontend",
   }
-  );
+);
 
-  const App: React.FC = () => {
-    return <RouterProvider router={router} />;
-  };
+const App: React.FC = () => {
+  return <RouterProvider router={router} />;
+};
 
-  export default App;
+export default App;

@@ -27,7 +27,7 @@ import {
 } from "../../Master/CustomerStatus/Services/CustomerStatusService";
 import { getAllReminders } from "../../Master/Reminder/Services/ReminderService";
 import { getAllFollowUps } from "../../Master/FollowUp/Services/FollowUpService";
-import { getAllDirectors } from "../../Master/Director/Services/DirectorService";
+// Director master removed - directors fetched via employee service
 import { getDepartments } from "../../../../HRMS/Services/MasterDataService";
 import { getAllPriorities } from "../../Master/Priority/Services/PriorityService";
 import {
@@ -38,6 +38,8 @@ import {
 import apiClient from "../../../../../API/apiClient";
 import { API_ENDPOINTS } from "../../../../../API/apiConfig";
 import type { Contact } from "../../Master/Contact/Types/ContactTypes";
+
+const getAllDirectors = getDirectorEmployees;
 
 export {
   getAllActivityTypes,
@@ -967,12 +969,14 @@ export const getRoleBasedAssignees = async (
         }
       });
 
-      allDirectors.forEach((d) => {
-        if (d && d.directorId && !seen.has(String(d.directorId))) {
-          seen.add(String(d.directorId));
+      (allDirectors as any[]).forEach((d: any) => {
+        const dId = d.id ?? d.directorId;
+        const dName = d.name ?? d.directorName ?? "Director";
+        if (d && dId && !seen.has(String(dId))) {
+          seen.add(String(dId));
           list.push({
-            id: String(d.directorId),
-            name: d.directorName,
+            id: String(dId),
+            name: dName,
             role: "Director",
             type: "Employee",
           });
@@ -1013,12 +1017,14 @@ export const getRoleBasedAssignees = async (
     const list: AssigneeOption[] = [];
     const seen = new Set<string>();
 
-    directors.forEach((d) => {
-      if (d && d.directorId && !seen.has(`dir-${d.directorId}`)) {
-        seen.add(`dir-${d.directorId}`);
+    (directors as any[]).forEach((d: any) => {
+      const dId = d.id ?? d.directorId;
+      const dName = d.name ?? d.directorName ?? "Director";
+      if (d && dId && !seen.has(`dir-${dId}`)) {
+        seen.add(`dir-${dId}`);
         list.push({
-          id: String(d.directorId),
-          name: `${d.directorName} (Director)`,
+          id: String(dId),
+          name: `${dName} (Director)`,
           role: "Director",
           type: "Employee",
         });

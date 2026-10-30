@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Clock,
   Contact,
@@ -74,36 +74,54 @@ const TABS: TabConfig[] = [
   },
 ];
 
+const TAB_ROUTES: Record<FollowUpContactTab, string> = {
+  "follow-up": "/rsm/master/follow-up",
+  "contact-types": "/rsm/contact-types",
+  "call-type": "/rsm/master/call-type",
+  "meeting-type": "/rsm/master/meeting-type",
+  "activity-type": "/rsm/master/activity-type",
+  "priority": "/rsm/master/priority",
+};
+
 export const FollowUpContactUpdatesMaster: React.FC<
   FollowUpContactUpdatesMasterProps
 > = ({ initialTab }) => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const rawTab = (
-    searchParams.get("tab") ||
-    initialTab ||
-    "follow-up"
-  ).toLowerCase() as FollowUpContactTab;
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const queryTab = searchParams.get("tab")?.toLowerCase() as FollowUpContactTab | undefined;
 
-  const activeTab: FollowUpContactTab = useMemo(() => {
-    const validTabs: FollowUpContactTab[] = [
-      "follow-up",
-      "contact-types",
-      "call-type",
-      "meeting-type",
-      "activity-type",
-      "priority",
-    ];
-    return validTabs.includes(rawTab) ? rawTab : "follow-up";
-  }, [rawTab]);
+  const validTabs: FollowUpContactTab[] = [
+    "follow-up",
+    "contact-types",
+    "call-type",
+    "meeting-type",
+    "activity-type",
+    "priority",
+  ];
 
+  const [activeTab, setActiveTab] = useState<FollowUpContactTab>(() => {
+    if (queryTab && validTabs.includes(queryTab)) return queryTab;
+    if (initialTab && validTabs.includes(initialTab)) return initialTab;
+    return "follow-up";
+  });
+
+  // Sync if initialTab prop changes (e.g. user clicked another item in sidebar)
   useEffect(() => {
-    if (initialTab && searchParams.get("tab") !== initialTab) {
-      setSearchParams({ tab: initialTab }, { replace: true });
+    if (initialTab && validTabs.includes(initialTab)) {
+      setActiveTab(initialTab);
     }
-  }, [initialTab, searchParams, setSearchParams]);
+  }, [initialTab]);
+
+  // Sync if query param changes
+  useEffect(() => {
+    if (queryTab && validTabs.includes(queryTab) && queryTab !== activeTab) {
+      setActiveTab(queryTab);
+    }
+  }, [queryTab]);
 
   const handleSelectTab = (tabId: FollowUpContactTab) => {
-    setSearchParams({ tab: tabId });
+    setActiveTab(tabId);
+    navigate(TAB_ROUTES[tabId]);
   };
 
   return (
