@@ -13,9 +13,35 @@ import { getAllPriorities } from "../../Master/Priority/Services/PriorityService
 import { createReminder } from "../../Master/Reminder/Services/ReminderService";
 const getAllDirectors = getDirectorEmployees;
 import { getDirectorEmployees } from "../../Master/BdeUsers/Services/BdeUserService";
+import { getAllDirectors } from "../../Master/Director/Services/DirectorService";
+import { getDirectorEmployees, getAllBdeUsers } from "../../Master/BdeUsers/Services/BdeUserService";
 import { getAllCustomers } from "../../Customer/Services/CustomerService";
 
 const TASKS_STORAGE_KEY = "isquare_tasks_cache_v1";
+
+const fetchAllEmployees = async (): Promise<any[]> => {
+  try {
+    const url = API_ENDPOINTS.Employees || `${API_ENDPOINTS.BaseUrl}/employees`;
+    const response = await apiClient.get<any>(url);
+    const list = Array.isArray(response.data)
+      ? response.data
+      : Array.isArray(response.data?.data)
+      ? response.data.data
+      : [];
+    if (list.length > 0) return list;
+  } catch {}
+  try {
+    const crmUrl = API_ENDPOINTS.CRMEmployees || `${API_ENDPOINTS.BaseUrl}/employees`;
+    const response = await apiClient.get<any>(crmUrl);
+    const list = Array.isArray(response.data)
+      ? response.data
+      : Array.isArray(response.data?.data)
+      ? response.data.data
+      : [];
+    if (list.length > 0) return list;
+  } catch {}
+  return [];
+};
 
 const safeGetTasks = (): TaskItem[] => {
   try {
@@ -96,7 +122,9 @@ export const getAllTasks = async (filters?: TaskFilterParams): Promise<TaskItem[
           taskTitle: String(t.taskTitle ?? t.title ?? `Task #${id}`),
           description: t.description || "",
           assignedTo: Number(t.assignedTo ?? 0),
+          assignedToName: t.assignedToName || t.assignedToEmployeeName || undefined,
           assignedBy: Number(t.assignedBy ?? 0),
+          assignedByName: t.assignedByName || t.assignedByEmployeeName || t.assignerName || undefined,
           priorityId: Number(t.priorityId ?? 1),
           taskStatusId: Number(t.taskStatusId ?? 1),
           startDate: t.startDate ? String(t.startDate).split("T")[0] : new Date().toISOString().split("T")[0],
@@ -122,8 +150,20 @@ export const getAllTasks = async (filters?: TaskFilterParams): Promise<TaskItem[
     if (!t.isDeleted) taskMap.set(t.taskId, t);
   }
   for (const t of localTasks) {
-    if (!t.isDeleted && !taskMap.has(t.taskId)) {
-      taskMap.set(t.taskId, t);
+    if (!t.isDeleted) {
+      if (!taskMap.has(t.taskId)) {
+        taskMap.set(t.taskId, t);
+      } else {
+        const existing = taskMap.get(t.taskId);
+        if (existing) {
+          if (!existing.assignedByName && t.assignedByName) {
+            existing.assignedByName = t.assignedByName;
+          }
+          if (!existing.assignedToName && t.assignedToName) {
+            existing.assignedToName = t.assignedToName;
+          }
+        }
+      }
     }
   }
 
@@ -131,22 +171,111 @@ export const getAllTasks = async (filters?: TaskFilterParams): Promise<TaskItem[
 
   // Enrich with names
   try {
-    const [directorsEmp, directList, customers, priorities, statuses] = await Promise.all([
+    const [directorsEmp, directList, customers, priorities, statuses, allEmployees, bdeUsersList] = await Promise.all([
       getDirectorEmployees().catch(() => []),
       getAllDirectors().catch(() => []),
       getAllCustomers().catch(() => []),
       getAllPriorities().catch(() => []),
       getAllTaskStatuses().catch(() => []),
+      fetchAllEmployees().catch(() => []), 
+      getAllBdeUsers().catch(() => []),
     ]);
 
     items = items.map((task) => {
       const matchedDirectorEmp = directorsEmp.find((d) => d.id === task.assignedTo);
       const matchedDirector = (directList as any[]).find((d: any) => (d.id || d.directorId) === task.assignedTo);
+      // 1. Resolve Assigned To Name
+      const matchedDirectorEmp = directorsEmp.find((d: any) => Number(d.id || 0) === task.assignedTo);
+      const matchedDirector = directList.find((d: any) => Number(d.directorId || d.id || 0) === task.assignedTo);
+      const matchedToEmp = allEmployees.find((e: any) => Number(e.id || e.employeeId || 0) === task.assignedTo);
       const assignedToName =
+        task.assignedToName ||
         matchedDirectorEmp?.name ||
         (matchedDirector as any)?.name ||
         matchedDirector?.directorName ||
+        (matchedToEmp ? `${matchedToEmp.firstName || ""} ${matchedToEmp.lastName || ""}`.trim() : undefined) ||
         (task.assignedTo > 0 ? `Director #${task.assignedTo}` : "Unassigned");
+
+      // 2. Resolve Assigned By Name
+      let assignedByName =
+        task.assignedByName && task.assignedByName.trim() !== "—"
+          ? task.assignedByName
+          : undefined;
+
+      if (!assignedByName) {
+        // Match against employees list
+        const matchedByEmp = allEmployees.find(
+          (e: any) => Number(e.id || e.employeeId || 0) === task.assignedBy
+        );
+        if (matchedByEmp) {
+          const fullName = `${matchedByEmp.firstName || ""} ${matchedByEmp.lastName || ""}`.trim();
+          assignedByName = fullName || (matchedByEmp as any).name || (matchedByEmp as any).employeeName;
+        }
+
+        // Match against director employees
+        if (!assignedByName) {
+          const matchedByDirEmp = directorsEmp.find((d: any) => Number(d.id || 0) === task.assignedBy);
+          if (matchedByDirEmp?.name) {
+            assignedByName = matchedByDirEmp.name;
+          }
+        }
+
+        // Match against directors
+        if (!assignedByName) {
+          const matchedByDir = directList.find(
+            (d: any) => Number(d.directorId || d.id || 0) === task.assignedBy
+          );
+          if (matchedByDir) {
+            assignedByName = matchedByDir.directorName || (matchedByDir as any).name;
+          }
+        }
+
+        // Match against BDE users
+        if (!assignedByName) {
+          const matchedByBde = bdeUsersList.find((b: any) => Number(b.id || 0) === task.assignedBy);
+          if (matchedByBde) {
+            assignedByName = matchedByBde.value || (matchedByBde as any).name;
+          }
+        }
+
+        // Match against currently logged in user
+        if (!assignedByName) {
+          try {
+            const rawUser = sessionStorage.getItem("user");
+            if (rawUser) {
+              const u = JSON.parse(rawUser);
+              if (
+                Number(u.employeeId) === task.assignedBy ||
+                Number(u.id) === task.assignedBy ||
+                Number(u.userId) === task.assignedBy
+              ) {
+                assignedByName =
+                  u.name || `${u.firstName || ""} ${u.lastName || ""}`.trim() || u.email;
+              }
+            }
+          } catch {}
+        }
+
+        // Graceful fallback if assignedBy > 0
+        if (!assignedByName && task.assignedBy > 0) {
+          if (task.assignedBy === 1) {
+            try {
+              const rawUser = sessionStorage.getItem("user");
+              if (rawUser) {
+                const u = JSON.parse(rawUser);
+                assignedByName =
+                  u.name || `${u.firstName || ""} ${u.lastName || ""}`.trim() || "Admin";
+              } else {
+                assignedByName = "Admin";
+              }
+            } catch {
+              assignedByName = "Admin";
+            }
+          } else {
+            assignedByName = `Employee #${task.assignedBy}`;
+          }
+        }
+      }
 
       const matchedCust = customers.find(
         (c: any) => Number(c.customerId || c.id || 0) === task.companyId
@@ -154,16 +283,17 @@ export const getAllTasks = async (filters?: TaskFilterParams): Promise<TaskItem[
       const companyName =
         matchedCust?.customerName || matchedCust?.companyName || (task.companyId > 0 ? `Company #${task.companyId}` : "General");
 
-      const matchedPrio = priorities.find((p) => p.id === task.priorityId);
+      const matchedPrio = (priorities as any[]).find((p: any) => p.id === task.priorityId);
       const priorityName = matchedPrio?.priorityName || "Medium";
       const priorityColor = matchedPrio?.colorCode || "#00234a";
 
-      const matchedStatus = statuses.find((s) => s.taskStatusId === task.taskStatusId);
+      const matchedStatus = (statuses as any[]).find((s: any) => s.taskStatusId === task.taskStatusId);
       const taskStatusName = matchedStatus?.statusName || (task.isCompleted ? "Completed" : "Pending");
 
       return {
         ...task,
         assignedToName,
+        assignedByName,
         companyName,
         priorityName,
         priorityColor,
@@ -185,6 +315,7 @@ export const getAllTasks = async (filters?: TaskFilterParams): Promise<TaskItem[
         (t.description || "").toLowerCase().includes(q) ||
         (t.companyName || "").toLowerCase().includes(q) ||
         (t.assignedToName || "").toLowerCase().includes(q) ||
+        (t.assignedByName || "").toLowerCase().includes(q) ||
         (t.remarks || "").toLowerCase().includes(q)
     );
   }
@@ -225,7 +356,9 @@ export const getTaskById = async (id: number): Promise<TaskItem | null> => {
         taskTitle: String(t.taskTitle ?? t.title ?? ""),
         description: t.description || "",
         assignedTo: Number(t.assignedTo ?? 0),
+        assignedToName: t.assignedToName || t.assignedToEmployeeName || undefined,
         assignedBy: Number(t.assignedBy ?? 0),
+        assignedByName: t.assignedByName || t.assignedByEmployeeName || t.assignerName || undefined,
         priorityId: Number(t.priorityId ?? 1),
         taskStatusId: Number(t.taskStatusId ?? 1),
         startDate: t.startDate ? String(t.startDate).split("T")[0] : "",
@@ -299,7 +432,10 @@ export const createTask = async (payload: TaskCreatePayload): Promise<TaskItem> 
         taskTitle: String(data.taskTitle ?? payload.taskTitle),
         description: data.description ?? payload.description,
         assignedTo: Number(data.assignedTo ?? payload.assignedTo),
+        assignedToName: data.assignedToName || payload.assignedToName || undefined,
         assignedBy: Number(data.assignedBy ?? payload.assignedBy),
+        assignedByName: data.assignedByName || payload.assignedByName || undefined,
+        companyName: payload.companyName,
         priorityId: Number(data.priorityId ?? payload.priorityId),
         taskStatusId: Number(data.taskStatusId ?? payload.taskStatusId),
         startDate: payload.startDate,
@@ -324,7 +460,10 @@ export const createTask = async (payload: TaskCreatePayload): Promise<TaskItem> 
       taskTitle: payload.taskTitle,
       description: payload.description,
       assignedTo: payload.assignedTo,
+      assignedToName: payload.assignedToName || undefined,
       assignedBy: payload.assignedBy,
+      assignedByName: payload.assignedByName || undefined,
+      companyName: payload.companyName,
       priorityId: payload.priorityId,
       taskStatusId: payload.taskStatusId,
       startDate: payload.startDate,

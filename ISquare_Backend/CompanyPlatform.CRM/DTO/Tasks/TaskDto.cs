@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace CompanyPlatform.CRM.DTO.Tasks
@@ -18,8 +18,12 @@ namespace CompanyPlatform.CRM.DTO.Tasks
         [Required]
         public int AssignedTo { get; set; }
 
+        public string? AssignedToName { get; set; }
+
         [Required]
         public int AssignedBy { get; set; }
+
+        public string? AssignedByName { get; set; }
 
         [Required]
         public int PriorityId { get; set; }
