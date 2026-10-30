@@ -102,8 +102,10 @@ export const AddEditContactModal: React.FC<AddEditContactModalProps> = ({
   }, []);
 
   // Initialize form state
+  const prevIsOpenRef = useRef(false);
+
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !prevIsOpenRef.current) {
       setErrors({});
       setCompanySearchQuery("");
       setIsCompanyDropdownOpen(false);
@@ -139,6 +141,7 @@ export const AddEditContactModal: React.FC<AddEditContactModalProps> = ({
         });
       }
     }
+    prevIsOpenRef.current = isOpen;
   }, [isOpen, contact, selectedCompanyId, companiesList]);
 
   const selectedCompany = useMemo(() => {
@@ -242,6 +245,7 @@ export const AddEditContactModal: React.FC<AddEditContactModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
+    e.stopPropagation();
     if (!validate()) {
       toast.error("Please fill in all required fields correctly.");
       return;

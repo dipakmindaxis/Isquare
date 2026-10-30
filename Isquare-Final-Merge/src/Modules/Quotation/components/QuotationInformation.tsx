@@ -23,6 +23,7 @@ interface QuotationInformationProps {
   quotationNumber?: string | null;
   customerId: number;
   contactId?: number | null;
+  enquiryId?: number | null;
   enquiryRef?: string | null;
   quotationDate?: string | null;
   revisionNumber: number;
@@ -32,6 +33,7 @@ interface QuotationInformationProps {
     customerId?: number;
     contactId?: number | null;
     contactPerson?: string | null;
+    enquiryId?: number | null;
     enquiryRef?: string;
     quotationDate?: string;
     status?: string;
@@ -45,6 +47,7 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
   quotationNumber,
   customerId,
   contactId = null,
+  enquiryId = null,
   enquiryRef = "",
   quotationDate,
   revisionNumber = 0,
@@ -70,8 +73,34 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
   onChangeRef.current = onChange;
 
   useEffect(() => {
-    setEnquirySearch(enquiryRef || "");
+    if (enquiryRef) {
+      setEnquirySearch(enquiryRef);
+    }
   }, [enquiryRef]);
+
+  // When enquiriesList loads, resolve full label for initial enquiryId or enquiryRef
+  useEffect(() => {
+    if (enquiriesList.length > 0) {
+      if (enquiryId) {
+        const found = enquiriesList.find((e) => Number(e.enquiryId) === Number(enquiryId));
+        if (found) {
+          setEnquirySearch(found.displayLabel);
+          return;
+        }
+      }
+      if (enquiryRef) {
+        const found = enquiriesList.find(
+          (e) =>
+            e.enquiryNumber === enquiryRef ||
+            e.displayLabel === enquiryRef ||
+            (e.enquiryId && `ENQ-${e.enquiryId}` === enquiryRef)
+        );
+        if (found) {
+          setEnquirySearch(found.displayLabel);
+        }
+      }
+    }
+  }, [enquiriesList, enquiryId, enquiryRef]);
 
   // Fetch real Enquiries from database via API
   useEffect(() => {
@@ -186,6 +215,11 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
     setEnquirySearch(item.displayLabel);
     setIsEnquiryDropdownOpen(false);
 
+    const eqId = item.enquiryId ? Number(item.enquiryId) : null;
+    const eqNum =
+      item.enquiryNumber ||
+      (eqId ? `ENQ-${String(eqId).padStart(3, "0")}` : item.displayLabel);
+
     let matchedCustId: number | null = null;
     if (item.customerId && item.customerId > 0) {
       matchedCustId = item.customerId;
@@ -205,11 +239,15 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
     if (matchedCustId && (!customerId || customerId === 0)) {
       handleCompanyChange(matchedCustId);
       onChangeRef.current({
-        enquiryRef: item.displayLabel,
+        enquiryId: eqId,
+        enquiryRef: eqNum,
         customerId: matchedCustId,
       });
     } else {
-      onChangeRef.current({ enquiryRef: item.displayLabel });
+      onChangeRef.current({
+        enquiryId: eqId,
+        enquiryRef: eqNum,
+      });
     }
   };
 
@@ -223,6 +261,7 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
       if (!compCompanyId || compCompanyId <= 0) {
         setContacts([]);
         setSelectedContactId(null);
+        onChangeRef.current({ contactId: null, contactPerson: null });
         return;
       }
 
@@ -242,23 +281,24 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
           );
         }
 
-        setContacts(list || []);
+        const validList = Array.isArray(list) ? list : [];
+        setContacts(validList);
 
         // Determine which contact to select
         if (
           preferredContactId &&
-          list.some((c) => Number(c.contactId) === Number(preferredContactId))
+          validList.some((c) => Number(c.contactId) === Number(preferredContactId))
         ) {
           setSelectedContactId(preferredContactId);
-          const matched = list.find(
+          const matched = validList.find(
             (c) => Number(c.contactId) === Number(preferredContactId)
           );
           onChangeRef.current({
             contactId: preferredContactId,
             contactPerson: matched?.fullName || null,
           });
-        } else if (list && list.length > 0) {
-          const first = list[0];
+        } else if (validList.length > 0) {
+          const first = validList[0];
           setSelectedContactId(first.contactId);
           onChangeRef.current({
             contactId: first.contactId,
@@ -272,6 +312,7 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
         console.warn("Failed to load contacts for company:", err);
         setContacts([]);
         setSelectedContactId(null);
+        onChangeRef.current({ contactId: null, contactPerson: null });
       } finally {
         setIsLoadingContacts(false);
       }
@@ -279,24 +320,55 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
     []
   );
 
+  const isFirstMountRef = useRef<boolean>(true);
+  const prevCustomerIdRef = useRef<number>(customerId);
+
   useEffect(() => {
-    fetchContactsForCompany(customerId, contactId);
-  }, [customerId, fetchContactsForCompany]);
+    if (isFirstMountRef.current) {
+      isFirstMountRef.current = false;
+      fetchContactsForCompany(customerId, contactId);
+      return;
+    }
+
+    if (prevCustomerIdRef.current !== customerId) {
+      prevCustomerIdRef.current = customerId;
+      fetchContactsForCompany(customerId, null);
+    }
+  }, [customerId, contactId, fetchContactsForCompany]);
 
   // Keep local state in sync if contactId prop changes externally
   useEffect(() => {
-    if (contactId !== undefined) {
+    if (contactId !== undefined && contactId !== selectedContactId) {
       setSelectedContactId(contactId);
     }
-  }, [contactId]);
+  }, [contactId, selectedContactId]);
+
+  // Listen for contacts updated/created in Master or other views
+  useEffect(() => {
+    const handleContactsMasterUpdated = () => {
+      if (customerId && customerId > 0) {
+        fetchContactsForCompany(customerId, selectedContactId);
+      }
+    };
+
+    window.addEventListener("contacts-updated", handleContactsMasterUpdated);
+    window.addEventListener("contact-created", handleContactsMasterUpdated);
+
+    return () => {
+      window.removeEventListener("contacts-updated", handleContactsMasterUpdated);
+      window.removeEventListener("contact-created", handleContactsMasterUpdated);
+    };
+  }, [customerId, selectedContactId, fetchContactsForCompany]);
 
   const handleCompanyChange = (newCompanyId: number) => {
+    prevCustomerIdRef.current = newCompanyId;
     setSelectedContactId(null);
     onChangeRef.current({
       customerId: newCompanyId,
       contactId: null,
       contactPerson: null,
     });
+    fetchContactsForCompany(newCompanyId, null);
   };
 
   const handleContactChange = (newContactId: number) => {
@@ -323,11 +395,44 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
     const newContactId = Number(created.contactId);
     const newFullName = created.fullName || "";
 
+    if (!newContactId) {
+      console.warn("Contact was created without a valid contactId:", createdPayload);
+      return;
+    }
+
+    const fullContactObj: Contact = {
+      ...created,
+      contactId: newContactId,
+      companyId: newCompanyId,
+      fullName: newFullName,
+    };
+
     // 1. If contact created for a different company, switch company selection
     if (newCompanyId && newCompanyId !== Number(customerId)) {
+      prevCustomerIdRef.current = newCompanyId;
       onChangeRef.current({ customerId: newCompanyId });
     }
 
+    // 2. Immediately update local state so the new contact is visible and selected instantly
+    setContacts((prev) => {
+      const filtered = prev.filter((c) => Number(c.companyId) === newCompanyId);
+      const exists = filtered.some((c) => Number(c.contactId) === newContactId);
+      if (exists) {
+        return filtered.map((c) =>
+          Number(c.contactId) === newContactId ? { ...c, ...fullContactObj } : c
+        );
+      }
+      return [fullContactObj, ...filtered];
+    });
+
+    setSelectedContactId(newContactId);
+    onChangeRef.current({
+      customerId: newCompanyId,
+      contactId: newContactId,
+      contactPerson: newFullName,
+    });
+
+    // 3. Refresh customers master if requested
     try {
       if (onRefreshCustomers) {
         await onRefreshCustomers();
@@ -336,34 +441,36 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
       // ignore
     }
 
-    // 2. Refresh contacts from backend and ensure newly added contact is retained alongside existing contacts
-    if (newCompanyId) {
-      await fetchContactsForCompany(newCompanyId, newContactId);
-      setContacts((prev) => {
-        const exists = prev.some((c) => Number(c.contactId) === newContactId);
-        if (exists) return prev;
-        return [
-          ...prev,
-          {
-            ...created,
-            contactId: newContactId,
-            companyId: newCompanyId,
-            fullName: newFullName,
-          },
-        ];
-      });
-      setSelectedContactId(newContactId);
-      onChangeRef.current({
-        customerId: newCompanyId,
-        contactId: newContactId,
-        contactPerson: newFullName,
-      });
+    // 4. In background, refresh contacts from database to verify consistency
+    try {
+      let freshList: Contact[] = [];
+      try {
+        freshList = await getContactsByCompanyId(newCompanyId);
+      } catch {
+        // fallback
+      }
+
+      if (!freshList || freshList.length === 0) {
+        const all = await getAllContacts();
+        freshList = all.filter(
+          (c: Contact) => Number(c.companyId) === Number(newCompanyId)
+        );
+      }
+
+      if (freshList && freshList.length > 0) {
+        const hasNew = freshList.some(
+          (c) => Number(c.contactId) === newContactId
+        );
+        setContacts(hasNew ? freshList : [fullContactObj, ...freshList]);
+      }
+    } catch (e) {
+      console.warn("Failed to refresh contacts from backend after creation:", e);
     }
 
-    // 3. Dispatch update events so ContactPersonMaster displays the new record alongside existing records
+    // 5. Dispatch update events so ContactPersonMaster displays the new record alongside existing records
     if (typeof window !== "undefined") {
       try {
-        window.dispatchEvent(new CustomEvent("contact-created", { detail: created }));
+        window.dispatchEvent(new CustomEvent("contact-created", { detail: fullContactObj }));
         window.dispatchEvent(new Event("contacts-updated"));
         localStorage.setItem("contacts_updated_at", Date.now().toString());
       } catch {
@@ -453,13 +560,13 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
                 onChange={(e) =>
                   handleContactChange(parseInt(e.target.value, 10) || 0)
                 }
-                disabled={disabled || !customerId || isLoadingContacts}
+                disabled={disabled || !customerId || (isLoadingContacts && contacts.length === 0)}
                 required
                 className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs font-medium text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 disabled:bg-gray-100 disabled:cursor-not-allowed cursor-pointer"
               >
                 {!customerId ? (
                   <option value="">Select Company first...</option>
-                ) : isLoadingContacts ? (
+                ) : contacts.length === 0 && isLoadingContacts ? (
                   <option value="">Loading contacts...</option>
                 ) : contacts.length === 0 ? (
                   <option value="">No contacts found — click + Add</option>
@@ -506,8 +613,17 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
               placeholder="Search or select enquiry (e.g. ENQ-2026-739)..."
               value={enquirySearch}
               onChange={(e) => {
-                setEnquirySearch(e.target.value);
-                onChangeRef.current({ enquiryRef: e.target.value });
+                const val = e.target.value;
+                setEnquirySearch(val);
+                const matched = enquiriesList.find(
+                  (item) =>
+                    item.displayLabel.toLowerCase() === val.toLowerCase() ||
+                    item.enquiryNumber?.toLowerCase() === val.toLowerCase()
+                );
+                onChangeRef.current({
+                  enquiryId: matched?.enquiryId ? Number(matched.enquiryId) : null,
+                  enquiryRef: matched ? matched.enquiryNumber : val,
+                });
                 setIsEnquiryDropdownOpen(true);
               }}
               onFocus={() => setIsEnquiryDropdownOpen(true)}
@@ -520,7 +636,7 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
                   type="button"
                   onClick={() => {
                     setEnquirySearch("");
-                    onChangeRef.current({ enquiryRef: "" });
+                    onChangeRef.current({ enquiryId: null, enquiryRef: "" });
                   }}
                   className="p-1 text-gray-400 hover:text-gray-600 rounded transition cursor-pointer"
                   title="Clear enquiry reference"

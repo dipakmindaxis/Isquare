@@ -256,6 +256,8 @@ namespace CompanyPlatform.Core.Data
 
         public DbSet<Enquiry> Enquiries { get; set; }
 
+        // public DbSet<ActivityType> ActivityType { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
