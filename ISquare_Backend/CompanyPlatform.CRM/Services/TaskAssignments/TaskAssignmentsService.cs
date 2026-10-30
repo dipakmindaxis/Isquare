@@ -1,3 +1,4 @@
+﻿using CompanyPlatform.Core.Models.CRM.Company;
 //using Microsoft.AspNetCore.Hosting;
 //using Microsoft.AspNetCore.Http;
 //using Microsoft.Extensions.Logging;
@@ -40,9 +41,9 @@
 //            _logger = logger;
 //        }
 
-//        // ─────────────────────────────────────────────────────────
+//        // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //        // GET ALL
-//        // ─────────────────────────────────────────────────────────
+//        // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //        public async Task<IEnumerable<TaskAssignmentsDto>> GetAllAssignmentsAsync()
 //        {
 //            _logger.LogInformation("Fetching all Task Assignments.");
@@ -54,9 +55,9 @@
 //                .Select(x => MapToDto(x));
 //        }
 
-//        // ─────────────────────────────────────────────────────────
+//        // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //        // GET BY ID
-//        // ─────────────────────────────────────────────────────────
+//        // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //        public async Task<TaskAssignmentsDto?> GetAssignmentByIdAsync(int id)
 //        {
 //            _logger.LogInformation("Fetching Task Assignment with ID: {AssignmentId}", id);
@@ -69,9 +70,9 @@
 //            return MapToDto(item);
 //        }
 
-//        // ─────────────────────────────────────────────────────────
+//        // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //        // CREATE
-//        // ─────────────────────────────────────────────────────────
+//        // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //        public async Task<TaskAssignmentsDto> CreateAssignmentAsync(TaskAssignmentsDto dto)
 //        {
 //            _logger.LogInformation("Creating Task Assignment.");
@@ -101,9 +102,9 @@
 //            return dto;
 //        }
 
-//        // ─────────────────────────────────────────────────────────
+//        // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //        // UPDATE
-//        // ─────────────────────────────────────────────────────────
+//        // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //        public async Task<bool> UpdateAssignmentAsync(int id, TaskAssignmentsDto dto)
 //        {
 //            _logger.LogInformation("Updating Task Assignment with ID: {AssignmentId}", id);
@@ -129,9 +130,9 @@
 //            return true;
 //        }
 
-//        // ─────────────────────────────────────────────────────────
+//        // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //        // DELETE (soft)
-//        // ─────────────────────────────────────────────────────────
+//        // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //        public async Task<bool> DeleteAssignmentAsync(int id)
 //        {
 //            _logger.LogInformation("Deleting Task Assignment with ID: {AssignmentId}", id);
@@ -151,10 +152,10 @@
 //            return true;
 //        }
 
-//        // ─────────────────────────────────────────────────────────
+//        // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //        // ASSIGN TASK
 //        // Validate TaskId, prevent duplicate active assignment.
-//        // ─────────────────────────────────────────────────────────
+//        // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //        public async Task<TaskAssignmentsDto> AssignTaskAsync(AssignTaskRequestDto dto)
 //        {
 //            _logger.LogInformation("Assigning Task {TaskId} to User {UserId}", dto.TaskId, dto.AssignedTo);
@@ -206,10 +207,10 @@
 //            return MapToDto(assignment);
 //        }
 
-//        // ─────────────────────────────────────────────────────────
+//        // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //        // REASSIGN TASK
 //        // Deactivate current active assignment, create new one.
-//        // ─────────────────────────────────────────────────────────
+//        // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //        public async Task<TaskAssignmentsDto> ReassignTaskAsync(int taskId, ReassignTaskRequestDto dto)
 //        {
 //            _logger.LogInformation("Reassigning Task {TaskId} to User {UserId}", taskId, dto.NewAssignedTo);
@@ -266,10 +267,10 @@
 //            return MapToDto(newAssignment);
 //        }
 
-//        // ─────────────────────────────────────────────────────────
+//        // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //        // UPLOAD ATTACHMENT
 //        // Uses same pattern as TaskAttachmentService.
-//        // ─────────────────────────────────────────────────────────
+//        // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //        public async Task<TaskAssignmentsDto> UploadAttachmentAsync(UploadTaskAssignmentAttachmentDto dto)
 //        {
 //            _logger.LogInformation("Uploading attachment for Task {TaskId}.", dto.TaskId);
@@ -289,7 +290,7 @@
 //            if (task == null || task.IsDeleted)
 //                throw new Exception($"Task with ID {dto.TaskId} not found.");
 
-//            // Build file path – same folder convention as TaskAttachmentService
+//            // Build file path â€“ same folder convention as TaskAttachmentService
 //            var uploadFolder = Path.Combine(
 //                _environment.WebRootPath,
 //                "Uploads",
@@ -347,10 +348,10 @@
 //            };
 //        }
 
-//        // ─────────────────────────────────────────────────────────
+//        // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //        // TASK TIMELINE
 //        // Returns chronological history for a task.
-//        // ─────────────────────────────────────────────────────────
+//        // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //        public async Task<IEnumerable<TaskTimelineItemDto>> GetTaskTimelineAsync(int taskId)
 //        {
 //            _logger.LogInformation("Fetching Task Timeline for Task {TaskId}.", taskId);
@@ -423,9 +424,9 @@
 //            return timeline.OrderBy(x => x.EventDate);
 //        }
 
-//        // ─────────────────────────────────────────────────────────
+//        // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //        // Private helper
-//        // ─────────────────────────────────────────────────────────
+//        // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //        private static TaskAssignmentsDto MapToDto(Model.TaskAssignments x) => new TaskAssignmentsDto
 //        {
 //            AssignmentId = x.AssignmentId,
@@ -495,12 +496,12 @@ namespace CompanyPlatform.CRM.Services.TaskAssignments
 
         private const long MaxFileSizeBytes = 10 * 1024 * 1024; // 10 MB
 
-        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Employee.Employees> _employeeRepository;
+        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.Employee> _employeeRepository;
 
         public TaskAssignmentsService(
             IRepositories<TaskAssignmentsEntity> repository,
             IRepositories<TasksEntity> taskRepository,
-            IRepositories<CompanyPlatform.Core.Models.CRM.Employee.Employees> employeeRepository,
+            IRepositories<CompanyPlatform.Core.Models.CRM.Company.Employee> employeeRepository,
             IRepositories<TaskHistoryEntity> historyRepository,
             IRepositories<TaskAttachmentEntity> attachmentRepository,
             IWebHostEnvironment environment,
@@ -1177,3 +1178,4 @@ namespace CompanyPlatform.CRM.Services.TaskAssignments
         }
     }
 }
+

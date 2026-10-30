@@ -1,19 +1,26 @@
 import React, { useState, useEffect } from "react";
-import { X, Loader2, Bell, CheckSquare, Calendar } from "lucide-react";
+import { X, Loader2, CheckSquare } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../../../../../hooks/useAuth";
 import { getAllCustomers } from "../../Customer/Services/CustomerService";
-import { getAllDirectors } from "../../Master/Director/Services/DirectorService";
-import { getDirectorEmployees } from "../../Master/BdeUsers/Services/BdeUserService";
 import {
   createTask,
   getAllTaskStatuses,
+  addTaskActivity,
 } from "../Services/TaskService";
 import {
   getPrioritiesWithFallback,
+  getEmployeeOptions,
   type PriorityOptionItem,
-  type AssigneeOption,
 } from "../Services/SalesActivityService";
+import {
+  getAllEmployees,
+  type Employee,
+} from "../../../../HRMS/Pages/Employee/Services/EmployeeSerivce";
+import {
+  getDirectorEmployees,
+  getAllBdeUsers,
+} from "../../Master/BdeUsers/Services/BdeUserService";
 import type { TaskCreatePayload, TaskStatusItem } from "../Types/TaskTypes";
 
 interface AddTaskModalProps {
@@ -23,6 +30,12 @@ interface AddTaskModalProps {
   initialCustomerId?: string;
   initialCustomerName?: string;
   isModal?: boolean;
+}
+
+export interface EmployeeAssignee {
+  id: number;
+  name: string;
+  designation: string;
 }
 
 export const AddTaskModal: React.FC<AddTaskModalProps> = ({
@@ -40,52 +53,56 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
 
   // Master Data
   const [customers, setCustomers] = useState<any[]>([]);
-  const [directors, setDirectors] = useState<AssigneeOption[]>([]);
+  const [assignors, setAssignors] = useState<EmployeeAssignee[]>([]);
+  const [assignees, setAssignees] = useState<EmployeeAssignee[]>([]);
   const [priorities, setPriorities] = useState<PriorityOptionItem[]>([]);
   const [statuses, setStatuses] = useState<TaskStatusItem[]>([]);
 
   // Form Fields
   const [taskTitle, setTaskTitle] = useState<string>("");
-  const [description, setDescription] = useState<string>("");
+  const [assignedBy, setAssignedBy] = useState<string>("");
+  const [assignedTo, setAssignedTo] = useState<string>("");
   const [companyId, setCompanyId] = useState<number | string>(initialCustomerId || "");
-  const [assignedDirectorId, setAssignedDirectorId] = useState<number | string>("");
-  const [priorityId, setPriorityId] = useState<number>(2); // Default High / Medium
-  const [taskStatusId, setTaskStatusId] = useState<number>(1); // Default Pending
-  const [startDate, setStartDate] = useState<string>(new Date().toISOString().split("T")[0]);
   const [dueDate, setDueDate] = useState<string>(
     new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
   );
-  const [remarks, setRemarks] = useState<string>("");
-
-  // Reminder Fields
-  const [enableReminder, setEnableReminder] = useState<boolean>(false);
-  const [reminderDate, setReminderDate] = useState<string>("");
-  const [reminderTime, setReminderTime] = useState<string>("10:00");
-  const [reminderRemarks, setReminderRemarks] = useState<string>("");
+  const [reminderDateTime, setReminderDateTime] = useState<string>("");
+  const [priorityId, setPriorityId] = useState<number>(2);
+  const [taskStatusId, setTaskStatusId] = useState<number>(1);
+  const [details, setDetails] = useState<string>("");
 
   useEffect(() => {
     if (isOpen) {
       setIsSubmitted(false);
       setTaskTitle("");
-      setDescription("");
       setCompanyId(initialCustomerId || "");
-      setStartDate(new Date().toISOString().split("T")[0]);
       setDueDate(
         new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
       );
-      setRemarks("");
-      setEnableReminder(false);
-      setReminderDate("");
-      setReminderTime("10:00");
-      setReminderRemarks("");
+      setReminderDateTime("");
+      setDetails("");
+
+      const isDirectorOrBde = (name: string, designation: string): boolean => {
+        const d = (designation || "").toLowerCase().trim();
+        const n = (name || "").toLowerCase().trim();
+        return (
+          d.includes("director") ||
+          d.includes("bde") ||
+          d.includes("business development") ||
+          n.includes("(director)") ||
+          n.includes("(bde")
+        );
+      };
 
       const loadDropdowns = async () => {
         try {
-          const [custList, directorEmp, directMaster, prioList, statusList] =
+          const [custList, empList, dirEmpList, bdeUsersList, empOpts, prioList, statusList] =
             await Promise.all([
               getAllCustomers().catch(() => []),
+              getAllEmployees().catch(() => []),
               getDirectorEmployees().catch(() => []),
-              getAllDirectors().catch(() => []),
+              getAllBdeUsers().catch(() => []),
+              getEmployeeOptions().catch(() => []),
               getPrioritiesWithFallback(),
               getAllTaskStatuses(),
             ]);
@@ -94,42 +111,98 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
           setPriorities(prioList);
           setStatuses(statusList);
 
-          // Build clean directors list
-          const seen = new Set<string>();
-          const dList: AssigneeOption[] = [];
+          // 1. Build Assignor List (Director & BDE User ONLY)
+          const assignorMap = new Map<string, EmployeeAssignee>();
 
-          directorEmp.forEach((d) => {
-            if (d && d.id && !seen.has(String(d.id))) {
-              seen.add(String(d.id));
-              dList.push({
-                id: String(d.id),
-                name: `${d.name} (Director)`,
-                role: "Director",
-                type: "Employee",
+          empList.forEach((emp: Employee) => {
+            const desg = emp.designationName || "";
+            const fullName = `${emp.firstName} ${emp.lastName || ""}`.trim();
+            if (isDirectorOrBde(fullName, desg)) {
+              const key = fullName.toLowerCase();
+              if (!assignorMap.has(key)) {
+                assignorMap.set(key, {
+                  id: emp.id,
+                  name: fullName,
+                  designation: desg.toLowerCase().includes("director")
+                    ? "Director"
+                    : "BDE User",
+                });
+              }
+            }
+          });
+
+          dirEmpList.forEach((dir) => {
+            const key = dir.name.toLowerCase();
+            if (!assignorMap.has(key)) {
+              assignorMap.set(key, {
+                id: dir.id,
+                name: dir.name,
+                designation: "Director",
               });
             }
           });
 
-          directMaster.forEach((d) => {
-            if (d && d.directorId && !seen.has(String(d.directorId))) {
-              seen.add(String(d.directorId));
-              dList.push({
-                id: String(d.directorId),
-                name: `${d.directorName} (Director Master)`,
-                role: "Director",
-                type: "Employee",
+          bdeUsersList.forEach((bde) => {
+            if (bde.isActive) {
+              const key = bde.value.toLowerCase();
+              if (!assignorMap.has(key)) {
+                assignorMap.set(key, {
+                  id: bde.id,
+                  name: bde.value,
+                  designation: "BDE User",
+                });
+              }
+            }
+          });
+
+          const assignorArr = Array.from(assignorMap.values());
+          setAssignors(assignorArr);
+
+          // 2. Build Assignee List (All employees BELOW Director & BDE)
+          const assigneeMap = new Map<string, EmployeeAssignee>();
+
+          empList.forEach((emp: Employee) => {
+            const desg = emp.designationName || "";
+            const fullName = `${emp.firstName} ${emp.lastName || ""}`.trim();
+            if (!isDirectorOrBde(fullName, desg)) {
+              const key = fullName.toLowerCase();
+              if (!assigneeMap.has(key)) {
+                assigneeMap.set(key, {
+                  id: emp.id,
+                  name: fullName,
+                  designation: desg || emp.departmentName || "Staff",
+                });
+              }
+            }
+          });
+
+          empOpts.forEach((opt) => {
+            const key = opt.name.toLowerCase();
+            if (!isDirectorOrBde(opt.name, opt.role || "") && !assigneeMap.has(key)) {
+              assigneeMap.set(key, {
+                id: Number(opt.id || 0),
+                name: opt.name,
+                designation: opt.role || "Sales Coordinator",
               });
             }
           });
 
-          setDirectors(dList);
+          const assigneeArr = Array.from(assigneeMap.values());
+          setAssignees(assigneeArr);
 
-          if (dList.length > 0) {
-            setAssignedDirectorId(dList[0].id);
+          // Default Assigned By (Current user if Director/BDE, or first assignor)
+          if (assignorArr.length > 0) {
+            setAssignedBy(`${assignorArr[0].name} (${assignorArr[0].designation})`);
+          }
+
+          // Default Assigned To (First subordinate employee)
+          if (assigneeArr.length > 0) {
+            setAssignedTo(`${assigneeArr[0].name} (${assigneeArr[0].designation})`);
           }
 
           if (prioList.length > 0) {
-            const highOrMed = prioList.find((p) => p.name.toLowerCase() === "high") || prioList[0];
+            const highOrMed =
+              prioList.find((p) => p.name.toLowerCase() === "high") || prioList[0];
             setPriorityId(Number(highOrMed.id));
           }
 
@@ -144,7 +217,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
 
       loadDropdowns();
     }
-  }, [isOpen, initialCustomerId]);
+  }, [isOpen, initialCustomerId, user]);
 
   if (!isOpen) return null;
 
@@ -153,12 +226,17 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
     setIsSubmitted(true);
 
     if (!taskTitle.trim()) {
-      toast.error("Please enter a Task Title / Subject.");
+      toast.error("Please enter Task Title.");
       return;
     }
 
-    if (!assignedDirectorId) {
-      toast.error("Please select a Director to assign this task / approval request.");
+    if (!assignedBy) {
+      toast.error("Please select Assigned By.");
+      return;
+    }
+
+    if (!assignedTo) {
+      toast.error("Please select Assigned To.");
       return;
     }
 
@@ -169,30 +247,76 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
 
     setIsLoading(true);
 
+    // Resolve assignedTo ID from assignees list
+    let resolvedAssignedToId = 1;
+    const matchedAssignee = assignees.find((a) => {
+      const full = `${a.name} (${a.designation})`.toLowerCase();
+      return full === assignedTo.toLowerCase() || a.name.toLowerCase() === assignedTo.toLowerCase();
+    });
+    if (matchedAssignee && matchedAssignee.id > 0) {
+      resolvedAssignedToId = matchedAssignee.id;
+    }
+
+    // Resolve assignedBy ID from assignors list
+    let resolvedAssignedById = Number(user?.employeeId || 1);
+    const matchedAssignor = assignors.find((a) => {
+      const full = `${a.name} (${a.designation})`.toLowerCase();
+      return full === assignedBy.toLowerCase() || a.name.toLowerCase() === assignedBy.toLowerCase();
+    });
+    if (matchedAssignor && matchedAssignor.id > 0) {
+      resolvedAssignedById = matchedAssignor.id;
+    }
+
+    // Resolve customer name
+    const matchedCust = customers.find(
+      (c: any) => String(c.customerId || c.id) === String(companyId)
+    );
+    const customerDisplayName = matchedCust
+      ? matchedCust.customerName || matchedCust.companyName
+      : "";
+
+    // Parse reminder
+    let remDate: string | undefined = undefined;
+    let remTime: string | undefined = undefined;
+    if (reminderDateTime) {
+      const parts = reminderDateTime.split("T");
+      remDate = parts[0];
+      remTime = parts[1] || "10:00";
+    }
+
     try {
       const payload: TaskCreatePayload = {
         companyId: companyId ? Number(companyId) : 0,
         taskTitle: taskTitle.trim(),
-        description: description.trim(),
-        assignedTo: Number(assignedDirectorId),
-        assignedBy: Number(user?.employeeId || 1),
+        description: details.trim(),
+        assignedTo: resolvedAssignedToId,
+        assignedToName: assignedTo,
+        assignedBy: resolvedAssignedById,
+        assignedByName: assignedBy,
         priorityId: Number(priorityId),
         taskStatusId: Number(taskStatusId),
-        startDate: startDate || new Date().toISOString().split("T")[0],
+        startDate: new Date().toISOString().split("T")[0],
         dueDate: dueDate,
-        remarks: remarks.trim() || undefined,
+        remarks: details.trim() || undefined,
         createdBy: Number(user?.employeeId || 1),
-        reminderDate: enableReminder && reminderDate ? reminderDate : undefined,
-        reminderTime: enableReminder && reminderTime ? reminderTime : undefined,
-        reminderRemarks: enableReminder && reminderRemarks ? reminderRemarks.trim() : undefined,
+        reminderDate: remDate,
+        reminderTime: remTime,
+        reminderRemarks: details.trim() || taskTitle.trim(),
       };
 
       await createTask(payload);
-      toast.success("Task / Approval Request submitted to Director successfully!");
+
+      addTaskActivity({
+        by: assignedBy,
+        text: `Created task: ${taskTitle.trim()}`,
+        customer: customerDisplayName || "General",
+      });
+
+      toast.success("Task assigned successfully!");
       onSuccess();
       onClose();
     } catch {
-      toast.error("Failed to submit task. Please try again.");
+      toast.error("Failed to assign task. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -206,254 +330,196 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
 
   const formElement = (
     <div className="bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden mb-8 animate-in slide-in-from-top-4 duration-300">
-      {/* Top Header Bar matching Customer Module */}
+      {/* Header Bar */}
       <div className="flex justify-between items-center bg-[#FF7900] text-white px-6 py-4 shrink-0 border-b border-[#e06800]">
         <div className="flex items-center gap-2.5">
           <CheckSquare size={20} className="text-white" />
-          <div>
-            <h2 className="text-base sm:text-lg font-bold tracking-tight text-white leading-tight">
-              Create New Task / Assignment Request
-            </h2>
-            <p className="text-xs text-white/85">
-              Submit and assign operational tasks, client commitments or managerial approvals
-            </p>
-          </div>
+          <h2 className="text-base sm:text-lg font-bold tracking-tight text-white leading-tight">
+            Add New Task
+          </h2>
         </div>
         <button
           type="button"
           onClick={onClose}
           disabled={isLoading}
           className="text-white/80 hover:text-white p-1.5 hover:bg-white/10 rounded-lg transition shrink-0 cursor-pointer"
-          title="Back to Tasks List"
+          title="Back to Tasks"
         >
           <X size={20} />
         </button>
       </div>
 
-      {/* Form matching Customer Module Sections & Spacing */}
+      {/* Form Content - Clean & Aligned 2-Column Grid */}
       <form onSubmit={handleSubmit} className="bg-white">
         <div className="p-6 sm:p-8 space-y-6">
-          {/* SECTION 1: TASK & ASSIGNMENT DETAILS */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
-            <div className="border-b border-gray-200 pb-2.5">
-              <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
-                <CheckSquare size={16} /> Section 1 - Task & Assignment Details
-              </h3>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-              {/* Task Title */}
-              <div className="md:col-span-2">
-                <label className={labelStyle}>
-                  Task Title / Approval Subject <RequiredAst />
-                </label>
-                <input
-                  type="text"
-                  value={taskTitle}
-                  onChange={(e) => setTaskTitle(e.target.value)}
-                  placeholder="e.g. Special Discount Approval for Tech Corp / Plant Audit Checklist"
-                  className={`${baseInputStyle} ${
-                    isSubmitted && !taskTitle ? "border-red-500" : ""
-                  }`}
-                  required
-                />
-              </div>
-
-              {/* Assigned Director */}
-              <div>
-                <label className={labelStyle}>
-                  Assigned Director <RequiredAst />
-                </label>
-                <select
-                  value={assignedDirectorId}
-                  onChange={(e) => setAssignedDirectorId(e.target.value)}
-                  className={`${baseInputStyle} ${
-                    isSubmitted && !assignedDirectorId ? "border-red-500" : ""
-                  }`}
-                  required
-                >
-                  <option value="">Select Director...</option>
-                  {directors.map((d) => (
-                    <option key={d.id} value={d.id}>
-                      {d.name}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-[11px] text-gray-400 mt-1">
-                  Tasks / approval requests must be assigned to a designated Director
-                </p>
-              </div>
-
-              {/* Customer / Company Account */}
-              <div>
-                <label className={labelStyle}>Customer / Company Account</label>
-                <select
-                  value={companyId}
-                  onChange={(e) => setCompanyId(e.target.value)}
-                  className={baseInputStyle}
-                >
-                  <option value="">Select Customer (Optional)...</option>
-                  {customers.map((c: any) => {
-                    const id = c.customerId || c.id;
-                    const name = c.companyName || c.customerName;
-                    return (
-                      <option key={id} value={id}>
-                        {name}
-                      </option>
-                    );
-                  })}
-                </select>
-              </div>
-
-              {/* Description */}
-              <div className="md:col-span-2">
-                <label className={labelStyle}>Description / Approval Context</label>
-                <textarea
-                  rows={3}
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Provide detailed description, requirements or financial metrics for this approval request..."
-                  className={`${baseInputStyle} resize-y min-h-[90px]`}
-                />
-              </div>
-
-              {/* General Remarks */}
-              <div className="md:col-span-2">
-                <label className={labelStyle}>Remarks / Notes for Director</label>
-                <input
-                  type="text"
-                  value={remarks}
-                  onChange={(e) => setRemarks(e.target.value)}
-                  placeholder="e.g. Urgent review requested before customer PO issuance"
-                  className={baseInputStyle}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* SECTION 2: TIMELINE & PRIORITY */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
-            <div className="border-b border-gray-200 pb-2.5">
-              <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
-                <Calendar size={16} /> Section 2 - Timeline & Priority
-              </h3>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-              {/* Priority Level */}
-              <div>
-                <label className={labelStyle}>
-                  Priority Level <RequiredAst />
-                </label>
-                <select
-                  value={priorityId}
-                  onChange={(e) => setPriorityId(Number(e.target.value))}
-                  className={baseInputStyle}
-                >
-                  {priorities.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Task Status */}
-              <div>
-                <label className={labelStyle}>Initial Task Status</label>
-                <select
-                  value={taskStatusId}
-                  onChange={(e) => setTaskStatusId(Number(e.target.value))}
-                  className={baseInputStyle}
-                >
-                  {statuses.map((s) => (
-                    <option key={s.taskStatusId || s.id} value={s.taskStatusId || s.id}>
-                      {s.statusName}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Start Date */}
-              <div>
-                <label className={labelStyle}>Start Date</label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className={baseInputStyle}
-                />
-              </div>
-
-              {/* Due Date */}
-              <div>
-                <label className={labelStyle}>
-                  Due Date <RequiredAst />
-                </label>
-                <input
-                  type="date"
-                  value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
-                  className={`${baseInputStyle} ${
-                    isSubmitted && !dueDate ? "border-red-500" : ""
-                  }`}
-                  required
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* SECTION 3: AUTOMATED REMINDER & NOTIFICATION */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
-            <div className="border-b border-gray-200 pb-2.5 flex items-center justify-between">
-              <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
-                <Bell size={16} /> Section 3 - Automated Reminder & Notification
-              </h3>
-              <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={enableReminder}
-                  onChange={(e) => setEnableReminder(e.target.checked)}
-                  className="rounded border-gray-300 text-[#FF7900] focus:ring-[#FF7900] w-4 h-4 cursor-pointer"
-                />
-                <span>Schedule Reminder</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
+            {/* Task Title - Full Row */}
+            <div className="md:col-span-2">
+              <label className={labelStyle}>
+                Task Title <RequiredAst />
               </label>
+              <input
+                type="text"
+                value={taskTitle}
+                onChange={(e) => setTaskTitle(e.target.value)}
+                placeholder="Enter task title / subject"
+                className={`${baseInputStyle} ${
+                  isSubmitted && !taskTitle ? "border-red-500" : ""
+                }`}
+                required
+              />
             </div>
 
-            {enableReminder && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 pt-2">
-                <div>
-                  <label className={labelStyle}>Reminder Date</label>
-                  <input
-                    type="date"
-                    value={reminderDate}
-                    onChange={(e) => setReminderDate(e.target.value)}
-                    className={baseInputStyle}
-                  />
-                </div>
-                <div>
-                  <label className={labelStyle}>Reminder Time</label>
-                  <input
-                    type="time"
-                    value={reminderTime}
-                    onChange={(e) => setReminderTime(e.target.value)}
-                    className={baseInputStyle}
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <label className={labelStyle}>Reminder Notification Message</label>
-                  <input
-                    type="text"
-                    value={reminderRemarks}
-                    onChange={(e) => setReminderRemarks(e.target.value)}
-                    placeholder="e.g. Follow up on Director approval decision"
-                    className={baseInputStyle}
-                  />
-                </div>
-              </div>
-            )}
+            {/* Assigned By (Director & BDE User Employees Only) */}
+            <div>
+              <label className={labelStyle}>
+                Assigned By <RequiredAst />
+              </label>
+              <select
+                value={assignedBy}
+                onChange={(e) => setAssignedBy(e.target.value)}
+                className={`${baseInputStyle} ${
+                  isSubmitted && !assignedBy ? "border-red-500" : ""
+                }`}
+                required
+              >
+                <option value="">Select Assignor (Director / BDE User)...</option>
+                {assignors.map((opt) => {
+                  const val = `${opt.name} (${opt.designation})`;
+                  return (
+                    <option key={`by-${opt.id}-${opt.name}`} value={val}>
+                      {val}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+
+            {/* Assigned To (Employees Below Director & BDE) */}
+            <div>
+              <label className={labelStyle}>
+                Assigned To <RequiredAst />
+              </label>
+              <select
+                value={assignedTo}
+                onChange={(e) => setAssignedTo(e.target.value)}
+                className={`${baseInputStyle} ${
+                  isSubmitted && !assignedTo ? "border-red-500" : ""
+                }`}
+                required
+              >
+                <option value="">Select Assignee (Team / Staff)...</option>
+                {assignees.map((opt) => {
+                  const val = `${opt.name} (${opt.designation})`;
+                  return (
+                    <option key={`to-${opt.id}-${opt.name}`} value={val}>
+                      {val}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+
+            {/* Related Customer */}
+            <div>
+              <label className={labelStyle}>Customer / Company Account</label>
+              <select
+                value={companyId}
+                onChange={(e) => setCompanyId(e.target.value)}
+                className={baseInputStyle}
+              >
+                <option value="">Select Customer (Optional)...</option>
+                {customers.map((c: any) => {
+                  const id = c.customerId || c.id;
+                  const name = c.companyName || c.customerName;
+                  return (
+                    <option key={id} value={id}>
+                      {name}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+
+            {/* Due Date */}
+            <div>
+              <label className={labelStyle}>
+                Due Date <RequiredAst />
+              </label>
+              <input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                className={`${baseInputStyle} ${
+                  isSubmitted && !dueDate ? "border-red-500" : ""
+                }`}
+                required
+              />
+            </div>
+
+            {/* Reminder Date & Time */}
+            <div>
+              <label className={labelStyle}>Reminder Date & Time</label>
+              <input
+                type="datetime-local"
+                value={reminderDateTime}
+                onChange={(e) => setReminderDateTime(e.target.value)}
+                className={baseInputStyle}
+              />
+            </div>
+
+            {/* Priority */}
+            <div>
+              <label className={labelStyle}>
+                Priority <RequiredAst />
+              </label>
+              <select
+                value={priorityId}
+                onChange={(e) => setPriorityId(Number(e.target.value))}
+                className={baseInputStyle}
+              >
+                {priorities.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} Priority
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Status */}
+            <div>
+              <label className={labelStyle}>Status</label>
+              <select
+                value={taskStatusId}
+                onChange={(e) => setTaskStatusId(Number(e.target.value))}
+                className={baseInputStyle}
+              >
+                {statuses.map((s) => (
+                  <option
+                    key={s.taskStatusId || s.id}
+                    value={s.taskStatusId || s.id}
+                  >
+                    {s.statusName}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Task Details / Instructions */}
+            <div className="md:col-span-2">
+              <label className={labelStyle}>Task Details / Instructions</label>
+              <textarea
+                rows={3}
+                value={details}
+                onChange={(e) => setDetails(e.target.value)}
+                placeholder="Enter task details, instructions or approval notes..."
+                className={`${baseInputStyle} resize-y min-h-[80px]`}
+              />
+            </div>
           </div>
         </div>
 
-        {/* Form Actions Footer matching Customer Module */}
+        {/* Footer Actions */}
         <div className="flex items-center justify-end gap-3 px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-xl">
           <button
             type="button"
@@ -473,7 +539,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
             ) : (
               <CheckSquare size={16} />
             )}
-            <span>Submit Task / Request</span>
+            <span>Save Task</span>
           </button>
         </div>
       </form>
@@ -482,7 +548,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
 
   if (isModal) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4 overflow-y-auto">
+      <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4 overflow-y-auto">
         <div className="w-full max-w-4xl my-auto animate-in fade-in zoom-in-95 duration-200">
           {formElement}
         </div>

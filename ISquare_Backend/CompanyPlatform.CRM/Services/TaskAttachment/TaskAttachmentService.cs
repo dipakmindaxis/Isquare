@@ -1,3 +1,4 @@
+﻿using CompanyPlatform.Core.Models.CRM.Company;
 //using Microsoft.AspNetCore.Hosting;
 //using Microsoft.AspNetCore.Http;
 //using Microsoft.Extensions.Logging;
@@ -577,7 +578,7 @@ namespace CompanyPlatform.CRM.Services.TaskAttachment
     {
         private readonly IRepositories<TaskAttachmentEntity> _repository;
         private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.Tasks> _taskRepository;
-        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Employee.Employees> _employeeRepository;
+        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.Employee> _employeeRepository;
         private readonly IWebHostEnvironment _environment;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<TaskAttachmentService> _logger;
@@ -585,7 +586,7 @@ namespace CompanyPlatform.CRM.Services.TaskAttachment
         public TaskAttachmentService(
             IRepositories<TaskAttachmentEntity> repository,
             IRepositories<CompanyPlatform.Core.Models.CRM.Company.Tasks> taskRepository,
-            IRepositories<CompanyPlatform.Core.Models.CRM.Employee.Employees> employeeRepository,
+            IRepositories<CompanyPlatform.Core.Models.CRM.Company.Employee> employeeRepository,
             IWebHostEnvironment environment,
             IHttpContextAccessor httpContextAccessor,
             ILogger<TaskAttachmentService> logger)
@@ -940,4 +941,5 @@ namespace CompanyPlatform.CRM.Services.TaskAttachment
         }
     }
 }
+
 

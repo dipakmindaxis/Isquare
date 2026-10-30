@@ -144,18 +144,12 @@ const rsmMenuConfig: MenuItem[] = [
   {
     icon: <Layers />,
     label: "ALL SALES ACTIVITIES",
-    subMenu: [
-      {
-        icon: <Layers />,
-        label: "ALL SALES ACTIVITIES",
-        to: "/rsm/sales-activities",
-      },
-      {
-        icon: <CheckSquare />,
-        label: "TASK ASSIGNMENT",
-        to: "/rsm/sales-activities?tab=tasks",
-      },
-    ],
+    to: "/rsm/sales-activities",
+  },
+  {
+    icon: <CheckSquare />,
+    label: "TASK ASSIGNMENT",
+    to: "/rsm/task-assignment",
   },
 
   {

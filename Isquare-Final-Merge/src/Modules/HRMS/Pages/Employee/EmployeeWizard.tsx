@@ -9,7 +9,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import EmployeeDetailsTab from "./Tabs/EmployeeDetailsTab";
-import type { EmployeeDetailsTabRef } from "./Tabs/EmployeeDetailsTab";
+import type { EmployeeDetailsTabRef, Level } from "./Tabs/EmployeeDetailsTab";
+import { getLevels } from "../../../RSM/Pages/Customer/Services/HierarchyLevelService";
 import BankDetailsTab from "./Tabs/BankDetailsTab";
 import EmployeeAddressTab from "./Tabs/EmployeeAddressTab";
 // import { type Employee } from "../../HRMS/Pages/Employee/Services/EmployeeService";
@@ -151,6 +152,7 @@ const EmployeeWizard: React.FC<EmployeeWizardProps> = ({
   const [designations, setDesignations] = useState<DesignationItem[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [roles, setRoles] = useState<Role[]>([]);
+  const [levels, setLevels] = useState<Level[]>([]);
   const [errors, setErrors] = useState<ValidationErrors>({});
 
   const initialFormState: EmployeeFormData = {
@@ -232,24 +234,27 @@ const EmployeeWizard: React.FC<EmployeeWizardProps> = ({
           deptRes,
           designationRes,
           roleRes,
-         
+          levelRes,
         ] = await Promise.all([
-          getCountries(),
-          getStates(),
-          getCompanies(),
-          getDepartmentsList(),
-          getDesignationsList(),
-          getRoles(),
+          getCountries().catch(() => []),
+          getStates().catch(() => []),
+          getCompanies().catch(() => [
+            { companyId: 1, companyName: "I-Square Safety Equipments Pvt. Ltd." },
+          ]),
+          getDepartmentsList().catch(() => []),
+          getDesignationsList().catch(() => []),
+          getRoles().catch(() => []),
+          getLevels().catch(() => []),
         ]);
-        setCountries(countryRes);
-        setStates(stateRes);
-        setCompanies(compRes);
-        setDepartments(deptRes);
-        setDesignations(designationRes);
-        setRoles(roleRes);
-       
-      } catch {
-        toast.error("Failed to load master data");
+        if (Array.isArray(countryRes)) setCountries(countryRes);
+        if (Array.isArray(stateRes)) setStates(stateRes);
+        if (Array.isArray(compRes)) setCompanies(compRes);
+        if (Array.isArray(deptRes)) setDepartments(deptRes);
+        if (Array.isArray(designationRes)) setDesignations(designationRes);
+        if (Array.isArray(roleRes)) setRoles(roleRes);
+        if (Array.isArray(levelRes)) setLevels(levelRes as Level[]);
+      } catch (err) {
+        console.warn("Failed to load some master data:", err);
       }
     };
     fetchMasterData();
@@ -541,7 +546,9 @@ const EmployeeWizard: React.FC<EmployeeWizardProps> = ({
                       departments={departments}
                       designations={designations}
                       roles={roles}
-                      errors={errors} levels={[]}          />
+                      levels={levels}
+                      errors={errors}
+                    />
         )}
         {activeTab === 1 && (
           <EmployeeAddressTab

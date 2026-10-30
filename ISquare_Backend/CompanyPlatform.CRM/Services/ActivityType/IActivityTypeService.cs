@@ -8,13 +8,10 @@ namespace CompanyPlatform.CRM.Services.ActivityType
 
         Task<ActivityTypeDto?> GetActivityTypeByIdAsync(int id);
 
-        Task<ActivityTypeDto> CreateActivityTypeAsync(
-            ActivityTypeDto dto);
+        Task<ActivityTypeDto> CreateActivityTypeAsync(ActivityTypeDto dto);
 
-        Task<bool> UpdateActivityTypeAsync(
-            int id,
-            ActivityTypeDto dto);
+        Task<bool> UpdateActivityTypeAsync(int id, ActivityTypeDto dto);
 
         Task<bool> DeleteActivityTypeAsync(int id);
     }
-}
+};

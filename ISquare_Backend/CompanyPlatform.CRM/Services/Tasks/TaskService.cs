@@ -1,3 +1,4 @@
+﻿using CompanyPlatform.Core.Models.CRM.Company;
 //using Microsoft.Extensions.Logging;
 //using CompanyPlatform.CRM.DTO.Tasks;
 //using CompanyPlatform.CRM.Repository;
@@ -312,7 +313,7 @@ namespace CompanyPlatform.CRM.Services.Tasks
     {
         private readonly IRepositories<TasksEntity> _repository;
         private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.Company> _companyRepository;
-        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Employee.Employees> _employeeRepository;
+        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.Employee> _employeeRepository;
         private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.Priority> _priorityRepository;
         private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.TaskStatus> _taskStatusRepository;
         private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.Reminder> _reminderRepository;
@@ -323,7 +324,7 @@ namespace CompanyPlatform.CRM.Services.Tasks
         public TaskService(
             IRepositories<TasksEntity> repository,
             IRepositories<CompanyPlatform.Core.Models.CRM.Company.Company> companyRepository,
-            IRepositories<CompanyPlatform.Core.Models.CRM.Employee.Employees> employeeRepository,
+            IRepositories<CompanyPlatform.Core.Models.CRM.Company.Employee> employeeRepository,
             IRepositories<CompanyPlatform.Core.Models.CRM.Company.Priority> priorityRepository,
             IRepositories<CompanyPlatform.Core.Models.CRM.Company.TaskStatus> taskStatusRepository,
             IRepositories<CompanyPlatform.Core.Models.CRM.Company.Reminder> reminderRepository,

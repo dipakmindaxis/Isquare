@@ -342,6 +342,7 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
           return;
         }
         validAddresses.push({
+          companyId: 0,
           addressType: addr.addressType?.trim() || "Billing",
           address: addr.address.trim(),
           countryId: addr.countryId ? Number(addr.countryId) : 1,

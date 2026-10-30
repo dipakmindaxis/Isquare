@@ -163,14 +163,15 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
        
       ] = await Promise.all([
         getEmployeeFullDetails(employeeId),
-        getWorkLocations(),
-        getDepartmentsList(),
-        getDesignationsList(),
-        getRoles(),
-        getCountries(),
-        getStates(),
-        getCompanies(),
-      
+        getWorkLocations().catch(() => []),
+        getDepartmentsList().catch(() => []),
+        getDesignationsList().catch(() => []),
+        getRoles().catch(() => []),
+        getCountries().catch(() => []),
+        getStates().catch(() => []),
+        getCompanies().catch(() => [
+          { companyId: 1, companyName: "I-Square Safety Equipments Pvt. Ltd." },
+        ]),
       ]);
 
       setMaster({
@@ -258,54 +259,106 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
   const handleSaveAll = async () => {
     if (!employeeId) return;
     setIsSaving(true);
-    const data = new FormData();
-    const nameParts = formData.firstName.trim().split(/\s+/);
-    data.append("FirstName", nameParts[0] || "");
-    data.append(
-      "LastName",
-      nameParts.length > 1 ? nameParts.slice(1).join(" ") : ".",
-    );
 
-    Object.keys(formData).forEach((key) => {
-      const val = formData[key];
-      if (
-        ![
-          "qualifications",
-          "experiences",
-          "firstName",
-          "lastName",
-          "attachments",
-          "documents",
-          "statutoryDetails",
-          "bankDetails",
-          "pfDetails",
-        ].includes(key)
-      ) {
-        if (val !== null && val !== undefined && typeof val !== "object") {
-          data.append(key.charAt(0).toUpperCase() + key.slice(1), String(val));
-        }
-      }
-    });
+    const nameStr = (formData.firstName || "").trim();
+    const nameParts = nameStr.split(/\s+/).filter(Boolean);
+    const firstName = nameParts[0] || (nameStr || "Employee");
+    const lastName =
+      nameParts.length > 1
+        ? nameParts.slice(1).join(" ")
+        : formData.lastName
+        ? String(formData.lastName).trim()
+        : ".";
 
-    data.append("QualificationsJson", JSON.stringify(formData.qualifications));
-    data.append("ExperiencesJson", JSON.stringify(formData.experiences));
-    if (photoFile) data.append("Photo", photoFile);
+    if (photoFile) {
+      console.log("Photo file selected:", photoFile.name);
+    }
+
+    const emailAddress = String(
+      formData.emailAddress ||
+      formData.email ||
+      formData.curEmail ||
+      ""
+    ).trim();
+
+    const mobileNumber = String(
+      formData.mobileNumber ||
+      formData.curMobileNo ||
+      ""
+    ).trim();
+
+    const addressParts = [
+      formData.curFlatNo,
+      formData.curPremisesName,
+      formData.curRoadName,
+      formData.curLocality,
+      formData.curTownDistrict,
+    ].filter(Boolean);
+
+    const presentAddress = String(
+      formData.presentAddress || (addressParts.length > 0 ? addressParts.join(", ") : "")
+    ).trim();
+
+    const parseDate = (d?: any) => {
+      if (!d) return undefined;
+      const parsed = new Date(d);
+      return !isNaN(parsed.getTime()) ? parsed.toISOString() : undefined;
+    };
+
+    const parseNum = (val: any) => {
+      const n = Number(val);
+      return !isNaN(n) && n > 0 ? n : undefined;
+    };
+
+    const updatePayload = {
+      employeeCode: formData.employeeCode
+        ? String(formData.employeeCode).trim()
+        : undefined,
+      firstName,
+      middleName: formData.middleName
+        ? String(formData.middleName).trim()
+        : undefined,
+      lastName,
+      dateOfBirth: parseDate(formData.dateOfBirth),
+      gender: formData.gender ? String(formData.gender) : undefined,
+      mobileNumber: mobileNumber || undefined,
+      emailAddress: emailAddress || "employee@isquare.com",
+      presentAddress: presentAddress || undefined,
+      dateOfJoining: parseDate(formData.dateOfJoining),
+      workLocationID: parseNum(formData.workLocationID),
+      departmentID: parseNum(formData.departmentID),
+      designationID: parseNum(formData.designationID),
+      reportingTo: parseNum(formData.reportingTo),
+      levelID: parseNum(formData.levelID),
+      photoPath: formData.photoPath ? String(formData.photoPath) : undefined,
+      googleCalendarId: formData.googleCalendarId
+        ? String(formData.googleCalendarId)
+        : undefined,
+      userId: formData.userId ? String(formData.userId) : undefined,
+      dateOfLeaving: parseDate(formData.dateOfLeaving),
+      isActive:
+        formData.isActive !== undefined ? Boolean(formData.isActive) : true,
+    };
 
     try {
       const token = sessionStorage.getItem("token");
-      await axios.put(
-        // `${API_ENDPOINTS.Employees}/${employeeId}/full-update`,
-        `${API_ENDPOINTS.Employees}/${employeeId}`,
-        data,
-        {
-          headers: { Authorization: `Bearer ${token}` },
+      const url = `${API_ENDPOINTS.CRMEmployee || `${API_ENDPOINTS.BaseUrl}/employee`}/${employeeId}`;
+      const response = await axios.put(url, updatePayload, {
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-      );
-      toast.success("Employee updated successfully");
+      });
+      toast.success(response.data?.message || "Employee updated successfully");
       onSuccess();
       onClose();
-    } catch {
-      toast.error("Update failed");
+    } catch (err: any) {
+      console.error("Employee update error:", err?.response?.data || err);
+      const msg =
+        err?.response?.data?.message ||
+        err?.response?.data?.title ||
+        "Update failed";
+      toast.error(msg);
     } finally {
       setIsSaving(false);
     }

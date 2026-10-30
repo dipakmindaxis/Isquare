@@ -1,3 +1,6 @@
+﻿using CompanyPlatform.Core.Models.CRM.Company;
+using CompanyPlatform.Core.Models.CRM.Employee;
+using Employee = CompanyPlatform.Core.Models.CRM.Company.Employee;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.WebUtilities;
@@ -14,7 +17,7 @@ using System.Security.Claims;
 using System.Text;
 using CompanyPlatform.Core.Data;
 using CompanyPlatform.Core.Services.Email;
-using CompanyPlatform.Core.Models.CRM.Employee;
+
 using Newtonsoft.Json;
 
 namespace CompanyPlatform.Core.Services.Auth
@@ -56,18 +59,18 @@ namespace CompanyPlatform.Core.Services.Auth
 
 
             // Only block if active (not soft-deleted) employee has this email
-            var activeEmployee = await _dbContext.Employees
+            var activeEmployee = await _dbContext.Tbl_Employee
                 .AnyAsync(e => e.EmailAddress == registerDto.Email && !e.IsDeleted);
             if (activeEmployee)
                 return (IdentityResult.Failed(), "An active employee with this email already exists.");
 
-            //var codeExists = await _dbContext.Employees.AnyAsync(e => e.EmployeeCode == registerDto.EmployeeCode);
+            //var codeExists = await _dbContext.Tbl_Employee.AnyAsync(e => e.EmployeeCode == registerDto.EmployeeCode);
             //if (codeExists) return (IdentityResult.Failed(), "Employee code already exists.");
 
             //await using var transaction = await _dbContext.Database.BeginTransactionAsync();
 
             // If a soft-deleted employee exists with this email, remove its Identity user
-            var deletedEmployee = await _dbContext.Employees
+            var deletedEmployee = await _dbContext.Tbl_Employee
         .FirstOrDefaultAsync(e => e.EmailAddress == registerDto.Email && e.IsDeleted);
             if (deletedEmployee != null)
             {
@@ -97,7 +100,7 @@ namespace CompanyPlatform.Core.Services.Auth
                 }
 
                 // 3. Save Main Employee Record
-                var newEmployee = new Employees
+                var newEmployee = new Employee
                 {
                     EmployeeCode = registerDto.EmployeeCode,
                     FirstName = registerDto.FirstName,
@@ -116,7 +119,7 @@ namespace CompanyPlatform.Core.Services.Auth
                     IsActive = true,
                     IsDeleted = false
                 };
-                _dbContext.Employees.Add(newEmployee);
+                _dbContext.Tbl_Employee.Add(newEmployee);
                 await _dbContext.SaveChangesAsync();
 
                 // 4. Save Statutory Details
@@ -336,7 +339,7 @@ namespace CompanyPlatform.Core.Services.Auth
 
             // 3. Resolve Employee record:
             // ApplicationUser links via foreign key EmployeeId to Employee (tbl_Employee).
-            // Some modules also use Employees (tbl_Employees). We check user.Employee first, then fallback to _dbContext.Employees.
+            // Some modules also use Employees (tbl_Employees). We check user.Employee first, then fallback to _dbContext.Tbl_Employee.
             int employeeId = user.EmployeeId;
             string firstName = string.Empty;
             string lastName = string.Empty;
@@ -369,7 +372,7 @@ namespace CompanyPlatform.Core.Services.Auth
             }
             else
             {
-                var employeeRecord = await _dbContext.Employees
+                var employeeRecord = await _dbContext.Tbl_Employee
                     .FirstOrDefaultAsync(e => e.ID == user.EmployeeId && e.IsActive == true);
 
                 if (employeeRecord == null)
@@ -660,7 +663,7 @@ namespace CompanyPlatform.Core.Services.Auth
             var employeeMessage = "Your password was successfully changed from a logged-in session. If you did not make this change, please secure your account immediately.";
            
 
-            var employee = await _dbContext.Employees.FindAsync(user.EmployeeId);
+            var employee = await _dbContext.Tbl_Employee.FindAsync(user.EmployeeId);
             if (employee?.ReportingTo != null)
             {
                 var managerId = employee.ReportingTo.Value;
@@ -675,3 +678,5 @@ namespace CompanyPlatform.Core.Services.Auth
         }
     }
 }
+
+

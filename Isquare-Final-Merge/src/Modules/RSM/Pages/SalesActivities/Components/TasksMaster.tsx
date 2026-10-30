@@ -1,27 +1,25 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
   CheckSquare,
-  Calendar,
-  CheckCircle,
   Plus,
   Search,
   Eye,
   RefreshCw,
+  CheckCircle,
+  Clock,
 } from "lucide-react";
 import { toast } from "sonner";
-import type { TaskItem, TaskSummaryStats } from "../Types/TaskTypes";
+import type { TaskItem, TaskSummaryStats, TaskActivityFeedItem } from "../Types/TaskTypes";
 import {
   getAllTasks,
   getTaskSummaryStats,
   completeTask,
+  getTaskActivities,
 } from "../Services/TaskService";
 import {
   getPrioritiesWithFallback,
   type PriorityOptionItem,
-  type AssigneeOption,
 } from "../Services/SalesActivityService";
-import { getAllDirectors } from "../../Master/Director/Services/DirectorService";
-import { getDirectorEmployees } from "../../Master/BdeUsers/Services/BdeUserService";
 import { AddTaskModal } from "./AddTaskModal";
 import { ViewTaskModal } from "./ViewTaskModal";
 
@@ -35,27 +33,32 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
   onAddClosed,
 }) => {
   const [tasks, setTasks] = useState<TaskItem[]>([]);
+  const [activities, setActivities] = useState<TaskActivityFeedItem[]>([]);
   const [stats, setStats] = useState<TaskSummaryStats>({
     total: 0,
     pending: 0,
+    inProgress: 0,
     dueToday: 0,
     overdue: 0,
     completed: 0,
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Filters
+  // View state: "overview" | "tasks" | "activities"
+  const [currentView, setCurrentView] = useState<"overview" | "tasks" | "activities">("overview");
+
+  // Filters for All Tasks
   const [search, setSearch] = useState<string>("");
-  const [activeTab, setActiveTab] = useState<"all" | "pending" | "today" | "overdue" | "completed">("all");
+  const [statusFilter, setStatusFilter] = useState<string>("All");
   const [selectedPriorityId, setSelectedPriorityId] = useState<string>("All");
-  const [selectedDirectorId, setSelectedDirectorId] = useState<string>("All");
 
   // Dropdowns
   const [priorities, setPriorities] = useState<PriorityOptionItem[]>([]);
-  const [directors, setDirectors] = useState<AssigneeOption[]>([]);
 
-  // Modals / Inline Form State
+  // Modals / Form State
   const [isAddOpen, setIsAddOpen] = useState<boolean>(initialAddOpen);
+  const [selectedTask, setSelectedTask] = useState<TaskItem | null>(null);
+  const [isViewOpen, setIsViewOpen] = useState<boolean>(false);
 
   useEffect(() => {
     if (initialAddOpen !== undefined) {
@@ -68,60 +71,28 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
     if (onAddClosed) onAddClosed();
   };
 
-  const [selectedTask, setSelectedTask] = useState<TaskItem | null>(null);
-  const [isViewOpen, setIsViewOpen] = useState<boolean>(false);
-
   const loadTasks = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [data, statsData, prioList, directorEmp, directMaster] = await Promise.all([
+      const [data, prioList] = await Promise.all([
         getAllTasks({
           search,
-          tabFilter: activeTab,
+          status: statusFilter,
           priorityId: selectedPriorityId === "All" ? "All" : Number(selectedPriorityId),
-          assignedTo: selectedDirectorId === "All" ? "All" : Number(selectedDirectorId),
         }),
-        getTaskSummaryStats(),
         getPrioritiesWithFallback(),
-        getDirectorEmployees().catch(() => []),
-        getAllDirectors().catch(() => []),
       ]);
 
       setTasks(data);
-      setStats(statsData);
+      setStats(getTaskSummaryStats(data));
       setPriorities(prioList);
-
-      const seen = new Set<string>();
-      const dList: AssigneeOption[] = [];
-      directorEmp.forEach((d) => {
-        if (d && d.id && !seen.has(String(d.id))) {
-          seen.add(String(d.id));
-          dList.push({
-            id: String(d.id),
-            name: d.name,
-            role: "Director",
-            type: "Employee",
-          });
-        }
-      });
-      directMaster.forEach((d) => {
-        if (d && d.directorId && !seen.has(String(d.directorId))) {
-          seen.add(String(d.directorId));
-          dList.push({
-            id: String(d.directorId),
-            name: d.directorName,
-            role: "Director",
-            type: "Employee",
-          });
-        }
-      });
-      setDirectors(dList);
+      setActivities(getTaskActivities());
     } catch {
-      toast.error("Failed to load tasks and approval requests.");
+      toast.error("Failed to load tasks.");
     } finally {
       setIsLoading(false);
     }
-  }, [search, activeTab, selectedPriorityId, selectedDirectorId]);
+  }, [search, statusFilter, selectedPriorityId]);
 
   useEffect(() => {
     loadTasks();
@@ -130,11 +101,41 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
   const handleMarkComplete = async (taskId: number) => {
     try {
       await completeTask(taskId);
-      toast.success("Task / Request marked as Completed / Approved!");
+      toast.success("Task marked as Completed!");
       loadTasks();
     } catch {
       toast.error("Failed to complete task.");
     }
+  };
+
+  const getStatusBadge = (task: TaskItem) => {
+    const isDone =
+      task.isCompleted ||
+      task.taskStatusId === 4 ||
+      (task.taskStatusName || "").toLowerCase().includes("completed") ||
+      (task.taskStatusName || "").toLowerCase().includes("approved");
+
+    if (isDone) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">
+          <CheckCircle size={11} /> Completed
+        </span>
+      );
+    }
+
+    if ((task.taskStatusName || "").toLowerCase().includes("progress")) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800">
+          <Clock size={11} /> In Progress
+        </span>
+      );
+    }
+
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800">
+        <Clock size={11} /> Pending
+      </span>
+    );
   };
 
   const getPriorityBadgeClass = (priorityName?: string) => {
@@ -144,6 +145,23 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
     if (p.includes("medium")) return "bg-blue-50 text-blue-700 border-blue-200";
     return "bg-slate-50 text-slate-600 border-slate-200";
   };
+
+  // Filter tasks based on statusFilter
+  const filteredTasks = tasks.filter((t) => {
+    const isDone =
+      t.isCompleted ||
+      t.taskStatusId === 4 ||
+      (t.taskStatusName || "").toLowerCase().includes("completed") ||
+      (t.taskStatusName || "").toLowerCase().includes("approved");
+
+    const isInProgress = !isDone && (t.taskStatusName || "").toLowerCase().includes("progress");
+    const isPending = !isDone && !isInProgress;
+
+    if (statusFilter === "Pending") return isPending;
+    if (statusFilter === "In Progress") return isInProgress;
+    if (statusFilter === "Completed") return isDone;
+    return true;
+  });
 
   return (
     <div className="space-y-5 animate-in fade-in duration-200">
@@ -159,293 +177,493 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
         />
       ) : (
         <>
-          {/* 1. Header Card */}
-          <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-[#154068] text-white flex items-center justify-center shadow-xs">
-            <CheckSquare size={24} />
-          </div>
-          <div>
-            <h1 className="text-lg sm:text-xl font-bold text-slate-900 leading-tight">
-              Task Assignment & Approvals
-            </h1>
-            <p className="text-xs text-slate-500">
-              Submit, track, and assign operational tasks or approval requests to Directors
-            </p>
-          </div>
-        </div>
+          {/* Header & Navigation Bar */}
+          <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-xl bg-[#00234a] text-white flex items-center justify-center shadow-xs">
+                <CheckSquare size={22} />
+              </div>
+              <div>
+                <h1 className="text-lg sm:text-xl font-bold text-slate-900 leading-tight">
+                  Task Assignment
+                </h1>
+                <p className="text-xs text-slate-500">
+                  Track team assignments, tasks and deadlines
+                </p>
+              </div>
+            </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={loadTasks}
-            className="p-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition cursor-pointer"
-            title="Refresh Tasks"
-          >
-            <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsAddOpen(true)}
-            className="px-4 py-2.5 bg-[#FF7900] hover:bg-[#e06800] text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-xs cursor-pointer"
-          >
-            <Plus size={16} />
-            <span>+ Add Task / Assignment Request</span>
-          </button>
-        </div>
-      </div>
+            {/* Navigation View Switcher + Add Task Button */}
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setCurrentView("overview")}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                    currentView === "overview"
+                      ? "bg-white text-[#00234a] shadow-xs"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  Overview
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentView("tasks")}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                    currentView === "tasks"
+                      ? "bg-white text-[#00234a] shadow-xs"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  All Tasks
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentView("activities")}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                    currentView === "activities"
+                      ? "bg-white text-[#00234a] shadow-xs"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  Activities
+                </button>
+              </div>
 
-      {/* 2. KPI Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Tasks</p>
-          <p className="text-2xl font-extrabold text-[#154068] mt-1">{stats.total}</p>
-        </div>
-        <div className="bg-white p-4 rounded-xl border border-amber-200 shadow-xs bg-amber-50/20">
-          <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">Pending / Approval</p>
-          <p className="text-2xl font-extrabold text-amber-600 mt-1">{stats.pending}</p>
-        </div>
-        <div className="bg-white p-4 rounded-xl border border-blue-200 shadow-xs bg-blue-50/20">
-          <p className="text-[10px] font-bold text-blue-700 uppercase tracking-wider">Due Today</p>
-          <p className="text-2xl font-extrabold text-blue-600 mt-1">{stats.dueToday}</p>
-        </div>
-        <div className="bg-white p-4 rounded-xl border border-rose-200 shadow-xs bg-rose-50/20">
-          <p className="text-[10px] font-bold text-rose-700 uppercase tracking-wider">Overdue</p>
-          <p className="text-2xl font-extrabold text-rose-600 mt-1">{stats.overdue}</p>
-        </div>
-        <div className="bg-white p-4 rounded-xl border border-emerald-200 shadow-xs bg-emerald-50/20 col-span-2 sm:col-span-1">
-          <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Completed / Approved</p>
-          <p className="text-2xl font-extrabold text-emerald-600 mt-1">{stats.completed}</p>
-        </div>
-      </div>
+              <button
+                type="button"
+                onClick={loadTasks}
+                className="p-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition cursor-pointer"
+                title="Refresh"
+              >
+                <RefreshCw size={15} className={isLoading ? "animate-spin" : ""} />
+              </button>
 
-      {/* 3. Filter Bar & Tabs */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-4">
-        {/* Status Tabs */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-slate-100">
-          {(
-            [
-              { id: "all", label: "All Tasks" },
-              { id: "pending", label: "Pending Requests" },
-              { id: "today", label: "Due Today" },
-              { id: "overdue", label: "Overdue" },
-              { id: "completed", label: "Completed / Approved" },
-            ] as const
-          ).map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => setActiveTab(t.id)}
-              className={`px-3.5 py-2 text-xs font-bold rounded-lg transition whitespace-nowrap cursor-pointer ${
-                activeTab === t.id
-                  ? "bg-[#154068] text-white shadow-xs"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Inputs & Dropdowns */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {/* Search */}
-          <div className="relative">
-            <Search size={15} className="absolute left-3.5 top-3 text-slate-400" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by title, description, customer..."
-              className="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
-            />
+              <button
+                type="button"
+                onClick={() => setIsAddOpen(true)}
+                className="px-4 py-2 bg-[#FF7900] hover:bg-[#e06800] text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer"
+              >
+                <Plus size={15} />
+                <span>Add Task</span>
+              </button>
+            </div>
           </div>
 
-          {/* Priority Filter */}
-          <div>
-            <select
-              value={selectedPriorityId}
-              onChange={(e) => setSelectedPriorityId(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none focus:border-blue-500 bg-white"
-            >
-              <option value="All">All Priorities (Urgent, High, Med, Low)</option>
-              {priorities.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name} Priority
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* VIEW 1: OVERVIEW */}
+          {currentView === "overview" && (
+            <div className="space-y-5 animate-in fade-in duration-200">
+              {/* KPI Dashboard Cards */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
+                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    Total Tasks
+                  </p>
+                  <p className="text-2xl font-extrabold text-[#00234a] mt-1">{stats.total}</p>
+                </div>
+                <div className="bg-white p-4 rounded-xl border border-amber-200 shadow-xs bg-amber-50/20">
+                  <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">
+                    Pending
+                  </p>
+                  <p className="text-2xl font-extrabold text-amber-600 mt-1">{stats.pending}</p>
+                </div>
+                <div className="bg-white p-4 rounded-xl border border-blue-200 shadow-xs bg-blue-50/20">
+                  <p className="text-[10px] font-bold text-blue-700 uppercase tracking-wider">
+                    In Progress
+                  </p>
+                  <p className="text-2xl font-extrabold text-blue-600 mt-1">{stats.inProgress}</p>
+                </div>
+                <div className="bg-white p-4 rounded-xl border border-emerald-200 shadow-xs bg-emerald-50/20">
+                  <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">
+                    Completed
+                  </p>
+                  <p className="text-2xl font-extrabold text-emerald-600 mt-1">{stats.completed}</p>
+                </div>
+              </div>
 
-          {/* Director Filter */}
-          <div>
-            <select
-              value={selectedDirectorId}
-              onChange={(e) => setSelectedDirectorId(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none focus:border-blue-500 bg-white"
-            >
-              <option value="All">All Assigned Directors</option>
-              {directors.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
+              {/* My Assigned Tasks Section */}
+              <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-5">
+                <div className="flex items-center justify-between gap-3 mb-4">
+                  <h3 className="font-bold text-sm sm:text-base text-slate-800">
+                    My Assigned Tasks
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentView("tasks")}
+                    className="text-xs font-semibold text-[#00234a] hover:text-[#FF7900] transition cursor-pointer"
+                  >
+                    View all tasks →
+                  </button>
+                </div>
+                <div className="overflow-x-auto w-full">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                        <th className="text-left py-2.5 px-3">Task Title</th>
+                        <th className="text-left py-2.5 px-3">Assigned By</th>
+                        <th className="text-left py-2.5 px-3">Assigned To</th>
+                        <th className="text-left py-2.5 px-3">Due Date</th>
+                        <th className="text-center py-2.5 px-3">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {tasks.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="py-8 text-center text-slate-400 text-xs">
+                            No tasks assigned yet.
+                          </td>
+                        </tr>
+                      ) : (
+                        tasks.slice(0, 5).map((t) => (
+                          <tr key={t.taskId} className="hover:bg-slate-50/70 transition">
+                            <td className="py-3 px-3">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedTask(t);
+                                  setIsViewOpen(true);
+                                }}
+                                className="font-bold text-slate-800 hover:text-blue-600 text-left cursor-pointer"
+                              >
+                                {t.taskTitle}
+                              </button>
+                              {t.companyName && (
+                                <p className="text-[11px] text-slate-400 mt-0.5">
+                                  {t.companyName}
+                                </p>
+                              )}
+                            </td>
+                            <td className="py-3 px-3 text-xs font-medium text-slate-700">
+                              {t.assignedByName || "—"}
+                            </td>
+                            <td className="py-3 px-3 text-xs font-medium text-slate-700">
+                              {t.assignedToName || "—"}
+                            </td>
+                            <td className="py-3 px-3 text-xs text-slate-600">
+                              {t.dueDate || "—"}
+                            </td>
+                            <td className="py-3 px-3 text-center">
+                              {getStatusBadge(t)}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
 
-      {/* 4. Tasks Table */}
-      <div className="bg-white rounded-xl shadow-xs overflow-hidden border border-slate-200">
-        <div className="overflow-x-auto w-full">
-          <table className="w-full text-sm">
-            <thead className="bg-[#FF7900] text-white border-b border-[#e06800]">
-              <tr>
-                <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider">Sr.</th>
-                <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider">Task Title & Details</th>
-                <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider">Assigned Director</th>
-                <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider">Customer / Company</th>
-                <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider">Due Date</th>
-                <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider">Priority</th>
-                <th className="px-4 py-3 text-center text-[11px] font-bold uppercase tracking-wider">Status</th>
-                <th className="px-4 py-3 text-center text-[11px] font-bold uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {isLoading ? (
-                <tr>
-                  <td colSpan={8} className="py-12 text-center text-slate-400 text-xs">
-                    Loading tasks and approval requests...
-                  </td>
-                </tr>
-              ) : tasks.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="py-12 text-center">
-                    <CheckSquare size={32} className="mx-auto text-slate-300 mb-2" />
-                    <p className="text-sm font-semibold text-slate-700">No tasks found</p>
-                    <p className="text-xs text-slate-400 mt-0.5">
-                      Submit a new task or approval request using "+ Add Task" button above
+              {/* Team Activity Feed Preview */}
+              <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-5">
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <div>
+                    <h3 className="font-bold text-sm sm:text-base text-slate-800">
+                      Team Activity Visibility
+                    </h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentView("activities")}
+                    className="text-xs font-semibold text-[#00234a] hover:text-[#FF7900] transition cursor-pointer"
+                  >
+                    View feed →
+                  </button>
+                </div>
+                <div className="space-y-3 pt-2">
+                  {activities.length === 0 ? (
+                    <p className="text-xs text-slate-400 py-4 text-center">
+                      No team activities recorded yet.
                     </p>
-                  </td>
-                </tr>
-              ) : (
-                tasks.map((task, idx) => {
-                  const isDone =
-                    task.isCompleted ||
-                    task.taskStatusId === 4 ||
-                    (task.taskStatusName || "").toLowerCase().includes("completed") ||
-                    (task.taskStatusName || "").toLowerCase().includes("approved");
+                  ) : (
+                    activities.slice(0, 4).map((act) => (
+                      <div
+                        key={act.id}
+                        className="flex items-start gap-3 p-3 bg-slate-50/70 rounded-xl border border-slate-100"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs shrink-0">
+                          {act.by.slice(0, 1)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold text-slate-800">{act.text}</p>
+                          <p className="text-[11px] text-slate-500 mt-0.5">
+                            {act.by} {act.customer ? `· ${act.customer}` : ""}
+                          </p>
+                          <p className="text-[10px] text-slate-400 mt-0.5">{act.time}</p>
+                        </div>
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 shrink-0">
+                          Shared
+                        </span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
-                  const isLate =
-                    !isDone &&
-                    task.dueDate &&
-                    new Date(task.dueDate) < new Date(new Date().setHours(0, 0, 0, 0));
+          {/* VIEW 2: ALL TASKS */}
+          {currentView === "tasks" && (
+            <div className="space-y-4 animate-in fade-in duration-200">
+              {/* Filters */}
+              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* Status Filter */}
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                      Filter by Status
+                    </label>
+                    <select
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none focus:border-blue-500 bg-white"
+                    >
+                      <option value="All">All statuses</option>
+                      <option value="Pending">Pending</option>
+                      <option value="In Progress">In Progress</option>
+                      <option value="Completed">Completed</option>
+                    </select>
+                  </div>
 
-                  return (
-                    <tr key={task.taskId} className="hover:bg-slate-50 transition">
-                      <td className="px-4 py-3 text-xs text-slate-400 font-medium">
-                        {idx + 1}
-                      </td>
-                      <td className="px-4 py-3 max-w-xs">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedTask(task);
-                            setIsViewOpen(true);
-                          }}
-                          className="text-left font-bold text-slate-800 hover:text-[#154068] hover:underline text-xs line-clamp-1 cursor-pointer"
-                        >
-                          {task.taskTitle}
-                        </button>
-                        <p className="text-[11px] text-slate-400 line-clamp-1 mt-0.5">
-                          {task.description || task.remarks || "No description"}
+                  {/* Priority Filter */}
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                      Priority Level
+                    </label>
+                    <select
+                      value={selectedPriorityId}
+                      onChange={(e) => setSelectedPriorityId(e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none focus:border-blue-500 bg-white"
+                    >
+                      <option value="All">All Priorities</option>
+                      {priorities.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} Priority
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Search */}
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                      Search Task
+                    </label>
+                    <div className="relative">
+                      <Search
+                        size={14}
+                        className="absolute left-3 top-2.5 text-slate-400"
+                      />
+                      <input
+                        type="text"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        placeholder="Search title, assignee, customer..."
+                        className="w-full pl-8 pr-3 py-2 border border-slate-300 rounded-lg text-xs outline-none focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tasks Table (No Task Type column) */}
+              <div className="bg-white rounded-xl shadow-xs overflow-hidden border border-slate-200">
+                <div className="overflow-x-auto w-full">
+                  <table className="w-full text-sm">
+                    <thead className="bg-[#FF7900] text-white border-b border-[#e06800]">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider">
+                          Sr.
+                        </th>
+                        <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider">
+                          Task Title
+                        </th>
+                        <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider">
+                          Assigned By
+                        </th>
+                        <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider">
+                          Assigned To
+                        </th>
+                        <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider">
+                          Customer
+                        </th>
+                        <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider">
+                          Due Date
+                        </th>
+                        <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider">
+                          Priority
+                        </th>
+                        <th className="px-4 py-3 text-center text-[11px] font-bold uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-4 py-3 text-center text-[11px] font-bold uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {isLoading ? (
+                        <tr>
+                          <td colSpan={9} className="py-12 text-center text-slate-400 text-xs">
+                            Loading tasks...
+                          </td>
+                        </tr>
+                      ) : filteredTasks.length === 0 ? (
+                        <tr>
+                          <td colSpan={9} className="py-12 text-center">
+                            <CheckSquare size={32} className="mx-auto text-slate-300 mb-2" />
+                            <p className="text-sm font-semibold text-slate-700">No tasks found</p>
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredTasks.map((task, idx) => {
+                          const isDone =
+                            task.isCompleted ||
+                            task.taskStatusId === 4 ||
+                            (task.taskStatusName || "").toLowerCase().includes("completed") ||
+                            (task.taskStatusName || "").toLowerCase().includes("approved");
+
+                          return (
+                            <tr key={task.taskId} className="hover:bg-slate-50 transition">
+                              <td className="px-4 py-3 text-xs text-slate-400 font-medium">
+                                {idx + 1}
+                              </td>
+                              <td className="px-4 py-3 max-w-xs">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedTask(task);
+                                    setIsViewOpen(true);
+                                  }}
+                                  className="font-bold text-slate-900 hover:text-blue-600 text-left transition cursor-pointer"
+                                >
+                                  {task.taskTitle}
+                                </button>
+                                {task.description && (
+                                  <p className="text-[11px] text-slate-400 truncate mt-0.5 max-w-[200px]">
+                                    {task.description}
+                                  </p>
+                                )}
+                              </td>
+                              <td className="px-4 py-3 text-xs text-slate-700 font-medium">
+                                {task.assignedByName || "—"}
+                              </td>
+                              <td className="px-4 py-3 text-xs text-slate-700 font-semibold">
+                                {task.assignedToName || "—"}
+                              </td>
+                              <td className="px-4 py-3 text-xs text-slate-600">
+                                {task.companyName || "—"}
+                              </td>
+                              <td className="px-4 py-3 text-xs text-slate-600">
+                                <p className="font-medium">{task.dueDate || "—"}</p>
+                                {task.reminderTime && (
+                                  <p className="text-[11px] text-slate-400 mt-0.5">
+                                    Reminder: {task.reminderTime}
+                                  </p>
+                                )}
+                              </td>
+                              <td className="px-4 py-3">
+                                <span
+                                  className={`inline-block px-2.5 py-0.5 rounded text-[11px] font-bold border ${getPriorityBadgeClass(
+                                    task.priorityName
+                                  )}`}
+                                >
+                                  {task.priorityName || "Medium"}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-center">
+                                {getStatusBadge(task)}
+                              </td>
+                              <td className="px-4 py-3 text-center">
+                                <div className="flex items-center justify-center gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setSelectedTask(task);
+                                      setIsViewOpen(true);
+                                    }}
+                                    className="p-1.5 text-slate-500 hover:text-[#00234a] hover:bg-slate-100 rounded-lg transition cursor-pointer"
+                                    title="View Details"
+                                  >
+                                    <Eye size={16} />
+                                  </button>
+                                  {!isDone && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleMarkComplete(task.taskId)}
+                                      className="p-1.5 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 rounded-lg transition cursor-pointer"
+                                      title="Mark as Completed"
+                                    >
+                                      <CheckCircle size={16} />
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* VIEW 3: ACTIVITIES FEED */}
+          {currentView === "activities" && (
+            <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-6 space-y-4 animate-in fade-in duration-200">
+              <div className="border-b border-slate-100 pb-3">
+                <h2 className="text-base font-bold text-slate-900">Activity Feed</h2>
+              </div>
+
+              <div className="space-y-3 pt-2">
+                {activities.length === 0 ? (
+                  <p className="text-xs text-slate-400 py-6 text-center">
+                    No team activities recorded yet.
+                  </p>
+                ) : (
+                  activities.map((act) => (
+                    <div
+                      key={act.id}
+                      className="flex items-start gap-3.5 p-4 bg-slate-50 rounded-xl border border-slate-100 hover:bg-slate-50/80 transition"
+                    >
+                      <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm shrink-0">
+                        {act.by.slice(0, 1)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-slate-800">{act.text}</p>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          {act.by} {act.customer ? `· ${act.customer}` : ""}
                         </p>
-                      </td>
-                      <td className="px-4 py-3 text-xs text-slate-700">
-                        <span className="font-semibold text-[#154068]">
-                          {task.assignedToName || `Director #${task.assignedTo}`}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-xs text-slate-600 truncate max-w-[160px]">
-                        {task.companyName || "—"}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-xs text-slate-700 font-medium">
-                        <div className="flex items-center gap-1.5">
-                          <Calendar size={13} className="text-slate-400" />
-                          <span className={isLate ? "text-rose-600 font-bold" : ""}>
-                            {task.dueDate}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <span
-                          className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${getPriorityBadgeClass(
-                            task.priorityName
-                          )}`}
-                        >
-                          {task.priorityName || "Medium"}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-center whitespace-nowrap">
-                        <span
-                          className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                            isDone
-                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                              : isLate
-                              ? "bg-rose-50 text-rose-700 border border-rose-200"
-                              : "bg-blue-50 text-blue-700 border border-blue-200"
-                          }`}
-                        >
-                          {isDone ? "Completed" : isLate ? "Overdue" : task.taskStatusName || "Pending"}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-center whitespace-nowrap">
-                        <div className="flex items-center justify-center gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSelectedTask(task);
-                              setIsViewOpen(true);
-                            }}
-                            className="p-1.5 rounded-md text-blue-600 hover:bg-blue-50 transition cursor-pointer"
-                            title="View Task Details"
-                          >
-                            <Eye size={15} />
-                          </button>
-                          {!isDone && (
-                            <button
-                              type="button"
-                              onClick={() => handleMarkComplete(task.taskId)}
-                              className="p-1.5 rounded-md text-emerald-600 hover:bg-emerald-50 transition cursor-pointer"
-                              title="Mark as Completed / Approved"
-                            >
-                              <CheckCircle size={15} />
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                        <p className="text-[11px] text-slate-400 mt-1">{act.time}</p>
+                      </div>
+                      <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200 shrink-0">
+                        Shared
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
         </>
       )}
 
-      {/* View Task Modal */}
-
-      <ViewTaskModal
-        isOpen={isViewOpen}
-        task={selectedTask}
-        onClose={() => {
-          setIsViewOpen(false);
-          setSelectedTask(null);
-        }}
-        onStatusUpdated={loadTasks}
-      />
+      {/* View Task Details Modal */}
+      {selectedTask && (
+        <ViewTaskModal
+          isOpen={isViewOpen}
+          task={selectedTask}
+          onClose={() => {
+            setIsViewOpen(false);
+            setSelectedTask(null);
+          }}
+          onStatusUpdated={loadTasks}
+        />
+      )}
     </div>
   );
 };
+
+export default TasksMaster;

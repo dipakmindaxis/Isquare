@@ -1,3 +1,4 @@
+﻿using CompanyPlatform.Core.Models.CRM.Company;
 using CompanyPlatform.Core.Data;
 using CompanyPlatform.CRM.DTO;
 using CompanyPlatform.CRM.DTO.AuditLog;
@@ -46,7 +47,7 @@ namespace CompanyPlatform.CRM.Services.AuditLog
 
             var query =
                 from a in _dbContext.AuditLogs
-                join e in _dbContext.Employees
+                join e in _dbContext.Tbl_Employee
                     on a.UserId equals e.ID into employeeJoin
                 from e in employeeJoin.DefaultIfEmpty()
                 where !a.IsDeleted
@@ -165,7 +166,7 @@ namespace CompanyPlatform.CRM.Services.AuditLog
                 return null;
             }
 
-            var employee = await _dbContext.Employees
+            var employee = await _dbContext.Tbl_Employee
                 .FirstOrDefaultAsync(e =>
                     e.ID == item.UserId);
 
@@ -235,7 +236,7 @@ namespace CompanyPlatform.CRM.Services.AuditLog
 //                // Wait! The Employee DOES NOT HAVE a CompanyId. Employees are employees of MindAxis (the agency) who manage clients (Companies). The users are Employees of the CRM. So all Employees can see the audit logs of all companies they have access to. I will just return all logs.
 
 //                var query = from a in _dbContext.AuditLogs
-//                            join e in _dbContext.Employees on a.UserId equals e.ID into empJoin
+//                            join e in _dbContext.Tbl_Employee on a.UserId equals e.ID into empJoin
 //                            from e in empJoin.DefaultIfEmpty()
 //                            where !a.IsDeleted
 //                            select new
@@ -313,7 +314,7 @@ namespace CompanyPlatform.CRM.Services.AuditLog
 //                if (item == null) return null;
 
 //                var emp = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync(
-//                    _dbContext.Employees, e => e.ID == item.UserId);
+//                    _dbContext.Tbl_Employee, e => e.ID == item.UserId);
 
 //                return new AuditLogDto
 //                {

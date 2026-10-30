@@ -345,13 +345,20 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
         customerOwnerType: formData.customerOwnerType || null,
 
         remarks: formData.remarks?.trim() || undefined,
-        addresses: (formData.addresses || []).map((addr) => ({
-          ...addr,
-          countryId: addr.countryId ? Number(addr.countryId) : 1,
-          stateId: addr.stateId ? Number(addr.stateId) : 1,
-          cityId: addr.cityId ? Number(addr.cityId) : 1,
-          pincode: addr.pincode?.trim() || "000000",
-        })),
+        addresses: (formData.addresses || [])
+          .filter((addr) => Boolean(addr.address?.trim()))
+          .map((addr) => ({
+            addressId: addr.addressId && addr.addressId > 0 ? addr.addressId : undefined,
+            companyId: customerId,
+            addressType: addr.addressType?.trim() || "Billing",
+            address: addr.address.trim(),
+            countryId: addr.countryId ? Number(addr.countryId) : 1,
+            stateId: addr.stateId ? Number(addr.stateId) : 1,
+            cityId: addr.cityId ? Number(addr.cityId) : 1,
+            pincode: addr.pincode?.trim() || "000000",
+            isPrimary: !!addr.isPrimary,
+            isActive: addr.isActive !== false,
+          })),
       };
 
       await updateCustomer(customerId, payload);

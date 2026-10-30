@@ -1,4 +1,5 @@
-﻿//using CompanyPlatform.Core.Data;
+﻿using CompanyPlatform.Core.Models.CRM.Company;
+//using CompanyPlatform.Core.Data;
 //using Microsoft.AspNetCore.SignalR;
 //using System;
 //using System.Collections.Generic;
@@ -35,7 +36,7 @@
 
 //        public async Task SendManagerNotificationAsync(int employeeId, string actionMessage)
 //        {
-//            var employee = await _context.Employees.FindAsync(employeeId);
+//            var employee = await _context.Tbl_Employee.FindAsync(employeeId);
 //            if (employee == null || !employee.ReportingTo.HasValue)
 //            {
 //                return;
@@ -98,7 +99,7 @@ namespace CompanyPlatform.CRM.Services.Notification
             string actionMessage)
         {
             var employee =
-                await _context.Employees
+                await _context.Tbl_Employee
                     .FindAsync(employeeId);
 
             if (employee == null ||

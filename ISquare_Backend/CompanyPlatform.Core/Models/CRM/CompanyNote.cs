@@ -1,3 +1,4 @@
+﻿using CompanyPlatform.Core.Models.CRM.Company;
 using CompanyPlatform.Core.Models.CRM.Employee;
 using System;
 using System.Collections.Generic;
@@ -37,6 +38,6 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public virtual Company Company { get; set; }
 
         [ForeignKey("UserId")]
-        public virtual Employees User { get; set; }
+        public virtual Employee User { get; set; }
     }
 }

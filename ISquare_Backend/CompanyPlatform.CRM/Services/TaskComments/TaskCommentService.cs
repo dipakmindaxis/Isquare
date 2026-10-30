@@ -1,3 +1,4 @@
+﻿using CompanyPlatform.Core.Models.CRM.Company;
 //using Microsoft.Extensions.Logging;
 //using CompanyPlatform.CRM.DTO.TaskComments;
 //using CompanyPlatform.CRM.Repository;
@@ -134,14 +135,14 @@ namespace CompanyPlatform.CRM.Services.TaskComments
     {
         private readonly IRepositories<TaskCommentEntity> _repository;
         private readonly IRepositories<TasksEntity> _taskRepository;
-        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Employee.Employees> _employeeRepository;
+        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.Employee> _employeeRepository;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<TaskCommentService> _logger;
 
         public TaskCommentService(
             IRepositories<TaskCommentEntity> repository,
             IRepositories<TasksEntity> taskRepository,
-            IRepositories<CompanyPlatform.Core.Models.CRM.Employee.Employees> employeeRepository,
+            IRepositories<CompanyPlatform.Core.Models.CRM.Company.Employee> employeeRepository,
             IHttpContextAccessor httpContextAccessor,
             ILogger<TaskCommentService> logger)
         {

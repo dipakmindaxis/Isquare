@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using CompanyPlatform.Core.Models.CRM.Company;
+using Microsoft.EntityFrameworkCore;
 using CompanyPlatform.Core.Data;
 using CompanyPlatform.Core.DTO.EmployeeDocuments;
 using PayrollManagementAPI.Services.EmployeeDocuments;
@@ -103,7 +104,7 @@ namespace PayrollManagementAPI.Services.EmployeeDocument
 
             _logger.LogInformation("File saved to: {FilePath}", filePath);
 
-            var employeeExists = await _context.Employees
+            var employeeExists = await _context.Tbl_Employee
             .AnyAsync(e => e.ID == dto.EmployeeID && !e.IsDeleted);
 
             if (!employeeExists)

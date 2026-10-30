@@ -1,3 +1,4 @@
+﻿using CompanyPlatform.Core.Models.CRM.Company;
 using CompanyPlatform.Core.Models.CRM.Employee;
 using System;
 using System.Collections.Generic;
@@ -29,7 +30,7 @@ namespace CompanyPlatform.Core.Models.CRM.Company
 
         public int PerformedBy { get; set; }
         [ForeignKey("PerformedBy")]
-        public virtual Employees PerformedByEmployee { get; set; }
+        public virtual Employee PerformedByEmployee { get; set; }
 
         public DateTime PerformedDate { get; set; }
 
@@ -40,3 +41,4 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public bool IsDeleted { get; set; } = false;
     }
 }
+

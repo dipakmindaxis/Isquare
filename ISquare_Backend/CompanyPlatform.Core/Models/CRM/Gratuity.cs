@@ -1,4 +1,5 @@
-﻿using CompanyPlatform.Core.Models.CRM.Employee;
+﻿using CompanyPlatform.Core.Models.CRM.Company;
+using CompanyPlatform.Core.Models.CRM.Employee;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -21,7 +22,7 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public int EmployeeID { get; set; }
 
         [ForeignKey("EmployeeID")]
-        public virtual Employees Employee { get; set; }
+        public virtual Employee Employee { get; set; }
 
         [Required]
         public decimal YearsOfService { get; set; }
@@ -45,3 +46,4 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public bool IsDeleted { get; set; }
     }
 }
+

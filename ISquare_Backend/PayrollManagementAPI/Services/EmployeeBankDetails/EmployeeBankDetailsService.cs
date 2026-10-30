@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using CompanyPlatform.Core.Models.CRM.Company;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using CompanyPlatform.Core.Data;
 using CompanyPlatform.Core.DTO.EmployeeBankDetails;
@@ -22,7 +23,7 @@ namespace PayrollManagementAPI.Services.EmployeeBankDetails
         public async Task<EmployeeBankFullResponseDto> GetEmployeeAndBankByIdAsync(int employeeId)
         {
             _logger.LogInformation("Fetching employee and bank details for EmployeeId: {EmployeeId}", employeeId);
-            var employee = await _context.Employees
+            var employee = await _context.Tbl_Employee
                 .FirstOrDefaultAsync(e => e.ID == employeeId && e.IsDeleted == false);
 
             if (employee == null)

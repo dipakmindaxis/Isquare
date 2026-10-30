@@ -176,6 +176,10 @@ import EnquiriesList from "./Modules/RSM/Pages/Enquiry/EnquiryMaster";
           element: <SalesActivities />,
         },
         {
+          path: "task-assignment",
+          element: <SalesActivities defaultTab="tasks" />,
+        },
+        {
           path: "sales/activities",
           element: <SalesActivities />,
         },

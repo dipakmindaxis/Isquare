@@ -1,4 +1,5 @@
-﻿using CompanyPlatform.Core.Models.CRM.Employee;
+﻿using CompanyPlatform.Core.Models.CRM.Company;
+using CompanyPlatform.Core.Models.CRM.Employee;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -67,12 +68,12 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public virtual MeetingType? MeetingType { get; set; }
 
         [ForeignKey(nameof(UserId))]
-        public virtual Employees? User { get; set; }
+        public virtual Employee? User { get; set; }
 
         [ForeignKey(nameof(CreatedBy))]
-        public virtual Employees? CreatedByEmployee { get; set; }
+        public virtual Employee? CreatedByEmployee { get; set; }
 
         [ForeignKey(nameof(UpdatedBy))]
-        public virtual Employees? UpdatedByEmployee { get; set; }
+        public virtual Employee? UpdatedByEmployee { get; set; }
     }
 }

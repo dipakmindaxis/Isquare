@@ -290,7 +290,7 @@ export const addEmployee = async (
 export const getEmployeeById = async (id: number): Promise<EmployeeDetail> => {
   try {
     const response = await apiClient.get<EmployeeDetail>(
-      `${API_ENDPOINTS.Employees}/${id}`,
+      `${API_ENDPOINTS.CRMEmployee || `${API_ENDPOINTS.BaseUrl}/employee`}/${id}`,
     );
     return response.data;
   } catch (error) {
@@ -306,20 +306,63 @@ export const getEmployeeFullDetails = async (
     const response = await apiClient.get<EmployeeFullDetail>(
       `${API_ENDPOINTS.Employees}/${id}/full-details`,
     );
-    return response.data;
-  } catch (error) {
-    console.error(`Failed to fetch full details for employee ${id}:`, error);
-    throw new Error("Could not fetch employee's full details.");
+    if (response.data) return response.data;
+  } catch {
+    // If full-details endpoint doesn't exist, fallback to CRM employee
   }
+
+  try {
+    const response = await apiClient.get<any>(
+      `${API_ENDPOINTS.CRMEmployee || `${API_ENDPOINTS.BaseUrl}/employee`}/${id}`,
+    );
+    const d = response.data;
+    if (d) {
+      return {
+        id: Number(d.id ?? d.ID ?? id),
+        role: d.role || "",
+        googleCalendarId: d.googleCalendarId || "",
+        employeeCode: d.employeeCode || d.EmployeeCode || "",
+        firstName: d.firstName || d.FirstName || "",
+        middleName: d.middleName || d.MiddleName || "",
+        lastName: d.lastName || d.LastName || "",
+        emailAddress: d.emailAddress || d.EmailAddress || "",
+        curMobileNo: d.mobileNumber || d.MobileNumber || "",
+        curEmail: d.emailAddress || d.EmailAddress || "",
+        mobileNumber: d.mobileNumber || d.MobileNumber || "",
+        dateOfBirth: d.dateOfBirth || d.DateOfBirth,
+        dateOfJoining: d.dateOfJoining || d.DateOfJoining,
+        gender: d.gender || d.Gender,
+        workLocationName: d.workLocationName || d.WorkLocationName || "",
+        departmentName: d.departmentName || d.DepartmentName || "",
+        designationName: d.designationName || d.DesignationName || "",
+        reportingToName: d.reportingToName || d.ReportingToName || "",
+        isActive: d.isActive ?? d.IsActive ?? true,
+        photoPath: d.photoPath || d.PhotoPath,
+        companyName: d.companyName || "",
+        statutoryDetails: null,
+        bankDetails: null,
+        documents: [],
+        pfDetails: null,
+        tdsDetails: null,
+        qualifications: [],
+        experiences: [],
+        ...(d as any),
+      };
+    }
+  } catch (error) {
+    console.error(`Failed to fetch details for employee ${id}:`, error);
+  }
+
+  throw new Error("Could not fetch employee's details.");
 };
 
 export const updateEmployee = async (
   id: number,
-  payload: UpdateEmployeePayload,
+  payload: UpdateEmployeePayload | any,
 ): Promise<EmployeeDetail> => {
   try {
     const response = await apiClient.put<EmployeeDetail>(
-      `${API_ENDPOINTS.Employees}/${id}`,
+      `${API_ENDPOINTS.CRMEmployee || `${API_ENDPOINTS.BaseUrl}/employee`}/${id}`,
       payload,
     );
     return response.data;

@@ -7,6 +7,7 @@ import type {
   TaskStatusItem,
   TaskFilterParams,
   TaskSummaryStats,
+  TaskActivityFeedItem,
 } from "../Types/TaskTypes";
 import { getAllPriorities } from "../../Master/Priority/Services/PriorityService";
 import { createReminder } from "../../Master/Reminder/Services/ReminderService";
@@ -399,11 +400,42 @@ export const deleteTask = async (taskId: number): Promise<boolean> => {
 export const getTaskSummaryStats = (tasks?: TaskItem[]): TaskSummaryStats => {
   const list = tasks || safeGetTasks();
   const today = new Date().toISOString().split("T")[0];
+  const completed = list.filter((t) => t.isCompleted || (t.taskStatusName || "").toLowerCase().includes("completed") || (t.taskStatusName || "").toLowerCase().includes("approved")).length;
+  const inProgress = list.filter((t) => !t.isCompleted && (t.taskStatusName || "").toLowerCase().includes("progress")).length;
+  const pending = list.filter((t) => !t.isCompleted && !(t.taskStatusName || "").toLowerCase().includes("progress")).length;
+  const dueToday = list.filter((t) => t.dueDate === today).length;
+  const overdue = list.filter((t) => !t.isCompleted && t.dueDate < today).length;
   return {
     total: list.length,
-    pending: list.filter((t) => !t.isCompleted).length,
-    completed: list.filter((t) => t.isCompleted).length,
-    dueToday: list.filter((t) => t.dueDate === today).length,
-    overdue: list.filter((t) => !t.isCompleted && t.dueDate < today).length,
+    pending,
+    inProgress,
+    completed,
+    dueToday,
+    overdue,
   };
+
+};
+
+const ACTIVITIES_STORAGE_KEY = "isquare_task_activities_v1";
+
+export const getTaskActivities = (): TaskActivityFeedItem[] => {
+  try {
+    const raw = localStorage.getItem(ACTIVITIES_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+};
+
+export const addTaskActivity = (item: Omit<TaskActivityFeedItem, "id" | "time">): void => {
+  try {
+    const existing = getTaskActivities();
+    const newEntry: TaskActivityFeedItem = {
+      id: `act-${Date.now()}`,
+      time: "Just now",
+      ...item,
+    };
+    const updated = [newEntry, ...existing];
+    localStorage.setItem(ACTIVITIES_STORAGE_KEY, JSON.stringify(updated.slice(0, 30)));
+  } catch {}
 };
