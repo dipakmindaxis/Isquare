@@ -11,11 +11,13 @@ import type {
 } from "../Types/TaskTypes";
 import { getAllPriorities } from "../../Master/Priority/Services/PriorityService";
 import { createReminder } from "../../Master/Reminder/Services/ReminderService";
-const getAllDirectors = getDirectorEmployees;
-import { getDirectorEmployees } from "../../Master/BdeUsers/Services/BdeUserService";
-import { getAllDirectors } from "../../Master/Director/Services/DirectorService";
-import { getDirectorEmployees, getAllBdeUsers } from "../../Master/BdeUsers/Services/BdeUserService";
+import {
+  getDirectorEmployees,
+  getAllBdeUsers,
+} from "../../Master/BdeUsers/Services/BdeUserService";
 import { getAllCustomers } from "../../Customer/Services/CustomerService";
+
+const getAllDirectors = getDirectorEmployees;
 
 const TASKS_STORAGE_KEY = "isquare_tasks_cache_v1";
 
@@ -182,8 +184,6 @@ export const getAllTasks = async (filters?: TaskFilterParams): Promise<TaskItem[
     ]);
 
     items = items.map((task) => {
-      const matchedDirectorEmp = directorsEmp.find((d) => d.id === task.assignedTo);
-      const matchedDirector = (directList as any[]).find((d: any) => (d.id || d.directorId) === task.assignedTo);
       // 1. Resolve Assigned To Name
       const matchedDirectorEmp = directorsEmp.find((d: any) => Number(d.id || 0) === task.assignedTo);
       const matchedDirector = directList.find((d: any) => Number(d.directorId || d.id || 0) === task.assignedTo);
@@ -191,8 +191,7 @@ export const getAllTasks = async (filters?: TaskFilterParams): Promise<TaskItem[
       const assignedToName =
         task.assignedToName ||
         matchedDirectorEmp?.name ||
-        (matchedDirector as any)?.name ||
-        matchedDirector?.directorName ||
+        matchedDirector?.name ||
         (matchedToEmp ? `${matchedToEmp.firstName || ""} ${matchedToEmp.lastName || ""}`.trim() : undefined) ||
         (task.assignedTo > 0 ? `Director #${task.assignedTo}` : "Unassigned");
 
@@ -226,7 +225,7 @@ export const getAllTasks = async (filters?: TaskFilterParams): Promise<TaskItem[
             (d: any) => Number(d.directorId || d.id || 0) === task.assignedBy
           );
           if (matchedByDir) {
-            assignedByName = matchedByDir.directorName || (matchedByDir as any).name;
+            assignedByName = matchedByDir.name;
           }
         }
 
