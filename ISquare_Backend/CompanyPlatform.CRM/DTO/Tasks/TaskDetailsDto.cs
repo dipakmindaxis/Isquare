@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace CompanyPlatform.CRM.DTO.Tasks
@@ -15,7 +15,11 @@ namespace CompanyPlatform.CRM.DTO.Tasks
 
         public int AssignedTo { get; set; }
 
+        public string? AssignedToName { get; set; }
+
         public int AssignedBy { get; set; }
+
+        public string? AssignedByName { get; set; }
 
         public int PriorityId { get; set; }
 
