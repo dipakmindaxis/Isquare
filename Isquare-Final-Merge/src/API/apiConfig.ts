@@ -1,6 +1,6 @@
 //const BASE_URL = "https://localhost:7296/api";
-//const BASE_URL = "https://sama9890-001-site1.jtempurl.com/api";
-const BASE_URL = "https://localhost:44363/api";
+const BASE_URL = "https://sama9890-001-site1.jtempurl.com/api";
+//const BASE_URL = "https://localhost:44363/api";
 //const BASE_URL = "https://localhost:7296/api";
 //const BASE_URL = "https://sama9890-001-site1.jtempurl.com/api";
 // const BASE_URL = "https://vishalkakde-001-site1.etempurl.com/api";
