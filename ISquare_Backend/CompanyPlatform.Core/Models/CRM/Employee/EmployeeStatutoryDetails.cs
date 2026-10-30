@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using CompanyPlatform.Core.Models.CRM.Company;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -33,7 +34,7 @@ namespace CompanyPlatform.Core.Models.CRM.Employee
 
         // Navigation Property
         [ForeignKey("EmployeeID")]
-        public virtual Employees Employee { get; set; }
+        public virtual CompanyPlatform.Core.Models.CRM.Company.Employee Employee { get; set; }
 
 
         [DefaultValue(false)]
@@ -41,3 +42,6 @@ namespace CompanyPlatform.Core.Models.CRM.Employee
 
     }
 }
+
+
+

@@ -1,4 +1,4 @@
-//using CompanyPlatform.Core.Models.CRM.Company;
+﻿//using CompanyPlatform.Core.Models.CRM.Company;
 //using CompanyPlatform.Core.Repository;
 //using CompanyPlatform.CRM.DTO.TaskAssignment;
 //using CompanyPlatform.CRM.Services.TaskAssignment;
@@ -193,13 +193,13 @@ namespace CompanyPlatform.Services.TaskAssignment
     {
         private readonly IRepositories<TaskAssignmentEntity> _repository;
         private readonly IRepositories<Tasks> _tasksRepository;
-        private readonly IRepositories<Employees> _employeeRepository;
+        private readonly IRepositories<Employee> _employeeRepository;
         private readonly ILogger<TaskAssignmentService> _logger;
 
         public TaskAssignmentService(
             IRepositories<TaskAssignmentEntity> repository,
             IRepositories<Tasks> tasksRepository,
-            IRepositories< Employees> employeeRepository,
+            IRepositories<Employee> employeeRepository,
             ILogger<TaskAssignmentService> logger)
         {
             _repository = repository;

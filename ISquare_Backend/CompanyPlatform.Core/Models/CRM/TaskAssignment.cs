@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -43,9 +43,10 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public virtual Tasks? Task { get; set; }
 
         [ForeignKey("AssignedTo")]
-        public virtual Employees? AssignedToEmployee { get; set; }
+        public virtual Employee? AssignedToEmployee { get; set; }
 
         [ForeignKey("AssignedBy")]
-        public virtual Employees? AssignedByEmployee { get; set; }
+        public virtual Employee? AssignedByEmployee { get; set; }
     }
 }
+

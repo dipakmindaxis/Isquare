@@ -32,6 +32,8 @@ namespace CompanyPlatform.CRM.Services.ActivityType
                 ID = x.ID,
                 ActivityName = x.ActivityName,
                 ActivitySubType = x.ActivitySubType,
+                SubjectPurpose = x.SubjectPurpose,
+                DiscussionNotesMOM = x.DiscussionNotesMOM,
                 IsActive = x.IsActive,
                 IsDeleted = x.IsDeleted
             });
@@ -59,6 +61,8 @@ namespace CompanyPlatform.CRM.Services.ActivityType
                 ID = item.ID,
                 ActivityName = item.ActivityName,
                 ActivitySubType = item.ActivitySubType,
+                SubjectPurpose = item.SubjectPurpose,
+                DiscussionNotesMOM = item.DiscussionNotesMOM,
                 IsActive = item.IsActive,
                 IsDeleted = item.IsDeleted
             };
@@ -75,6 +79,8 @@ namespace CompanyPlatform.CRM.Services.ActivityType
             {
                 ActivityName = dto.ActivityName,
                 ActivitySubType = dto.ActivitySubType,
+                SubjectPurpose = dto.SubjectPurpose,
+                DiscussionNotesMOM = dto.DiscussionNotesMOM,
                 IsActive = dto.IsActive,
                 IsDeleted = false
             };
@@ -112,6 +118,8 @@ namespace CompanyPlatform.CRM.Services.ActivityType
 
             entity.ActivityName = dto.ActivityName;
             entity.ActivitySubType = dto.ActivitySubType;
+            entity.SubjectPurpose = dto.SubjectPurpose;
+            entity.DiscussionNotesMOM = dto.DiscussionNotesMOM;
             entity.IsActive = dto.IsActive;
 
             await _repository.Update(entity);

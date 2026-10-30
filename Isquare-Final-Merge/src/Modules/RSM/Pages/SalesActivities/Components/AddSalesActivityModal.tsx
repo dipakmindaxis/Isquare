@@ -48,6 +48,7 @@ import type {
   CustomerStatus,
 } from "../Services/SalesActivityService";
 import { uploadSalesAttachment } from "../../Master/SalesAttachments/Services/SalesAttachmentService";
+import { updateActivityType } from "../../Master/ActivityType/Services/ActivityTypeService";
 import { buttonStyles } from "../../../../../Components/Common/buttonStyles";
 import { createReminder } from "../../Master/Reminder/Services/ReminderService";
 import { createFollowUp } from "../../Master/FollowUp/Services/FollowUpService";
@@ -541,6 +542,26 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
         }
       }
 
+      // Sync Subject / Purpose & Discussion Notes to ActivityType in backend
+      const matchedAct = masterActivityTypes.find(
+        (a) => a.activityName.toLowerCase() === effectiveType.toLowerCase()
+      );
+      if (matchedAct && matchedAct.id) {
+        try {
+          await updateActivityType(matchedAct.id, {
+            id: matchedAct.id,
+            activityName: matchedAct.activityName,
+            activitySubType: subType.trim() || matchedAct.activitySubType || "",
+            subjectPurpose: finalSubject,
+            discussionNotesMOM: finalNotes,
+            isActive: true,
+            isDeleted: false,
+          });
+        } catch (actErr) {
+          console.warn("Syncing ActivityType subjectPurpose/discussionNotesMOM error:", actErr);
+        }
+      }
+
       // Sync FollowUp to backend /api/FollowUp
       if (followUpDate || nextActionDate) {
         try {
@@ -644,7 +665,7 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
 
         {/* Form Body matching Customer Module spacing & dimensions */}
         <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0 bg-white">
-          <div className="p-6 sm:p-8 min-h-[460px]">
+          <div className="p-5 sm:p-6">
             {/* TAB 0: ACTIVITY DETAILS */}
             {activeTab === 0 && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 animate-in fade-in duration-200">
@@ -824,8 +845,16 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
                       const matchedAct = masterActivityTypes.find(
                         (a) => a.activityName === newType
                       );
-                      if (matchedAct && matchedAct.activitySubType) {
-                        setSubType(matchedAct.activitySubType);
+                      if (matchedAct) {
+                        if (matchedAct.activitySubType) {
+                          setSubType(matchedAct.activitySubType);
+                        }
+                        if (matchedAct.subjectPurpose) {
+                          setSubject(matchedAct.subjectPurpose);
+                        }
+                        if (matchedAct.discussionNotesMOM) {
+                          setDiscussionNotes(matchedAct.discussionNotesMOM);
+                        }
                       }
                     }}
                     className={`${baseInputStyle} ${
@@ -1160,7 +1189,7 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
                     }}
                     className={baseInputStyle}
                   >
-                    <option value="">Select Priority Level...</option>
+                    <option value="">Select Priority Level</option>
                     {priorityOptions.map((prio) => (
                       <option key={prio.id} value={prio.name}>
                         {prio.name}
@@ -1188,7 +1217,7 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
                     }}
                     className={baseInputStyle}
                   >
-                    <option value="">Select Follow-Up Status...</option>
+                    <option value="">Select Follow-Up Status</option>
                     {customerStatuses.map((cs) => (
                       <option key={cs.customerStatusId} value={cs.customerStatusId}>
                         {cs.statusName}
@@ -1204,14 +1233,14 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
                     rows={3}
                     value={nextActionDetails}
                     onChange={(e) => setNextActionDetails(e.target.value)}
-                    placeholder="Enter follow-up details, agenda or discussion outcome..."
+                    placeholder="Enter follow-up remarks or next action details..."
                     className={`${baseInputStyle} resize-y`}
                   />
                 </div>
 
                 {/* REMINDER SECTION */}
                 <div className="md:col-span-2 pt-4 border-t border-gray-200 mt-2">
-                  <div className="flex items-center gap-2 mb-4">
+                  <div className="flex items-center gap-2 mb-2">
                     <div className="w-7 h-7 rounded-lg bg-[#154068]/10 text-[#154068] flex items-center justify-center">
                       <Bell size={16} />
                     </div>
@@ -1219,26 +1248,39 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
                       <h3 className="text-xs font-bold text-[#154068] uppercase tracking-wider">
                         Reminder Configuration
                       </h3>
-                      <p className="text-[11px] text-gray-500">
-                        Schedule automated alerts and notifications for this sales activity
-                      </p>
                     </div>
                   </div>
                 </div>
 
-                {/* Reminder Title */}
-                <div className="relative md:col-span-2">
+                {/* Reminder Title & Priority (2 columns) */}
+                <div className="relative">
                   <label className={labelStyle}>Reminder Title / Subject</label>
                   <input
                     type="text"
                     value={reminderTitle}
                     onChange={(e) => setReminderTitle(e.target.value)}
-                    placeholder="e.g. Follow-up call regarding technical quotation..."
+                    placeholder="Enter reminder title or subject..."
                     className={baseInputStyle}
                   />
                 </div>
 
-                {/* Reminder Date */}
+                <div className="relative">
+                  <label className={labelStyle}>Reminder Priority</label>
+                  <select
+                    value={reminderPriorityId}
+                    onChange={(e) => setReminderPriorityId(e.target.value)}
+                    className={baseInputStyle}
+                  >
+                    <option value="">Select Priority</option>
+                    {priorityOptions.map((prio) => (
+                      <option key={prio.id} value={prio.id}>
+                        {prio.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Reminder Date & Time (2 columns) */}
                 <div className="relative">
                   <label className={labelStyle}>Reminder Date</label>
                   <input
@@ -1249,7 +1291,6 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
                   />
                 </div>
 
-                {/* Reminder Time */}
                 <div className="relative">
                   <label className={labelStyle}>Reminder Time</label>
                   <input
@@ -1260,17 +1301,12 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
                   />
                 </div>
 
-                {/* Assignment Target: Employee vs Team */}
-                <div className="relative md:col-span-2 p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div>
-                      <label className="text-xs font-bold text-[#154068] uppercase tracking-wider block">
-                        Work Assignment (Employee / Team)
-                      </label>
-                      <p className="text-[11px] text-gray-500">
-                        Assign this follow-up/reminder to an employee or team without mixing up IDs
-                      </p>
-                    </div>
+                {/* Work Assignment Box */}
+                <div className="relative md:col-span-2 p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3.5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/80 pb-2.5">
+                    <label className="text-xs font-bold text-[#154068] uppercase tracking-wider block">
+                      Work Assignment
+                    </label>
                     {/* Toggle between Employee and Team */}
                     <div className="inline-flex rounded-lg border border-slate-300 p-0.5 bg-white shrink-0">
                       <button
@@ -1305,97 +1341,82 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
                     </div>
                   </div>
 
-                  {assignedType === "Employee" ? (
-                    <div>
-                      <label className={labelStyle}>Assigned Employee</label>
-                      <select
-                        value={reminderAssignedTo}
-                        onChange={(e) => {
-                          setReminderAssignedTo(e.target.value);
-                          setAssignedTeamId("");
-                          setAssignedTeamName("");
-                        }}
-                        className={baseInputStyle}
-                      >
-                        <option value="">Select Employee...</option>
-                        {roleAssignees.map((emp) => (
-                          <option key={emp.id} value={emp.id}>
-                            {emp.name} {emp.role ? `(${emp.role})` : ""}
-                          </option>
-                        ))}
-                        {employees.map((emp) => (
-                          <option key={`emp-${emp.id}`} value={emp.id}>
-                            {emp.name} (Sales Rep)
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  ) : (
-                    <div>
-                      <label className={labelStyle}>Assigned Team</label>
-                      <select
-                        value={assignedTeamId}
-                        onChange={(e) => {
-                          const selId = e.target.value;
-                          setAssignedTeamId(selId);
-                          const matchedTeam = teams.find((t) => t.id === selId);
-                          if (matchedTeam) {
-                            setAssignedTeamName(matchedTeam.name);
-                          } else {
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {assignedType === "Employee" ? (
+                      <div>
+                        <label className={labelStyle}>Assigned Employee</label>
+                        <select
+                          value={reminderAssignedTo}
+                          onChange={(e) => {
+                            setReminderAssignedTo(e.target.value);
+                            setAssignedTeamId("");
                             setAssignedTeamName("");
-                          }
-                          setReminderAssignedTo("");
-                        }}
+                          }}
+                          className={baseInputStyle}
+                        >
+                          <option value="">Select Employee</option>
+                          {roleAssignees.map((emp) => (
+                            <option key={emp.id} value={emp.id}>
+                              {emp.name} {emp.role ? `(${emp.role})` : ""}
+                            </option>
+                          ))}
+                          {employees.map((emp) => (
+                            <option key={`emp-${emp.id}`} value={emp.id}>
+                              {emp.name} (Sales Rep)
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    ) : (
+                      <div>
+                        <label className={labelStyle}>Assigned Team</label>
+                        <select
+                          value={assignedTeamId}
+                          onChange={(e) => {
+                            const selId = e.target.value;
+                            setAssignedTeamId(selId);
+                            const matchedTeam = teams.find((t) => t.id === selId);
+                            if (matchedTeam) {
+                              setAssignedTeamName(matchedTeam.name);
+                            } else {
+                              setAssignedTeamName("");
+                            }
+                            setReminderAssignedTo("");
+                          }}
+                          className={baseInputStyle}
+                        >
+                          <option value="">Select Team</option>
+                          {teams.map((t) => (
+                            <option key={t.id} value={t.id}>
+                              {t.name}
+                            </option>
+                          ))}
+                        </select>
+                        {assignedTeamName && (
+                          <p className="text-[11px] text-green-700 font-medium mt-1">
+                            ✓ Assigned to: <span className="font-bold">{assignedTeamName}</span>
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Reminder Status */}
+                    <div>
+                      <label className={labelStyle}>Reminder Status</label>
+                      <select
+                        value={reminderStatusId}
+                        onChange={(e) => setReminderStatusId(e.target.value)}
                         className={baseInputStyle}
                       >
-                        <option value="">Select Team (Sales Coordinator, Accounts, Service, Store)...</option>
-                        {teams.map((t) => (
-                          <option key={t.id} value={t.id}>
-                            {t.name}
+                        <option value="">Select Reminder Status</option>
+                        {customerStatuses.map((cs) => (
+                          <option key={cs.customerStatusId} value={cs.customerStatusId}>
+                            {cs.statusName}
                           </option>
                         ))}
                       </select>
-                      {assignedTeamName && (
-                        <p className="text-[11px] text-green-700 font-medium mt-1">
-                          ✓ Assigned to: <span className="font-bold">{assignedTeamName}</span>
-                        </p>
-                      )}
                     </div>
-                  )}
-                </div>
-
-                {/* Reminder Priority */}
-                <div className="relative">
-                  <label className={labelStyle}>Reminder Priority</label>
-                  <select
-                    value={reminderPriorityId}
-                    onChange={(e) => setReminderPriorityId(e.target.value)}
-                    className={baseInputStyle}
-                  >
-                    <option value="">Select Priority...</option>
-                    {priorityOptions.map((prio) => (
-                      <option key={prio.id} value={prio.id}>
-                        {prio.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Reminder Status */}
-                <div className="relative md:col-span-2">
-                  <label className={labelStyle}>Reminder Status</label>
-                  <select
-                    value={reminderStatusId}
-                    onChange={(e) => setReminderStatusId(e.target.value)}
-                    className={baseInputStyle}
-                  >
-                    <option value="">Select Reminder Status...</option>
-                    {customerStatuses.map((cs) => (
-                      <option key={cs.customerStatusId} value={cs.customerStatusId}>
-                        {cs.statusName}
-                      </option>
-                    ))}
-                  </select>
+                  </div>
                 </div>
 
                 {/* Reminder Remarks */}
@@ -1405,7 +1426,7 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
                     rows={2}
                     value={reminderRemarks}
                     onChange={(e) => setReminderRemarks(e.target.value)}
-                    placeholder="Enter reminder instructions or specific notes for assignee..."
+                    placeholder="Enter reminder instructions or specific notes..."
                     className={`${baseInputStyle} resize-y`}
                   />
                 </div>

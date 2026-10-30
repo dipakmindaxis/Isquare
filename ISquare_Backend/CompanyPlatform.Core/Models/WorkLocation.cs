@@ -1,4 +1,4 @@
-﻿using CompanyPlatform.Core.Models.CRM.Employee;
+using CompanyPlatform.Core.Models.CRM.Company;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -39,7 +39,6 @@ namespace CompanyPlatform.Core.Models
         [DefaultValue(false)]
         public bool IsDeleted { get; set; } 
 
-     public virtual ICollection<Employees> Employees { get; set; }
-
+        public virtual ICollection<Employee> Employees { get; set; } = new List<Employee>();
     }
 }

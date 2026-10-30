@@ -1,4 +1,4 @@
-using CompanyPlatform.Core.Data;
+﻿using CompanyPlatform.Core.Data;
 using CompanyPlatform.Core.Models;
 using CompanyPlatform.Core.Models.CRM;
 using CompanyPlatform.Core.Models.CRM.Company;
@@ -13,7 +13,6 @@ using CompanyPlatform.Core.Services.Companies;
 using CompanyPlatform.Core.Services.Department;
 using CompanyPlatform.Core.Services.Designation;
 using CompanyPlatform.Core.Services.Email;
-using CompanyPlatform.Core.Services.Employee;
 using CompanyPlatform.Core.Services.EmployeePFDetails;
 using CompanyPlatform.Core.Services.EmployeeStatutoryDetails;
 using CompanyPlatform.Core.Services.EmployeeTDSDetails;
@@ -51,7 +50,6 @@ using CompanyPlatform.CRM.Services.CustomerCategory;
 using CompanyPlatform.CRM.Services.CustomerSource;
 using CompanyPlatform.CRM.Services.CustomerStatus;
 using CompanyPlatform.CRM.Services.CustomerType;
-using CompanyPlatform.CRM.Services.Director;
 using CompanyPlatform.CRM.Services.DocumentType;
 using CompanyPlatform.CRM.Services.Employee;
 using CompanyPlatform.CRM.Services.EmailTemplate;
@@ -244,7 +242,6 @@ builder.Services.AddTransient<IEmailService, EmailService>();
 builder.Services.AddScoped(typeof(IRepositories<>), typeof(Repositories<>));
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
-builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IWorkLocationService, WorkLocationService>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IDesignationService, DesignationService>();
@@ -303,7 +300,6 @@ builder.Services.AddScoped<ICompanyVisitService, CompanyVisitService>();
 
 //vi
 builder.Services.AddScoped<ISalesCoordinatorService,SalesCoordinatorService>();
-builder.Services.AddScoped<IDirectorService, DirectorService>();
 builder.Services.AddScoped<ICRMEmployeeService, CRMEmployeeService>();
 builder.Services.AddScoped<ILevelMasterService, LevelMasterService>();
 builder.Services.AddScoped<ISalesAttachmentService, SalesAttachmentService>();
@@ -467,3 +463,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.Run();
+
+
+

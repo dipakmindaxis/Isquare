@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Diagnostics.Metrics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CompanyPlatform.Core.Models.CRM.Company
 {
@@ -20,6 +14,11 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public string ActivityName { get; set; }
 
         public string? ActivitySubType { get; set; }
+
+        // New columns
+        public string? SubjectPurpose { get; set; }
+
+        public string? DiscussionNotesMOM { get; set; }
 
         [DefaultValue(true)]
         public bool IsActive { get; set; }

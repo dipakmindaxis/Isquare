@@ -1,11 +1,10 @@
-using CompanyPlatform.Core.Models;
+﻿using CompanyPlatform.Core.Models;
 using CompanyPlatform.Core.Models.CRM;
 using CompanyPlatform.Core.Models.CRM.AddressType;
 using CompanyPlatform.Core.Models.CRM.Call;
 using CompanyPlatform.Core.Models.CRM.Company;
 using CompanyPlatform.Core.Models.CRM.CustomerArea;
 using CompanyPlatform.Core.Models.CRM.CustomerSource;
-using CompanyPlatform.Core.Models.CRM.Director;
 using CompanyPlatform.Core.Models.CRM.Employee;
 using CompanyPlatform.Core.Models.CRM.Notification;
 using CompanyPlatform.Core.Models.CRM.PaymentTerm;
@@ -44,7 +43,6 @@ namespace CompanyPlatform.Core.Data
 
         //vi
         public DbSet<SalesCoordinator> SalesCoordinators{ get; set; }
-        public DbSet<Director> Directors { get; set; }
         public DbSet<SalesAttachment> SalesAttachments { get; set; }
         public DbSet<AddressType> AddressTypes { get; set; }
         public DbSet<PaymentTerm> PaymentTerms { get; set; }
@@ -106,7 +104,6 @@ namespace CompanyPlatform.Core.Data
         public DbSet<CallAttachment> CallAttachments { get; set; }
         // Employee
 
-        public DbSet<Employees> Employees { get; set; }
         public DbSet<CompanyPlatform.Core.Models.CRM.Company.Employee> Tbl_Employee { get; set; }
 
 
@@ -263,9 +260,6 @@ namespace CompanyPlatform.Core.Data
 
             builder.Entity<CompanyPlatform.Core.Models.CRM.Company.Employee>()
                 .ToTable("tbl_Employee", tb => tb.HasTrigger("trg_tbl_Employee"));
-
-            builder.Entity<Employees>()
-                .ToTable("tbl_Employees", tb => tb.HasTrigger("trg_tbl_Employees"));
 
 
             builder.Entity<Reminder>()
@@ -689,5 +683,7 @@ namespace CompanyPlatform.Core.Data
         }
     }
 }
+
+
 
 

@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   Layers,
-  Clock,
   CheckSquare,
   RefreshCw,
   CheckCircle2,
@@ -27,7 +26,6 @@ import {
   deleteSalesActivity,
   getCustomerOptions,
   getEmployeeOptions,
-  getSalesModuleCounts,
 } from "./Services/SalesActivityService";
 import { SalesActivityStatsCards } from "./Components/SalesActivityStatsCards";
 import { SalesActivityFilterBar } from "./Components/SalesActivityFilterBar";
@@ -166,7 +164,6 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
   const [customers, setCustomers] = useState<CustomerOption[]>([]);
   const [employees, setEmployees] = useState<EmployeeOption[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [moduleCounts, setModuleCounts] = useState(() => getSalesModuleCounts());
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -212,7 +209,6 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
       setStats(statData);
       setCustomers(custData);
       setEmployees(empData);
-      setModuleCounts(getSalesModuleCounts());
     } catch {
       toast.error("Failed to load sales activities.");
     } finally {
@@ -270,6 +266,7 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
   const handleEdit = (activity: SalesActivity) => {
     setSelectedActivity(activity);
     setIsEditOpen(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleDeleteRequest = (activity: SalesActivity) => {
@@ -328,12 +325,6 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
       label: "All Activities",
       icon: <Layers size={16} />,
       count: stats.total,
-    },
-    {
-      id: "followups" as const,
-      label: "Follow-Up Tracker",
-      icon: <Clock size={16} />,
-      count: moduleCounts.followUps,
     },
     {
       id: "tasks" as const,
@@ -430,118 +421,20 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
 
       {/* Main View Display */}
       {mainView === "all" && (
-        <div className="space-y-6">
-          {/* Listing Action Header matching CustomerMaster */}
-          {!isAddOpen && (
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <h2 className="border-b-2 border-[#FF7900] pb-2 text-2xl sm:text-3xl font-bold tracking-tight text-[#00234a]">
-                  All Activities
-                </h2>
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={loadData}
-                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer"
-                >
-                  <RefreshCw size={15} className={isLoading ? "animate-spin" : ""} />
-                  <span>Refresh</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={handleExportClick}
-                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer"
-                >
-                  <FaFileExcel className="text-emerald-600" />
-                  <span>Export</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleSwitchMainView("tasks");
-                    setTaskAddRequested(true);
-                  }}
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#00234a] hover:bg-[#003366] text-white px-4 py-2.5 text-xs sm:text-sm font-semibold shadow-sm transition cursor-pointer"
-                >
-                  <FaPlus size={12} />
-                  <span>Add Task</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsAddOpen(true);
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                  }}
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#FF7900] hover:bg-[#e06800] text-white px-5 py-2.5 text-xs sm:text-sm font-semibold shadow-md shadow-orange-500/25 transition cursor-pointer"
-                >
-                  <FaPlus size={12} />
-                  <span>Record Activity</span>
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* KPI / Summary Cards */}
-          {!isAddOpen && (
-            <SalesActivityStatsCards
-              stats={stats}
-              activeTab={activeTab}
-              onSelectTab={handleTabChange}
+        <div>
+          {isAddOpen ? (
+            <AddSalesActivityModal
+              isOpen={isAddOpen}
+              onClose={() => setIsAddOpen(false)}
+              onSuccess={() => {
+                setIsAddOpen(false);
+                loadData();
+              }}
             />
-          )}
-
-          {/* Add Sales Activity Form Component */}
-          <AddSalesActivityModal
-            isOpen={isAddOpen}
-            onClose={() => setIsAddOpen(false)}
-            onSuccess={() => {
-              setIsAddOpen(false);
-              loadData();
-            }}
-          />
-
-          {/* Filters & Quick Status Tabs */}
-          <SalesActivityFilterBar
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            selectedType={selectedType}
-            onTypeChange={setSelectedType}
-            selectedStatus={selectedStatus}
-            onStatusChange={setSelectedStatus}
-            selectedCustomerId={selectedCustomerId}
-            onCustomerChange={setSelectedCustomerId}
-            selectedEmployeeId={selectedEmployeeId}
-            onEmployeeChange={setSelectedEmployeeId}
-            activeTab={activeTab}
-            onTabChange={handleTabChange}
-            onResetFilters={handleResetFilters}
-            customers={customers}
-            employees={employees}
-          />
-
-          {/* Sales Activities Data Table without Related Link */}
-          <SalesActivityTable
-            activities={activities}
-            isLoading={isLoading}
-            currentPage={currentPage}
-            itemsPerPage={itemsPerPage}
-            onPageChange={setCurrentPage}
-            onItemsPerPageChange={setItemsPerPage}
-            onView={handleView}
-            onEdit={handleEdit}
-            onDelete={handleDeleteRequest}
-            onAddNew={() => {
-              setIsAddOpen(true);
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
-          />
-
-          {/* Edit Modal */}
-          {isEditOpen && (
+          ) : isEditOpen && selectedActivity ? (
             <EditSalesActivityModal
               isOpen={isEditOpen}
-              isModal={true}
+              isModal={false}
               activity={selectedActivity}
               onClose={() => {
                 setIsEditOpen(false);
@@ -553,6 +446,100 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
                 loadData();
               }}
             />
+          ) : (
+            <div className="space-y-6">
+              {/* Listing Action Header matching CustomerMaster */}
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <h2 className="border-b-2 border-[#FF7900] pb-2 text-2xl sm:text-3xl font-bold tracking-tight text-[#00234a]">
+                    All Activities
+                  </h2>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={loadData}
+                    className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer"
+                  >
+                    <RefreshCw size={15} className={isLoading ? "animate-spin" : ""} />
+                    <span>Refresh</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleExportClick}
+                    className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer"
+                  >
+                    <FaFileExcel className="text-emerald-600" />
+                    <span>Export</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleSwitchMainView("tasks");
+                      setTaskAddRequested(true);
+                    }}
+                    className="inline-flex items-center gap-2 rounded-xl bg-[#00234a] hover:bg-[#003366] text-white px-4 py-2.5 text-xs sm:text-sm font-semibold shadow-sm transition cursor-pointer"
+                  >
+                    <FaPlus size={12} />
+                    <span>Add Task</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsAddOpen(true);
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                    className="inline-flex items-center gap-2 rounded-xl bg-[#FF7900] hover:bg-[#e06800] text-white px-5 py-2.5 text-xs sm:text-sm font-semibold shadow-md shadow-orange-500/25 transition cursor-pointer"
+                  >
+                    <FaPlus size={12} />
+                    <span>Record Activity</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* KPI / Summary Cards */}
+              <SalesActivityStatsCards
+                stats={stats}
+                activeTab={activeTab}
+                onSelectTab={handleTabChange}
+              />
+
+              {/* Filters & Quick Status Tabs */}
+              <SalesActivityFilterBar
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                selectedType={selectedType}
+                onTypeChange={setSelectedType}
+                selectedStatus={selectedStatus}
+                onStatusChange={setSelectedStatus}
+                selectedCustomerId={selectedCustomerId}
+                onCustomerChange={setSelectedCustomerId}
+                selectedEmployeeId={selectedEmployeeId}
+                onEmployeeChange={setSelectedEmployeeId}
+                activeTab={activeTab}
+                onTabChange={handleTabChange}
+                onResetFilters={handleResetFilters}
+                customers={customers}
+                employees={employees}
+              />
+
+              {/* Sales Activities Data Table without Related Link */}
+              <SalesActivityTable
+                activities={activities}
+                isLoading={isLoading}
+                currentPage={currentPage}
+                itemsPerPage={itemsPerPage}
+                onPageChange={setCurrentPage}
+                onItemsPerPageChange={setItemsPerPage}
+                onView={handleView}
+                onEdit={handleEdit}
+                onDelete={handleDeleteRequest}
+                onAddNew={() => {
+                  setIsAddOpen(true);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+              />
+            </div>
           )}
 
           {/* View Details Modal */}
@@ -567,6 +554,7 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
               setIsViewOpen(false);
               setSelectedActivity(act);
               setIsEditOpen(true);
+              window.scrollTo({ top: 0, behavior: "smooth" });
             }}
           />
 

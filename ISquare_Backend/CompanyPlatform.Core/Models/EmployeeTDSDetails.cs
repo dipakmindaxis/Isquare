@@ -1,4 +1,5 @@
-﻿using CompanyPlatform.Core.Models.CRM.Employee;
+﻿using CompanyPlatform.Core.Models.CRM.Company;
+using CompanyPlatform.Core.Models.CRM.Employee;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -19,7 +20,7 @@ namespace CompanyPlatform.Core.Models
         public decimal TDSAmount { get; set; }
 
         [ForeignKey("EmployeeID")]
-        public virtual Employees Employee { get; set; }
+        public virtual Employee Employee { get; set; }
 
         [DefaultValue(false)]
         public bool IsDeleted { get; set; }

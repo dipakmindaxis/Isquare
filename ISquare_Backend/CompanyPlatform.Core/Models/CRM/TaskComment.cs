@@ -1,3 +1,4 @@
+﻿using CompanyPlatform.Core.Models.CRM.Company;
 using CompanyPlatform.Core.Models.CRM.Employee;
 using System;
 using System.Collections.Generic;
@@ -28,7 +29,7 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         [Required]
         public int CommentedBy { get; set; }
         [ForeignKey("CommentedBy")]
-        public virtual Employees CommentedByEmployee { get; set; }
+        public virtual Employee CommentedByEmployee { get; set; }
 
         [Required]
         public DateTime CommentDate { get; set; }

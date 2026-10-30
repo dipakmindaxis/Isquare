@@ -11,6 +11,11 @@ namespace CompanyPlatform.CRM.DTO.ActivityType
 
         public string? ActivitySubType { get; set; }
 
+        // New columns
+        public string? SubjectPurpose { get; set; }
+
+        public string? DiscussionNotesMOM { get; set; }
+
         public bool IsActive { get; set; }
 
         public bool IsDeleted { get; set; }

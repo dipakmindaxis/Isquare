@@ -27,6 +27,10 @@ namespace CompanyPlatform.CRM.DTO.Employee
         public string? DesignationName { get; set; }
         public int? ReportingTo { get; set; }
         public string? ReportingToName { get; set; }
+        public int? LevelID { get; set; }
+        public string? LevelName { get; set; }
+        public string? PhotoPath { get; set; }
+        public string? GoogleCalendarId { get; set; }
         public string? UserId { get; set; }
         public DateTime? DateOfLeaving { get; set; }
         public bool IsActive { get; set; }
@@ -61,6 +65,9 @@ namespace CompanyPlatform.CRM.DTO.Employee
         public int? DepartmentID { get; set; }
         public int? DesignationID { get; set; }
         public int? ReportingTo { get; set; }
+        public int? LevelID { get; set; }
+        public string? PhotoPath { get; set; }
+        public string? GoogleCalendarId { get; set; }
         public string? UserId { get; set; }
         public bool IsActive { get; set; } = true;
     }
@@ -92,6 +99,9 @@ namespace CompanyPlatform.CRM.DTO.Employee
         public int? DepartmentID { get; set; }
         public int? DesignationID { get; set; }
         public int? ReportingTo { get; set; }
+        public int? LevelID { get; set; }
+        public string? PhotoPath { get; set; }
+        public string? GoogleCalendarId { get; set; }
         public string? UserId { get; set; }
         public DateTime? DateOfLeaving { get; set; }
         public bool IsActive { get; set; } = true;

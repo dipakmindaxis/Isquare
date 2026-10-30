@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using CompanyPlatform.CRM.DTO.TaskHistory;
 //using CompanyPlatform.CRM.Repository;
@@ -13,14 +13,14 @@ namespace CompanyPlatform.CRM.Services.TaskHistory
     {
         private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.TaskHistory> _repository;
         private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.Tasks> _taskRepository;
-        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Employee.Employees> _employeeRepository;
+        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.Employee> _employeeRepository;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<TaskHistoryService> _logger;
 
         public TaskHistoryService(
             IRepositories<CompanyPlatform.Core.Models.CRM.Company.TaskHistory> repository,
             IRepositories<CompanyPlatform.Core.Models.CRM.Company.Tasks> taskRepository,
-            IRepositories<CompanyPlatform.Core.Models.CRM.Employee.Employees> employeeRepository,
+            IRepositories<CompanyPlatform.Core.Models.CRM.Company.Employee> employeeRepository,
             IHttpContextAccessor httpContextAccessor,
             ILogger<TaskHistoryService> logger)
         {
@@ -393,5 +393,6 @@ namespace CompanyPlatform.CRM.Services.TaskHistory
 //        }
 //    }
 //}
+
 
 

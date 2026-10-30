@@ -65,37 +65,67 @@ namespace CompanyPlatform.CRM.Services.Employee
             }
         }
 
-        public async Task<IEnumerable<EmployeeDto>> GetAllAsync()
+        public async Task<IEnumerable<EmployeeDto>> GetAllAsync(int? designationId = null, string? role = null)
         {
             _logger.LogInformation("Fetching all non-deleted employees.");
 
-            var employees = await _context.Tbl_Employee
+            var query = _context.Tbl_Employee
                 .Include(e => e.Department)
                 .Include(e => e.Designation)
                 .Include(e => e.WorkLocation)
                 .Include(e => e.ReportingToManager)
-                .Where(e => !e.IsDeleted)
-                .OrderBy(e => e.ID)
-                .ToListAsync();
+                .Include(e => e.Level)
+                .Where(e => !e.IsDeleted);
+
+            if (designationId.HasValue && designationId.Value > 0)
+            {
+                query = query.Where(e => e.DesignationID == designationId.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(role))
+            {
+                query = query.Where(e => e.Designation != null && e.Designation.DesignationName.Contains(role));
+            }
+
+            var employees = await query.OrderBy(e => e.ID).ToListAsync();
 
             return employees.Select(MapToDto);
         }
 
-        public async Task<IEnumerable<EmployeeDto>> GetActiveAsync()
+        public async Task<IEnumerable<EmployeeDto>> GetActiveAsync(int? designationId = null, string? role = null)
         {
             _logger.LogInformation("Fetching all active non-deleted employees.");
 
-            var employees = await _context.Tbl_Employee
+            var query = _context.Tbl_Employee
                 .Include(e => e.Department)
                 .Include(e => e.Designation)
                 .Include(e => e.WorkLocation)
                 .Include(e => e.ReportingToManager)
-                .Where(e => !e.IsDeleted && e.IsActive)
+                .Include(e => e.Level)
+                .Where(e => !e.IsDeleted && e.IsActive);
+
+            if (designationId.HasValue && designationId.Value > 0)
+            {
+                query = query.Where(e => e.DesignationID == designationId.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(role))
+            {
+                query = query.Where(e => e.Designation != null && e.Designation.DesignationName.Contains(role));
+            }
+
+            var employees = await query
                 .OrderBy(e => e.FirstName)
                 .ThenBy(e => e.LastName)
                 .ToListAsync();
 
             return employees.Select(MapToDto);
+        }
+
+        public async Task<IEnumerable<EmployeeDto>> GetByDesignationIdAsync(int designationId)
+        {
+            _logger.LogInformation("Fetching active employees by DesignationID: {DesignationId}", designationId);
+            return await GetActiveAsync(designationId);
         }
 
         public async Task<EmployeeDto?> GetByIdAsync(int id)
@@ -107,6 +137,7 @@ namespace CompanyPlatform.CRM.Services.Employee
                 .Include(e => e.Designation)
                 .Include(e => e.WorkLocation)
                 .Include(e => e.ReportingToManager)
+                .Include(e => e.Level)
                 .FirstOrDefaultAsync(e => e.ID == id && !e.IsDeleted);
 
             return employee == null ? null : MapToDto(employee);
@@ -124,6 +155,7 @@ namespace CompanyPlatform.CRM.Services.Employee
                 .Include(e => e.Designation)
                 .Include(e => e.WorkLocation)
                 .Include(e => e.ReportingToManager)
+                .Include(e => e.Level)
                 .FirstOrDefaultAsync(e => e.EmployeeCode.ToLower() == employeeCode.Trim().ToLower() && !e.IsDeleted);
 
             return employee == null ? null : MapToDto(employee);
@@ -199,6 +231,9 @@ namespace CompanyPlatform.CRM.Services.Employee
                 DepartmentID = deptId,
                 DesignationID = desigId,
                 ReportingTo = repId,
+                LevelID = (dto.LevelID.HasValue && dto.LevelID.Value > 0) ? dto.LevelID.Value : null,
+                PhotoPath = dto.PhotoPath,
+                GoogleCalendarId = dto.GoogleCalendarId,
                 UserId = dto.UserId,
                 IsActive = dto.IsActive,
                 IsDeleted = false
@@ -288,6 +323,18 @@ namespace CompanyPlatform.CRM.Services.Employee
             entity.DepartmentID = deptId;
             entity.DesignationID = desigId;
             entity.ReportingTo = repId;
+            if (dto.LevelID.HasValue)
+            {
+                entity.LevelID = dto.LevelID.Value > 0 ? dto.LevelID.Value : null;
+            }
+            if (dto.PhotoPath != null)
+            {
+                entity.PhotoPath = dto.PhotoPath;
+            }
+            if (dto.GoogleCalendarId != null)
+            {
+                entity.GoogleCalendarId = dto.GoogleCalendarId;
+            }
             entity.UserId = dto.UserId;
             entity.DateOfLeaving = dto.DateOfLeaving;
             entity.IsActive = dto.IsActive;
@@ -342,6 +389,10 @@ namespace CompanyPlatform.CRM.Services.Employee
                 ReportingToName = e.ReportingToManager != null
                     ? $"{e.ReportingToManager.FirstName} {e.ReportingToManager.LastName}".Trim()
                     : null,
+                LevelID = e.LevelID,
+                LevelName = e.Level?.LevelName,
+                PhotoPath = e.PhotoPath,
+                GoogleCalendarId = e.GoogleCalendarId,
                 UserId = e.UserId,
                 DateOfLeaving = e.DateOfLeaving,
                 IsActive = e.IsActive,

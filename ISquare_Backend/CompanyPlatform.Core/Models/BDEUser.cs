@@ -1,7 +1,7 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using CompanyPlatform.Core.Models.CRM.Employee;
+using CompanyPlatform.Core.Models.CRM.Company;
 
 namespace CompanyPlatform.Core.Models.CRM
 {
@@ -26,8 +26,10 @@ namespace CompanyPlatform.Core.Models.CRM
         // Employee ID of the Director or other reporting role
         public int? DirectorEmployeeId { get; set; }
 
-        // References tbl_Employees
+        // References tbl_Employee
         [ForeignKey(nameof(DirectorEmployeeId))]
-        public virtual Employees? DirectorEmployee { get; set; }
+        public virtual CompanyPlatform.Core.Models.CRM.Company.Employee? DirectorEmployee { get; set; }
     }
 }
+
+

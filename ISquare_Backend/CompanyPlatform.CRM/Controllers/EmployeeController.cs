@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -36,14 +37,10 @@ namespace CompanyPlatform.CRM.Controllers
 
         // GET: api/employee
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] string? role = null, [FromQuery] string? designation = null)
+        public async Task<IActionResult> GetAll([FromQuery] string? role = null, [FromQuery] string? designation = null, [FromQuery] int? designationId = null)
         {
             _logger.LogInformation("Fetching all Employee records.");
-            var employees = await _employeeService.GetAllAsync();
-            if (!string.IsNullOrWhiteSpace(role))
-            {
-                employees = employees.Where(e => e.DesignationName != null && e.DesignationName.Contains(role, StringComparison.OrdinalIgnoreCase));
-            }
+            var employees = await _employeeService.GetAllAsync(designationId, role);
             if (!string.IsNullOrWhiteSpace(designation))
             {
                 employees = employees.Where(e => e.DesignationName != null && e.DesignationName.Contains(designation, StringComparison.OrdinalIgnoreCase));
@@ -53,14 +50,10 @@ namespace CompanyPlatform.CRM.Controllers
 
         // GET: api/employee/active
         [HttpGet("active")]
-        public async Task<IActionResult> GetActive([FromQuery] string? role = null, [FromQuery] string? designation = null)
+        public async Task<IActionResult> GetActive([FromQuery] string? role = null, [FromQuery] string? designation = null, [FromQuery] int? designationId = null)
         {
             _logger.LogInformation("Fetching active Employee records for dropdown/selection.");
-            var employees = await _employeeService.GetActiveAsync();
-            if (!string.IsNullOrWhiteSpace(role))
-            {
-                employees = employees.Where(e => e.DesignationName != null && e.DesignationName.Contains(role, StringComparison.OrdinalIgnoreCase));
-            }
+            var employees = await _employeeService.GetActiveAsync(designationId, role);
             if (!string.IsNullOrWhiteSpace(designation))
             {
                 employees = employees.Where(e => e.DesignationName != null && e.DesignationName.Contains(designation, StringComparison.OrdinalIgnoreCase));
@@ -75,6 +68,15 @@ namespace CompanyPlatform.CRM.Controllers
             _logger.LogInformation("Fetching active Employee records with designation: {Designation}", designation);
             var employees = (await _employeeService.GetActiveAsync())
                 .Where(e => e.DesignationName != null && e.DesignationName.Contains(designation, StringComparison.OrdinalIgnoreCase));
+            return Ok(employees);
+        }
+
+        // GET: api/employee/by-designation-id/{designationId}
+        [HttpGet("by-designation-id/{designationId:int}")]
+        public async Task<IActionResult> GetByDesignationId(int designationId)
+        {
+            _logger.LogInformation("Fetching active Employee records with DesignationID: {DesignationId}", designationId);
+            var employees = await _employeeService.GetByDesignationIdAsync(designationId);
             return Ok(employees);
         }
 

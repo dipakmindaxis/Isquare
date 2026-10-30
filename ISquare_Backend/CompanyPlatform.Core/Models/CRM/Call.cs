@@ -1,4 +1,4 @@
-using CompanyPlatform.Core.Models.CRM.Employee;
+﻿using CompanyPlatform.Core.Models.CRM.Employee;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -33,7 +33,7 @@ namespace CompanyPlatform.Core.Models.CRM.Call
         [Required]
         public int UserId { get; set; }
         [ForeignKey("UserId")]
-        public virtual Employees User { get; set; }
+        public virtual CompanyPlatform.Core.Models.CRM.Company.Employee User { get; set; }
 
         [Required]
         public DateTime CallDate { get; set; }
@@ -51,7 +51,7 @@ namespace CompanyPlatform.Core.Models.CRM.Call
         [Required]
         public int CreatedBy { get; set; }
         [ForeignKey("CreatedBy")]
-        public virtual Employees CreatedByEmployee { get; set; }
+        public virtual CompanyPlatform.Core.Models.CRM.Company.Employee CreatedByEmployee { get; set; }
 
         [Required]
         public DateTime CreatedDate { get; set; }
@@ -60,3 +60,5 @@ namespace CompanyPlatform.Core.Models.CRM.Call
         public bool IsDeleted { get; set; }
     }
 }
+
+

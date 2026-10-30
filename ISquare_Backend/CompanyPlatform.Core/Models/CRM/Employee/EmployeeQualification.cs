@@ -35,6 +35,9 @@ namespace CompanyPlatform.Core.Models.CRM.Employee
 
         // [ForeignKey("EmployeeID")]
         [ForeignKey(nameof(EmployeeID))]
-        public virtual Employees Employee { get; set; }
+        public virtual CompanyPlatform.Core.Models.CRM.Company.Employee Employee { get; set; }
     }
 }
+
+
+

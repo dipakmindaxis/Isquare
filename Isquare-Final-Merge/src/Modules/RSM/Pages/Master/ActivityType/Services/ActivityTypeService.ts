@@ -15,6 +15,10 @@ export interface ActivityTypeDto {
   ActivitySubType?: string;
   subType?: string;
   SubType?: string;
+  subjectPurpose?: string;
+  SubjectPurpose?: string;
+  discussionNotesMOM?: string;
+  DiscussionNotesMOM?: string;
   isActive?: boolean;
   IsActive?: boolean;
   isDeleted?: boolean;
@@ -32,6 +36,8 @@ export interface ActivityType {
   id: number;
   activityName: string;
   activitySubType: string;
+  subjectPurpose?: string;
+  discussionNotesMOM?: string;
   value: string;
   label: string;
   code: string;
@@ -41,7 +47,9 @@ export interface ActivityType {
 
 export interface ActivityTypeCreatePayload {
   activityName: string;
-  activitySubType: string;
+  activitySubType?: string;
+  subjectPurpose?: string;
+  discussionNotesMOM?: string;
   isActive: boolean;
   isDeleted: boolean;
 }
@@ -49,7 +57,9 @@ export interface ActivityTypeCreatePayload {
 export interface ActivityTypeUpdatePayload {
   id: number;
   activityName: string;
-  activitySubType: string;
+  activitySubType?: string;
+  subjectPurpose?: string;
+  discussionNotesMOM?: string;
   isActive: boolean;
   isDeleted: boolean;
 }
@@ -85,24 +95,19 @@ export const getAllActivityTypes = async (): Promise<ActivityType[]> => {
         const active = typeof item.isActive === "boolean" ? item.isActive : typeof item.IsActive === "boolean" ? item.IsActive : true;
         const deleted = typeof item.isDeleted === "boolean" ? item.isDeleted : typeof item.IsDeleted === "boolean" ? item.IsDeleted : false;
 
+        const subjVal = item.subjectPurpose || item.SubjectPurpose || "";
+        const notesVal = item.discussionNotesMOM || item.DiscussionNotesMOM || "";
         return {
           id: idVal,
           activityName: name,
           activitySubType: subTypeVal,
+          subjectPurpose: subjVal,
+          discussionNotesMOM: notesVal,
           value: name,
           label: name,
           code: item.code || item.Code || `ACT_${String(idVal).padStart(3, "0")}`,
           isActive: active,
           isDeleted: deleted,
-          isActive:
-            item.isActive !== undefined
-              ? Boolean(item.isActive)
-              : item.IsActive !== undefined
-                ? Boolean(item.IsActive)
-                : true,
-          code: item.code ?? item.Code ?? `ACT_${String(item.id ?? item.Id ?? 0).padStart(3, "0")}`,
-          category: item.category ?? item.Category ?? "General",
-          isDeleted: Boolean(item.isDeleted ?? item.IsDeleted ?? false),
         };
       })
       .filter((item: ActivityType) => !item.isDeleted);
@@ -121,6 +126,8 @@ export const createActivityType = async (payload: ActivityTypeCreatePayload): Pr
   const requestBody: ActivityTypeCreatePayload = {
     activityName: payload.activityName,
     activitySubType: payload.activitySubType || "",
+    subjectPurpose: payload.subjectPurpose || "",
+    discussionNotesMOM: payload.discussionNotesMOM || "",
     isActive: payload.isActive,
     isDeleted: payload.isDeleted || false,
   };
@@ -134,6 +141,8 @@ export const updateActivityType = async (id: number, payload: ActivityTypeUpdate
     id,
     activityName: payload.activityName,
     activitySubType: payload.activitySubType || "",
+    subjectPurpose: payload.subjectPurpose || "",
+    discussionNotesMOM: payload.discussionNotesMOM || "",
     isActive: payload.isActive,
     isDeleted: payload.isDeleted || false,
   };

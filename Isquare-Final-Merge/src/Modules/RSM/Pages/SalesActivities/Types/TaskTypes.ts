@@ -3,8 +3,9 @@ export interface TaskItem {
   companyId: number;
   companyName?: string;
   taskTitle: string;
+  taskType?: string;
   description?: string;
-  assignedTo: number; // Director ID
+  assignedTo: number;
   assignedToName?: string;
   assignedBy: number;
   assignedByName?: string;
@@ -31,9 +32,12 @@ export interface TaskCreatePayload {
   taskId?: number;
   companyId: number;
   taskTitle: string;
+  taskType?: string;
   description?: string;
-  assignedTo: number; // Director's ID
+  assignedTo: number;
+  assignedToName?: string;
   assignedBy: number;
+  assignedByName?: string;
   priorityId: number;
   taskStatusId: number;
   startDate: string;
@@ -52,9 +56,12 @@ export interface TaskUpdatePayload {
   taskId: number;
   companyId?: number;
   taskTitle?: string;
+  taskType?: string;
   description?: string;
   assignedTo?: number;
+  assignedToName?: string;
   assignedBy?: number;
+  assignedByName?: string;
   priorityId?: number;
   taskStatusId?: number;
   startDate?: string;
@@ -83,13 +90,24 @@ export interface TaskFilterParams {
   status?: string | "All";
   priorityId?: number | "All";
   assignedTo?: number | "All";
+  taskType?: string | "All";
   tabFilter?: "all" | "pending" | "completed" | "today" | "overdue";
 }
 
 export interface TaskSummaryStats {
   total: number;
   pending: number;
+  inProgress: number;
   completed: number;
   dueToday: number;
   overdue: number;
+}
+
+export interface TaskActivityFeedItem {
+  id: string | number;
+  by: string;
+  text: string;
+  customer?: string;
+  time: string;
+  type?: string;
 }

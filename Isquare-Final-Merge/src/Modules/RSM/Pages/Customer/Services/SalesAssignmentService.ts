@@ -34,6 +34,8 @@ export interface RawEmployeeApiRecord {
   DepartmentName?: string;
   departmentName?: string;
   department?: string;
+  ReportingTo?: number;
+  reportingTo?: number;
   IsActive?: boolean;
   isActive?: boolean;
   IsDeleted?: boolean;
@@ -180,7 +182,6 @@ const isDirectorEmployeeApi = (e: RawEmployeeApiRecord): boolean => {
 
 /**
  * Normalizes an employee record from the Employee table into DirectorEmployeeItem
- * Strictly typed with no any or unknown types.
  */
 const normalizeEmp = (emp: RawEmployeeApiRecord): DirectorEmployeeItem => {
   const id: number = Number(emp.ID ?? emp.id ?? emp.EmployeeId ?? emp.employeeId ?? 0);
@@ -274,80 +275,58 @@ const normalizeOwner = (co: RawOwnerApiRecord, fallbackCoordinatorId: number): C
 });
 
 /**
- * 1. Fetch Directors exclusively from the Employee table via Employee APIs.
- * Uses LevelId = 1 / Director role as primary source.
+ * 1. Fetch Directors exclusively from tbl_Employee via Employee API.
+ * Uses DesignationId = 1 (Director).
  */
 export const getDirectorsFromEmployees = async (): Promise<DirectorEmployeeItem[]> => {
-  // 1st priority: Employee Selection List (/api/payroll-employees/selection-list) - LevelID = 1
+  // 1st priority: Active employees from CRM Employee API filtered by DesignationId = 1 (Director)
   try {
-    const selectionListUrl: string =
-      API_ENDPOINTS.EmployeeSelectionList ||
-      `${API_ENDPOINTS.BaseUrl}/payroll-employees/selection-list`;
-    const res = await apiClient.get<ApiDataResponse<RawEmployeeApiRecord>>(selectionListUrl);
+    const activeUrl = `${API_ENDPOINTS.CRMEmployee || `${API_ENDPOINTS.BaseUrl}/employee`}/active`;
+    const res = await apiClient.get<ApiDataResponse<RawEmployeeApiRecord>>(activeUrl, {
+      params: { designationId: 1 },
+    });
     const list: RawEmployeeApiRecord[] = ensureArray<RawEmployeeApiRecord>(res.data);
     if (list.length > 0) {
-      const mapped: DirectorEmployeeItem[] = list
-        .filter(isDirectorEmployeeApi)
-        .map(normalizeEmp)
-        .filter((e: DirectorEmployeeItem) => e.isActive && e.id > 0);
+      const mapped = list.map(normalizeEmp).filter((e) => e.isActive && e.id > 0);
       if (mapped.length > 0) return mapped;
     }
-  } catch {
-    // Continue to next employee endpoint
-  }
+  } catch {}
 
-  // 2nd priority: Payroll Employees endpoint (/api/payroll-employees)
+  // 2nd priority: /api/employee/by-designation-id/1
   try {
-    const payrollUrl: string =
-      API_ENDPOINTS.Employees || `${API_ENDPOINTS.BaseUrl}/payroll-employees`;
-    const res = await apiClient.get<ApiDataResponse<RawEmployeeApiRecord>>(payrollUrl);
-    const list: RawEmployeeApiRecord[] = ensureArray<RawEmployeeApiRecord>(res.data);
-    if (list.length > 0) {
-      const mapped: DirectorEmployeeItem[] = list
-        .filter(isDirectorEmployeeApi)
-        .map(normalizeEmp)
-        .filter((e: DirectorEmployeeItem) => e.isActive && e.id > 0);
-      if (mapped.length > 0) return mapped;
-    }
-  } catch {
-    // Continue to next employee endpoint
-  }
-
-  // 3rd priority: CRM Employees active endpoint (/api/employees/active)
-  try {
-    const activeUrl: string = `${
-      API_ENDPOINTS.CRMEmployees || `${API_ENDPOINTS.BaseUrl}/employees`
-    }/active`;
-    const res = await apiClient.get<ApiDataResponse<RawEmployeeApiRecord>>(activeUrl);
-    const list: RawEmployeeApiRecord[] = ensureArray<RawEmployeeApiRecord>(res.data);
-    if (list.length > 0) {
-      const mapped: DirectorEmployeeItem[] = list
-        .filter(isDirectorEmployeeApi)
-        .map(normalizeEmp)
-        .filter((e: DirectorEmployeeItem) => e.isActive && e.id > 0);
-      if (mapped.length > 0) return mapped;
-    }
-  } catch {
-    // Continue to standard employees endpoint
-  }
-
-  // 4th priority: CRM Employees by designation endpoint (/api/employees/by-designation/director)
-  try {
-    const designatedUrl: string = `${
-      API_ENDPOINTS.CRMEmployees || `${API_ENDPOINTS.BaseUrl}/employees`
-    }/by-designation/director`;
+    const designatedUrl = `${API_ENDPOINTS.CRMEmployee || `${API_ENDPOINTS.BaseUrl}/employee`}/by-designation-id/1`;
     const res = await apiClient.get<ApiDataResponse<RawEmployeeApiRecord>>(designatedUrl);
     const list: RawEmployeeApiRecord[] = ensureArray<RawEmployeeApiRecord>(res.data);
     if (list.length > 0) {
-      const mapped: DirectorEmployeeItem[] = list
-        .filter(isDirectorEmployeeApi)
-        .map(normalizeEmp)
-        .filter((e: DirectorEmployeeItem) => e.isActive && e.id > 0);
+      const mapped = list.map(normalizeEmp).filter((e) => e.isActive && e.id > 0);
       if (mapped.length > 0) return mapped;
     }
-  } catch {
-    // All employee endpoints failed
-  }
+  } catch {}
+
+  // 3rd priority: /api/employee/by-designation/director
+  try {
+    const designatedUrl = `${API_ENDPOINTS.CRMEmployee || `${API_ENDPOINTS.BaseUrl}/employee`}/by-designation/director`;
+    const res = await apiClient.get<ApiDataResponse<RawEmployeeApiRecord>>(designatedUrl);
+    const list: RawEmployeeApiRecord[] = ensureArray<RawEmployeeApiRecord>(res.data);
+    if (list.length > 0) {
+      const mapped = list.map(normalizeEmp).filter((e) => e.isActive && e.id > 0);
+      if (mapped.length > 0) return mapped;
+    }
+  } catch {}
+
+  // 4th priority: /api/employee/active filtered by isDirectorEmployeeApi
+  try {
+    const activeUrl = `${API_ENDPOINTS.CRMEmployee || `${API_ENDPOINTS.BaseUrl}/employee`}/active`;
+    const res = await apiClient.get<ApiDataResponse<RawEmployeeApiRecord>>(activeUrl);
+    const list: RawEmployeeApiRecord[] = ensureArray<RawEmployeeApiRecord>(res.data);
+    if (list.length > 0) {
+      const mapped = list
+        .filter(isDirectorEmployeeApi)
+        .map(normalizeEmp)
+        .filter((e) => e.isActive && e.id > 0);
+      if (mapped.length > 0) return mapped;
+    }
+  } catch {}
 
   return [];
 };
@@ -383,11 +362,31 @@ export const getBdeUsersByDirectorId = async (
       const filtered: BdeUserOption[] = mapped.filter(
         (b: BdeUserOption) => b.isActive && b.directorId === directorId
       );
-      return filtered;
+      if (filtered.length > 0) return filtered;
     }
   } catch (error) {
     console.error(`Failed to fetch BDE users for Director ${directorId}:`, error);
   }
+
+  // Also query active employees with DesignationId = 2 (BDE User) reporting to directorId
+  try {
+    const empRes = await apiClient.get<ApiDataResponse<RawEmployeeApiRecord>>(
+      `${API_ENDPOINTS.CRMEmployee || `${API_ENDPOINTS.BaseUrl}/employee`}/active`,
+      { params: { designationId: 2 } }
+    );
+    const empList = ensureArray<RawEmployeeApiRecord>(empRes.data);
+    const matches = empList
+      .filter((e) => Number(e.ReportingTo ?? e.reportingTo ?? 0) === directorId)
+      .map((e) => ({
+        id: Number(e.ID ?? e.id ?? 0),
+        value: (e.FullName ?? e.fullName ?? `${e.FirstName || ""} ${e.LastName || ""}`).trim(),
+        name: (e.FullName ?? e.fullName ?? `${e.FirstName || ""} ${e.LastName || ""}`).trim(),
+        code: (e.EmployeeCode ?? e.employeeCode ?? "").trim(),
+        directorId,
+        isActive: true,
+      }));
+    if (matches.length > 0) return matches;
+  } catch {}
 
   return [];
 };
@@ -425,11 +424,30 @@ export const getSalesCoordinatorsByBdeId = async (
       const filtered: SalesCoordinatorOption[] = mapped.filter(
         (sc: SalesCoordinatorOption) => sc.isActive && sc.bdeUserId === bdeUserId
       );
-      return filtered;
+      if (filtered.length > 0) return filtered;
     }
   } catch (error) {
     console.error(`Failed to fetch Sales Coordinators for BDE ${bdeUserId}:`, error);
   }
+
+  // Also query active employees with DesignationId = 3 (Sales Coordinator) reporting to bdeUserId
+  try {
+    const empRes = await apiClient.get<ApiDataResponse<RawEmployeeApiRecord>>(
+      `${API_ENDPOINTS.CRMEmployee || `${API_ENDPOINTS.BaseUrl}/employee`}/active`,
+      { params: { designationId: 3 } }
+    );
+    const empList = ensureArray<RawEmployeeApiRecord>(empRes.data);
+    const matches = empList
+      .filter((e) => Number(e.ReportingTo ?? e.reportingTo ?? 0) === bdeUserId)
+      .map((e) => ({
+        salesCoordinatorId: Number(e.ID ?? e.id ?? 0),
+        salesCoordinatorName: (e.FullName ?? e.fullName ?? `${e.FirstName || ""} ${e.LastName || ""}`).trim(),
+        salesCoordinatorCode: (e.EmployeeCode ?? e.employeeCode ?? "").trim(),
+        bdeUserId,
+        isActive: true,
+      }));
+    if (matches.length > 0) return matches;
+  } catch {}
 
   return [];
 };

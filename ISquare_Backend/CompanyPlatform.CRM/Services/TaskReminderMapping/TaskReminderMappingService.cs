@@ -1,3 +1,4 @@
+﻿using CompanyPlatform.Core.Models.CRM.Company;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using CompanyPlatform.CRM.DTO.TaskReminderMapping;
@@ -6,7 +7,7 @@ using System.Security.Claims;
 using TaskReminderMappingEntity = CompanyPlatform.Core.Models.CRM.Company.TaskReminderMapping;
 using TasksEntity = CompanyPlatform.Core.Models.CRM.Company.Tasks;
 using ReminderEntity = CompanyPlatform.Core.Models.CRM.Company.Reminder;
-using EmployeesEntity = CompanyPlatform.Core.Models.CRM.Employee.Employees;
+using EmployeesEntity = CompanyPlatform.Core.Models.CRM.Company.Employee;
 
 namespace CompanyPlatform.CRM.Services.TaskReminderMapping
 {
@@ -238,3 +239,5 @@ namespace CompanyPlatform.CRM.Services.TaskReminderMapping
         }
     }
 }
+
+
