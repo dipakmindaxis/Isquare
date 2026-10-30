@@ -290,10 +290,22 @@ export const getCities = async (stateId?: number): Promise<CityItem[]> => {
 
 export const getAddressTypes = async (): Promise<AddressTypeItem[]> => {
   try {
-    const response = await apiClient.get<AddressTypeItem[]>(
-      API_ENDPOINTS.AddressType
+    const response = await apiClient.get<any[]>(
+      API_ENDPOINTS.AddressType || `${API_ENDPOINTS.BaseUrl}/address-type`
     );
-    return ensureArray<AddressTypeItem>(response.data);
+    const list = ensureArray<any>(response.data);
+    return list
+      .filter((a) => a.isActive !== false && a.IsActive !== false)
+      .map((a) => {
+        const id = Number(a.addressTypeId ?? a.AddressTypeId ?? a.id ?? a.ID ?? 0);
+        const name = String(a.addressTypeName ?? a.AddressTypeName ?? a.name ?? a.Name ?? "").trim();
+        return {
+          id,
+          addressTypeName: name,
+          name,
+          type: name,
+        };
+      });
   } catch {
     return [];
   }

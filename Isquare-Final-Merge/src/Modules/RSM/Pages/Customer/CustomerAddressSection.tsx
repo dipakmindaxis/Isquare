@@ -30,8 +30,9 @@ const CustomerAddressSection: React.FC<CustomerAddressSectionProps> = ({
   }>({});
 
   const handleAddAddress = () => {
+    const defaultType = addressTypes[0]?.addressTypeName || addressTypes[0]?.name || "";
     const newAddr: CustomerAddress = {
-      addressType: addressTypes[0]?.name || addressTypes[0]?.addressTypeName || "Billing",
+      addressType: defaultType,
       address: "",
       countryId: 1,
       stateId: 1,
@@ -210,25 +211,15 @@ const CustomerAddressSection: React.FC<CustomerAddressSectionProps> = ({
                       }
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm"
                     >
-                      {addressTypes.length > 0 ? (
-                        addressTypes.map((t) => {
-                          const val = t.name || t.addressTypeName || t.type || String(t.id);
-                          return (
-                            <option key={t.id} value={val}>
-                              {val}
-                            </option>
-                          );
-                        })
-                      ) : (
-                        <>
-                          <option value="Billing">Billing</option>
-                          <option value="Shipping">Shipping</option>
-                          <option value="Registered">Registered</option>
-                          <option value="Plant">Plant / Site</option>
-                          <option value="Headquarters">Headquarters</option>
-                          <option value="Correspondence">Correspondence</option>
-                        </>
-                      )}
+                      <option value="">Select Address Type...</option>
+                      {addressTypes.map((t) => {
+                        const val = t.addressTypeName || t.name || t.type || String(t.id);
+                        return (
+                          <option key={t.id || val} value={val}>
+                            {val}
+                          </option>
+                        );
+                      })}
                     </select>
                   )}
                 </div>
