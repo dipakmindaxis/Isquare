@@ -866,6 +866,16 @@ export const getCustomerOptions = async (): Promise<CustomerOption[]> => {
       email: c.email || c.emailAddress || "",
       industry: c.industryName || "",
       city: c.cityName || c.city || "",
+      directorId: c.directorId ?? c.DirectorId ?? null,
+      directorName: c.directorName ?? c.DirectorName ?? null,
+      bdeUserId: c.bdeUserId ?? c.BDEUserId ?? null,
+      bdeUserName: c.bdeUserName ?? c.BDEUserName ?? null,
+      salesCoordinatorId: c.salesCoordinatorId ?? c.SalesCoordinatorId ?? null,
+      salesCoordinatorName: c.salesCoordinatorName ?? c.SalesCoordinatorName ?? null,
+      customerOwnerId: c.customerOwnerId ?? c.CustomerOwnerId ?? null,
+      customerOwnerName: c.customerOwnerName ?? c.CustomerOwnerName ?? null,
+      customerOwnerType: c.customerOwnerType ?? c.CustomerOwnerType ?? null,
+      contactPersons: c.contactPersons ?? c.ContactPersons ?? [],
     }));
   } catch {
     return [];
@@ -1024,7 +1034,7 @@ export const getRoleBasedAssignees = async (
         seen.add(`dir-${dId}`);
         list.push({
           id: String(dId),
-          name: `${dName} (Director)`,
+          name: dName,
           role: "Director",
           type: "Employee",
         });
@@ -1036,7 +1046,7 @@ export const getRoleBasedAssignees = async (
         seen.add(`bde-${b.id}`);
         list.push({
           id: String(b.id),
-          name: `${b.value || b.code} (BDE)`,
+          name: b.value || b.code || `BDE User #${b.id}`,
           role: "BDE",
           type: "Employee",
         });
