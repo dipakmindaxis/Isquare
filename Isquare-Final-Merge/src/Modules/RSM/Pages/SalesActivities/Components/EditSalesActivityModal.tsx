@@ -56,6 +56,14 @@ import { createReminder } from "../../Master/Reminder/Services/ReminderService";
 import { createFollowUp } from "../../Master/FollowUp/Services/FollowUpService";
 import { AddActivityContactModal } from "./AddActivityContactModal";
 import { useAuth } from "../../../../../hooks/useAuth";
+import { getCustomerById } from "../../Customer/Services/CustomerService";
+
+interface CompanySalesRep {
+  id: string;
+  name: string;
+  role: string;
+  rawName: string;
+}
 
 interface EditSalesActivityModalProps {
   isOpen: boolean;
@@ -87,10 +95,16 @@ export const EditSalesActivityModal: React.FC<EditSalesActivityModalProps> = ({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const cleanName = (val?: string | null) => {
+    if (!val) return "";
+    return val.replace(/\s*\((Director|BDE|Sales Rep|Sales Representative|Coordinator|Sales Coordinator)\)/gi, "").trim();
+  };
+
   // Dropdown Master Data
   const [customers, setCustomers] = useState<CustomerOption[]>([]);
   const [employees, setEmployees] = useState<EmployeeOption[]>([]);
   const [roleAssignees, setRoleAssignees] = useState<AssigneeOption[]>([]);
+  const [companySalesReps, setCompanySalesReps] = useState<CompanySalesRep[]>([]);
   const [teams, setTeams] = useState<AssigneeOption[]>([]);
   const [priorityOptions, setPriorityOptions] = useState<PriorityOptionItem[]>([]);
   const [, setOutcomes] = useState<ActivityOutcomeItem[]>([]);
@@ -256,6 +270,79 @@ export const EditSalesActivityModal: React.FC<EditSalesActivityModalProps> = ({
           setDocTypes(dTypes.filter((d: any) => d.isActive));
           setRelatedOptions(enqList);
 
+          if (activity.customerId) {
+            const matchedCust = cData.find((c) => String(c.id) === String(activity.customerId));
+            let custData: any = matchedCust;
+            if (matchedCust && !custData.directorName && !custData.bdeUserName) {
+              try {
+                const fullCust = await getCustomerById(Number(activity.customerId));
+                if (fullCust) {
+                  custData = {
+                    ...matchedCust,
+                    ...fullCust,
+                    directorId: fullCust.directorId ?? (fullCust as any).DirectorId,
+                    directorName: fullCust.directorName ?? (fullCust as any).DirectorName,
+                    bdeUserId: fullCust.bdeUserId ?? (fullCust as any).BDEUserId,
+                    bdeUserName: fullCust.bdeUserName ?? (fullCust as any).BDEUserName,
+                    salesCoordinatorId: fullCust.salesCoordinatorId ?? (fullCust as any).SalesCoordinatorId,
+                    salesCoordinatorName: fullCust.salesCoordinatorName ?? (fullCust as any).SalesCoordinatorName,
+                  };
+                }
+              } catch {}
+            }
+            if (custData) {
+              const reps: CompanySalesRep[] = [];
+              const seen = new Set<string>();
+
+              const bdeName = cleanName(custData.bdeUserName || custData.BDEUserName);
+              const bdeId = custData.bdeUserId || custData.BDEUserId;
+              if (bdeName || bdeId) {
+                const idStr = String(bdeId || `bde-${bdeName}`);
+                if (!seen.has(idStr)) {
+                  seen.add(idStr);
+                  reps.push({
+                    id: idStr,
+                    name: `${bdeName || "BDE User"} (BDE)`,
+                    role: "BDE",
+                    rawName: bdeName || "BDE User",
+                  });
+                }
+              }
+
+              const dirName = cleanName(custData.directorName || custData.DirectorName);
+              const dirId = custData.directorId || custData.DirectorId;
+              if (dirName || dirId) {
+                const idStr = String(dirId || `dir-${dirName}`);
+                if (!seen.has(idStr)) {
+                  seen.add(idStr);
+                  reps.push({
+                    id: idStr,
+                    name: `${dirName || "Director"} (Director)`,
+                    role: "Director",
+                    rawName: dirName || "Director",
+                  });
+                }
+              }
+
+              const scName = cleanName(custData.salesCoordinatorName || custData.SalesCoordinatorName);
+              const scId = custData.salesCoordinatorId || custData.SalesCoordinatorId;
+              if (scName || scId) {
+                const idStr = String(scId || `sc-${scName}`);
+                if (!seen.has(idStr)) {
+                  seen.add(idStr);
+                  reps.push({
+                    id: idStr,
+                    name: `${scName || "Coordinator"} (Sales Coordinator)`,
+                    role: "Coordinator",
+                    rawName: scName || "Coordinator",
+                  });
+                }
+              }
+
+              setCompanySalesReps(reps);
+            }
+          }
+
           // Auto-match priorityId and statusId if existing
           if (activity.priority) {
             const matchedPrio = prioWithFb.find(
@@ -303,6 +390,89 @@ export const EditSalesActivityModal: React.FC<EditSalesActivityModalProps> = ({
     if (matched) {
       const cName = matched.companyName || matched.name;
       setCustomerName(cName);
+
+      // Fetch complete customer details to guarantee Director & BDE User are loaded
+      let custData: any = matched;
+      if (!custData.directorName && !custData.bdeUserName) {
+        try {
+          const fullCust = await getCustomerById(Number(selectedCustomerId));
+          if (fullCust) {
+            custData = {
+              ...matched,
+              ...fullCust,
+              directorId: fullCust.directorId ?? (fullCust as any).DirectorId,
+              directorName: fullCust.directorName ?? (fullCust as any).DirectorName,
+              bdeUserId: fullCust.bdeUserId ?? (fullCust as any).BDEUserId,
+              bdeUserName: fullCust.bdeUserName ?? (fullCust as any).BDEUserName,
+              salesCoordinatorId: fullCust.salesCoordinatorId ?? (fullCust as any).SalesCoordinatorId,
+              salesCoordinatorName: fullCust.salesCoordinatorName ?? (fullCust as any).SalesCoordinatorName,
+            };
+          }
+        } catch {
+          // fallback to matched
+        }
+      }
+
+      // Build customer-specific Sales Reps (Director & BDE selected during customer creation)
+      const reps: CompanySalesRep[] = [];
+      const seen = new Set<string>();
+
+      const bdeName = cleanName(custData.bdeUserName || custData.BDEUserName);
+      const bdeId = custData.bdeUserId || custData.BDEUserId;
+      if (bdeName || bdeId) {
+        const idStr = String(bdeId || `bde-${bdeName}`);
+        if (!seen.has(idStr)) {
+          seen.add(idStr);
+          reps.push({
+            id: idStr,
+            name: `${bdeName || "BDE User"} (BDE)`,
+            role: "BDE",
+            rawName: bdeName || "BDE User",
+          });
+        }
+      }
+
+      const dirName = cleanName(custData.directorName || custData.DirectorName);
+      const dirId = custData.directorId || custData.DirectorId;
+      if (dirName || dirId) {
+        const idStr = String(dirId || `dir-${dirName}`);
+        if (!seen.has(idStr)) {
+          seen.add(idStr);
+          reps.push({
+            id: idStr,
+            name: `${dirName || "Director"} (Director)`,
+            role: "Director",
+            rawName: dirName || "Director",
+          });
+        }
+      }
+
+      const scName = cleanName(custData.salesCoordinatorName || custData.SalesCoordinatorName);
+      const scId = custData.salesCoordinatorId || custData.SalesCoordinatorId;
+      if (scName || scId) {
+        const idStr = String(scId || `sc-${scName}`);
+        if (!seen.has(idStr)) {
+          seen.add(idStr);
+          reps.push({
+            id: idStr,
+            name: `${scName || "Coordinator"} (Sales Coordinator)`,
+            role: "Coordinator",
+            rawName: scName || "Coordinator",
+          });
+        }
+      }
+
+      setCompanySalesReps(reps);
+
+      // Automatic selection of Sales Rep for this Company
+      if (reps.length > 0) {
+        const defaultRep = reps.find((r) => r.role === "BDE") || reps.find((r) => r.role === "Director") || reps[0];
+        setAssignedEmployeeId(defaultRep.id);
+        setAssignedEmployeeName(defaultRep.rawName);
+      } else {
+        setAssignedEmployeeId("");
+        setAssignedEmployeeName("");
+      }
       setIsLoadingContacts(true);
       try {
         const contactList = await getContactsForCustomer(selectedCustomerId);
@@ -354,6 +524,16 @@ export const EditSalesActivityModal: React.FC<EditSalesActivityModalProps> = ({
 
   const handleEmployeeChange = (selectedEmpId: string) => {
     setAssignedEmployeeId(selectedEmpId);
+    const matchedRep = companySalesReps.find((r) => r.id === selectedEmpId);
+    if (matchedRep) {
+      setAssignedEmployeeName(matchedRep.rawName);
+      return;
+    }
+    const matchedRole = roleAssignees.find((r) => r.id === selectedEmpId);
+    if (matchedRole) {
+      setAssignedEmployeeName(cleanName(matchedRole.name));
+      return;
+    }
     const matched = employees.find((e) => e.id === selectedEmpId);
     if (matched) {
       setAssignedEmployeeName(matched.name);
@@ -701,24 +881,31 @@ export const EditSalesActivityModal: React.FC<EditSalesActivityModalProps> = ({
                     <select
                       value={assignedEmployeeId}
                       onChange={(e) => handleEmployeeChange(e.target.value)}
+                      disabled={!customerId}
                       className={`${baseInputStyle} ${
                         isSubmitted && !assignedEmployeeId ? "border-red-500" : ""
                       }`}
                       required
                     >
                       <option value="">
-                        {userRoleCategory === "BDE"
-                          ? "Select Director..."
-                          : userRoleCategory === "SalesPerson"
-                          ? "Select BDE User..."
-                          : "Select Sales Representative..."}
+                        {!customerId ? "Select a company first..." : "Select Sales Representative..."}
+
+
+
+
                       </option>
-                      {roleAssignees.map((e) => (
+                      {companySalesReps.length > 0
+                        ? companySalesReps.map((e) => (
+                            <option key={e.id} value={e.id}>
+                              {e.name}
+                            </option>
+                          ))
+                        : roleAssignees.map((e) => (
                         <option key={e.id} value={e.id}>
-                          {e.name} {e.role ? `(${e.role})` : ""}
+                          {cleanName(e.name)} {e.role ? `(${e.role})` : ""}
                         </option>
                       ))}
-                      {roleAssignees.length === 0 &&
+                      {false && roleAssignees.length === 0 &&
                         employees.map((e) => (
                           <option key={e.id} value={e.id}>
                             {e.name}
@@ -1308,7 +1495,8 @@ export const EditSalesActivityModal: React.FC<EditSalesActivityModalProps> = ({
                   />
                 </div>
 
-                {/* Work Assignment Box */}
+                {/* Work Assignment removed - managed in Task Assignment module */}
+                {false && (
                 <div className="relative md:col-span-2 p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3.5">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/80 pb-2.5">
                     <label className="text-xs font-bold text-[#154068] uppercase tracking-wider block">
@@ -1426,6 +1614,7 @@ export const EditSalesActivityModal: React.FC<EditSalesActivityModalProps> = ({
                   </div>
                 </div>
 
+                )}
                 {/* Reminder Remarks */}
                 <div className="relative md:col-span-2">
                   <label className={labelStyle}>Reminder Remarks / Details</label>

@@ -54,6 +54,14 @@ import { createReminder } from "../../Master/Reminder/Services/ReminderService";
 import { createFollowUp } from "../../Master/FollowUp/Services/FollowUpService";
 import { AddActivityContactModal } from "./AddActivityContactModal";
 import { useAuth } from "../../../../../hooks/useAuth";
+import { getCustomerById } from "../../Customer/Services/CustomerService";
+
+interface CompanySalesRep {
+  id: string;
+  name: string;
+  role: string;
+  rawName: string;
+}
 
 interface AddSalesActivityModalProps {
   isOpen: boolean;
@@ -89,6 +97,7 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
   const [customers, setCustomers] = useState<CustomerOption[]>([]);
   const [employees, setEmployees] = useState<EmployeeOption[]>([]);
   const [roleAssignees, setRoleAssignees] = useState<AssigneeOption[]>([]);
+  const [companySalesReps, setCompanySalesReps] = useState<CompanySalesRep[]>([]);
   const [teams, setTeams] = useState<AssigneeOption[]>([]);
   const [priorityOptions, setPriorityOptions] = useState<PriorityOptionItem[]>([]);
   const [, setOutcomes] = useState<ActivityOutcomeItem[]>([]);
@@ -159,6 +168,7 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
       setCustomerId("");
       setCustomerName("");
       setCompanyContacts([]);
+      setCompanySalesReps([]);
       setIsLoadingContacts(false);
       setIsAddContactModalOpen(false);
       setContactPerson("");
@@ -255,7 +265,8 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
               "Director";
             setAssignedEmployeeId(String(user?.employeeId || "director"));
             setAssignedEmployeeName(dirName);
-          } else if (roleList.length > 0) {
+          } /* Company-specific sales reps will auto-populate when company is selected */
+          if (false) {
             setAssignedEmployeeId(String(roleList[0].id));
             setAssignedEmployeeName(roleList[0].name);
           } else if (eData.length > 0) {
@@ -293,6 +304,11 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
 
   if (!isOpen) return null;
 
+  const cleanName = (val?: string | null) => {
+    if (!val) return "";
+    return val.replace(/\s*\((Director|BDE|Sales Rep|Sales Representative|Coordinator|Sales Coordinator)\)/gi, "").trim();
+  };
+
   const handleCustomerChange = async (selectedId: string) => {
     setCustomerId(selectedId);
     getRelatedRecordOptions(selectedId).then(setRelatedOptions).catch(() => {});
@@ -300,12 +316,95 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
     if (matched) {
       const cName = matched.companyName || matched.name;
       setCustomerName(cName);
+
+      // Fetch complete customer details to guarantee Director & BDE User are loaded
+      let custData: any = matched;
+      if (!custData.directorName && !custData.bdeUserName) {
+        try {
+          const fullCust = await getCustomerById(Number(selectedId));
+          if (fullCust) {
+            custData = {
+              ...matched,
+              ...fullCust,
+              directorId: fullCust.directorId ?? (fullCust as any).DirectorId,
+              directorName: fullCust.directorName ?? (fullCust as any).DirectorName,
+              bdeUserId: fullCust.bdeUserId ?? (fullCust as any).BDEUserId,
+              bdeUserName: fullCust.bdeUserName ?? (fullCust as any).BDEUserName,
+              salesCoordinatorId: fullCust.salesCoordinatorId ?? (fullCust as any).SalesCoordinatorId,
+              salesCoordinatorName: fullCust.salesCoordinatorName ?? (fullCust as any).SalesCoordinatorName,
+            };
+          }
+        } catch {
+          // fallback to matched
+        }
+      }
+
+      // Build customer-specific Sales Reps (Director & BDE selected during customer creation)
+      const reps: CompanySalesRep[] = [];
+      const seen = new Set<string>();
+
+      const bdeName = cleanName(custData.bdeUserName || custData.BDEUserName);
+      const bdeId = custData.bdeUserId || custData.BDEUserId;
+      if (bdeName || bdeId) {
+        const idStr = String(bdeId || `bde-${bdeName}`);
+        if (!seen.has(idStr)) {
+          seen.add(idStr);
+          reps.push({
+            id: idStr,
+            name: `${bdeName || "BDE User"} (BDE)`,
+            role: "BDE",
+            rawName: bdeName || "BDE User",
+          });
+        }
+      }
+
+      const dirName = cleanName(custData.directorName || custData.DirectorName);
+      const dirId = custData.directorId || custData.DirectorId;
+      if (dirName || dirId) {
+        const idStr = String(dirId || `dir-${dirName}`);
+        if (!seen.has(idStr)) {
+          seen.add(idStr);
+          reps.push({
+            id: idStr,
+            name: `${dirName || "Director"} (Director)`,
+            role: "Director",
+            rawName: dirName || "Director",
+          });
+        }
+      }
+
+      const scName = cleanName(custData.salesCoordinatorName || custData.SalesCoordinatorName);
+      const scId = custData.salesCoordinatorId || custData.SalesCoordinatorId;
+      if (scName || scId) {
+        const idStr = String(scId || `sc-${scName}`);
+        if (!seen.has(idStr)) {
+          seen.add(idStr);
+          reps.push({
+            id: idStr,
+            name: `${scName || "Coordinator"} (Sales Coordinator)`,
+            role: "Coordinator",
+            rawName: scName || "Coordinator",
+          });
+        }
+      }
+
+      setCompanySalesReps(reps);
+
+      // Automatic selection of Sales Rep for this Company
+      if (reps.length > 0) {
+        const defaultRep = reps.find((r) => r.role === "BDE") || reps.find((r) => r.role === "Director") || reps[0];
+        setAssignedEmployeeId(defaultRep.id);
+        setAssignedEmployeeName(defaultRep.rawName);
+      } else {
+        setAssignedEmployeeId("");
+        setAssignedEmployeeName("");
+      }
       setIsLoadingContacts(true);
       try {
         const contactList = await getContactsForCustomer(selectedId);
         setCompanyContacts(contactList);
         if (contactList && contactList.length > 0) {
-          const first = contactList[0];
+          const first = contactList.find((c) => c.isPrimary) || contactList[0];
           setContactPerson(first.fullName);
           setContactPhone(first.mobileNo || first.altMobileNo || "");
           setContactEmail(first.emailAddress || first.altEmailAddress || "");
@@ -326,6 +425,7 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
     } else {
       setCustomerName("");
       setCompanyContacts([]);
+      setCompanySalesReps([]);
       setContactPerson("");
       setContactPhone("");
       setContactEmail("");
@@ -351,6 +451,16 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
 
   const handleEmployeeChange = (selectedId: string) => {
     setAssignedEmployeeId(selectedId);
+    const matchedRep = companySalesReps.find((r) => r.id === selectedId);
+    if (matchedRep) {
+      setAssignedEmployeeName(matchedRep.rawName);
+      return;
+    }
+    const matchedRole = roleAssignees.find((r) => r.id === selectedId);
+    if (matchedRole) {
+      setAssignedEmployeeName(cleanName(matchedRole.name));
+      return;
+    }
     const matched = employees.find((e) => e.id === selectedId);
     if (matched) {
       setAssignedEmployeeName(matched.name);
@@ -710,24 +820,31 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
                     <select
                       value={assignedEmployeeId}
                       onChange={(e) => handleEmployeeChange(e.target.value)}
+                      disabled={!customerId}
                       className={`${baseInputStyle} ${
                         isSubmitted && !assignedEmployeeId ? "border-red-500" : ""
                       }`}
                       required
                     >
                       <option value="">
-                        {userRoleCategory === "BDE"
-                          ? "Select Director..."
-                          : userRoleCategory === "SalesPerson"
-                          ? "Select BDE User..."
-                          : "Select Sales Representative..."}
+                        {!customerId ? "Select a company first..." : "Select Sales Representative..."}
+
+
+
+
                       </option>
-                      {roleAssignees.map((e) => (
+                      {companySalesReps.length > 0
+                        ? companySalesReps.map((e) => (
+                            <option key={e.id} value={e.id}>
+                              {e.name}
+                            </option>
+                          ))
+                        : roleAssignees.map((e) => (
                         <option key={e.id} value={e.id}>
-                          {e.name} {e.role ? `(${e.role})` : ""}
+                          {cleanName(e.name)} {e.role ? `(${e.role})` : ""}
                         </option>
                       ))}
-                      {roleAssignees.length === 0 &&
+                      {false && roleAssignees.length === 0 &&
                         employees.map((e) => (
                           <option key={e.id} value={e.id}>
                             {e.name}
@@ -1301,7 +1418,8 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
                   />
                 </div>
 
-                {/* Work Assignment Box */}
+                {/* Work Assignment removed - managed in Task Assignment module */}
+                {false && (
                 <div className="relative md:col-span-2 p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3.5">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/80 pb-2.5">
                     <label className="text-xs font-bold text-[#154068] uppercase tracking-wider block">
@@ -1419,6 +1537,7 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
                   </div>
                 </div>
 
+                )}
                 {/* Reminder Remarks */}
                 <div className="relative md:col-span-2">
                   <label className={labelStyle}>Reminder Remarks / Details</label>

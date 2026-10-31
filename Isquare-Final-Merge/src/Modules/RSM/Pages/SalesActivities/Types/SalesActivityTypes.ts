@@ -185,6 +185,16 @@ export interface CustomerOption {
   email: string;
   industry: string;
   city: string;
+  directorId?: number | null;
+  directorName?: string | null;
+  bdeUserId?: number | null;
+  bdeUserName?: string | null;
+  salesCoordinatorId?: number | null;
+  salesCoordinatorName?: string | null;
+  customerOwnerId?: number | null;
+  customerOwnerName?: string | null;
+  customerOwnerType?: string | null;
+  contactPersons?: any[];
 }
 
 export interface EmployeeOption {
