@@ -64,6 +64,7 @@ export interface Customer {
   customerOwnerId?: number;
   customerOwnerName?: string;
   customerOwnerType?: "Director" | "BDE" | string | null;
+  customerOwnerValue?: string | null;
 
   // Addresses
   addresses?: CustomerAddress[];
@@ -128,6 +129,7 @@ export interface CustomerCreatePayload {
   customerOwnerId?: number | null;
   customerOwnerName?: string | null;
   customerOwnerType?: "Director" | "BDE" | string | null;
+  customerOwnerValue?: string | null;
 
   // Addresses
   addresses?: CustomerAddressPayload[] | CustomerAddress[];

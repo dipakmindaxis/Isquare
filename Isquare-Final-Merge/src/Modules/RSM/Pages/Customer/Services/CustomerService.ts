@@ -11,11 +11,26 @@ import type {
 
 export type { Customer, CustomerAddress, CustomerCreatePayload, CustomerUpdatePayload, AddressValidationResult };
 
+type CustomerApiRecord = Customer & {
+  BDEUserId?: number | null;
+  BDEUserName?: string | null;
+};
+
+const normalizeCustomer = (customer: CustomerApiRecord): Customer => ({
+  ...customer,
+  bdeUserId: customer.bdeUserId ?? customer.BDEUserId ?? undefined,
+  bdeUserName: customer.bdeUserName ?? customer.BDEUserName ?? undefined,
+});
+
 export const getAllCustomers = async (): Promise<Customer[]> => {
   try {
-    const response = await apiClient.get<Customer[]>(API_ENDPOINTS.Customer);
-    if (Array.isArray(response.data)) return response.data;
-    if (response.data && Array.isArray((response.data as any).data)) return (response.data as any).data;
+    const response = await apiClient.get<
+      CustomerApiRecord[] | { data?: CustomerApiRecord[] }
+    >(API_ENDPOINTS.Customer);
+    if (Array.isArray(response.data)) return response.data.map(normalizeCustomer);
+    if (response.data && Array.isArray(response.data.data)) {
+      return response.data.data.map(normalizeCustomer);
+    }
     return [];
   } catch (error) {
     console.warn("Failed to fetch customers from backend:", error);
@@ -44,10 +59,10 @@ export const getNextCustomerCode = async (): Promise<string> => {
 };
 
 export const getCustomerById = async (id: number): Promise<Customer> => {
-  const response = await apiClient.get<Customer>(
+  const response = await apiClient.get<CustomerApiRecord>(
     `${API_ENDPOINTS.Customer}/${id}`
   );
-  return response.data;
+  return normalizeCustomer(response.data);
 };
 
 export const createCustomer = async (

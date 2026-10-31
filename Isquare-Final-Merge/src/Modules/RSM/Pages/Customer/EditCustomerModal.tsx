@@ -152,44 +152,125 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
               .join(", ");
           }
 
+          // Normalize name for robust comparison (strips codes like "(3)" or "(EMP001)" and trims)
+          const normalizeForCompare = (str?: string | null): string => {
+            if (!str) return "";
+            return str
+              .replace(/\([^)]*\)/g, "")
+              .trim()
+              .toLowerCase();
+          };
+
           // Restore Customer Owner
+          let resolvedOwnerType: "Director" | "BDE" | "" = "";
+          let resolvedOwnerId: number | "" = "";
+          let resolvedOwnerName = "";
           let resolvedOwnerVal = "";
-          if (customerRes.customerOwnerType && customerRes.customerOwnerId) {
-            resolvedOwnerVal = `${customerRes.customerOwnerType}:${customerRes.customerOwnerId}`;
-          } else if (customerRes.customerOwnerName) {
-            const matchedDir = loadedDirectors.find(
-              (d) =>
-                d.directorName.trim().toLowerCase() ===
-                customerRes.customerOwnerName?.trim().toLowerCase()
-            );
-            if (matchedDir) {
-              resolvedOwnerVal = `Director:${matchedDir.directorId}`;
+
+          const rawOwnerType = customerRes.customerOwnerType?.trim().toUpperCase();
+          const rawOwnerId = customerRes.customerOwnerId ? Number(customerRes.customerOwnerId) : null;
+          const rawOwnerName = customerRes.customerOwnerName?.trim() || "";
+          const assignedBdeId = customerRes.bdeUserId ? Number(customerRes.bdeUserId) : null;
+          const assignedBdeName = customerRes.bdeUserName?.trim() || "";
+          const assignedDirId = customerRes.directorId ? Number(customerRes.directorId) : null;
+          const assignedDirName = customerRes.directorName?.trim() || "";
+
+          // 1. Explicit owner type check
+          if (rawOwnerType === "BDE") {
+            resolvedOwnerType = "BDE";
+            resolvedOwnerId = rawOwnerId || assignedBdeId || "";
+            resolvedOwnerName = rawOwnerName || assignedBdeName;
+          } else if (rawOwnerType === "DIRECTOR") {
+            resolvedOwnerType = "Director";
+            resolvedOwnerId = rawOwnerId || assignedDirId || "";
+            resolvedOwnerName = rawOwnerName || assignedDirName;
+          }
+
+          // 2. Direct comparison against customer's assigned BDE User and Director
+          if (!resolvedOwnerType) {
+            const normOwnerName = normalizeForCompare(rawOwnerName);
+            const normBdeName = normalizeForCompare(assignedBdeName);
+            const normDirName = normalizeForCompare(assignedDirName);
+
+            // BDE Match by ID
+            if (rawOwnerId && assignedBdeId && rawOwnerId === assignedBdeId) {
+              resolvedOwnerType = "BDE";
+              resolvedOwnerId = assignedBdeId;
+              resolvedOwnerName = assignedBdeName || rawOwnerName;
+            }
+            // BDE Match by Name
+            else if (
+              normOwnerName &&
+              normBdeName &&
+              (normOwnerName === normBdeName ||
+                normOwnerName.includes(normBdeName) ||
+                normBdeName.includes(normOwnerName))
+            ) {
+              resolvedOwnerType = "BDE";
+              resolvedOwnerId = assignedBdeId || rawOwnerId || "";
+              resolvedOwnerName = assignedBdeName || rawOwnerName;
+            }
+            // Director Match by ID
+            else if (rawOwnerId && assignedDirId && rawOwnerId === assignedDirId) {
+              resolvedOwnerType = "Director";
+              resolvedOwnerId = assignedDirId;
+              resolvedOwnerName = assignedDirName || rawOwnerName;
+            }
+            // Director Match by Name
+            else if (
+              normOwnerName &&
+              normDirName &&
+              (normOwnerName === normDirName ||
+                normOwnerName.includes(normDirName) ||
+                normDirName.includes(normOwnerName))
+            ) {
+              resolvedOwnerType = "Director";
+              resolvedOwnerId = assignedDirId || rawOwnerId || "";
+              resolvedOwnerName = assignedDirName || rawOwnerName;
+            }
+          }
+
+          // 3. Fallback matching against loaded master lists
+          if (!resolvedOwnerType) {
+            const normOwnerName = normalizeForCompare(rawOwnerName);
+
+            // Check loaded BDE users
+            const matchedBde = loadedBdes.find((b) => {
+              if (rawOwnerId && b.id === rawOwnerId) return true;
+              if (normOwnerName) {
+                const normVal = normalizeForCompare(b.value);
+                return normVal && (normVal === normOwnerName || normVal.includes(normOwnerName) || normOwnerName.includes(normVal));
+              }
+              return false;
+            });
+
+            if (matchedBde) {
+              resolvedOwnerType = "BDE";
+              resolvedOwnerId = matchedBde.id;
+              resolvedOwnerName = matchedBde.value || rawOwnerName;
             } else {
-              const matchedBde = loadedBdes.find(
-                (b) =>
-                  b.value.trim().toLowerCase() ===
-                  customerRes.customerOwnerName?.trim().toLowerCase()
-              );
-              if (matchedBde) {
-                resolvedOwnerVal = `BDE:${matchedBde.id}`;
+              // Check loaded Directors
+              const matchedDir = loadedDirectors.find((d) => {
+                if (rawOwnerId && d.directorId === rawOwnerId) return true;
+                if (normOwnerName) {
+                  const normDir = normalizeForCompare(d.directorName);
+                  return normDir && (normDir === normOwnerName || normDir.includes(normOwnerName) || normOwnerName.includes(normDir));
+                }
+                return false;
+              });
+
+              if (matchedDir) {
+                resolvedOwnerType = "Director";
+                resolvedOwnerId = matchedDir.directorId;
+                resolvedOwnerName = matchedDir.directorName || rawOwnerName;
               }
             }
           }
-          if (!resolvedOwnerVal && customerRes.customerOwnerId) {
-            const matchedDir = loadedDirectors.find(
-              (d) => d.directorId === Number(customerRes.customerOwnerId)
-            );
-            if (matchedDir) {
-              resolvedOwnerVal = `Director:${matchedDir.directorId}`;
-            } else {
-              const matchedBde = loadedBdes.find(
-                (b) => b.id === Number(customerRes.customerOwnerId)
-              );
-              if (matchedBde) {
-                resolvedOwnerVal = `BDE:${matchedBde.id}`;
-              }
-            }
+
+          if (resolvedOwnerType && resolvedOwnerId) {
+            resolvedOwnerVal = `${resolvedOwnerType}:${resolvedOwnerId}`;
           }
+
           setCustomerOwnerValue(resolvedOwnerVal);
 
           const mergedAddresses =
@@ -205,6 +286,13 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
                 ? initialCoordinatorIds[0]
                 : (customerRes.salesCoordinatorId ? Number(customerRes.salesCoordinatorId) : undefined),
             salesCoordinatorName: resolvedCoordinatorName || customerRes.salesCoordinatorName || "",
+            customerOwnerId:
+              resolvedOwnerId !== ""
+                ? Number(resolvedOwnerId)
+                : (customerRes.customerOwnerId ? Number(customerRes.customerOwnerId) : undefined),
+            customerOwnerName: resolvedOwnerName || customerRes.customerOwnerName || "",
+            customerOwnerType: resolvedOwnerType || customerRes.customerOwnerType || "",
+            customerOwnerValue: resolvedOwnerVal,
             addresses: mergedAddresses,
             registrationDate: customerRes.registrationDate
               ? customerRes.registrationDate.substring(0, 10)
@@ -340,9 +428,14 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
                 .map((sc) => sc.salesCoordinatorName)
                 .join(", ")
             : null),
-        customerOwnerId: formData.customerOwnerId ? Number(formData.customerOwnerId) : null,
+        customerOwnerId:
+          formData.customerOwnerId !== undefined && formData.customerOwnerId !== null && Boolean(formData.customerOwnerId)
+            ? Number(formData.customerOwnerId)
+            : (customerOwnerValue.includes(":") ? Number(customerOwnerValue.split(":")[1]) : null),
         customerOwnerName: formData.customerOwnerName?.trim() || null,
-        customerOwnerType: formData.customerOwnerType || null,
+        customerOwnerType:
+          formData.customerOwnerType ||
+          (customerOwnerValue.includes(":") ? customerOwnerValue.split(":")[0] : null),
 
         remarks: formData.remarks?.trim() || undefined,
         addresses: (formData.addresses || [])
@@ -781,6 +874,10 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
                         updates.customerOwnerType !== undefined
                           ? updates.customerOwnerType
                           : prev.customerOwnerType,
+                      customerOwnerValue:
+                        updates.customerOwnerValue !== undefined
+                          ? updates.customerOwnerValue
+                          : (prev as any).customerOwnerValue,
                     }));
                   }}
                 />

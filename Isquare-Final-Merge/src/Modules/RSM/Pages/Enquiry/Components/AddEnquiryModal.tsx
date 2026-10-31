@@ -2,10 +2,10 @@ import React, { useEffect, useState } from "react";
 import { X, Loader2, FileText, Phone, Building, Briefcase, IndianRupee, Layers, Calendar, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { getNextEnquiryNumber, createEnquiry, uploadEnquiryDocument } from "../Services/EnquiryService";
-import { 
-  getEnquiryTypes, getEnquirySources, getProductCategories, getUOMs, getPlacesOfSupply, 
-  getCurrencies, getEnquiryStatuses, getEnquiryStages, getEnquiryPriorities, getTerritories, 
-  getLostReasons, getDepartments, getActivityTypes, getSalesManagers, getBdeUsers 
+import {
+  getEnquiryTypes, getEnquirySources, getProductCategories, getUOMs, getPlacesOfSupply,
+  getCurrencies, getEnquiryStatuses, getEnquiryStages, getEnquiryPriorities, getTerritories,
+  getLostReasons, getDepartments, getActivityTypes, getSalesManagers, getBdeUsers
 } from "../Services/EnquiryMasterDataService";
 import { getCustomers } from "../../Customer/Services/CustomerService";
 import { getAllPaymentTerms } from "../../Master/PaymentTerm/Services/PaymentTermService";
@@ -35,7 +35,7 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
   const [contacts, setContacts] = useState<any[]>([]);
   const [filteredContacts, setFilteredContacts] = useState<any[]>([]);
   const [bdeUsersList, setBdeUsersList] = useState<MasterItem[]>([]);
-  
+
   const [masters, setMasters] = useState<{
     types: MasterItem[], sources: MasterItem[], categories: MasterItem[], uoms: MasterItem[],
     places: MasterItem[], currencies: MasterItem[], statuses: MasterItem[], stages: MasterItem[],
@@ -110,12 +110,12 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
       contactMobile: "",
       contactEmail: ""
     }));
-    
+
     if (custId) {
       const cust = customers.find(c => c.customerId === custId);
       setSelectedCustomerInfo(cust);
       setFilteredContacts(contacts.filter(c => c.companyId === custId));
-      
+
       // Auto-populate BDE from Customer Master
       let bdeId: number | "" = cust?.bdeUserId || cust?.bdeId || cust?.assignedBdeId || "";
       let bdeName: string = cust?.bdeUserName || cust?.bdeName || cust?.assignedBdeName || "";
@@ -212,7 +212,7 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const selectedStatus = masters.statuses.find(s => s.id === Number(formData.enquiryStatusId));
     if (selectedStatus?.name.toLowerCase() === "lost" && !formData.lostReasonId) {
       toast.error("Lost Reason is mandatory when Status is 'Lost'.");
@@ -222,15 +222,15 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
     setIsSubmitting(true);
     try {
       const payload = { ...formData };
-      
+
       const numericFields = [
-        'enquiryTypeId', 'enquirySourceId', 'customerId', 'contactId', 'productCategoryId', 
-        'unitOfMeasureId', 'placeOfSupplyId', 'expectedOrderValue', 'currencyId', 'customerBudget', 'probabilityPercentage', 
-        'paymentTermId', 'customerCreditLimit', 'estimatedTaxPercent', 'enquiryStatusId', 'enquiryStageId', 
+        'enquiryTypeId', 'enquirySourceId', 'customerId', 'contactId', 'productCategoryId',
+        'unitOfMeasureId', 'placeOfSupplyId', 'expectedOrderValue', 'currencyId', 'customerBudget', 'probabilityPercentage',
+        'paymentTermId', 'customerCreditLimit', 'estimatedTaxPercent', 'enquiryStatusId', 'enquiryStageId',
         'enquiryPriorityId', 'departmentId', 'salesTerritoryId', 'activityTypeId', 'lostReasonId',
         'salesManagerId', 'bdeUserId'
       ];
-      
+
       numericFields.forEach(field => {
         if (payload[field] === "") payload[field] = null;
         else if (payload[field] !== undefined && payload[field] !== null) payload[field] = Number(payload[field]);
@@ -251,7 +251,7 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
 
   return (
     <div className="bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden mb-8 animate-in slide-in-from-top-4 duration-300">
-      
+
       {/* Form Top Bar - Matches Customer Form */}
       <div className="flex justify-between items-center bg-[#FF7900] text-white px-6 py-4 shrink-0 border-b border-[#e06800]">
         <div className="flex items-center gap-2.5">
@@ -335,7 +335,7 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
                       <div><span className="text-gray-400 block uppercase text-[9px] font-bold tracking-wider">GSTIN</span><span className="font-semibold text-gray-800">{selectedCustomerInfo.gstin || "-"}</span></div>
                       <div><span className="text-gray-400 block uppercase text-[9px] font-bold tracking-wider">PAN</span><span className="font-semibold text-gray-800">{selectedCustomerInfo.pan || "-"}</span></div>
                       <div><span className="text-gray-400 block uppercase text-[9px] font-bold tracking-wider">Industry</span><span className="font-semibold text-gray-800">{selectedCustomerInfo.industryName || "-"}</span></div>
-                      
+
                       <div><span className="text-gray-400 block uppercase text-[9px] font-bold tracking-wider">Area</span><span className="font-semibold text-gray-800">{selectedCustomerInfo.customerAreaName || "-"}</span></div>
                       <div><span className="text-gray-400 block uppercase text-[9px] font-bold tracking-wider">Sales Manager</span><span className="font-semibold text-gray-800">{selectedCustomerInfo.salesManagerName || "-"}</span></div>
                       <div><span className="text-gray-400 block uppercase text-[9px] font-bold tracking-wider">BDE</span><span className="font-semibold text-gray-800">{selectedCustomerInfo.bdeUserName || "-"}</span></div>
@@ -357,11 +357,11 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-x-8 gap-y-6">
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Customer Contact <span className="text-red-500">*</span></label>
-                    <select 
-                      name="contactId" 
-                      value={formData.contactId || ""} 
-                      onChange={handleContactChange} 
-                      disabled={!formData.customerId} 
+                    <select
+                      name="contactId"
+                      value={formData.contactId || ""}
+                      onChange={handleContactChange}
+                      disabled={!formData.customerId}
                       className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800 disabled:bg-gray-100 disabled:cursor-not-allowed"
                     >
                       <option value="">Select Contact</option>
@@ -418,7 +418,7 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Customer Requirement <span className="text-red-500">*</span></label>
                     <textarea required name="customerRequirement" rows={3} value={formData.customerRequirement || ""} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm" />
                   </div>
-                  
+
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Required Quantity</label>
                     <input type="number" name="requiredQuantity" value={formData.requiredQuantity || ""} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm" />
@@ -693,7 +693,7 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
             </div>
           )}
         </div>
-        
+
         {/* Footer Actions - Matches Customer Form */}
         <div className="p-5 bg-gray-50 flex justify-end gap-3 border-t border-gray-200">
           <button type="button" onClick={onClose} disabled={isSubmitting} className={buttonStyles.cancel}>

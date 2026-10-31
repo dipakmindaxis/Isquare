@@ -201,8 +201,23 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
 
   const [selectedOwnerValue, setSelectedOwnerValue] = useState<string>(() => {
     if (values.customerOwnerValue) return values.customerOwnerValue;
-    if (values.customerOwnerType && values.customerOwnerId) {
-      return `${values.customerOwnerType}:${values.customerOwnerId}`;
+    if (values.customerOwnerType && values.customerOwnerId) { return `${values.customerOwnerType}:${values.customerOwnerId}`;
+
+    }
+    if (values.customerOwnerId && values.bdeUserId && Number(values.customerOwnerId) === Number(values.bdeUserId)) {
+      return `BDE:${values.bdeUserId}`;
+    }
+    if (values.customerOwnerId && values.directorId && Number(values.customerOwnerId) === Number(values.directorId)) {
+      return `Director:${values.directorId}`;
+    }
+    if (values.customerOwnerName && values.bdeUserName && values.customerOwnerName.trim().toLowerCase() === values.bdeUserName.trim().toLowerCase()) {
+      return `BDE:${values.bdeUserId || values.customerOwnerId}`;
+    }
+    if (values.customerOwnerName && values.directorName && values.customerOwnerName.trim().toLowerCase() === values.directorName.trim().toLowerCase()) {
+      return `Director:${values.directorId || values.customerOwnerId}`; } if (false) { if (false) {
+    }
+
+
     }
     return "";
   });
@@ -644,7 +659,17 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
       if (propValues.customerOwnerValue) {
         setSelectedOwnerValue(propValues.customerOwnerValue);
       } else if (propValues.customerOwnerType && propValues.customerOwnerId) {
-        setSelectedOwnerValue(`${propValues.customerOwnerType}:${propValues.customerOwnerId}`);
+        setSelectedOwnerValue(`${propValues?.customerOwnerType}:${propValues?.customerOwnerId}`);
+      } else if (propValues.customerOwnerId && propValues.bdeUserId && Number(propValues.customerOwnerId) === Number(propValues.bdeUserId)) {
+        setSelectedOwnerValue(`BDE:${propValues.bdeUserId}`);
+      } else if (propValues.customerOwnerId && propValues.directorId && Number(propValues.customerOwnerId) === Number(propValues.directorId)) {
+        setSelectedOwnerValue(`Director:${propValues.directorId}`);
+      } else if (propValues.customerOwnerName && propValues.bdeUserName && propValues.customerOwnerName.trim().toLowerCase() === propValues.bdeUserName.trim().toLowerCase()) {
+        setSelectedOwnerValue(`BDE:${propValues.bdeUserId || propValues.customerOwnerId}`);
+      } else if (propValues.customerOwnerName && propValues.directorName && propValues.customerOwnerName.trim().toLowerCase() === propValues.directorName.trim().toLowerCase()) {
+        setSelectedOwnerValue(`Director:${propValues.directorId || propValues.customerOwnerId}`);
+      } if (false) {
+        setSelectedOwnerValue(`${propValues?.customerOwnerType}:${propValues?.customerOwnerId}`);
       }
     }
   }, [
@@ -662,9 +687,10 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
     return (
       directors.find((d) => d.id === selectedDirectorId) ||
       employees.find((e) => e.id === selectedDirectorId) ||
+      (values.directorId && Number(values.directorId) === selectedDirectorId ? { id: selectedDirectorId, name: values.directorName || "", code: values.directorCode || "" } : null) ||
       null
     );
-  }, [selectedDirectorId, directors, employees]);
+  }, [selectedDirectorId, directors, employees, values.directorId, values.directorName, values.directorCode]);
 
   // Selected BDE Object
   const selectedBdeObj = useMemo(() => {
@@ -673,9 +699,10 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
       filteredBdes.find((b) => b.id === selectedBdeId) ||
       bdeUsers.find((b) => b.id === selectedBdeId) ||
       employees.find((e) => e.id === selectedBdeId) ||
+      (values.bdeUserId && Number(values.bdeUserId) === selectedBdeId ? { id: selectedBdeId, name: values.bdeUserName || "", code: (values as any).bdeUserCode || (values as any).bdeCode || "" } : null) ||
       null
     );
-  }, [selectedBdeId, filteredBdes, bdeUsers, employees]);
+  }, [selectedBdeId, filteredBdes, bdeUsers, employees, values.bdeUserId, values.bdeUserName]);
 
   // Customer Owner dropdown options: Contains ONLY the selected Director and BDE User
   const customerOwnerOptions = useMemo(() => {
