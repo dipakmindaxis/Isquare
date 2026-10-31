@@ -88,17 +88,182 @@ export const getEnquiryPriorities = async (): Promise<MasterItem[]> => {
 };
 export const getTerritories = () => fetchMaster(API_ENDPOINTS.SalesTerritories, 'salesTerritoryId', 'salesTerritoryName');
 export const getLostReasons = () => fetchMaster(API_ENDPOINTS.LostReasons, 'lostReasonId', 'lostReasonName');
+
 export const getDepartments = async (): Promise<MasterItem[]> => {
   try {
-    // The Department API does not have an /active endpoint, so we fetch directly
-    const res = await axios.get(API_ENDPOINTS.Departments);
-    return res.data.map((item: any) => ({
-      id: item.id || item.ID,
-      name: item.departmentName,
-    }));
+    const departmentUrls = [
+      API_ENDPOINTS.Departments,
+      `${API_ENDPOINTS.BaseUrl}/departments`,
+      `${API_ENDPOINTS.BaseUrl}/department`,
+    ].filter(Boolean);
+
+    let list: any[] = [];
+
+    // Try fetching with apiClient (sends auth header)
+    for (const url of departmentUrls) {
+      try {
+        const res = await apiClient.get(url);
+        const data = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.result || []);
+        if (Array.isArray(data) && data.length > 0) {
+          list = data;
+          break;
+        }
+      } catch {
+        // Try next candidate
+      }
+    }
+
+    // Fallback to axios if apiClient didn't return data
+    if (list.length === 0) {
+      for (const url of departmentUrls) {
+        try {
+          const res = await axios.get(url);
+          const data = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.result || []);
+          if (Array.isArray(data) && data.length > 0) {
+            list = data;
+            break;
+          }
+        } catch {
+          // Try next candidate
+        }
+      }
+    }
+
+    return list
+      .filter((item: any) => !item.isDeleted && !item.IsDeleted && item.isActive !== false && item.IsActive !== false)
+      .map((item: any) => ({
+        id: Number(item.id ?? item.Id ?? item.ID ?? item.departmentId ?? item.DepartmentId ?? 0),
+        name: String(
+          item.departmentName ??
+          item.DepartmentName ??
+          item.name ??
+          item.Name ??
+          ""
+        ).trim(),
+      }))
+      .filter((item: MasterItem) => item.id > 0 && item.name.length > 0);
   } catch (error) {
     console.error("Error fetching departments:", error);
     return [];
   }
 };
+
+export const getSalesManagers = async (): Promise<MasterItem[]> => {
+  try {
+    const urls = [
+      API_ENDPOINTS.SalesUserManagers,
+      API_ENDPOINTS.SalesUserManager,
+      `${API_ENDPOINTS.BaseUrl}/salesusermanager`,
+    ].filter(Boolean);
+
+    let list: any[] = [];
+
+    for (const url of urls) {
+      try {
+        const res = await apiClient.get(url);
+        const data = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.result || []);
+        if (Array.isArray(data) && data.length > 0) {
+          list = data;
+          break;
+        }
+      } catch {
+        // Try next candidate
+      }
+    }
+
+    if (list.length === 0) {
+      for (const url of urls) {
+        try {
+          const res = await axios.get(url);
+          const data = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.result || []);
+          if (Array.isArray(data) && data.length > 0) {
+            list = data;
+            break;
+          }
+        } catch {
+          // Try next candidate
+        }
+      }
+    }
+
+    return list
+      .filter((item: any) => !item.isDeleted && !item.IsDeleted && item.isActive !== false && item.IsActive !== false)
+      .map((item: any) => ({
+        id: Number(item.id ?? item.Id ?? item.ID ?? item.salesManagerId ?? item.SalesManagerId ?? 0),
+        name: String(
+          item.userName ??
+          item.UserName ??
+          item.name ??
+          item.Name ??
+          ""
+        ).trim(),
+        code: String(item.code ?? item.Code ?? "").trim(),
+      }))
+      .filter((item: MasterItem) => item.id > 0 && item.name.length > 0);
+  } catch (error) {
+    console.error("Error fetching sales managers:", error);
+    return [];
+  }
+};
+
+export const getBdeUsers = async (): Promise<MasterItem[]> => {
+  try {
+    const urls = [
+      API_ENDPOINTS.BdeUser,
+      API_ENDPOINTS.BdeUsers,
+      `${API_ENDPOINTS.BaseUrl}/bdeuser`,
+    ].filter(Boolean);
+
+    let list: any[] = [];
+
+    for (const url of urls) {
+      try {
+        const res = await apiClient.get(url);
+        const data = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.result || []);
+        if (Array.isArray(data) && data.length > 0) {
+          list = data;
+          break;
+        }
+      } catch {
+        // Try next candidate
+      }
+    }
+
+    if (list.length === 0) {
+      for (const url of urls) {
+        try {
+          const res = await axios.get(url);
+          const data = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.result || []);
+          if (Array.isArray(data) && data.length > 0) {
+            list = data;
+            break;
+          }
+        } catch {
+          // Try next candidate
+        }
+      }
+    }
+
+    return list
+      .filter((item: any) => !item.isDeleted && !item.IsDeleted && item.isActive !== false && item.IsActive !== false)
+      .map((item: any) => ({
+        id: Number(item.id ?? item.Id ?? item.ID ?? item.bdeUserId ?? item.BdeUserId ?? 0),
+        name: String(
+          item.value ??
+          item.Value ??
+          item.userName ??
+          item.UserName ??
+          item.name ??
+          item.Name ??
+          ""
+        ).trim(),
+        code: String(item.code ?? item.Code ?? "").trim(),
+      }))
+      .filter((item: MasterItem) => item.id > 0 && item.name.length > 0);
+  } catch (error) {
+    console.error("Error fetching BDE users:", error);
+    return [];
+  }
+};
+
 export const getActivityTypes = () => fetchMaster(API_ENDPOINTS.ActivityType, 'id', 'activityName');
