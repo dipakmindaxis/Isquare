@@ -5,7 +5,7 @@ import { getNextEnquiryNumber, createEnquiry, uploadEnquiryDocument } from "../S
 import { 
   getEnquiryTypes, getEnquirySources, getProductCategories, getUOMs, getPlacesOfSupply, 
   getCurrencies, getEnquiryStatuses, getEnquiryStages, getEnquiryPriorities, getTerritories, 
-  getLostReasons, getDepartments, getActivityTypes 
+  getLostReasons, getDepartments, getActivityTypes, getSalesManagers, getBdeUsers 
 } from "../Services/EnquiryMasterDataService";
 import { getCustomers } from "../../Customer/Services/CustomerService";
 import { getAllPaymentTerms } from "../../Master/PaymentTerm/Services/PaymentTermService";
@@ -34,15 +34,17 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
   const [customers, setCustomers] = useState<any[]>([]);
   const [contacts, setContacts] = useState<any[]>([]);
   const [filteredContacts, setFilteredContacts] = useState<any[]>([]);
+  const [bdeUsersList, setBdeUsersList] = useState<MasterItem[]>([]);
   
   const [masters, setMasters] = useState<{
     types: MasterItem[], sources: MasterItem[], categories: MasterItem[], uoms: MasterItem[],
     places: MasterItem[], currencies: MasterItem[], statuses: MasterItem[], stages: MasterItem[],
     priorities: MasterItem[], territories: MasterItem[], lostReasons: MasterItem[], departments: MasterItem[],
-    activities: MasterItem[], paymentTerms: MasterItem[]
+    activities: MasterItem[], paymentTerms: MasterItem[], salesManagers: MasterItem[]
   }>({
     types: [], sources: [], categories: [], uoms: [], places: [], currencies: [], statuses: [], stages: [],
-    priorities: [], territories: [], lostReasons: [], departments: [], activities: [], paymentTerms: []
+    priorities: [], territories: [], lostReasons: [], departments: [], activities: [], paymentTerms: [],
+    salesManagers: []
   });
 
   const [selectedCustomerInfo, setSelectedCustomerInfo] = useState<any>(null);
@@ -59,24 +61,29 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
       const [
         nextNumber, custRes, contRes, termsRes,
         types, sources, categories, uoms, places, currencies,
-        statuses, stages, priorities, territories, lostReasons, departments, activities
+        statuses, stages, priorities, territories, lostReasons, departments, activities,
+        salesManagersRes, bdeUsersRes
       ] = await Promise.all([
         getNextEnquiryNumber().catch(() => ""),
         getCustomers().catch(() => []),
         getAllContacts().catch(() => []),
         getAllPaymentTerms().catch(() => []),
         getEnquiryTypes(), getEnquirySources(), getProductCategories(), getUOMs(), getPlacesOfSupply(), getCurrencies(),
-        getEnquiryStatuses(), getEnquiryStages(), getEnquiryPriorities(), getTerritories(), getLostReasons(), getDepartments(), getActivityTypes()
+        getEnquiryStatuses(), getEnquiryStages(), getEnquiryPriorities(), getTerritories(), getLostReasons(), getDepartments(), getActivityTypes(),
+        getSalesManagers().catch(() => []),
+        getBdeUsers().catch(() => [])
       ]);
 
       setFormData({ enquiryDate: new Date().toISOString().split("T")[0], enquiryNumber: nextNumber });
       setCustomers(custRes);
       setContacts(contRes);
+      setBdeUsersList(bdeUsersRes);
 
       setMasters({
         types, sources, categories, uoms, places, currencies, statuses, stages,
         priorities, territories, lostReasons, departments, activities,
-        paymentTerms: termsRes.map((pt: any) => ({ id: pt.paymentTermId, name: pt.paymentTermName }))
+        paymentTerms: termsRes.map((pt: any) => ({ id: pt.paymentTermId, name: pt.paymentTermName })),
+        salesManagers: salesManagersRes
       });
 
     } catch (error) {
@@ -93,26 +100,77 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
 
   const handleCustomerChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const custId = e.target.value ? Number(e.target.value) : "";
-    setFormData((prev: any) => ({ ...prev, customerId: custId, contactId: "", contactName: "", departmentName: "", designation: "", contactMobile: "", contactEmail: "" }));
+    setFormData((prev: any) => ({
+      ...prev,
+      customerId: custId,
+      contactId: "",
+      contactName: "",
+      departmentName: "",
+      designation: "",
+      contactMobile: "",
+      contactEmail: ""
+    }));
     
     if (custId) {
       const cust = customers.find(c => c.customerId === custId);
       setSelectedCustomerInfo(cust);
       setFilteredContacts(contacts.filter(c => c.companyId === custId));
       
+      // Auto-populate BDE from Customer Master
+      let bdeId: number | "" = cust?.bdeUserId || cust?.bdeId || cust?.assignedBdeId || "";
+      let bdeName: string = cust?.bdeUserName || cust?.bdeName || cust?.assignedBdeName || "";
+
+      if (bdeId && !bdeName && bdeUsersList.length > 0) {
+        const matchedBde = bdeUsersList.find(b => b.id === Number(bdeId));
+        if (matchedBde) bdeName = matchedBde.name;
+      } else if (!bdeId && bdeName && bdeUsersList.length > 0) {
+        const matchedBde = bdeUsersList.find(b => b.name.toLowerCase() === bdeName.toLowerCase());
+        if (matchedBde) bdeId = matchedBde.id;
+      }
+
+      // Auto-populate Sales Manager if assigned to customer, else preserve or allow selection
+      let smId: number | "" = cust?.salesManagerId || "";
+      let smName: string = cust?.salesManagerName || "";
+
+      if (!smId && cust?.directorId) {
+        const matchedSm = masters.salesManagers.find(m => m.id === cust.directorId || (cust.directorName && m.name.toLowerCase() === cust.directorName.toLowerCase()));
+        if (matchedSm) {
+          smId = matchedSm.id;
+          smName = matchedSm.name;
+        }
+      } else if (!smId && cust?.salesManagerName) {
+        const matchedSm = masters.salesManagers.find(m => m.name.toLowerCase() === cust.salesManagerName.toLowerCase());
+        if (matchedSm) {
+          smId = matchedSm.id;
+          smName = matchedSm.name;
+        }
+      } else if (smId && !smName) {
+        const matchedSm = masters.salesManagers.find(m => m.id === Number(smId));
+        if (matchedSm) smName = matchedSm.name;
+      }
+
       // Auto-fill commercial & assignment details from customer master
       setFormData((prev: any) => ({
         ...prev,
         paymentTermId: cust?.paymentTermsId || cust?.paymentTermId || "",
         customerCreditLimit: cust?.creditLimit || "",
-        salesManagerId: cust?.salesManagerId || "",
-        salesManagerName: cust?.salesManagerName || "",
-        bdeUserId: cust?.bdeUserId || "",
-        bdeUserName: cust?.bdeUserName || ""
+        salesManagerId: smId,
+        salesManagerName: smName,
+        bdeUserId: bdeId,
+        bdeUserName: bdeName
       }));
     } else {
       setSelectedCustomerInfo(null);
       setFilteredContacts([]);
+      setFormData((prev: any) => ({
+        ...prev,
+        paymentTermId: "",
+        customerCreditLimit: "",
+        salesManagerId: "",
+        salesManagerName: "",
+        bdeUserId: "",
+        bdeUserName: ""
+      }));
     }
   };
 
@@ -165,10 +223,13 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
     try {
       const payload = { ...formData };
       
-      const numericFields = ['enquiryTypeId', 'enquirySourceId', 'customerId', 'contactId', 'productCategoryId', 
+      const numericFields = [
+        'enquiryTypeId', 'enquirySourceId', 'customerId', 'contactId', 'productCategoryId', 
         'unitOfMeasureId', 'placeOfSupplyId', 'expectedOrderValue', 'currencyId', 'customerBudget', 'probabilityPercentage', 
         'paymentTermId', 'customerCreditLimit', 'estimatedTaxPercent', 'enquiryStatusId', 'enquiryStageId', 
-        'enquiryPriorityId', 'departmentId', 'salesTerritoryId', 'activityTypeId', 'lostReasonId'];
+        'enquiryPriorityId', 'departmentId', 'salesTerritoryId', 'activityTypeId', 'lostReasonId',
+        'salesManagerId', 'bdeUserId'
+      ];
       
       numericFields.forEach(field => {
         if (payload[field] === "") payload[field] = null;
@@ -296,7 +357,7 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-x-8 gap-y-6">
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Customer Contact <span className="text-red-500">*</span></label>
-                <select 
+                    <select 
                       name="contactId" 
                       value={formData.contactId || ""} 
                       onChange={handleContactChange} 
@@ -469,18 +530,61 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
                   </div>
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Assigned Sales Manager</label>
-                    <input type="text" readOnly value={formData.salesManagerName || ""} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 bg-gray-100 text-gray-500 text-sm cursor-not-allowed" placeholder="Inherited" />
+                    <select
+                      name="salesManagerId"
+                      value={formData.salesManagerId || ""}
+                      onChange={(e) => {
+                        const smId = e.target.value ? Number(e.target.value) : "";
+                        const sm = masters.salesManagers.find(m => m.id === smId);
+                        setFormData((prev: any) => ({
+                          ...prev,
+                          salesManagerId: smId,
+                          salesManagerName: sm ? sm.name : "",
+                        }));
+                      }}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800"
+                    >
+                      <option value="">Select Sales Manager</option>
+                      {masters.salesManagers.map((sm) => (
+                        <option key={sm.id} value={sm.id}>
+                          {sm.name} {sm.code ? `(${sm.code})` : ""}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Assigned BDE / Employee</label>
-                    <input type="text" readOnly value={formData.bdeUserName || ""} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 bg-gray-100 text-gray-500 text-sm cursor-not-allowed" placeholder="Inherited" />
+                    <input
+                      type="text"
+                      readOnly
+                      value={formData.bdeUserName || ""}
+                      className="w-full border border-gray-200 rounded-lg px-4 py-2.5 bg-gray-100 text-gray-700 text-sm cursor-not-allowed font-medium select-none"
+                      placeholder="Inherited from Customer"
+                    />
                   </div>
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Department</label>
-                    <select name="departmentId" value={formData.departmentId || ""} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800">
+                    <select
+                      name="departmentId"
+                      value={formData.departmentId || ""}
+                      onChange={(e) => {
+                        const deptId = e.target.value ? Number(e.target.value) : "";
+                        const dept = masters.departments.find(d => d.id === deptId);
+                        setFormData((prev: any) => ({
+                          ...prev,
+                          departmentId: deptId,
+                          departmentMasterName: dept ? dept.name : "",
+                        }));
+                      }}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800"
+                    >
                       <option value="">Select Department</option>
-                      {masters.departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                      {masters.departments.map((d) => (
+                        <option key={d.id} value={d.id}>
+                          {d.name}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div>
@@ -495,7 +599,7 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
                     <input type="text" name="responsiblePerson" value={formData.responsiblePerson || ""} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm" />
                   </div>
                 </div>
-                <p className="text-[10px] text-gray-400 mt-2 italic">Sales Manager and BDE are inherited from Customer Master.</p>
+                <p className="text-[10px] text-gray-400 mt-2 italic">BDE is inherited from Customer Master. Sales Manager defaults from Customer Master and can be selected manually.</p>
               </div>
 
               {/* 07. Follow-up / Sales Activity */}
