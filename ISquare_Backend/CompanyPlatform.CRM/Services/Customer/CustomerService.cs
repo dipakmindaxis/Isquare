@@ -741,7 +741,14 @@ namespace CompanyPlatform.CRM.Services.Customer
             var paymentTerm = c.PaymentTermsId.HasValue ? paymentTerms.FirstOrDefault(pt => pt.PaymentTermId == c.PaymentTermsId.Value) : null;
 
             var director = c.DirectorId.HasValue ? employees.FirstOrDefault(e => e.ID == c.DirectorId.Value) : null;
-            var bde = c.BDEUserId.HasValue ? bdeUsers.FirstOrDefault(b => b.ID == c.BDEUserId.Value) : null;
+            var bdeRec = c.BDEUserId.HasValue 
+                ? (bdeUsers.FirstOrDefault(b => b.ID == c.BDEUserId.Value) ?? 
+                   bdeUsers.FirstOrDefault(b => int.TryParse(b.Code, out int bCode) && bCode == c.BDEUserId.Value))
+                : null;
+            var bdeUser = (bdeRec == null && c.BDEUserId.HasValue) ? employees.FirstOrDefault(e => e.ID == c.BDEUserId.Value) : null;
+            string? bdeUserName = bdeRec != null && !string.IsNullOrWhiteSpace(bdeRec.Value)
+                ? bdeRec.Value
+                : (bdeUser != null ? $"{bdeUser.FirstName} {bdeUser.LastName}".Trim() : null);
             var salesCoord = c.SalesCoordinatorId.HasValue ? employees.FirstOrDefault(e => e.ID == c.SalesCoordinatorId.Value) : null;
             var customerOwnerEmp = c.CustomerOwnerId.HasValue ? employees.FirstOrDefault(e => e.ID == c.CustomerOwnerId.Value) : null;
             var customerOwnerBde = (customerOwnerEmp == null && c.CustomerOwnerId.HasValue) ? bdeUsers.FirstOrDefault(b => b.ID == c.CustomerOwnerId.Value) : null;
@@ -801,7 +808,7 @@ namespace CompanyPlatform.CRM.Services.Customer
                 DirectorName = director != null ? $"{director.FirstName} {director.LastName}".Trim() : null,
 
                 BDEUserId = c.BDEUserId,
-                BDEUserName = bde?.Value,
+                BDEUserName = bdeUserName,
 
                 SalesCoordinatorId = c.SalesCoordinatorId,
                 SalesCoordinatorName = !string.IsNullOrWhiteSpace(c.SalesCoordinatorName) ? c.SalesCoordinatorName : (salesCoord != null ? $"{salesCoord.FirstName} {salesCoord.LastName}".Trim() : null),

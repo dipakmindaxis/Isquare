@@ -17,6 +17,7 @@ import type {
   CustomerAddress,
   IndustryItem,
   CustomerAreaItem,
+  BdeUserItem,
 } from "./Types/CustomerTypes";
 import {
   getCustomerById,
@@ -26,6 +27,7 @@ import {
 import {
   getIndustries,
   getCustomerAreas,
+  getBdeUsers,
 } from "./Services/CustomerMasterDataService";
 
 interface ViewCustomerModalProps {
@@ -71,6 +73,7 @@ const ViewCustomerModal: React.FC<ViewCustomerModalProps> = ({
   const [addresses, setAddresses] = useState<CustomerAddress[]>([]);
   const [industries, setIndustries] = useState<IndustryItem[]>([]);
   const [areas, setAreas] = useState<CustomerAreaItem[]>([]);
+  const [bdeUsers, setBdeUsers] = useState<BdeUserItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [validatingAddrId, setValidatingAddrId] = useState<number | null>(null);
   const [validationMsg, setValidationMsg] = useState<{
@@ -82,15 +85,17 @@ const ViewCustomerModal: React.FC<ViewCustomerModalProps> = ({
       const fetchData = async () => {
         setIsLoading(true);
         try {
-          const [custData, addrData, indData, areaData] = await Promise.all([
+          const [custData, addrData, indData, areaData, bdeData] = await Promise.all([
             getCustomerById(customerId),
             getCustomerAddresses(customerId).catch(() => []),
             getIndustries().catch(() => []),
             getCustomerAreas().catch(() => []),
+            getBdeUsers().catch(() => []),
           ]);
           setCustomer(custData);
           setIndustries(Array.isArray(indData) ? indData : []);
           setAreas(Array.isArray(areaData) ? areaData : []);
+          setBdeUsers(Array.isArray(bdeData) ? bdeData : []);
           setAddresses(
             addrData && addrData.length > 0
               ? addrData
@@ -266,7 +271,11 @@ const ViewCustomerModal: React.FC<ViewCustomerModalProps> = ({
                     label="BDE User"
                     value={
                       customer.bdeUserName ||
-                      (customer.bdeUserId ? `BDE #${customer.bdeUserId}` : "-")
+                      (customer as any).BDEUserName ||
+                      (customer.bdeUserId && bdeUsers.length > 0
+                        ? bdeUsers.find((b) => b.id === Number(customer.bdeUserId) || (b.code && b.code === String(customer.bdeUserId)))?.value
+                        : null) ||
+                      "-"
                     }
                   />
                   <DetailItem
