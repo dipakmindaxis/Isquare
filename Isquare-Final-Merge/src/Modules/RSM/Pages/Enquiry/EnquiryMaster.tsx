@@ -24,6 +24,8 @@ import EditEnquiryModal from "./Components/EditEnquiryModal";
 import ConfirmationModal from "../../../../Components/Common/ConfirmationModal";
 import { exportToExcel } from "../../../../Utils/exportToExcel";
 
+//
+
 const customTableStyles: any = {
   header: {
     style: {

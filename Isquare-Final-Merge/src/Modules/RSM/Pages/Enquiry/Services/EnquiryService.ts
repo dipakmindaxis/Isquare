@@ -76,3 +76,5 @@ export const updateEnquiry = async (id: number, payload: any): Promise<void> => 
     await axios.put(`${API_ENDPOINTS.Enquiry}/${id}`, payload);
   }
 };
+
+//

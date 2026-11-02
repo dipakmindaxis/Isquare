@@ -12,6 +12,7 @@ import { getAllPaymentTerms } from "../../Master/PaymentTerm/Services/PaymentTer
 import { getAllContacts } from "../../Master/Contact/Services/ContactService";
 import type { MasterItem } from "../Types/EnquiryTypes";
 import { buttonStyles } from "../../../../../Components/Common/buttonStyles";
+//
 
 interface EditEnquiryModalProps {
   isOpen: boolean;
