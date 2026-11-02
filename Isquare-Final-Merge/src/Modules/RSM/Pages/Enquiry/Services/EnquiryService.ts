@@ -49,3 +49,30 @@ export const uploadEnquiryDocument = async (file: File): Promise<{ filePath: str
     return response.data;
   }
 };
+
+export const deleteEnquiry = async (id: number): Promise<void> => {
+  try {
+    await apiClient.delete(`${API_ENDPOINTS.Enquiry}/${id}`);
+  } catch {
+    await axios.delete(`${API_ENDPOINTS.Enquiry}/${id}`);
+  }
+};
+
+// Add this to your existing EnquiryService.ts file
+export const getEnquiryById = async (id: number): Promise<EnquiryDto> => {
+  try {
+    const response = await apiClient.get(`${API_ENDPOINTS.Enquiry}/${id}`);
+    return response.data;
+  } catch {
+    const response = await axios.get(`${API_ENDPOINTS.Enquiry}/${id}`);
+    return response.data;
+  }
+};
+
+export const updateEnquiry = async (id: number, payload: any): Promise<void> => {
+  try {
+    await apiClient.put(`${API_ENDPOINTS.Enquiry}/${id}`, payload);
+  } catch {
+    await axios.put(`${API_ENDPOINTS.Enquiry}/${id}`, payload);
+  }
+};
