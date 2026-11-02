@@ -108,10 +108,10 @@ const Departments: React.FC = () => {
   };
 
   return (
-    <div className="p-4 md:p-4 bg-gray-50 min-h-full">
-      {/* Create Leave Type Card */}
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">
+    <div className="space-y-6">
+      {/* Add New Department Card */}
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
+        <h3 className="text-lg font-bold text-[#172B4D] mb-4">
           Add New Department
         </h3>
         <form
@@ -119,14 +119,14 @@ const Departments: React.FC = () => {
           className="flex flex-col md:flex-row items-end gap-4"
         >
           <div className="w-full md:w-1/3">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">
               Department Name
             </label>
             <input
               type="text"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-700 shadow-xs outline-none transition focus:border-[#153E63] focus:bg-white"
               placeholder="e.g., Human Resources"
               required
             />
@@ -135,122 +135,134 @@ const Departments: React.FC = () => {
             <button
               type="submit"
               disabled={isSaving}
-              className="w-full flex items-center justify-center gap-2 bg-[#00234a] hover:bg-[#001833] text-white font-semibold px-4 py-2 rounded-lg h-[42px]"
+              className="w-full md:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#153E63] px-6 py-2.5 text-sm font-semibold text-white shadow-[0_10px_18px_rgba(21,62,99,0.18)] transition hover:bg-[#103454] h-[42px] cursor-pointer disabled:opacity-50"
             >
               {isSaving ? (
                 <Loader2 className="animate-spin" size={18} />
               ) : (
                 <Plus size={18} />
               )}
-              {isSaving ? "Saving..." : "Add"}
+              <span>{isSaving ? "Saving..." : "Add"}</span>
             </button>
           </div>
         </form>
       </div>
 
-      <div className="flex items-center justify-between gap-4 mb-4">
-        <div className="relative w-full md:max-w-md">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search by department name..."
-            className="w-full pl-11 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+      {/* Search Input Bar */}
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex w-full items-center md:w-auto">
+          <label className="mr-2 text-sm font-medium text-slate-600">Search:</label>
+          <div className="relative w-full md:w-80">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search by department name..."
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-3.5 py-2.5 text-sm text-slate-700 shadow-xs outline-none transition focus:border-[#153E63] focus:bg-white"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <table className="w-full text-sm">
-          <thead className="bg-[#00234a] text-white text-xs uppercase">
-            <tr>
-              <th className="px-6 py-3 text-left">Department Name</th>
-              <th className="px-6 py-3 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white">
-            {isLoading ? (
+      {/* Department Records Table Card */}
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-[#FF7900] text-white">
               <tr>
-                <td colSpan={2} className="text-center py-8">
-                  <Loader2 className="animate-spin inline-block mr-2" />{" "}
-                  Loading...
-                </td>
+                <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-white border-r border-[#e06800]">
+                  Department Name
+                </th>
+                <th className="px-6 py-3.5 text-right text-xs font-bold uppercase tracking-wider text-white">
+                  Actions
+                </th>
               </tr>
-            ) : paginatedItems.length === 0 ? (
-              <tr>
-                <td colSpan={2} className="text-center py-8 text-gray-500">
-                  No departments found.
-                </td>
-              </tr>
-            ) : (
-              paginatedItems.map((item) => (
-                <tr key={item.id} className="border-b hover:bg-gray-50">
-                  <td className="px-6 py-4 font-medium text-gray-900">
-                    {item.departmentName}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex justify-end gap-4">
-                      <button
-                        onClick={() => handleEditClick(item)}
-                        className={`${actionButtonStyles.base} ${actionButtonStyles.edit}`}
-                        title="Edit"
-                      >
-                        <FaEdit size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteRequest(item)}
-                        className={`${actionButtonStyles.base} ${actionButtonStyles.delete}`}
-                        title="Delete"
-                      >
-                        <FaTrash size={16} />
-                      </button>
-                    </div>
+            </thead>
+            <tbody className="divide-y divide-slate-100 bg-white">
+              {isLoading ? (
+                <tr>
+                  <td colSpan={2} className="text-center py-12">
+                    <Loader2 className="animate-spin inline-block text-[#153E63] mr-2" />{" "}
+                    <span className="text-slate-500 font-medium">Loading departments...</span>
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ) : paginatedItems.length === 0 ? (
+                <tr>
+                  <td colSpan={2} className="text-center py-12 text-slate-500">
+                    No departments found.
+                  </td>
+                </tr>
+              ) : (
+                paginatedItems.map((item) => (
+                  <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="px-6 py-4 font-semibold text-[#172B4D] border-r border-slate-100">
+                      {item.departmentName}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex justify-end items-center gap-4">
+                        <button
+                          onClick={() => handleEditClick(item)}
+                          className={`${actionButtonStyles.base} ${actionButtonStyles.edit}`}
+                          title="Edit"
+                        >
+                          <FaEdit size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteRequest(item)}
+                          className={`${actionButtonStyles.base} ${actionButtonStyles.delete}`}
+                          title="Delete"
+                        >
+                          <FaTrash size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
 
-      {totalPages > 0 && (
-        <div className="flex items-center justify-between mt-4 text-sm text-gray-600">
-          <div className="flex items-center gap-2">
-            <span>Rows per page:</span>
-            <select
-              value={itemsPerPage}
-              onChange={(e) => setItemsPerPage(Number(e.target.value))}
-              className="p-1 border rounded-md"
-            >
-              <option value={5}>5</option>
-              <option value={10}>10</option>
-              <option value={25}>25</option>
-            </select>
-          </div>
-          <div className="flex items-center gap-4">
-            <span>
-              Page {currentPage} of {totalPages}
-            </span>
+        {/* Pagination Footer */}
+        {totalPages > 0 && (
+          <div className="bg-white border-t border-slate-200 px-6 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-medium text-slate-600">
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => setCurrentPage((p) => p - 1)}
-                disabled={currentPage === 1}
-                className="p-2 border rounded-md disabled:text-gray-300"
+              <span>Rows per page:</span>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs text-slate-700 outline-none focus:border-[#153E63]"
               >
-                <ChevronLeft size={16} />
-              </button>
-              <button
-                onClick={() => setCurrentPage((p) => p + 1)}
-                disabled={currentPage === totalPages}
-                className="p-2 border rounded-md disabled:text-gray-300"
-              >
-                <ChevronRight size={16} />
-              </button>
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-4">
+              <span>
+                Page {currentPage} of {totalPages}
+              </span>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setCurrentPage((p) => p - 1)}
+                  disabled={currentPage === 1}
+                  className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <button
+                  onClick={() => setCurrentPage((p) => p + 1)}
+                  disabled={currentPage === totalPages}
+                  className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {selectedItem && (
         <EditDepartmentModal

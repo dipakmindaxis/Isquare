@@ -25,14 +25,14 @@ const Dashboard = () => {
   }, [isAuthenticated, dispatch]);
     
   return (
-    <div className="flex h-screen bg-[#e4e8e1]">
+    <div className="flex h-screen bg-[#EDF3FF]">
       {/* Sidebar */}
       <Sidebar isOpen={isSidebarOpen} />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden bg-[#e4e8e1]">
+      <div className="flex-1 flex flex-col overflow-hidden bg-[#EDF3FF]">
         <Navbar toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
-        <main className="flex-1 overflow-y-auto p-6 transition-all duration-300 bg-[#e4e8e1]">
+        <main className="flex-1 overflow-y-auto p-6 transition-all duration-300 bg-[#EDF3FF]">
           <Outlet />
         </main>
       </div>

@@ -774,7 +774,7 @@ const CustomerMaster: React.FC<CustomerMasterProps> = ({
                   className="rounded-xl bg-[#00234a] hover:bg-[#FF7900] px-5 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-[0_10px_18px_rgba(0,35,74,0.18)] transition cursor-pointer flex items-center gap-2"
                 >
                   <FaPlus size={12} />
-                  <span>+ Create New</span>
+                  <span>Create New</span>
                 </button>
               </div>
             </div>

@@ -38,7 +38,7 @@ interface SidebarProps {
   isOpen: boolean;
 }
 
-interface MenuItem {
+export interface MenuItem {
   label: string;
   to?: string;
   icon: React.ReactElement;
@@ -91,7 +91,7 @@ const masterMenu: MenuItem = {
   ],
 };
 
-const rsmMenuConfig: MenuItem[] = [
+export const rsmMenuConfig: MenuItem[] = [
   {
     icon: <LayoutDashboard />,
     label: "DASHBOARD",
@@ -326,7 +326,7 @@ const SidebarSection = ({
 }) => (
   <div className="mt-3">
     {isOpen && (
-      <p className="text-xs font-semibold text-[#FF7900] px-4 mb-2 uppercase tracking-wider">
+      <p className="text-[11px] font-bold text-[#FF7900] px-4 mb-2 uppercase tracking-wider">
         {title}
       </p>
     )}
@@ -365,7 +365,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
           title={item.label}
           className={`flex items-center gap-3 px-3.5 ${verticalPadding} mx-2 rounded-xl transition-all duration-200 group ${
             isActive
-              ? "bg-white text-[#FF7900] shadow-sm"
+              ? "bg-white text-[#FF7900] shadow-sm font-semibold"
               : "text-gray-200 hover:bg-white/10 hover:text-white"
           }`}
           style={{ paddingLeft: `${level * 16 + 12}px` }}
@@ -381,7 +381,9 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
           {isOpen && (
             <span
               className={`sidebar-menu-item leading-snug truncate ${
-                isActive ? "text-[#FF7900] font-semibold" : "text-gray-200 group-hover:text-white"
+                isActive
+                  ? "text-[#FF7900] font-semibold"
+                  : "text-gray-200 group-hover:text-white"
               }`}
             >
               {item.label}
@@ -437,6 +439,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
 
 export const Sidebar = ({ isOpen }: SidebarProps) => {
   const location = useLocation();
+  const isHRMS = location.pathname.startsWith("/hrms");
   const { hasPermission } = usePermissions();
 
   const [openMenuLabel, setOpenMenuLabel] = useState<string | null>(null);
@@ -520,7 +523,6 @@ export const Sidebar = ({ isOpen }: SidebarProps) => {
       .filter((item): item is MenuItem => item !== null);
   };
 
-  const isHRMS = location.pathname.startsWith("/hrms");
   const isRSM = location.pathname.startsWith("/rsm");
   const isVMS = location.pathname.startsWith("/vms");
 
@@ -537,7 +539,7 @@ export const Sidebar = ({ isOpen }: SidebarProps) => {
 
   return (
     <div
-      className={`relative h-screen bg-[#424242] flex flex-col shadow-xl border-r border-[#383838] shrink-0 ${
+      className={`relative h-screen bg-[#414141] border-r border-[#383838] flex flex-col shadow-xl shrink-0 ${
         isDragging ? "transition-none select-none" : "transition-all duration-300"
       }`}
       style={{
@@ -569,14 +571,21 @@ export const Sidebar = ({ isOpen }: SidebarProps) => {
       <div
         className={`flex items-center ${
           isOpen ? "pl-6 pr-3 justify-start" : "justify-center"
-        } border-b border-[#FF7900]/60 h-[60px] shrink-0 bg-[#424242] transition-all duration-300 overflow-hidden`}
+        } border-b border-[#FF7900]/60 h-[64px] bg-[#414141] shrink-0 transition-all duration-300 overflow-hidden`}
       >
         {isOpen ? (
-          <ISquareLogo
-            size="md"
-            theme="white"
-            className="justify-start max-w-[220px]"
-          />
+          <div className="flex flex-col justify-center">
+            <ISquareLogo
+              size="md"
+              theme="white"
+              className="justify-start max-w-[220px]"
+            />
+            {isHRMS && (
+              <p className="text-[10px] text-[#FF7900] font-medium tracking-wide pl-12 -mt-1.5">
+                -- HRMS &amp; Payroll
+              </p>
+            )}
+          </div>
         ) : (
           <ISquareIcon size={40} />
         )}
@@ -648,6 +657,53 @@ export const Sidebar = ({ isOpen }: SidebarProps) => {
           </SidebarSection>
         )}
       </div>
+
+      {/* Subtle Orange Wave Decoration for HRMS matching reference screenshot */}
+      {isHRMS && isOpen && (
+        <div className="relative w-full h-28 pointer-events-none overflow-hidden shrink-0 mt-auto select-none opacity-85">
+          <svg
+            viewBox="0 0 260 100"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-full h-full object-cover"
+            preserveAspectRatio="none"
+          >
+            <path
+              d="M-20 60 C 50 100, 150 10, 280 50 L 280 100 L -20 100 Z"
+              fill="url(#orange-wave-fill)"
+              opacity="0.25"
+            />
+            <path
+              d="M-20 45 C 70 10, 170 90, 280 25"
+              stroke="url(#orange-wave-stroke)"
+              strokeWidth="2.2"
+            />
+            <path
+              d="M-20 60 C 80 25, 180 105, 280 40"
+              stroke="url(#orange-wave-stroke)"
+              strokeWidth="1.5"
+              opacity="0.7"
+            />
+            <path
+              d="M-20 75 C 90 40, 190 120, 280 55"
+              stroke="url(#orange-wave-stroke)"
+              strokeWidth="1"
+              opacity="0.4"
+            />
+            <defs>
+              <linearGradient id="orange-wave-fill" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#FF7900" stopOpacity="0.4" />
+                <stop offset="100%" stopColor="#FFA726" stopOpacity="0.05" />
+              </linearGradient>
+              <linearGradient id="orange-wave-stroke" x1="0%" y1="50%" x2="100%" y2="50%">
+                <stop offset="0%" stopColor="#FF7900" />
+                <stop offset="50%" stopColor="#FFA726" />
+                <stop offset="100%" stopColor="#FFB74D" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+      )}
 
       {/* Footer Switcher & Settings */}
       <div className="p-1 border-t border-[#525252] mt-auto">

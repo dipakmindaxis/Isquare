@@ -69,7 +69,7 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
         getAllContacts().catch(() => []),
         getAllPaymentTerms().catch(() => []),
         getEnquiryTypes(), getEnquirySources(), getProductCategories(), getUOMs(), getPlacesOfSupply(), getCurrencies(),
-        getEnquiryStatuses(), getEnquiryStages(), getEnquiryPriorities(), getTerritories(), getLostReasons(), getDepartments(), getActivityTypes(),
+        getEnquiryStatuses(), getEnquiryStages(), getEnquiryPriorities(), getTerritories(), getLostReasons(), getDepartments(), getActivityTypes().catch(() => []),
         getSalesManagers().catch(() => []),
         getBdeUsers().catch(() => [])
       ]);

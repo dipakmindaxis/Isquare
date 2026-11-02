@@ -2,6 +2,7 @@ import axios from "axios";
 import apiClient from "../../../../../API/apiClient";
 import { API_ENDPOINTS } from "../../../../../API/apiConfig"; 
 import type { MasterItem } from "../Types/EnquiryTypes";
+import { getAllActivityTypes } from "../../Master/ActivityType/Services/ActivityTypeService";
 
 const fetchMaster = async (url: string, idField: string, nameField: string): Promise<MasterItem[]> => {
   try {
@@ -266,4 +267,87 @@ export const getBdeUsers = async (): Promise<MasterItem[]> => {
   }
 };
 
-export const getActivityTypes = () => fetchMaster(API_ENDPOINTS.ActivityType, 'id', 'activityName');
+export const getActivityTypes = async (): Promise<MasterItem[]> => {
+  try {
+    // 1. First attempt: Use the existing Activity Types Master service
+    const masterItems = await getAllActivityTypes();
+    if (Array.isArray(masterItems) && masterItems.length > 0) {
+      const activeItems = masterItems
+        .filter((item) => item.isActive !== false && !item.isDeleted)
+        .map((item) => ({
+          id: Number(item.id),
+          name: String(item.activityName || item.value || item.label || "").trim(),
+          code: String(item.code || "").trim(),
+        }))
+        .filter((item: MasterItem) => item.id > 0 && item.name.length > 0);
+
+      if (activeItems.length > 0) {
+        return activeItems;
+      }
+    }
+  } catch (err) {
+    console.warn("getAllActivityTypes fallback to direct API:", err);
+  }
+
+  // 2. Direct API fallback with apiClient (authenticated) and axios
+  try {
+    const urls = [
+      API_ENDPOINTS.ActivityType,
+      API_ENDPOINTS.ActivityTypes,
+      `${API_ENDPOINTS.BaseUrl}/ActivityType`,
+      `${API_ENDPOINTS.BaseUrl}/activitytype`,
+    ].filter(Boolean);
+
+    let rawList: any[] = [];
+
+    for (const url of urls) {
+      try {
+        const res = await apiClient.get(url);
+        const data = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.result || []);
+        if (Array.isArray(data) && data.length > 0) {
+          rawList = data;
+          break;
+        }
+      } catch {
+        // Try next candidate URL
+      }
+    }
+
+    if (rawList.length === 0) {
+      for (const url of urls) {
+        try {
+          const res = await axios.get(url);
+          const data = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.result || []);
+          if (Array.isArray(data) && data.length > 0) {
+            rawList = data;
+            break;
+          }
+        } catch {
+          // Try next candidate URL
+        }
+      }
+    }
+
+    return rawList
+      .filter((item: any) => !item.isDeleted && !item.IsDeleted && item.isActive !== false && item.IsActive !== false)
+      .map((item: any) => ({
+        id: Number(item.id ?? item.Id ?? item.ID ?? item.activityTypeId ?? item.ActivityTypeId ?? 0),
+        name: String(
+          item.activityName ??
+          item.ActivityName ??
+          item.activityTypeName ??
+          item.ActivityTypeName ??
+          item.name ??
+          item.Name ??
+          item.value ??
+          item.Value ??
+          ""
+        ).trim(),
+        code: String(item.code ?? item.Code ?? "").trim(),
+      }))
+      .filter((item: MasterItem) => item.id > 0 && item.name.length > 0);
+  } catch (error) {
+    console.error("Error fetching activity types:", error);
+    return [];
+  }
+};

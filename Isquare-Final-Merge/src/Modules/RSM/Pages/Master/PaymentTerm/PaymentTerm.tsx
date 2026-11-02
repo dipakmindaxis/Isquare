@@ -169,22 +169,23 @@ const PaymentTerm: React.FC<PaymentTermProps> = ({ isTab = false }) => {
   };
 
   return (
-    <div className={isTab ? "w-full space-y-4" : "p-4 md:p-6 bg-gray-50 min-h-full space-y-5"}>
+    <div className={isTab ? "w-full space-y-6" : "min-h-screen space-y-6 bg-[#e4e8e1] p-4 md:p-6"}>
       {/* Top Header Card */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white rounded-none shadow-xs border border-gray-200 p-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white rounded-2xl border border-slate-200 p-5 md:p-6 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
         <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 bg-orange-50 border border-[#FF7900]/30 text-[#FF7900] rounded-none flex items-center justify-center shadow-xs">
+          <div className="w-12 h-12 bg-[#FFF1E6] border border-[#FFE0CC] text-[#FF7900] rounded-2xl flex items-center justify-center shadow-xs">
             <Receipt className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">Payment Terms</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-[#172B4D] tracking-tight">Payment Terms</h1>
+            <p className="text-xs text-slate-500 font-medium mt-0.5">Manage credit terms, schedules, and payment conditions.</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-3">
           <button
             onClick={handleExportExcel}
-            className="flex items-center gap-2 px-3.5 py-2.5 rounded-none border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 font-medium text-sm transition cursor-pointer shadow-xs"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-[#153E63] hover:bg-slate-50 font-semibold text-sm transition cursor-pointer shadow-xs"
             title="Export to Excel"
           >
             <Download size={15} />
@@ -192,85 +193,88 @@ const PaymentTerm: React.FC<PaymentTermProps> = ({ isTab = false }) => {
           </button>
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center gap-2 bg-[#FF7900] hover:bg-[#E66D00] text-white font-medium px-5 py-2.5 rounded-none transition shadow-sm cursor-pointer text-sm"
+            className="inline-flex items-center gap-2 rounded-xl bg-[#153E63] hover:bg-[#103454] text-white font-semibold px-5 py-2.5 transition shadow-[0_10px_18px_rgba(21,62,99,0.18)] cursor-pointer text-sm"
           >
             <Plus size={18} />
-            <span>Add Payment Term</span>
+            <span>+ Add Payment Term</span>
           </button>
         </div>
       </div>
 
       {/* Stats Counter Strip */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="bg-white rounded-none p-4 border border-gray-200 shadow-xs flex items-center justify-between">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-[0_4px_16px_rgba(15,23,42,0.03)] flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Terms</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">{stats.total}</p>
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Terms</p>
+            <p className="text-2xl font-extrabold text-[#172B4D] mt-1">{stats.total}</p>
           </div>
-          <div className="w-10 h-10 rounded-none bg-blue-50 text-[#00234a] flex items-center justify-center">
-            <Receipt size={20} />
+          <div className="w-11 h-11 rounded-xl bg-[#FFF1E6] text-[#FF7900] flex items-center justify-center shadow-2xs">
+            <Receipt size={22} />
           </div>
         </div>
-        <div className="bg-white rounded-none p-4 border border-gray-200 shadow-xs flex items-center justify-between">
+        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-[0_4px_16px_rgba(15,23,42,0.03)] flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Active</p>
-            <p className="text-2xl font-bold text-green-700 mt-1">{stats.active}</p>
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Active</p>
+            <p className="text-2xl font-extrabold text-emerald-600 mt-1">{stats.active}</p>
           </div>
-          <div className="w-10 h-10 rounded-none bg-green-50 text-green-700 flex items-center justify-center">
-            <CheckCircle2 size={20} />
+          <div className="w-11 h-11 rounded-xl bg-[#E8F8F5] text-[#00A995] flex items-center justify-center shadow-2xs">
+            <CheckCircle2 size={22} />
           </div>
         </div>
-        <div className="bg-white rounded-none p-4 border border-gray-200 shadow-xs flex items-center justify-between">
+        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-[0_4px_16px_rgba(15,23,42,0.03)] flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Inactive</p>
-            <p className="text-2xl font-bold text-red-600 mt-1">{stats.inactive}</p>
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Inactive</p>
+            <p className="text-2xl font-extrabold text-rose-600 mt-1">{stats.inactive}</p>
           </div>
-          <div className="w-10 h-10 rounded-none bg-red-50 text-red-600 flex items-center justify-center">
-            <XCircle size={20} />
+          <div className="w-11 h-11 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center shadow-2xs">
+            <XCircle size={22} />
           </div>
         </div>
       </div>
 
       {/* Search and Filters */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-4 rounded-none border border-gray-200 shadow-xs">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search by code or name..."
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-none text-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#FF7900] focus:border-[#FF7900] transition"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-[0_4px_16px_rgba(15,23,42,0.03)]">
+        <div className="flex w-full items-center sm:w-auto">
+          <label className="mr-2 text-sm font-medium text-slate-600">Search:</label>
+          <div className="relative w-full sm:w-80">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search by code or name..."
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#153E63] focus:bg-white shadow-xs"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
         </div>
 
-        <div className="flex bg-gray-100 p-1 rounded-none w-full sm:w-auto">
+        <div className="flex bg-slate-100 p-1 rounded-xl w-full sm:w-auto">
           <button
             onClick={() => setStatusFilter("ALL")}
-            className={`px-3 py-1.5 rounded-none text-xs font-semibold transition cursor-pointer ${
+            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
               statusFilter === "ALL"
-                ? "bg-white text-[#FF7900] shadow-xs"
-                : "text-gray-600 hover:text-gray-900"
+                ? "bg-white text-[#153E63] shadow-xs"
+                : "text-slate-600 hover:text-slate-900"
             }`}
           >
             All ({stats.total})
           </button>
           <button
             onClick={() => setStatusFilter("ACTIVE")}
-            className={`px-3 py-1.5 rounded-none text-xs font-semibold transition cursor-pointer ${
+            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
               statusFilter === "ACTIVE"
-                ? "bg-white text-[#FF7900] shadow-xs"
-                : "text-gray-600 hover:text-gray-900"
+                ? "bg-white text-emerald-600 shadow-xs"
+                : "text-slate-600 hover:text-slate-900"
             }`}
           >
             Active ({stats.active})
           </button>
           <button
             onClick={() => setStatusFilter("INACTIVE")}
-            className={`px-3 py-1.5 rounded-none text-xs font-semibold transition cursor-pointer ${
+            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
               statusFilter === "INACTIVE"
-                ? "bg-white text-[#FF7900] shadow-xs"
-                : "text-gray-600 hover:text-gray-900"
+                ? "bg-white text-rose-600 shadow-xs"
+                : "text-slate-600 hover:text-slate-900"
             }`}
           >
             Inactive ({stats.inactive})
@@ -278,41 +282,41 @@ const PaymentTerm: React.FC<PaymentTermProps> = ({ isTab = false }) => {
         </div>
       </div>
 
-      {/* Table matching Screenshot 2 */}
-      <div className="bg-white rounded-none shadow-xs overflow-hidden border border-gray-200">
+      {/* Table Card */}
+      <div className="bg-white rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.04)] overflow-hidden border border-slate-200">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm border-collapse">
-            <thead className="bg-[#FF7900] text-white text-xs uppercase tracking-wider border-b border-[#e06800]">
+          <table className="w-full text-sm">
+            <thead className="bg-[#FF7900] text-white text-xs uppercase tracking-wider">
               <tr>
-                <th className="px-4 py-3.5 text-left font-bold w-16 border-r border-[#e06800]">
+                <th className="px-5 py-3.5 text-left font-bold w-20 border-r border-[#e06800]">
                   Sr. No.
                 </th>
-                <th className="px-4 py-3.5 text-left font-bold border-r border-[#e06800]">
+                <th className="px-5 py-3.5 text-left font-bold border-r border-[#e06800]">
                   Payment Term Code
                 </th>
-                <th className="px-4 py-3.5 text-left font-bold border-r border-[#e06800]">
+                <th className="px-5 py-3.5 text-left font-bold border-r border-[#e06800]">
                   Payment Term Name
                 </th>
-                <th className="px-4 py-3.5 text-center font-bold w-28 border-r border-[#e06800]">
+                <th className="px-5 py-3.5 text-center font-bold w-28 border-r border-[#e06800]">
                   Status
                 </th>
-                <th className="px-4 py-3.5 text-center font-bold w-36">
+                <th className="px-5 py-3.5 text-center font-bold w-36">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white divide-y divide-slate-100">
               {isLoading ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-12 text-gray-500">
-                    <Loader2 className="animate-spin inline-block mr-2 text-[#FF7900]" />
+                  <td colSpan={5} className="text-center py-12 text-slate-500">
+                    <Loader2 className="animate-spin inline-block mr-2 text-[#153E63]" />
                     Loading payment terms...
                   </td>
                 </tr>
               ) : paginatedItems.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-12 text-gray-400">
-                    <FileSpreadsheet className="w-10 h-10 mx-auto mb-2 text-gray-300" />
+                  <td colSpan={5} className="text-center py-12 text-slate-400">
+                    <FileSpreadsheet className="w-10 h-10 mx-auto mb-2 text-slate-300" />
                     No payment terms found.
                   </td>
                 </tr>
@@ -320,18 +324,18 @@ const PaymentTerm: React.FC<PaymentTermProps> = ({ isTab = false }) => {
                 paginatedItems.map((item, index) => (
                   <tr
                     key={item.paymentTermId}
-                    className="hover:bg-orange-50/20 transition-colors"
+                    className="hover:bg-slate-50/80 transition-colors"
                   >
-                    <td className="px-4 py-3 text-gray-700 font-medium border-r border-gray-200">
+                    <td className="px-5 py-4 text-slate-700 font-semibold border-r border-slate-100">
                       {(currentPage - 1) * itemsPerPage + index + 1}
                     </td>
-                    <td className="px-4 py-3 font-semibold text-gray-800 border-r border-gray-200">
+                    <td className="px-5 py-4 font-bold text-[#172B4D] border-r border-slate-100">
                       {item.paymentTermCode}
                     </td>
-                    <td className="px-4 py-3 text-gray-900 font-semibold border-r border-gray-200">
+                    <td className="px-5 py-4 text-slate-800 font-semibold border-r border-slate-100">
                       {item.paymentTermName}
                     </td>
-                    <td className="px-4 py-3 text-center border-r border-gray-200">
+                    <td className="px-5 py-4 text-center border-r border-slate-100">
                       <div className="flex justify-center w-full">
                         <label
                           className="relative inline-flex items-center cursor-pointer"
@@ -345,7 +349,7 @@ const PaymentTerm: React.FC<PaymentTermProps> = ({ isTab = false }) => {
                           />
                           <div
                             className={`w-11 h-6 rounded-full transition-colors relative ${
-                              item.isActive ? "bg-[#FF8500]" : "bg-gray-300"
+                              item.isActive ? "bg-[#153E63]" : "bg-slate-300"
                             }`}
                           >
                             <span
@@ -360,28 +364,28 @@ const PaymentTerm: React.FC<PaymentTermProps> = ({ isTab = false }) => {
                         </label>
                       </div>
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex justify-center items-center gap-2 w-full">
+                    <td className="px-5 py-4">
+                      <div className="flex justify-center items-center gap-3 w-full">
                         <button
                           onClick={() => handleViewClick(item)}
                           className={`${actionButtonStyles.base} ${actionButtonStyles.view}`}
                           title="View"
                         >
-                          <FaEye size={14} />
+                          <FaEye size={16} />
                         </button>
                         <button
                           onClick={() => handleEditClick(item)}
                           className={`${actionButtonStyles.base} ${actionButtonStyles.edit}`}
                           title="Edit"
                         >
-                          <FaEdit size={14} />
+                          <FaEdit size={16} />
                         </button>
                         <button
                           onClick={() => handleDeleteRequest(item)}
                           className={`${actionButtonStyles.base} ${actionButtonStyles.delete}`}
                           title="Delete"
                         >
-                          <FaTrash size={14} />
+                          <FaTrash size={16} />
                         </button>
                       </div>
                     </td>
@@ -393,13 +397,13 @@ const PaymentTerm: React.FC<PaymentTermProps> = ({ isTab = false }) => {
         </div>
 
         {/* Pagination Footer */}
-        <div className="bg-white border-t border-gray-200 px-4 py-3 flex items-center justify-end gap-6 text-xs text-gray-600 select-none">
+        <div className="bg-white border-t border-slate-200 px-6 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-medium text-slate-600 select-none">
           <div className="flex items-center gap-2">
             <span>Rows per page:</span>
             <select
               value={itemsPerPage}
               onChange={(e) => setItemsPerPage(Number(e.target.value))}
-              className="px-2 py-1 border border-gray-300 rounded-none bg-white text-xs font-medium focus:outline-none focus:ring-1 focus:ring-[#FF7900]"
+              className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs text-slate-700 outline-none focus:border-[#153E63]"
             >
               <option value={5}>5</option>
               <option value={10}>10</option>
@@ -415,11 +419,11 @@ const PaymentTerm: React.FC<PaymentTermProps> = ({ isTab = false }) => {
                   filteredItems.length
                 )} of ${filteredItems.length}`}
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             <button
               onClick={() => setCurrentPage(1)}
               disabled={currentPage === 1}
-              className="p-1.5 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed text-gray-600 transition"
+              className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed text-slate-600 transition"
               title="First Page"
             >
               <ChevronsLeft size={16} />
@@ -427,7 +431,7 @@ const PaymentTerm: React.FC<PaymentTermProps> = ({ isTab = false }) => {
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="p-1.5 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed text-gray-600 transition"
+              className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed text-slate-600 transition"
               title="Previous Page"
             >
               <ChevronLeft size={16} />
@@ -435,7 +439,7 @@ const PaymentTerm: React.FC<PaymentTermProps> = ({ isTab = false }) => {
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages || totalPages === 0}
-              className="p-1.5 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed text-gray-600 transition"
+              className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed text-slate-600 transition"
               title="Next Page"
             >
               <ChevronRight size={16} />
@@ -443,7 +447,7 @@ const PaymentTerm: React.FC<PaymentTermProps> = ({ isTab = false }) => {
             <button
               onClick={() => setCurrentPage(totalPages)}
               disabled={currentPage === totalPages || totalPages === 0}
-              className="p-1.5 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed text-gray-600 transition"
+              className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed text-slate-600 transition"
               title="Last Page"
             >
               <ChevronsRight size={16} />
