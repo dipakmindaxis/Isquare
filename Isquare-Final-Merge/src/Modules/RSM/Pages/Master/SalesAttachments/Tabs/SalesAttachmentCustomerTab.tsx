@@ -57,7 +57,7 @@ const SalesAttachmentCustomerTab: React.FC<SalesAttachmentCustomerTabProps> = ({
                 <span className="text-[11px] font-extrabold uppercase tracking-widest text-gray-400 block">
                   CUSTOMER CODE
                 </span>
-                <p className="text-sm font-mono text-slate-700">
+                <p className="text-sm font-medium text-slate-700">
                   {selectedCustomer.customerCode}
                 </p>
               </div>

@@ -92,14 +92,14 @@ export const QuotationApprovalList: React.FC = () => {
 
       {/* Section Title & Actions */}
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h2 className="border-b-2 border-[#FF7900] pb-2 text-2xl sm:text-3xl font-bold tracking-tight text-[#00234a]">
+        <h2 className="border-b-2 border-[#FF7900] pb-2 text-3xl font-bold tracking-[-0.03em] text-[#00234a]">
           Approval Requests
         </h2>
 
         <button
           type="button"
           onClick={fetchApprovals}
-          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#00234a] shadow-xs transition hover:bg-slate-50 cursor-pointer"
+          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#00234a] shadow-xs transition hover:bg-slate-50 cursor-pointer"
           title="Refresh approvals list"
         >
           <RefreshCw size={14} className="text-[#FF7900]" />
@@ -110,9 +110,9 @@ export const QuotationApprovalList: React.FC = () => {
       {/* Table Container */}
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1000px] border-collapse text-left text-xs">
+          <table className="w-full min-w-[1000px] border-collapse text-left text-sm">
             <thead>
-              <tr className="bg-[#FF7900] text-white font-bold uppercase text-[12px] tracking-wider">
+              <tr className="bg-[#FF7900] text-white font-semibold uppercase text-[13px] tracking-wider">
                 <th className="p-3.5 border-r border-[#e06800]">Request #</th>
                 <th className="p-3.5 border-r border-[#e06800]">Quotation Ref</th>
                 <th className="p-3.5 border-r border-[#e06800]">Approval Reason</th>
@@ -139,10 +139,10 @@ export const QuotationApprovalList: React.FC = () => {
               ) : (
                 approvals.map((app) => (
                   <tr key={app.quotationApprovalId} className="hover:bg-[#f0f7ff] transition duration-150 min-h-[52px]">
-                    <td className="p-3.5 font-bold font-mono text-[#00234a]">
+                    <td className="p-3.5 font-semibold text-[#00234a]">
                       #{app.quotationApprovalId}
                     </td>
-                    <td className="p-3.5 font-bold font-mono text-[#00234a]">
+                    <td className="p-3.5 font-semibold text-[#00234a]">
                       <Link to={`/rsm/quotations/${app.quotationId}`} className="hover:text-[#FF7900] transition">
                         {app.quotationNumber || `QT-${app.quotationId}`}
                       </Link>
@@ -170,7 +170,7 @@ export const QuotationApprovalList: React.FC = () => {
                             setDecision("Approved");
                             setApproverComments("");
                           }}
-                          className="px-3.5 py-1.5 bg-[#00234a] hover:bg-[#FF7900] text-white font-semibold rounded-xl transition cursor-pointer shadow-xs"
+                          className="px-3.5 py-1.5 bg-[#00234a] hover:bg-[#FF7900] text-white font-semibold rounded-xl transition cursor-pointer shadow-xs text-sm"
                         >
                           Review &amp; Decide
                         </button>
@@ -206,7 +206,7 @@ export const QuotationApprovalList: React.FC = () => {
             <div className="p-6 space-y-4">
               <p className="text-xs text-gray-600 bg-orange-50/60 border border-orange-200/60 p-3 rounded-xl">
                 Deciding approval for Quotation{" "}
-                <span className="font-bold font-mono text-[#00234a]">
+                <span className="font-bold text-[#00234a]">
                   {selectedApproval.quotationNumber || `QT-${selectedApproval.quotationId}`}
                 </span>
                 . Reason: {selectedApproval.approvalReason}
@@ -221,7 +221,7 @@ export const QuotationApprovalList: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setDecision("Approved")}
-                      className={`py-2.5 px-3 rounded-xl text-xs font-semibold border transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                      className={`py-2.5 px-3 rounded-xl text-sm font-semibold border transition flex items-center justify-center gap-1.5 cursor-pointer ${
                         decision === "Approved"
                           ? "bg-emerald-600 text-white border-emerald-600 shadow-xs"
                           : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
@@ -234,7 +234,7 @@ export const QuotationApprovalList: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setDecision("Rejected")}
-                      className={`py-2.5 px-3 rounded-xl text-xs font-semibold border transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                      className={`py-2.5 px-3 rounded-xl text-sm font-semibold border transition flex items-center justify-center gap-1.5 cursor-pointer ${
                         decision === "Rejected"
                           ? "bg-rose-600 text-white border-rose-600 shadow-xs"
                           : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
@@ -255,7 +255,7 @@ export const QuotationApprovalList: React.FC = () => {
                     placeholder="e.g. Approved as a strategic pricing exception for key client."
                     value={approverComments}
                     onChange={(e) => setApproverComments(e.target.value)}
-                    className="w-full text-xs p-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-[#FF7900] focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
+                    className="w-full text-sm p-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-[#FF7900] focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
                   />
                 </div>
 
@@ -263,14 +263,14 @@ export const QuotationApprovalList: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setSelectedApproval(null)}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-[#00234a] shadow-xs transition hover:bg-slate-50 cursor-pointer"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-[#00234a] shadow-xs transition hover:bg-slate-50 cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className={`rounded-xl px-5 py-2 text-xs font-semibold text-white shadow-xs transition cursor-pointer ${
+                    className={`rounded-xl px-5 py-2 text-sm font-semibold text-white shadow-xs transition cursor-pointer ${
                       decision === "Approved" ? "bg-emerald-600 hover:bg-emerald-700" : "bg-rose-600 hover:bg-rose-700"
                     }`}
                   >

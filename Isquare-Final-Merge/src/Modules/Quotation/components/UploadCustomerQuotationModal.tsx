@@ -477,7 +477,7 @@ export const UploadCustomerQuotationModal: React.FC<
                 onChange={(e) => setQuotationNumber(e.target.value)}
                 required
                 placeholder="e.g. QT-CUST-101"
-                className="w-full text-xs rounded-xl border border-gray-300 py-2.5 px-3 bg-white text-gray-800 font-mono focus:outline-none focus:ring-2 focus:ring-[#00234a]/15 focus:border-[#00234a] transition"
+                className="w-full text-sm rounded-xl border border-gray-300 py-2.5 px-3 bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#00234a]/15 focus:border-[#00234a] transition"
               />
             </div>
 
@@ -528,7 +528,7 @@ export const UploadCustomerQuotationModal: React.FC<
                   value={estimatedAmount}
                   onChange={(e) => setEstimatedAmount(e.target.value)}
                   placeholder="0.00 (from customer sheet summary)"
-                  className="w-full text-xs rounded-xl border border-gray-300 py-2.5 pl-7 pr-3 bg-white text-gray-800 font-mono focus:outline-none focus:ring-2 focus:ring-[#00234a]/15 focus:border-[#00234a] transition"
+                  className="w-full text-sm rounded-xl border border-gray-300 py-2.5 pl-7 pr-3 bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#00234a]/15 focus:border-[#00234a] transition"
                 />
               </div>
               <p className="text-[10px] text-gray-400 mt-1">

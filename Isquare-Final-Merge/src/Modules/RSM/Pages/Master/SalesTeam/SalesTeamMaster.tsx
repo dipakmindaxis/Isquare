@@ -96,10 +96,10 @@ export const SalesTeamMaster: React.FC<SalesTeamMasterProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl md:text-2xl font-bold text-gray-900">
+                <h1 className="text-2xl font-bold text-[#00234a]">
                   Sales Team Master
                 </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-orange-50 text-[#FF7900] border border-[#FF7900]/20">
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-orange-50 text-[#FF7900] border border-[#FF7900]/20">
                   Unified Master
                 </span>
               </div>
@@ -119,7 +119,7 @@ export const SalesTeamMaster: React.FC<SalesTeamMasterProps> = ({
                 key={tab.id}
                 type="button"
                 onClick={() => handleSelectTab(tab.id)}
-                className={`flex items-center gap-2.5 px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-all cursor-pointer ${
+                className={`flex items-center gap-2.5 px-4 py-3 text-sm font-semibold border-b-2 whitespace-nowrap transition-all cursor-pointer ${
                   isActive
                     ? "border-[#FF7900] text-[#FF7900] font-semibold bg-orange-50/50 rounded-t-lg"
                     : "border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300"

@@ -388,7 +388,7 @@ export const ContactPersonMaster: React.FC<ContactPersonMasterProps> = ({
       <div className="bg-white rounded-none shadow-xs overflow-hidden border border-gray-200">
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse min-w-[900px]">
-            <thead className="bg-[#FF7900] text-white text-xs uppercase tracking-wider border-b border-[#e06800]">
+            <thead className="bg-[#FF7900] text-white text-[13px] font-semibold uppercase tracking-wider border-b border-[#e06800]">
               <tr>
                 <th className="px-3.5 py-3.5 text-left font-bold w-14 border-r border-[#e06800]">
                   Sr. No.
@@ -463,7 +463,7 @@ export const ContactPersonMaster: React.FC<ContactPersonMasterProps> = ({
                     <td className="px-4 py-3 text-gray-700 border-r border-gray-200">
                       {item.designation || "—"}
                     </td>
-                    <td className="px-4 py-3 text-gray-800 font-mono text-xs border-r border-gray-200">
+                    <td className="px-4 py-3 text-gray-800 font-medium text-sm border-r border-gray-200">
                       {item.mobileNo ? (
                         <a
                           href={`tel:${item.mobileNo}`}

@@ -50,7 +50,7 @@ export const QuotationAccessoryRow: React.FC<QuotationAccessoryRowProps> = ({
   };
 
   return (
-    <tr className="bg-orange-50/20 hover:bg-orange-50/40 border-b border-gray-100 transition text-xs">
+    <tr className="bg-orange-50/20 hover:bg-orange-50/40 border-b border-gray-100 transition text-sm">
       {/* Code, Name, Suggestion & Link */}
       <td className="p-3 pl-6 align-top min-w-[280px] border-r border-gray-100">
         <div className="flex items-start gap-2">
@@ -70,7 +70,7 @@ export const QuotationAccessoryRow: React.FC<QuotationAccessoryRowProps> = ({
               value={accessory.itemCode || ""}
               onChange={(e) => handleSelectPredefined(e.target.value)}
               disabled={disabled}
-              className="w-full text-xs h-8.5 py-1 px-2.5 bg-white border border-gray-200 rounded-lg focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none"
+              className="w-full text-sm h-8.5 py-1 px-2.5 bg-white border border-gray-200 rounded-lg focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none"
             >
               <option value="">Custom Accessory...</option>
               <optgroup label="Suggested for This Product">
@@ -91,7 +91,7 @@ export const QuotationAccessoryRow: React.FC<QuotationAccessoryRowProps> = ({
                   onUpdate({ ...accessory, itemCode: e.target.value })
                 }
                 disabled={disabled}
-                className="w-full text-xs h-8 py-1 px-2.5 bg-white border border-gray-200 rounded-lg font-mono focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none"
+                className="w-full text-sm h-8 py-1 px-2.5 bg-white border border-gray-200 rounded-lg focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none"
               />
               <input
                 type="text"
@@ -102,7 +102,7 @@ export const QuotationAccessoryRow: React.FC<QuotationAccessoryRowProps> = ({
                 }
                 disabled={disabled}
                 required
-                className="w-full text-xs h-8 py-1 px-2.5 bg-white border border-gray-200 rounded-lg font-semibold focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none"
+                className="w-full text-sm h-8 py-1 px-2.5 bg-white border border-gray-200 rounded-lg font-medium focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none"
               />
             </div>
           </div>
@@ -119,7 +119,7 @@ export const QuotationAccessoryRow: React.FC<QuotationAccessoryRowProps> = ({
             onUpdate({ ...accessory, specification: e.target.value })
           }
           disabled={disabled}
-          className="w-full min-h-[76px] text-xs leading-relaxed py-1.5 px-2.5 bg-white border border-gray-200 rounded-lg focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none resize-none"
+          className="w-full min-h-[76px] text-sm leading-relaxed py-1.5 px-2.5 bg-white border border-gray-200 rounded-lg focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none resize-none"
         />
       </td>
 
@@ -151,7 +151,7 @@ export const QuotationAccessoryRow: React.FC<QuotationAccessoryRowProps> = ({
 
       {/* 4. HSN Code */}
       <td className="p-3 align-top text-center w-24 min-w-[85px]">
-        <div className="py-1 px-1.5 bg-slate-50 border border-slate-200 rounded text-center font-mono text-xs text-gray-500">
+        <div className="py-1 px-1.5 bg-slate-50 border border-slate-200 rounded text-center text-sm text-gray-500">
           —
         </div>
       </td>
@@ -170,7 +170,7 @@ export const QuotationAccessoryRow: React.FC<QuotationAccessoryRowProps> = ({
             })
           }
           disabled={disabled}
-          className="w-full text-xs py-1.5 px-2 text-center bg-white border border-gray-300 rounded font-bold focus:ring-1 focus:ring-blue-500 focus:outline-none"
+          className="w-full text-sm py-1.5 px-2 text-center bg-white border border-gray-300 rounded font-medium focus:ring-1 focus:ring-blue-500 focus:outline-none"
         />
       </td>
 
@@ -188,7 +188,7 @@ export const QuotationAccessoryRow: React.FC<QuotationAccessoryRowProps> = ({
             });
           }}
           disabled={disabled}
-          className="w-full text-xs py-1.5 px-2 bg-white border border-gray-300 rounded text-gray-700 font-medium focus:outline-none"
+          className="w-full text-sm py-1.5 px-2 bg-white border border-gray-300 rounded text-gray-700 font-medium focus:outline-none"
         >
           {STANDARD_UOMS.map((uom) => (
             <option key={uom.id} value={uom.id}>
@@ -212,7 +212,7 @@ export const QuotationAccessoryRow: React.FC<QuotationAccessoryRowProps> = ({
             })
           }
           disabled={disabled}
-          className="w-full text-xs py-1.5 px-2 bg-white border border-gray-300 rounded font-semibold text-right focus:ring-1 focus:ring-blue-500 focus:outline-none"
+          className="w-full text-sm py-1.5 px-2 bg-white border border-gray-300 rounded font-medium text-right focus:ring-1 focus:ring-blue-500 focus:outline-none"
         />
       </td>
 
@@ -234,7 +234,7 @@ export const QuotationAccessoryRow: React.FC<QuotationAccessoryRowProps> = ({
             })
           }
           disabled={disabled}
-          className="w-full text-xs py-1.5 px-2 text-center bg-white border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none"
+          className="w-full text-sm py-1.5 px-2 text-center bg-white border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none"
         />
       </td>
 
@@ -253,13 +253,13 @@ export const QuotationAccessoryRow: React.FC<QuotationAccessoryRowProps> = ({
             })
           }
           disabled={disabled}
-          className="w-full text-xs py-1.5 px-2 text-center bg-white border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none"
+          className="w-full text-sm py-1.5 px-2 text-center bg-white border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none"
         />
       </td>
 
       {/* 10. Line Total */}
       <td className="p-3 align-top w-28 min-w-[110px] text-right">
-        <div className="text-xs font-bold text-gray-900">
+        <div className="text-sm font-semibold text-gray-900">
           {formatINR(calc.lineTotal)}
         </div>
         <div className="text-[10px] text-gray-400 mt-0.5">
@@ -269,21 +269,21 @@ export const QuotationAccessoryRow: React.FC<QuotationAccessoryRowProps> = ({
 
       {/* 11. Purchase Rate */}
       <td className="p-3 align-top w-28 min-w-[100px] text-right border-r border-gray-100">
-        <div className="py-1 px-1.5 bg-slate-50 border border-slate-200 rounded text-right font-medium text-xs text-gray-400">
+        <div className="py-1 px-1.5 bg-slate-50 border border-slate-200 rounded text-right font-medium text-sm text-gray-400">
           —
         </div>
       </td>
 
       {/* 12. Profit % */}
       <td className="p-3 align-top w-20 min-w-[75px] text-center border-r border-gray-100">
-        <div className="py-1 px-1.5 bg-slate-50 border border-slate-200 rounded text-center font-medium text-xs text-gray-400">
+        <div className="py-1 px-1.5 bg-slate-50 border border-slate-200 rounded text-center font-medium text-sm text-gray-400">
           —
         </div>
       </td>
 
       {/* 13. Stock */}
       <td className="p-3 align-top w-20 min-w-[70px] text-center border-r border-gray-100">
-        <div className="py-1 px-1.5 bg-slate-50 border border-slate-200 rounded text-center font-medium text-xs text-gray-400">
+        <div className="py-1 px-1.5 bg-slate-50 border border-slate-200 rounded text-center font-medium text-sm text-gray-400">
           —
         </div>
       </td>

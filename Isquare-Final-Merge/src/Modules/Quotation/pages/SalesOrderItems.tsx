@@ -45,7 +45,7 @@ export const SalesOrderItems: React.FC = () => {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#00234a] tracking-tight">
+          <h1 className="text-3xl font-bold tracking-[-0.03em] text-[#00234a]">
             Sales Order Items Master
           </h1>
           <p className="text-xs text-gray-500 mt-1">
@@ -74,7 +74,7 @@ export const SalesOrderItems: React.FC = () => {
             placeholder="Search items by code, name, or brand..."
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            className="w-full text-xs pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 focus:bg-white focus:outline-none"
+            className="w-full text-sm pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 focus:bg-white focus:outline-none"
           />
         </div>
 
@@ -85,9 +85,9 @@ export const SalesOrderItems: React.FC = () => {
 
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
+          <table className="w-full text-left border-collapse text-sm">
             <thead>
-              <tr className="bg-[#154068] text-white font-bold uppercase text-[11px] tracking-wider">
+              <tr className="bg-[#154068] text-white font-semibold uppercase text-[13px] tracking-wider">
                 <th className="p-3.5">Order Ref</th>
                 <th className="p-3.5">Item Name</th>
                 <th className="p-3.5">Code / Brand</th>
@@ -120,7 +120,7 @@ export const SalesOrderItems: React.FC = () => {
 
                   return (
                     <tr key={item.salesOrderItemId} className="hover:bg-slate-50 transition">
-                      <td className="p-3.5 font-bold font-mono text-purple-700">
+                      <td className="p-3.5 font-semibold text-purple-700">
                         <Link to={`/rsm/sales-orders/${item.salesOrderId}`} className="hover:underline">
                           SO-{item.salesOrderId}
                         </Link>
@@ -134,7 +134,7 @@ export const SalesOrderItems: React.FC = () => {
                         )}
                       </td>
                       <td className="p-3.5">
-                        <span className="font-mono text-gray-700 font-semibold">{item.itemCode || "—"}</span>
+                        <span className="text-gray-700 font-semibold">{item.itemCode || "—"}</span>
                         {item.brand && <span className="text-gray-400 ml-1">({item.brand})</span>}
                       </td>
                       <td className="p-3.5 text-center">
@@ -156,7 +156,7 @@ export const SalesOrderItems: React.FC = () => {
                       </td>
                       <td className="p-3.5 text-center text-gray-600">{item.discountPercentage}%</td>
                       <td className="p-3.5 text-center text-gray-600">{item.gstRate}%</td>
-                      <td className="p-3.5 text-right font-bold text-gray-900 font-mono">
+                      <td className="p-3.5 text-right font-medium text-gray-900">
                         {item.lineTotal ? formatINR(item.lineTotal) : formatINR(total)}
                       </td>
                     </tr>

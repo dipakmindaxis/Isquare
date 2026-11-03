@@ -20,7 +20,7 @@ export const SalesActivityHeader: React.FC<SalesActivityHeaderProps> = ({
             <FaTasks size={26} />
           </div>
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-[#082B50] tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-bold text-[#082B50] tracking-[-0.03em]">
               Sales Activities
             </h1>
             <p className="text-xs sm:text-[13px] text-slate-500 font-medium mt-0.5">
@@ -35,7 +35,7 @@ export const SalesActivityHeader: React.FC<SalesActivityHeaderProps> = ({
           <button
             type="button"
             onClick={onExport}
-            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 border border-slate-200/90 rounded-xl text-xs sm:text-sm font-bold text-[#082B50] bg-white hover:bg-slate-50 transition-all shadow-sm active:scale-95 min-h-[40px] cursor-pointer"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 border border-slate-200/90 rounded-xl text-sm font-semibold text-[#082B50] bg-white hover:bg-slate-50 transition-all shadow-sm active:scale-95 min-h-[40px] cursor-pointer"
           >
             <FaFileExcel className="text-emerald-600 text-sm" />
             <span>Export</span>
@@ -45,7 +45,7 @@ export const SalesActivityHeader: React.FC<SalesActivityHeaderProps> = ({
           <button
             type="button"
             onClick={onAddTask}
-            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-[#154068] hover:bg-[#0f2d4a] text-white rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-sm active:scale-95 min-h-[40px] cursor-pointer"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-[#154068] hover:bg-[#0f2d4a] text-white rounded-xl text-sm font-semibold transition-all shadow-sm active:scale-95 min-h-[40px] cursor-pointer"
           >
             <FaPlus size={12} />
             <span>Add Task / Request</span>
@@ -54,7 +54,7 @@ export const SalesActivityHeader: React.FC<SalesActivityHeaderProps> = ({
         <button
           type="button"
           onClick={onAddNew}
-          className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-[#FF7900] hover:bg-[#e06800] text-white rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-md shadow-orange-500/25 active:scale-95 min-h-[40px] cursor-pointer"
+          className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-[#FF7900] hover:bg-[#e06800] text-white rounded-xl text-sm font-semibold transition-all shadow-md shadow-orange-500/25 active:scale-95 min-h-[40px] cursor-pointer"
         >
           <FaPlus size={12} />
           <span>Record Activity</span>

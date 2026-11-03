@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { exportToExcel } from "../../../../Utils/exportToExcel";
+import { listingTableStyles } from "../../../../Components/Common/listingTableStyles";
 import {
   getCustomers,
   deleteCustomer,
@@ -117,7 +118,8 @@ const TABS: TabConfig[] = [
   },
 ];
 
-const customTableStyles: any = {
+const customTableStyles: any = listingTableStyles;
+/*
   header: {
     style: {
       minHeight: "52px",
@@ -137,7 +139,8 @@ const customTableStyles: any = {
     style: {
       color: "#ffffff",
       fontSize: "13px",
-      fontWeight: "700",
+      fontWeight: 600,
+      fontWeight: 600,
       textTransform: "uppercase",
       paddingLeft: "14px",
       paddingRight: "14px",
@@ -149,6 +152,7 @@ const customTableStyles: any = {
   cells: {
     style: {
       fontSize: "13px",
+      fontWeight: 600,
       color: "#374151",
       paddingLeft: "14px",
       paddingRight: "14px",
@@ -169,6 +173,7 @@ const customTableStyles: any = {
   },
 };
 
+*/
 const actionButtonStyles = {
   base: "p-2 rounded-lg transition-all duration-200 flex items-center justify-center shadow-sm hover:shadow",
   view: "bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white",
@@ -551,14 +556,14 @@ const CustomerMaster: React.FC<CustomerMasterProps> = ({
         return email ? (
           <a
             href={`mailto:${email}`}
-            className="text-xs text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1.5 truncate"
+            className="text-sm text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1.5 truncate"
             title={email}
           >
             <Mail size={12} className="shrink-0 text-gray-400" />
             <span className="truncate">{email}</span>
           </a>
         ) : (
-          <span className="text-gray-400 text-xs">—</span>
+          <span className="text-gray-400 text-sm">—</span>
         );
       },
       sortable: true,
@@ -567,7 +572,7 @@ const CustomerMaster: React.FC<CustomerMasterProps> = ({
     {
       name: "GSTIN / Area",
       cell: (row) => (
-        <div className="text-xs py-1">
+        <div className="text-sm py-1">
           <p className="font-semibold text-gray-800">{row.gstin || "-"}</p>
           <p className="text-gray-500">{getAreaName(row)}</p>
         </div>
@@ -671,10 +676,10 @@ const CustomerMaster: React.FC<CustomerMasterProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl md:text-2xl font-bold text-gray-900">
+                <h1 className="text-2xl font-bold text-[#00234a]">
                   Customer Master
                 </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-orange-50 text-[#FF7900] border border-[#FF7900]/20">
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-orange-50 text-[#FF7900] border border-[#FF7900]/20">
                   Unified Master
                 </span>
               </div>
@@ -744,7 +749,7 @@ const CustomerMaster: React.FC<CustomerMasterProps> = ({
                 {/* Listing Header matching Referral Image */}
                 <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <h2 className="border-b-2 border-[#FF7900] pb-2 text-2xl sm:text-3xl font-bold tracking-tight text-[#00234a]">
+                <h2 className="border-b-2 border-[#FF7900] pb-2 text-3xl font-bold tracking-[-0.03em] text-[#00234a]">
                   Customers
                 </h2>
               </div>
@@ -755,7 +760,7 @@ const CustomerMaster: React.FC<CustomerMasterProps> = ({
                     loadMasterData();
                     fetchCustomers();
                   }}
-                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer"
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer"
                 >
                   <RefreshCw size={15} className={isLoading ? "animate-spin" : ""} />
                   <span>Refresh</span>
@@ -763,7 +768,7 @@ const CustomerMaster: React.FC<CustomerMasterProps> = ({
                 <button
                   type="button"
                   onClick={handleExportClick}
-                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer"
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer"
                 >
                   <FaFileExcel className="text-emerald-600 text-sm" />
                   <span>Export</span>
@@ -771,7 +776,7 @@ const CustomerMaster: React.FC<CustomerMasterProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(true)}
-                  className="rounded-xl bg-[#00234a] hover:bg-[#FF7900] px-5 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-[0_10px_18px_rgba(0,35,74,0.18)] transition cursor-pointer flex items-center gap-2"
+                  className="rounded-xl bg-[#00234a] hover:bg-[#FF7900] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_18px_rgba(0,35,74,0.18)] transition cursor-pointer flex items-center gap-2"
                 >
                   <FaPlus size={12} />
                   <span>Create New</span>
@@ -825,7 +830,7 @@ const CustomerMaster: React.FC<CustomerMasterProps> = ({
                   value={filterText}
                   onChange={(e) => setFilterText(e.target.value)}
                   placeholder="Search by name, code, company, GSTIN, PAN, area..."
-                  className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#FF8500]/20 focus:border-[#FF8500]"
+                  className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#FF8500]/20 focus:border-[#FF8500]"
                 />
               </div>
 

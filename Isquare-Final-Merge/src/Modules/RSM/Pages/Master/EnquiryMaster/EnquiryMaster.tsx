@@ -181,10 +181,10 @@ export const EnquiryMaster: React.FC<EnquiryMasterProps> = ({ initialTab }) => {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl md:text-2xl font-bold text-gray-900">
+                <h1 className="text-2xl font-bold text-[#00234a]">
                   Enquiry Masters
                 </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-600 border border-blue-500/20">
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-600 border border-blue-500/20">
                   Unified Master
                 </span>
               </div>

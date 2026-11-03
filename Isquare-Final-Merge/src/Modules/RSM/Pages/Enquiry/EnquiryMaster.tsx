@@ -23,11 +23,12 @@ import EditEnquiryModal from "./Components/EditEnquiryModal";
  import ViewEnquiryModal from "./Components/ViewEnquiryModal";
 import ConfirmationModal from "../../../../Components/Common/ConfirmationModal";
 import { exportToExcel } from "../../../../Utils/exportToExcel";
+import { listingTableStyles } from "../../../../Components/Common/listingTableStyles";
 
 //
 
-const customTableStyles: any = {
-  header: {
+const customTableStyles: any = listingTableStyles;
+/*
     style: {
       minHeight: "52px",
     },
@@ -78,6 +79,7 @@ const customTableStyles: any = {
   },
 };
 
+*/
 const actionButtonStyles = {
   base: "p-2 rounded-lg transition-all duration-200 flex items-center justify-center shadow-sm hover:shadow",
   view: "bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white",
@@ -221,7 +223,7 @@ const EnquiryMaster: React.FC = () => {
     {
       name: "Status / Stage",
       cell: (row) => (
-        <div className="text-xs py-1">
+        <div className="text-sm py-1">
           <p className="font-semibold text-gray-800">{row.enquiryStatusName || "-"}</p>
           <p className="text-gray-500">{row.enquiryStageName || "-"}</p>
         </div>
@@ -233,7 +235,7 @@ const EnquiryMaster: React.FC = () => {
       name: "Value",
       selector: (row) => row.expectedOrderValue || 0,
       cell: (row) => (
-        <span className="font-semibold text-gray-700">
+        <span className="font-medium text-gray-700">
           {row.expectedOrderValue ? `₹${row.expectedOrderValue.toLocaleString()}` : "-"}
         </span>
       ),
@@ -292,10 +294,10 @@ const EnquiryMaster: React.FC = () => {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl md:text-2xl font-bold text-gray-900">
+                <h1 className="text-2xl font-bold text-[#00234a]">
                   Enquiry Master
                 </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-orange-50 text-[#FF7900] border border-[#FF7900]/20">
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-orange-50 text-[#FF7900] border border-[#FF7900]/20">
                   Operations
                 </span>
               </div>
@@ -337,7 +339,7 @@ const EnquiryMaster: React.FC = () => {
             {/* Listing Sub-Header Actions */}
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <h2 className="border-b-2 border-[#FF7900] pb-2 text-2xl sm:text-3xl font-bold tracking-tight text-[#00234a]">
+                <h2 className="border-b-2 border-[#FF7900] pb-2 text-3xl font-bold tracking-[-0.03em] text-[#00234a]">
                   Enquiries
                 </h2>
               </div>
@@ -345,7 +347,7 @@ const EnquiryMaster: React.FC = () => {
                 <button
                   type="button"
                   onClick={fetchEnquiries}
-                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer"
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer"
                 >
                   <RefreshCw size={15} className={isLoading ? "animate-spin" : ""} />
                   <span>Refresh</span>
@@ -353,7 +355,7 @@ const EnquiryMaster: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleExportClick}
-                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer"
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer"
                 >
                   <FaFileExcel className="text-emerald-600 text-sm" />
                   <span>Export</span>
@@ -361,7 +363,7 @@ const EnquiryMaster: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(true)}
-                  className="rounded-xl bg-[#00234a] hover:bg-[#FF7900] px-5 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-[0_10px_18px_rgba(0,35,74,0.18)] transition cursor-pointer flex items-center gap-2"
+                  className="rounded-xl bg-[#00234a] hover:bg-[#FF7900] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_18px_rgba(0,35,74,0.18)] transition cursor-pointer flex items-center gap-2"
                 >
                   <FaPlus size={12} />
                   <span>Create New</span>
@@ -415,7 +417,7 @@ const EnquiryMaster: React.FC = () => {
                   value={filterText}
                   onChange={(e) => setFilterText(e.target.value)}
                   placeholder="Search by number, customer, subject..."
-                  className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#FF8500]/20 focus:border-[#FF8500]"
+                  className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#FF8500]/20 focus:border-[#FF8500]"
                 />
               </div>
 

@@ -29,7 +29,8 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         [MaxLength(150)]
         public string? Brand { get; set; }
 
-        [MaxLength(500)]
+        //[MaxLength(500)]
+        [Column(TypeName = "nvarchar(max)")]
         public string? Specification { get; set; }
 
         [Column(TypeName = "decimal(18,3)")]

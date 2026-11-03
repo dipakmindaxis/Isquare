@@ -211,7 +211,7 @@ export const QuotationPricing: React.FC<QuotationPricingProps> = ({
               value={selectedFreightType}
               onChange={(e) => handleFreightTypeChange(e.target.value)}
               disabled={disabled}
-              className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs font-semibold text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 cursor-pointer shadow-xs"
+              className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 cursor-pointer shadow-xs"
             >
               <option value="Custom value">Custom value</option>
               <option value="Extra at actual">Extra at actual</option>
@@ -236,7 +236,7 @@ export const QuotationPricing: React.FC<QuotationPricingProps> = ({
                     onChange={(e) => handleFreightAmountChange(e.target.value)}
                     disabled={disabled}
                     placeholder="1500"
-                    className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-8 pr-3 text-xs font-semibold text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
+                    className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-8 pr-3 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
                   />
                 </div>
               </div>
@@ -254,7 +254,7 @@ export const QuotationPricing: React.FC<QuotationPricingProps> = ({
                   {selectedFreightType === "To-pay basis" &&
                     "Freight payable by customer directly to carrier on delivery."}
                 </p>
-                <div className="pt-0.5 text-right font-mono font-bold text-xs text-[#00234a]">
+                <div className="pt-0.5 text-right font-bold text-sm text-[#00234a]">
                   ₹0 added to quotation
                 </div>
               </div>
@@ -263,7 +263,7 @@ export const QuotationPricing: React.FC<QuotationPricingProps> = ({
 
           <div className="text-[11px] text-gray-500 flex items-center justify-between border-t border-gray-100 pt-2.5">
             <span>Effective Freight:</span>
-            <span className="font-mono font-bold text-gray-800">
+            <span className="font-semibold text-gray-800">
               {formatINR(freightCharges)}
             </span>
           </div>
@@ -279,7 +279,7 @@ export const QuotationPricing: React.FC<QuotationPricingProps> = ({
               value={selectedInstallationType}
               onChange={(e) => handleInstallationTypeChange(e.target.value)}
               disabled={disabled}
-              className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs font-semibold text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 cursor-pointer shadow-xs"
+              className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 cursor-pointer shadow-xs"
             >
               <option value="Custom value">Custom value</option>
               <option value="At your scope">At your scope</option>
@@ -304,7 +304,7 @@ export const QuotationPricing: React.FC<QuotationPricingProps> = ({
                     }
                     disabled={disabled}
                     placeholder="2500"
-                    className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-8 pr-3 text-xs font-semibold text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
+                    className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-8 pr-3 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
                   />
                 </div>
               </div>
@@ -317,7 +317,7 @@ export const QuotationPricing: React.FC<QuotationPricingProps> = ({
                 <p className="text-[11px] text-gray-600">
                   Installation and commissioning handled under buyer/site scope.
                 </p>
-                <div className="pt-0.5 text-right font-mono font-bold text-xs text-[#00234a]">
+                <div className="pt-0.5 text-right font-bold text-sm text-[#00234a]">
                   ₹0 added to quotation
                 </div>
               </div>
@@ -326,7 +326,7 @@ export const QuotationPricing: React.FC<QuotationPricingProps> = ({
 
           <div className="text-[11px] text-gray-500 flex items-center justify-between border-t border-gray-100 pt-2.5">
             <span>Effective Installation:</span>
-            <span className="font-mono font-bold text-gray-800">
+            <span className="font-semibold text-gray-800">
               {formatINR(installationCharges)}
             </span>
           </div>
@@ -344,7 +344,7 @@ export const QuotationPricing: React.FC<QuotationPricingProps> = ({
               onChange={(e) => handleOtherDescChange(e.target.value)}
               disabled={disabled}
               placeholder="Standard Packaging & Handling"
-              className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs font-medium text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
+              className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
             />
 
             <div className="pt-1">
@@ -363,7 +363,7 @@ export const QuotationPricing: React.FC<QuotationPricingProps> = ({
                   onChange={(e) => handleOtherAmountChange(e.target.value)}
                   disabled={disabled}
                   placeholder="800"
-                  className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-8 pr-3 text-xs font-semibold text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
+                  className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-8 pr-3 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
                 />
               </div>
             </div>
@@ -371,7 +371,7 @@ export const QuotationPricing: React.FC<QuotationPricingProps> = ({
 
           <div className="text-[11px] text-gray-500 flex items-center justify-between border-t border-gray-100 pt-2.5">
             <span>Effective Other Charge:</span>
-            <span className="font-mono font-bold text-gray-800">
+            <span className="font-semibold text-gray-800">
               {formatINR(otherCharges)}
             </span>
           </div>
@@ -394,7 +394,7 @@ export const QuotationPricing: React.FC<QuotationPricingProps> = ({
             <button
               type="button"
               onClick={handleAddCharge}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-[#00234a] hover:bg-[#FF7900] text-white transition cursor-pointer shadow-xs"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold bg-[#00234a] hover:bg-[#FF7900] text-white transition cursor-pointer shadow-xs"
             >
               <Plus size={14} />
               <span>Add Named Charge</span>
@@ -410,7 +410,7 @@ export const QuotationPricing: React.FC<QuotationPricingProps> = ({
           <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="bg-[#FF7900] text-white text-[11px] font-bold uppercase tracking-wider">
+                <tr className="bg-[#FF7900] text-white text-[13px] font-semibold uppercase tracking-wider">
                   <th className="p-3 border-r border-[#e06800]">Charge Name</th>
                   <th className="p-3 border-r border-[#e06800]">Description</th>
                   <th className="p-3 w-28 border-r border-[#e06800]">Type</th>
@@ -442,7 +442,7 @@ export const QuotationPricing: React.FC<QuotationPricingProps> = ({
                           }
                           disabled={disabled}
                           placeholder="Charge Name"
-                          className="w-full text-xs py-1.5 px-2.5 border border-gray-300 rounded-lg font-semibold focus:outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]"
+                          className="w-full text-sm py-1.5 px-2.5 border border-gray-300 rounded-lg font-medium focus:outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]"
                         />
                       </td>
                       <td className="p-2.5">
@@ -457,7 +457,7 @@ export const QuotationPricing: React.FC<QuotationPricingProps> = ({
                           }
                           disabled={disabled}
                           placeholder="Optional description"
-                          className="w-full text-xs py-1.5 px-2.5 border border-gray-300 rounded-lg focus:outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]"
+                          className="w-full text-sm py-1.5 px-2.5 border border-gray-300 rounded-lg focus:outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]"
                         />
                       </td>
                       <td className="p-2.5">
@@ -472,7 +472,7 @@ export const QuotationPricing: React.FC<QuotationPricingProps> = ({
                             })
                           }
                           disabled={disabled}
-                          className="w-full text-xs py-1.5 px-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#FF7900]"
+                          className="w-full text-sm py-1.5 px-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#FF7900]"
                         >
                           <option value="Fixed">Fixed (₹)</option>
                           <option value="Percentage">Percentage (%)</option>
@@ -491,7 +491,7 @@ export const QuotationPricing: React.FC<QuotationPricingProps> = ({
                             })
                           }
                           disabled={disabled}
-                          className="w-full text-xs py-1.5 px-2 border border-gray-300 rounded-lg text-right font-semibold focus:outline-none focus:border-[#FF7900]"
+                          className="w-full text-sm py-1.5 px-2 border border-gray-300 rounded-lg text-right font-medium focus:outline-none focus:border-[#FF7900]"
                         />
                       </td>
                       <td className="p-2.5 text-center">

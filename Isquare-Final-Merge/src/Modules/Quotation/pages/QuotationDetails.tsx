@@ -428,7 +428,7 @@ export const QuotationDetails: React.FC = () => {
     : "1. Taxes extra as applicable.\n2. Prices firm for validity period.\n3. Goods once sold will not be taken back.\n4. Subject to Pune Jurisdiction.";
 
   return (
-    <div className="p-4 md:p-6 bg-[#F1F4F1] min-h-screen space-y-6 text-[#172B4D] font-sans">
+    <div className="p-4 md:p-6 bg-[#F1F4F1] min-h-screen space-y-6 text-[#172B4D]">
       {/* Top Breadcrumb & Action Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -442,10 +442,10 @@ export const QuotationDetails: React.FC = () => {
           </button>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-extrabold text-[#052B50] tracking-tight font-mono">
+              <h1 className="text-2xl sm:text-3xl font-bold text-[#052B50] tracking-[-0.03em]">
                 {quotation.quotationNumber || `QT-${quotation.quotationId}`}
               </h1>
-              <span className="px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 font-mono font-bold text-xs">
+              <span className="px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 font-bold text-xs">
                 R{quotation.revisionNumber}
               </span>
               <QuotationStatusBadge status={quotation.status} />
@@ -459,7 +459,7 @@ export const QuotationDetails: React.FC = () => {
               <span className="font-bold text-[#172B4D]">{customerDisplayName}</span>
               {enquiryDisplayRef && (
                 <span className="ml-1 text-[#64748B]">
-                  {" "}· Enquiry: <span className="font-mono font-semibold text-[#172B4D]">{enquiryDisplayRef}</span>
+                  {" "}· Enquiry: <span className="font-semibold text-[#172B4D]">{enquiryDisplayRef}</span>
                 </span>
               )}
             </p>
@@ -473,7 +473,7 @@ export const QuotationDetails: React.FC = () => {
               type="button"
               onClick={handleMarkAsWon}
               disabled={isMarkingWon}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-purple-600 px-3.5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-purple-700 disabled:cursor-wait disabled:opacity-60 cursor-pointer"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-purple-600 px-3.5 py-2 text-sm font-semibold text-white shadow-xs transition hover:bg-purple-700 disabled:cursor-wait disabled:opacity-60 cursor-pointer"
             >
               <CheckCircle size={14} />
               <span>{isMarkingWon ? "Updating..." : "Mark as Won"}</span>
@@ -483,7 +483,7 @@ export const QuotationDetails: React.FC = () => {
           <button
             type="button"
             onClick={() => setIsPreviewOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-white hover:bg-slate-50 text-[#172B4D] border border-[#E2E8F0] rounded-xl transition shadow-xs cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold bg-white hover:bg-slate-50 text-[#172B4D] border border-[#E2E8F0] rounded-xl transition shadow-xs cursor-pointer"
             title="Preview customer-facing quotation"
           >
             <Printer size={14} className="text-[#052B50]" />
@@ -503,7 +503,7 @@ export const QuotationDetails: React.FC = () => {
               exportQuotationToCustomerExcel(fullQuoteForPreview, true);
               toast.success("Excel exported successfully");
             }}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl transition shadow-xs cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl transition shadow-xs cursor-pointer"
             title="Export Quotation to Excel (.xlsx)"
           >
             <FileSpreadsheet size={14} className="text-emerald-700" />
@@ -528,7 +528,7 @@ export const QuotationDetails: React.FC = () => {
                 toast.error("Failed to generate PDF");
               }
             }}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 rounded-xl transition shadow-xs cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 rounded-xl transition shadow-xs cursor-pointer"
             title="Export Quotation to PDF (.pdf)"
           >
             <Download size={14} className="text-rose-700" />
@@ -538,7 +538,7 @@ export const QuotationDetails: React.FC = () => {
           <button
             type="button"
             onClick={() => setRevisionModalOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl transition shadow-xs cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl transition shadow-xs cursor-pointer"
           >
             <RotateCcw size={14} className="text-indigo-600" />
             <span>Create Revision (+R)</span>
@@ -550,7 +550,7 @@ export const QuotationDetails: React.FC = () => {
             <button
               type="button"
               onClick={() => setApprovalModalOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-xl transition shadow-xs cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-xl transition shadow-xs cursor-pointer"
             >
               <CheckCircle size={14} className="text-amber-600" />
               <span>Record Approval Decision</span>
@@ -564,7 +564,7 @@ export const QuotationDetails: React.FC = () => {
             <button
               type="button"
               onClick={() => setRequestApprovalModalOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-xl transition shadow-xs cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-xl transition shadow-xs cursor-pointer"
               title="Submit for management approval"
             >
               <ShieldAlert size={14} className="text-amber-600" />
@@ -576,7 +576,7 @@ export const QuotationDetails: React.FC = () => {
             type="button"
             onClick={handleConvertToOrder}
             disabled={isConvertingToOrder}
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-xs transition cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-xs transition cursor-pointer disabled:opacity-50"
           >
             <ShoppingCart size={14} />
             <span>{isConvertingToOrder ? "Converting..." : "Convert to Sales Order"}</span>
@@ -584,7 +584,7 @@ export const QuotationDetails: React.FC = () => {
 
           <Link
             to={`/rsm/quotations/${quotation.quotationId}/edit`}
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-[#052B50] hover:bg-[#FF7900] text-white rounded-xl shadow-xs transition cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-[#052B50] hover:bg-[#FF7900] text-white rounded-xl shadow-xs transition cursor-pointer"
           >
             <Edit size={14} />
             <span>Edit</span>
@@ -640,15 +640,15 @@ export const QuotationDetails: React.FC = () => {
               <h3 className="text-xs font-bold uppercase tracking-wider text-[#172B4D]">
                 Itemized Products &amp; Accessories ({items.length})
               </h3>
-              <span className="text-xs font-semibold text-[#FF7900] font-mono">
+              <span className="text-xs font-semibold text-[#FF7900]">
                 Total Taxable: {formatINR(quotation.taxableAmount)}
               </span>
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs">
+              <table className="w-full text-left border-collapse text-sm">
                 <thead>
-                  <tr className="bg-[#FF7900] text-white font-bold uppercase text-[10px] tracking-wider">
+                  <tr className="bg-[#FF7900] text-white font-semibold uppercase text-[13px] tracking-wider">
                     <th className="p-3 w-8 text-center">#</th>
                     <th className="p-3">Product Name &amp; Spec</th>
                     <th className="p-3 w-20 text-center">Qty</th>
@@ -682,7 +682,7 @@ export const QuotationDetails: React.FC = () => {
                                 {item.itemName} {item.brand ? `· ${item.brand}` : ""}
                               </div>
                               {item.itemCode && (
-                                <div className="text-[10px] font-mono text-blue-600 font-semibold mt-0.5">
+                                <div className="text-[11px] text-blue-600 font-semibold mt-0.5">
                                   Code: {item.itemCode}
                                 </div>
                               )}
@@ -695,7 +695,7 @@ export const QuotationDetails: React.FC = () => {
                             <td className="p-3 align-top text-center font-bold text-[#172B4D]">
                               {item.quantity} {item.unitName || "Nos"}
                             </td>
-                            <td className="p-3 align-top text-right font-medium text-[#172B4D] font-mono">
+                            <td className="p-3 align-top text-right font-medium text-[#172B4D]">
                               {formatINR(item.rate)}
                             </td>
                             <td className="p-3 align-top text-center text-[#64748B]">
@@ -704,7 +704,7 @@ export const QuotationDetails: React.FC = () => {
                             <td className="p-3 align-top text-center text-[#64748B]">
                               {item.gstRate}%
                             </td>
-                            <td className="p-3 align-top text-right font-bold text-[#172B4D] font-mono pr-4">
+                            <td className="p-3 align-top text-right font-bold text-[#172B4D] pr-4">
                               {formatINR(calc.lineTotal)}
                             </td>
                           </tr>
@@ -734,12 +734,12 @@ export const QuotationDetails: React.FC = () => {
                                   <td className="p-2.5 text-center font-medium text-[#172B4D]">
                                     {acc.quantity} {acc.unitName || "Nos"}
                                   </td>
-                                  <td className="p-2.5 text-right font-medium text-[#172B4D] font-mono">
+                                  <td className="p-2.5 text-right font-medium text-[#172B4D]">
                                     {formatINR(acc.rate)}
                                   </td>
                                   <td className="p-2.5 text-center text-[#64748B]">{acc.discountPercentage}%</td>
                                   <td className="p-2.5 text-center text-[#64748B]">{acc.gstRate}%</td>
-                                  <td className="p-2.5 text-right font-bold text-[#172B4D] font-mono pr-4">
+                                  <td className="p-2.5 text-right font-bold text-[#172B4D] pr-4">
                                     {formatINR(aCalc.lineTotal)}
                                   </td>
                                 </tr>
@@ -784,7 +784,7 @@ export const QuotationDetails: React.FC = () => {
               </div>
             </div>
 
-            <div className="pt-1 text-xs text-[#172B4D] font-mono leading-relaxed bg-[#F5F7F8] p-4 rounded-xl border border-[#E2E8F0] whitespace-pre-line">
+            <div className="pt-1 text-sm text-[#172B4D] leading-relaxed bg-[#F5F7F8] p-4 rounded-xl border border-[#E2E8F0] whitespace-pre-line">
               {termsDisplay}
             </div>
           </div>
@@ -803,7 +803,7 @@ export const QuotationDetails: React.FC = () => {
                 {revisions.map((rev) => (
                   <div key={rev.quotationRevisionId} className="py-2.5 flex items-center justify-between">
                     <div>
-                      <span className="font-bold font-mono px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-xs mr-2">
+                      <span className="font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-xs mr-2">
                         R{rev.revisionNumber}
                       </span>
                       <span className="text-[#172B4D] font-medium">{rev.revisionReason || "Proposal Revised"}</span>
@@ -814,7 +814,7 @@ export const QuotationDetails: React.FC = () => {
                       )}
                     </div>
                     {rev.grandTotal && (
-                      <span className="font-bold font-mono text-[#052B50]">
+                      <span className="font-bold text-[#052B50]">
                         {formatINR(rev.grandTotal)}
                       </span>
                     )}
@@ -836,51 +836,51 @@ export const QuotationDetails: React.FC = () => {
             <div className="space-y-2 text-xs border-b border-[#E2E8F0] pb-3 text-[#64748B]">
               <div className="flex justify-between">
                 <span>Gross Subtotal:</span>
-                <span className="font-mono text-[#172B4D]">{formatINR(quotation.subtotal)}</span>
+                <span className="text-[#172B4D]">{formatINR(quotation.subtotal)}</span>
               </div>
               {quotation.discountAmount > 0 && (
                 <div className="flex justify-between text-emerald-600 font-semibold">
                   <span>Total Discount:</span>
-                  <span className="font-mono">- {formatINR(quotation.discountAmount)}</span>
+                  <span className="font-semibold">- {formatINR(quotation.discountAmount)}</span>
                 </div>
               )}
               <div className="flex justify-between">
                 <span>Taxable Amount:</span>
-                <span className="font-mono font-medium text-[#172B4D]">{formatINR(quotation.taxableAmount)}</span>
+                <span className="font-medium text-[#172B4D]">{formatINR(quotation.taxableAmount)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Total GST:</span>
-                <span className="font-mono font-medium text-[#172B4D]">{formatINR(quotation.taxAmount)}</span>
+                <span className="font-medium text-[#172B4D]">{formatINR(quotation.taxAmount)}</span>
               </div>
               {quotation.freightCharges > 0 && (
                 <div className="flex justify-between">
                   <span>Freight Charges:</span>
-                  <span className="font-mono text-[#172B4D]">{formatINR(quotation.freightCharges)}</span>
+                  <span className="text-[#172B4D]">{formatINR(quotation.freightCharges)}</span>
                 </div>
               )}
               {quotation.installationCharges > 0 && (
                 <div className="flex justify-between">
                   <span>Installation Charges:</span>
-                  <span className="font-mono text-[#172B4D]">{formatINR(quotation.installationCharges)}</span>
+                  <span className="text-[#172B4D]">{formatINR(quotation.installationCharges)}</span>
                 </div>
               )}
               {quotation.otherCharges > 0 && (
                 <div className="flex justify-between">
                   <span>Other Charges:</span>
-                  <span className="font-mono text-[#172B4D]">{formatINR(quotation.otherCharges)}</span>
+                  <span className="text-[#172B4D]">{formatINR(quotation.otherCharges)}</span>
                 </div>
               )}
               {(charges || []).map((ch, idx) => (
                 <div key={idx} className="flex justify-between">
                   <span>{ch.chargeName}:</span>
-                  <span className="font-mono text-[#172B4D]">{formatINR(ch.totalAmount || ch.chargeAmount)}</span>
+                  <span className="text-[#172B4D]">{formatINR(ch.totalAmount || ch.chargeAmount)}</span>
                 </div>
               ))}
             </div>
 
             <div className="flex justify-between items-baseline pt-2">
               <span className="text-xs font-bold uppercase text-[#64748B]">Grand Total:</span>
-              <span className="text-2xl font-extrabold text-[#052B50] font-mono">
+              <span className="text-2xl font-extrabold text-[#052B50]">
                 {formatINR(quotation.grandTotal)}
               </span>
             </div>
@@ -902,7 +902,7 @@ export const QuotationDetails: React.FC = () => {
             {customer?.phone && <p className="text-[#64748B]">{customer.phone}</p>}
             {customer?.city && <p className="text-[#64748B]">{customer.city}, India</p>}
             {customer?.gstin && (
-              <p className="font-mono text-[#64748B] text-[11px]">GSTIN: {customer.gstin}</p>
+              <p className="text-[#64748B] text-[11px]">GSTIN: {customer.gstin}</p>
             )}
           </div>
 
@@ -915,13 +915,13 @@ export const QuotationDetails: React.FC = () => {
             <p className="font-bold text-[#172B4D] pt-0.5">{companyProfile?.bankName || "HDFC Bank Ltd"}</p>
             <p>
               Account Number:{" "}
-              <span className="font-mono font-semibold text-[#172B4D]">
+              <span className="font-semibold text-[#172B4D]">
                 {companyProfile?.accountNumber || "20252548605789"}
               </span>
             </p>
             <p>
               IFSC Code:{" "}
-              <span className="font-mono font-semibold text-[#172B4D]">
+              <span className="font-semibold text-[#172B4D]">
                 {companyProfile?.ifscCode || "HDFC0000123"}
               </span>
             </p>

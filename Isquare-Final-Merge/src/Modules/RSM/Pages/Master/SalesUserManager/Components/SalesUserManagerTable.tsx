@@ -20,8 +20,8 @@ const SalesUserManagerTable: React.FC<SalesUserManagerTableProps> = ({
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
       <div className="overflow-x-auto">
-        <table className="w-full text-xs text-left">
-          <thead className="bg-[#FF7900] text-white text-xs uppercase tracking-wider border-b border-[#e06800]">
+        <table className="w-full text-sm text-left">
+          <thead className="bg-[#FF7900] text-white text-[13px] font-semibold uppercase tracking-wider border-b border-[#e06800]">
             <tr>
               <th className="px-6 py-3.5 font-semibold text-left">
                 SR NO
@@ -84,7 +84,7 @@ const SalesUserManagerTable: React.FC<SalesUserManagerTableProps> = ({
                     {item.userName}
                   </td>
 
-                  <td className="px-6 py-4 text-gray-700 font-mono text-xs">
+                  <td className="px-6 py-4 text-gray-700 font-medium text-sm">
                     {item.code}
                   </td>
 

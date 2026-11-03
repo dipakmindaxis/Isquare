@@ -122,7 +122,7 @@ export const SalesOrderList: React.FC = () => {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#00234a] tracking-tight">
+          <h1 className="text-3xl font-bold tracking-[-0.03em] text-[#00234a]">
             Sales Order Management
           </h1>
           <p className="text-xs text-gray-500 mt-1">
@@ -142,14 +142,14 @@ export const SalesOrderList: React.FC = () => {
           <button
             type="button"
             onClick={handleExportExcel}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl transition"
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl transition"
           >
             <FileSpreadsheet size={15} />
             <span>Export Excel</span>
           </button>
           <Link
             to="/rsm/quotations"
-            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-[#00234a] hover:bg-[#003366] rounded-xl shadow-md transition"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-[#00234a] hover:bg-[#003366] rounded-xl shadow-md transition"
           >
             <Plus size={15} />
             <span>Generate from Quotation</span>
@@ -207,9 +207,9 @@ export const SalesOrderList: React.FC = () => {
       {/* Sales Orders Table */}
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
+          <table className="w-full text-left border-collapse text-sm">
             <thead>
-              <tr className="bg-[#154068] text-white font-bold uppercase text-[11px] tracking-wider">
+              <tr className="bg-[#154068] text-white font-semibold uppercase text-[13px] tracking-wider">
                 <th className="p-3.5">Sales Order #</th>
                 <th className="p-3.5">Quotation Ref</th>
                 <th className="p-3.5">Customer Name</th>
@@ -236,12 +236,12 @@ export const SalesOrderList: React.FC = () => {
               ) : (
                 paginatedOrders.map((o) => (
                   <tr key={o.salesOrderId} className="hover:bg-slate-50 transition">
-                    <td className="p-3.5 font-bold font-mono text-purple-800">
+                    <td className="p-3.5 font-semibold text-purple-800">
                       <Link to={`/rsm/sales-orders/${o.salesOrderId}`} className="hover:underline">
                         {o.salesOrderNumber || `SO-${o.salesOrderId}`}
                       </Link>
                     </td>
-                    <td className="p-3.5 font-mono text-blue-700">
+                    <td className="p-3.5 text-blue-700 font-medium">
                       {o.quotationId ? (
                         <Link to={`/rsm/quotations/${o.quotationId}`} className="hover:underline">
                           {o.quotationNumber || `QT-${o.quotationId}`}
@@ -261,7 +261,7 @@ export const SalesOrderList: React.FC = () => {
                         ? new Date(o.expectedDeliveryDate).toLocaleDateString("en-IN")
                         : "—"}
                     </td>
-                    <td className="p-3.5 text-right font-bold text-gray-900 font-mono">
+                    <td className="p-3.5 text-right font-medium text-gray-900">
                       {o.grandTotal ? formatINR(o.grandTotal) : "—"}
                     </td>
                     <td className="p-3.5 text-center">
@@ -333,7 +333,7 @@ export const SalesOrderList: React.FC = () => {
 
             <p className="text-xs text-gray-600">
               Updating status for Sales Order{" "}
-              <span className="font-bold font-mono">
+              <span className="font-bold">
                 {selectedOrder.salesOrderNumber || `SO-${selectedOrder.salesOrderId}`}
               </span>
             </p>

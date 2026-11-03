@@ -255,7 +255,7 @@ export const PriorityMaster: React.FC<PriorityMasterProps> = ({ isTab = false })
             className="h-4 w-4 rounded-full border border-slate-300 shadow-sm"
             style={{ backgroundColor: row.colorCode }}
           />
-          <span className="font-mono text-xs font-semibold uppercase text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-md border border-slate-200">
+          <span className="text-xs font-semibold uppercase text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-md border border-slate-200">
             {row.colorCode}
           </span>
         </div>
@@ -447,7 +447,7 @@ export const PriorityMaster: React.FC<PriorityMasterProps> = ({ isTab = false })
                           }))
                         }
                         placeholder="#ef4444"
-                        className="font-mono text-sm uppercase outline-none grow"
+                        className="text-sm uppercase outline-none grow"
                       />
                     </div>
                     <div
@@ -639,7 +639,7 @@ export const PriorityMaster: React.FC<PriorityMasterProps> = ({ isTab = false })
                       className="h-4 w-4 rounded-full border border-slate-300"
                       style={{ backgroundColor: selectedItem.colorCode }}
                     />
-                    <span className="font-mono text-sm font-semibold text-slate-700">
+                    <span className="text-sm font-semibold text-slate-700">
                       {selectedItem.colorCode}
                     </span>
                   </div>

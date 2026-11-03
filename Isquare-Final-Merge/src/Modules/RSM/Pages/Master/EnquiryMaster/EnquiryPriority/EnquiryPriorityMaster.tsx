@@ -195,7 +195,7 @@ export const EnquiryPriorityMaster: React.FC<EnquiryPriorityMasterProps> = ({ is
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#00234a]/10 text-[#00234a]">
             <AlertCircle size={16} />
           </div>
-          <span className="font-mono text-xs font-bold text-[#00234a]">
+          <span className="text-sm font-semibold text-[#00234a]">
             {row.enquiryPriorityCode}
           </span>
         </div>
@@ -458,7 +458,7 @@ export const EnquiryPriorityMaster: React.FC<EnquiryPriorityMasterProps> = ({ is
               <div className="rounded-xl bg-slate-50 p-4 border border-slate-100 space-y-3">
                 <div>
                   <span className="text-[10px] font-extrabold uppercase text-gray-400 block tracking-widest">Priority Code</span>
-                  <p className="text-sm font-mono font-bold text-[#00234a]">{selectedItem.enquiryPriorityCode}</p>
+                  <p className="text-sm font-semibold text-[#00234a]">{selectedItem.enquiryPriorityCode}</p>
                 </div>
                 <div>
                   <span className="text-[10px] font-extrabold uppercase text-gray-400 block tracking-widest">Priority Name</span>

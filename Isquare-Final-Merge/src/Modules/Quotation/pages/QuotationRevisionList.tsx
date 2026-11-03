@@ -55,14 +55,14 @@ export const QuotationRevisionList: React.FC = () => {
 
       {/* Section Title & Actions */}
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h2 className="border-b-2 border-[#FF7900] pb-2 text-2xl sm:text-3xl font-bold tracking-tight text-[#00234a]">
+        <h2 className="border-b-2 border-[#FF7900] pb-2 text-3xl font-bold tracking-[-0.03em] text-[#00234a]">
           Revision History
         </h2>
 
         <button
           type="button"
           onClick={fetchRevisions}
-          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#00234a] shadow-xs transition hover:bg-slate-50 cursor-pointer"
+          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#00234a] shadow-xs transition hover:bg-slate-50 cursor-pointer"
           title="Refresh revisions list"
         >
           <RefreshCw size={14} className="text-[#FF7900]" />
@@ -73,9 +73,9 @@ export const QuotationRevisionList: React.FC = () => {
       {/* Table Container */}
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[900px] border-collapse text-left text-xs">
+          <table className="w-full min-w-[900px] border-collapse text-left text-sm">
             <thead>
-              <tr className="bg-[#FF7900] text-white font-bold uppercase text-[12px] tracking-wider">
+              <tr className="bg-[#FF7900] text-white font-semibold uppercase text-[13px] tracking-wider">
                 <th className="p-3.5 border-r border-[#e06800]">Revision #</th>
                 <th className="p-3.5 border-r border-[#e06800]">Quotation Ref</th>
                 <th className="p-3.5 border-r border-[#e06800]">Revision Reason</th>
@@ -102,12 +102,12 @@ export const QuotationRevisionList: React.FC = () => {
               ) : (
                 revisions.map((rev) => (
                   <tr key={rev.quotationRevisionId} className="hover:bg-[#f0f7ff] transition duration-150 min-h-[52px]">
-                    <td className="p-3.5 font-bold font-mono">
-                      <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-bold font-mono bg-orange-50 text-[#FF7900] border border-[#FF7900]/30">
+                    <td className="p-3.5 font-medium">
+                      <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-orange-50 text-[#FF7900] border border-[#FF7900]/30">
                         R{rev.revisionNumber}
                       </span>
                     </td>
-                    <td className="p-3.5 font-bold font-mono text-[#00234a]">
+                    <td className="p-3.5 font-semibold text-[#00234a]">
                       <Link
                         to={`/rsm/quotations/${rev.quotationId}`}
                         className="hover:text-[#FF7900] transition"
@@ -124,7 +124,7 @@ export const QuotationRevisionList: React.FC = () => {
                     <td className="p-3.5 text-gray-600 font-medium">
                       {rev.revisedBy || "Administrator"}
                     </td>
-                    <td className="p-3.5 text-right font-bold text-gray-900 font-mono">
+                    <td className="p-3.5 text-right font-semibold text-gray-900">
                       {rev.grandTotal ? formatINR(rev.grandTotal) : "—"}
                     </td>
                     <td className="p-3.5 text-center">
@@ -164,10 +164,10 @@ export const QuotationRevisionList: React.FC = () => {
               </button>
             </div>
 
-            <div className="p-6 space-y-3.5 text-xs">
+            <div className="p-6 space-y-3.5 text-sm">
               <div className="flex justify-between border-b border-gray-100 pb-2">
                 <span className="text-gray-500 font-medium">Quotation Reference:</span>
-                <span className="font-bold font-mono text-[#00234a]">{selectedRevision.quotationNumber || `QT-${selectedRevision.quotationId}`}</span>
+                <span className="font-bold text-[#00234a]">{selectedRevision.quotationNumber || `QT-${selectedRevision.quotationId}`}</span>
               </div>
               <div className="flex justify-between border-b border-gray-100 pb-2">
                 <span className="text-gray-500 font-medium">Revision Reason:</span>
@@ -179,15 +179,15 @@ export const QuotationRevisionList: React.FC = () => {
               </div>
               <div className="flex justify-between border-b border-gray-100 pb-2">
                 <span className="text-gray-500 font-medium">Taxable Amount:</span>
-                <span className="font-mono font-medium text-gray-800">{formatINR(selectedRevision.taxableAmount)}</span>
+                <span className="font-medium text-gray-800">{formatINR(selectedRevision.taxableAmount)}</span>
               </div>
               <div className="flex justify-between border-b border-gray-100 pb-2">
                 <span className="text-gray-500 font-medium">GST Amount:</span>
-                <span className="font-mono font-medium text-gray-800">{formatINR(selectedRevision.taxAmount)}</span>
+                <span className="font-medium text-gray-800">{formatINR(selectedRevision.taxAmount)}</span>
               </div>
               <div className="flex justify-between border-b border-gray-100 pb-2">
                 <span className="text-gray-500 font-medium">Freight &amp; Charges:</span>
-                <span className="font-mono font-medium text-gray-800">
+                <span className="font-medium text-gray-800">
                   {formatINR(
                     (selectedRevision.freightCharges || 0) +
                       (selectedRevision.installationCharges || 0) +
@@ -197,7 +197,7 @@ export const QuotationRevisionList: React.FC = () => {
               </div>
               <div className="flex justify-between items-baseline pt-2 text-sm font-bold border-t border-gray-200">
                 <span className="text-gray-700">Grand Total:</span>
-                <span className="text-xl font-extrabold text-[#00234a] font-mono">{formatINR(selectedRevision.grandTotal)}</span>
+                <span className="text-xl font-extrabold text-[#00234a]">{formatINR(selectedRevision.grandTotal)}</span>
               </div>
             </div>
 
@@ -205,7 +205,7 @@ export const QuotationRevisionList: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setSelectedRevision(null)}
-                className="rounded-xl bg-[#00234a] hover:bg-[#FF7900] px-5 py-2 text-xs font-semibold text-white shadow-xs transition cursor-pointer"
+                className="rounded-xl bg-[#00234a] hover:bg-[#FF7900] px-5 py-2 text-sm font-semibold text-white shadow-xs transition cursor-pointer"
               >
                 Close
               </button>

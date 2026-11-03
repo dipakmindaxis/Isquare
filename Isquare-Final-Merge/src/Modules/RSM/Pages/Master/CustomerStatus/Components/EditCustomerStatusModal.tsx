@@ -120,7 +120,7 @@ const EditCustomerStatusModal: React.FC<EditCustomerStatusModalProps> = ({
           ) : (
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
+                <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
                   Status Code <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
@@ -139,7 +139,7 @@ const EditCustomerStatusModal: React.FC<EditCustomerStatusModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
+                <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
                   Status Name <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
@@ -158,7 +158,7 @@ const EditCustomerStatusModal: React.FC<EditCustomerStatusModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
+                <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
                   Description
                 </label>
                 <div className="relative">
@@ -198,7 +198,7 @@ const EditCustomerStatusModal: React.FC<EditCustomerStatusModalProps> = ({
               type="button"
               onClick={onClose}
               disabled={isSaving}
-              className="px-5 py-2 rounded-lg text-sm font-medium bg-gray-500 hover:bg-gray-600 text-white transition cursor-pointer"
+              className="px-5 py-2 rounded-lg text-sm font-semibold bg-gray-500 hover:bg-gray-600 text-white transition cursor-pointer"
             >
               Cancel
             </button>

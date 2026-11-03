@@ -500,7 +500,7 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
             type="text"
             readOnly
             value={quotationNumber || "Auto-generated upon save"}
-            className="w-full rounded-lg border border-gray-200 bg-gray-100 px-3.5 py-2.5 text-xs font-mono font-semibold text-gray-700 cursor-not-allowed select-none"
+            className="w-full rounded-lg border border-gray-200 bg-gray-100 px-3.5 py-2.5 text-sm font-semibold text-gray-700 cursor-not-allowed select-none"
           />
         </div>
 
@@ -517,7 +517,7 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
               }
               disabled={disabled}
               required
-              className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs font-medium text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 cursor-pointer"
+              className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 cursor-pointer"
             >
               <option value="" disabled>
                 Select Company...
@@ -562,7 +562,7 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
                 }
                 disabled={disabled || !customerId || (isLoadingContacts && contacts.length === 0)}
                 required
-                className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs font-medium text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 disabled:bg-gray-100 disabled:cursor-not-allowed cursor-pointer"
+                className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 disabled:bg-gray-100 disabled:cursor-not-allowed cursor-pointer"
               >
                 {!customerId ? (
                   <option value="">Select Company first...</option>
@@ -628,7 +628,7 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
               }}
               onFocus={() => setIsEnquiryDropdownOpen(true)}
               disabled={disabled}
-              className="w-full rounded-lg border border-gray-300 bg-white pl-3.5 pr-14 py-2.5 text-xs font-mono text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 cursor-text"
+              className="w-full rounded-lg border border-gray-300 bg-white pl-3.5 pr-14 py-2.5 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 cursor-text"
             />
             <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
               {enquirySearch && !disabled && (
@@ -710,7 +710,7 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
                       }`}
                     >
                       <div className="min-w-0 flex-1">
-                        <div className="text-xs font-mono font-bold text-[#00234a] truncate">
+                        <div className="text-sm font-semibold text-[#00234a] truncate">
                           {eq.displayLabel}
                         </div>
                         <div className="text-[11px] text-gray-500 flex items-center gap-1.5 mt-0.5 truncate">
@@ -746,7 +746,7 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
               })
             }
             disabled={disabled}
-            className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20"
+            className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20"
           />
         </div>
 
@@ -756,10 +756,10 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
             Revision
           </label>
           <div className="flex items-center gap-2">
-            <span className="px-3 py-1.5 bg-orange-50 text-[#FF7900] rounded-lg border border-[#FF7900]/20 text-xs font-bold font-mono">
+            <span className="px-3 py-1.5 bg-orange-50 text-[#FF7900] rounded-lg border border-[#FF7900]/20 text-xs font-semibold">
               R{revisionNumber}
             </span>
-            <span className="text-xs text-gray-500">
+            <span className="text-sm text-gray-500">
               {revisionNumber === 0
                 ? "Initial Proposal"
                 : `Revision #${revisionNumber}`}
@@ -776,7 +776,7 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
             value={status || "Draft"}
             onChange={(e) => onChangeRef.current({ status: e.target.value })}
             disabled={disabled}
-            className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs font-medium text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 cursor-pointer"
+            className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 cursor-pointer"
           >
             <option value="Draft">Draft</option>
             <option value="Sent">Sent</option>
@@ -790,7 +790,7 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
 
       {/* Selected Customer & Contact Details Preview Banner matching Customer Master */}
       {(selectedCustomer || selectedContact) && (
-        <div className="p-3.5 bg-orange-50/30 border border-orange-100 rounded-xl flex flex-wrap items-center justify-between gap-3 text-xs text-slate-600">
+        <div className="p-3.5 bg-orange-50/30 border border-orange-100 rounded-xl flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600">
           <div className="flex flex-wrap items-center gap-y-1">
             <span className="font-bold text-slate-800 mr-2 flex items-center gap-1">
               <User size={13} className="text-[#FF7900]" />

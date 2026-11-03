@@ -94,7 +94,7 @@ const AddRoleModal: React.FC<AddRoleModalProps> = ({
             <div>
               <label
                 htmlFor="roleName"
-                className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5"
+                className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5"
               >
                 Role Name <span className="text-red-500">*</span>
               </label>
@@ -126,14 +126,14 @@ const AddRoleModal: React.FC<AddRoleModalProps> = ({
               type="button"
               onClick={handleClose}
               disabled={isLoading}
-              className="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-white transition cursor-pointer"
+              className="px-4 py-2 rounded-lg border border-gray-300 text-sm font-semibold text-gray-700 hover:bg-white transition cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="flex items-center gap-2 bg-[#FF7900] hover:bg-[#e06800] text-white px-5 py-2 rounded-lg text-sm font-medium shadow-xs transition cursor-pointer disabled:opacity-50"
+              className="flex items-center gap-2 bg-[#FF7900] hover:bg-[#e06800] text-white px-5 py-2 rounded-lg text-sm font-semibold shadow-xs transition cursor-pointer disabled:opacity-50"
             >
               {isLoading ? (
                 <>

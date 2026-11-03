@@ -92,7 +92,7 @@ export const QuotationDashboard: React.FC = () => {
       {/* Header with Title and Quick Action */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#00234a] tracking-tight">
+          <h1 className="text-3xl font-bold tracking-[-0.03em] text-[#00234a]">
             Quotation Management Dashboard
           </h1>
           <p className="text-xs text-gray-500 mt-1">
@@ -103,14 +103,14 @@ export const QuotationDashboard: React.FC = () => {
         <div className="flex items-center gap-3">
           <Link
             to="/rsm/quotations"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-gray-700 bg-white hover:bg-gray-50 border border-gray-300 rounded-xl transition shadow-sm"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 border border-gray-300 rounded-xl transition shadow-sm"
           >
             <FileText size={14} />
             <span>All Quotations</span>
           </Link>
           <Link
             to="/rsm/quotations/create"
-            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-[#00234a] hover:bg-[#003366] rounded-xl shadow-md transition"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-[#00234a] hover:bg-[#003366] rounded-xl shadow-md transition"
           >
             <Plus size={15} />
             <span>Create Quotation</span>
@@ -349,9 +349,9 @@ export const QuotationDashboard: React.FC = () => {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
+          <table className="w-full text-left border-collapse text-sm">
             <thead>
-              <tr className="bg-[#154068] text-white font-bold uppercase text-[11px] tracking-wider">
+              <tr className="bg-[#154068] text-white font-semibold uppercase text-[13px] tracking-wider">
                 <th className="p-3.5">Quotation #</th>
                 <th className="p-3.5">Revision</th>
                 <th className="p-3.5">Customer</th>
@@ -378,18 +378,18 @@ export const QuotationDashboard: React.FC = () => {
               ) : (
                 recentQuotations.map((q) => (
                   <tr key={q.quotationId} className="hover:bg-slate-50 transition">
-                    <td className="p-3.5 font-bold text-gray-900 font-mono">
+                    <td className="p-3.5 font-semibold text-gray-900">
                       {q.quotationNumber || `QT-${q.quotationId}`}
                     </td>
                     <td className="p-3.5">
-                      <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-mono font-bold text-[11px]">
+                      <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-semibold text-[11px]">
                         R{q.revisionNumber}
                       </span>
                     </td>
                     <td className="p-3.5 font-semibold text-gray-800">
                       {q.customerName || `Customer #${q.customerId}`}
                     </td>
-                    <td className="p-3.5 text-gray-500 font-mono">
+                    <td className="p-3.5 text-gray-500">
                       {q.enquiryRef || q.enquiryId ? `ENQ-${q.enquiryId}` : "—"}
                     </td>
                     <td className="p-3.5 text-gray-500">
@@ -397,7 +397,7 @@ export const QuotationDashboard: React.FC = () => {
                         ? new Date(q.quotationDate).toLocaleDateString("en-IN")
                         : "—"}
                     </td>
-                    <td className="p-3.5 text-right font-bold text-gray-900">
+                    <td className="p-3.5 text-right font-medium text-gray-900">
                       {formatINR(q.grandTotal)}
                     </td>
                     <td className="p-3.5 text-center">

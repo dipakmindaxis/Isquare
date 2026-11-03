@@ -100,7 +100,7 @@ const SalesUserManagerForm: React.FC<SalesUserManagerFormProps> = ({
             <div>
               <label
                 htmlFor="salesUserName"
-                className="mb-1 block text-sm font-medium text-gray-700"
+                className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5"
               >
                 User Name
               </label>
@@ -119,7 +119,7 @@ const SalesUserManagerForm: React.FC<SalesUserManagerFormProps> = ({
             <div>
               <label
                 htmlFor="salesUserCode"
-                className="mb-1 block text-sm font-medium text-gray-700"
+                className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5"
               >
                 Code
               </label>

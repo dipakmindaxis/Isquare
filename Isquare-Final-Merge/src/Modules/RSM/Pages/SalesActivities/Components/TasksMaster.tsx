@@ -243,7 +243,7 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
               <button
                 type="button"
                 onClick={() => setIsAddOpen(true)}
-                className="px-4 py-2 bg-[#FF7900] hover:bg-[#e06800] text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer"
+                className="px-4 py-2 bg-[#FF7900] hover:bg-[#e06800] text-white rounded-xl text-sm font-semibold transition flex items-center gap-1.5 shadow-xs cursor-pointer"
               >
                 <Plus size={15} />
                 <span>Add Task</span>
@@ -299,7 +299,7 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
                 <div className="overflow-x-auto w-full">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                      <tr className="border-b border-slate-100 text-[13px] font-semibold text-slate-500 uppercase tracking-wider">
                         <th className="text-left py-2.5 px-3">Task Title</th>
                         <th className="text-left py-2.5 px-3">Assigned By</th>
                         <th className="text-left py-2.5 px-3">Assigned To</th>
@@ -334,13 +334,13 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
                                 </p>
                               )}
                             </td>
-                            <td className="py-3 px-3 text-xs font-medium text-slate-700">
+                            <td className="py-3 px-3 text-sm font-medium text-slate-700">
                               {t.assignedByName || "—"}
                             </td>
-                            <td className="py-3 px-3 text-xs font-medium text-slate-700">
+                            <td className="py-3 px-3 text-sm font-medium text-slate-700">
                               {t.assignedToName || "—"}
                             </td>
-                            <td className="py-3 px-3 text-xs text-slate-600">
+                            <td className="py-3 px-3 text-sm text-slate-600">
                               {t.dueDate || "—"}
                             </td>
                             <td className="py-3 px-3 text-center">
@@ -410,13 +410,13 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {/* Status Filter */}
                   <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
                       Filter by Status
                     </label>
                     <select
                       value={statusFilter}
                       onChange={(e) => setStatusFilter(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none focus:border-blue-500 bg-white"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-700 outline-none focus:border-blue-500 bg-white"
                     >
                       <option value="All">All statuses</option>
                       <option value="Pending">Pending</option>
@@ -427,13 +427,13 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
 
                   {/* Priority Filter */}
                   <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
                       Priority Level
                     </label>
                     <select
                       value={selectedPriorityId}
                       onChange={(e) => setSelectedPriorityId(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none focus:border-blue-500 bg-white"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-700 outline-none focus:border-blue-500 bg-white"
                     >
                       <option value="All">All Priorities</option>
                       {priorities.map((p) => (
@@ -446,7 +446,7 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
 
                   {/* Search */}
                   <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
                       Search Task
                     </label>
                     <div className="relative">
@@ -459,7 +459,7 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Search title, assignee, customer..."
-                        className="w-full pl-8 pr-3 py-2 border border-slate-300 rounded-lg text-xs outline-none focus:border-blue-500"
+                        className="w-full pl-8 pr-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-700 outline-none focus:border-blue-500"
                       />
                     </div>
                   </div>
@@ -472,31 +472,31 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
                   <table className="w-full text-sm">
                     <thead className="bg-[#FF7900] text-white border-b border-[#e06800]">
                       <tr>
-                        <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-[13px] font-semibold uppercase tracking-wider">
                           Sr.
                         </th>
-                        <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-[13px] font-semibold uppercase tracking-wider">
                           Task Title
                         </th>
-                        <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-[13px] font-semibold uppercase tracking-wider">
                           Assigned By
                         </th>
-                        <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-[13px] font-semibold uppercase tracking-wider">
                           Assigned To
                         </th>
-                        <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-[13px] font-semibold uppercase tracking-wider">
                           Customer
                         </th>
-                        <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-[13px] font-semibold uppercase tracking-wider">
                           Due Date
                         </th>
-                        <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-[13px] font-semibold uppercase tracking-wider">
                           Priority
                         </th>
-                        <th className="px-4 py-3 text-center text-[11px] font-bold uppercase tracking-wider">
+                        <th className="px-4 py-3 text-center text-[13px] font-semibold uppercase tracking-wider">
                           Status
                         </th>
-                        <th className="px-4 py-3 text-center text-[11px] font-bold uppercase tracking-wider">
+                        <th className="px-4 py-3 text-center text-[13px] font-semibold uppercase tracking-wider">
                           Actions
                         </th>
                       </tr>
@@ -525,7 +525,7 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
 
                           return (
                             <tr key={task.taskId} className="hover:bg-slate-50 transition">
-                              <td className="px-4 py-3 text-xs text-slate-400 font-medium">
+                              <td className="px-4 py-3 text-sm text-slate-500 font-medium">
                                 {idx + 1}
                               </td>
                               <td className="px-4 py-3 max-w-xs">
@@ -545,16 +545,16 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
                                   </p>
                                 )}
                               </td>
-                              <td className="px-4 py-3 text-xs text-slate-700 font-medium">
+                              <td className="px-4 py-3 text-sm text-slate-700 font-medium">
                                 {task.assignedByName || "—"}
                               </td>
-                              <td className="px-4 py-3 text-xs text-slate-700 font-semibold">
+                              <td className="px-4 py-3 text-sm text-slate-700 font-semibold">
                                 {task.assignedToName || "—"}
                               </td>
-                              <td className="px-4 py-3 text-xs text-slate-600">
+                              <td className="px-4 py-3 text-sm text-slate-600">
                                 {task.companyName || "—"}
                               </td>
-                              <td className="px-4 py-3 text-xs text-slate-600">
+                              <td className="px-4 py-3 text-sm text-slate-600">
                                 <p className="font-medium">{task.dueDate || "—"}</p>
                                 {task.reminderTime && (
                                   <p className="text-[11px] text-slate-400 mt-0.5">
