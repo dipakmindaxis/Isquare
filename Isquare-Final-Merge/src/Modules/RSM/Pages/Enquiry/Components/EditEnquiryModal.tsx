@@ -221,7 +221,7 @@ const EditEnquiryModal: React.FC<EditEnquiryModalProps> = ({ isOpen, enquiryId, 
               {/* Section 1: Basic */}
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
                 <div className="border-b border-gray-200 pb-2.5">
-                  <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
+                  <h3 className="text-sm font-extrabold uppercase tracking-widest text-[#FF7900] flex items-center gap-2">
                     <FileText size={16} /> Section 1 - Enquiry Basic Details
                   </h3>
                 </div>
@@ -261,7 +261,7 @@ const EditEnquiryModal: React.FC<EditEnquiryModalProps> = ({ isOpen, enquiryId, 
               {/* Section 2: Contact */}
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
                 <div className="border-b border-gray-200 pb-2.5">
-                  <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
+                  <h3 className="text-sm font-extrabold uppercase tracking-widest text-[#FF7900] flex items-center gap-2">
                     <Phone size={16} /> Section 2 - Enquiry Contact
                   </h3>
                 </div>
@@ -291,7 +291,7 @@ const EditEnquiryModal: React.FC<EditEnquiryModalProps> = ({ isOpen, enquiryId, 
               {/* Section 3: Requirement */}
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
                 <div className="border-b border-gray-200 pb-2.5">
-                  <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
+                  <h3 className="text-sm font-extrabold uppercase tracking-widest text-[#FF7900] flex items-center gap-2">
                     <Building size={16} /> Section 3 - Requirement Details
                   </h3>
                 </div>
@@ -328,7 +328,7 @@ const EditEnquiryModal: React.FC<EditEnquiryModalProps> = ({ isOpen, enquiryId, 
               {/* Section 4: Commercial */}
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
                 <div className="border-b border-gray-200 pb-2.5">
-                  <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
+                  <h3 className="text-sm font-extrabold uppercase tracking-widest text-[#FF7900] flex items-center gap-2">
                     <IndianRupee size={16} /> Section 4 - Commercial Details
                   </h3>
                 </div>
@@ -347,7 +347,7 @@ const EditEnquiryModal: React.FC<EditEnquiryModalProps> = ({ isOpen, enquiryId, 
               {/* Section 5: Pipeline & Assignment */}
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
                 <div className="border-b border-gray-200 pb-2.5">
-                  <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
+                  <h3 className="text-sm font-extrabold uppercase tracking-widest text-[#FF7900] flex items-center gap-2">
                     <Layers size={16} /> Section 5 - Pipeline & Assignment
                   </h3>
                 </div>
@@ -379,7 +379,7 @@ const EditEnquiryModal: React.FC<EditEnquiryModalProps> = ({ isOpen, enquiryId, 
               {/* Section 6: Followup */}
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
                 <div className="border-b border-gray-200 pb-2.5">
-                  <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
+                  <h3 className="text-sm font-extrabold uppercase tracking-widest text-[#FF7900] flex items-center gap-2">
                     <Calendar size={16} /> Section 6 - Follow-up & Outcome
                   </h3>
                 </div>

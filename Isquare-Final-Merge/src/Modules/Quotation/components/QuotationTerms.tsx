@@ -55,7 +55,7 @@ export const QuotationTerms: React.FC<QuotationTermsProps> = ({
             <button
               type="button"
               onClick={onLoadDefaults}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-white text-[#00234a] hover:bg-slate-50 border border-slate-200 shadow-xs transition cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-semibold bg-white text-[#00234a] hover:bg-slate-50 border border-slate-200 shadow-xs transition cursor-pointer"
               title="Reset fields to standard company defaults"
             >
               <RefreshCw size={13} className="text-[#FF7900]" />
@@ -76,7 +76,7 @@ export const QuotationTerms: React.FC<QuotationTermsProps> = ({
               value={deliveryPeriod || ""}
               onChange={(e) => onChange({ deliveryPeriod: e.target.value })}
               disabled={disabled}
-              className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
+              className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
             />
           </div>
 
@@ -93,7 +93,7 @@ export const QuotationTerms: React.FC<QuotationTermsProps> = ({
                 })
               }
               disabled={disabled}
-              className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs font-medium text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs cursor-pointer"
+              className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm font-normal text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs cursor-pointer"
             >
               <option value="">Select Payment Term...</option>
               {paymentTermsList.map((pt) => (
@@ -125,7 +125,7 @@ export const QuotationTerms: React.FC<QuotationTermsProps> = ({
                 })
               }
               disabled={disabled}
-              className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-xs text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
+              className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
             />
             <p className="text-[11px] text-gray-500 mt-1 font-medium">Calculated validity: <span className="font-semibold text-gray-800">{validity || "30 Days"}</span></p>
           </div>
@@ -150,7 +150,7 @@ export const QuotationTerms: React.FC<QuotationTermsProps> = ({
           onChange={(e) => onChange({ termsAndConditions: e.target.value })}
           disabled={disabled}
           placeholder="1. Taxes extra as applicable.&#10;2. Prices firm for validity period.&#10;3. Goods once sold will not be returned.&#10;4. Subject to Pune Jurisdiction."
-          className="w-full rounded-xl border border-gray-300 bg-white px-3.5 py-3 text-xs font-mono text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
+          className="w-full rounded-xl border border-gray-300 bg-white px-3.5 py-3 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
         />
       </div>
     </div>

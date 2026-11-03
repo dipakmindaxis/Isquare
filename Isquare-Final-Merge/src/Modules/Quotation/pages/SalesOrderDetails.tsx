@@ -136,7 +136,7 @@ export const SalesOrderDetails: React.FC = () => {
           </button>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-extrabold text-[#00234a] tracking-tight font-mono">
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-[-0.03em] text-[#00234a]">
                 {order.salesOrderNumber || `SO-${order.salesOrderId}`}
               </h1>
               <QuotationStatusBadge status={order.orderStatus || "Pending"} type="order" />
@@ -151,7 +151,7 @@ export const SalesOrderDetails: React.FC = () => {
                   · Generated from Quotation:{" "}
                   <Link
                     to={`/rsm/quotations/${order.quotationId}`}
-                    className="font-mono text-blue-600 font-bold hover:underline"
+                    className="text-blue-600 font-bold hover:underline"
                   >
                     {order.quotationNumber || `QT-${order.quotationId}`}
                   </Link>
@@ -165,7 +165,7 @@ export const SalesOrderDetails: React.FC = () => {
           <button
             type="button"
             onClick={() => window.print()}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 rounded-xl transition shadow-sm print:hidden"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 rounded-xl transition shadow-sm print:hidden"
           >
             <Printer size={14} />
             <span>Print Order</span>
@@ -183,16 +183,16 @@ export const SalesOrderDetails: React.FC = () => {
                 Sales Order Line Items ({items.length})
               </h3>
               {order.grandTotal && (
-                <span className="text-xs font-bold text-purple-700 font-mono">
+                <span className="text-xs font-bold text-purple-700">
                   Order Total: {formatINR(order.grandTotal)}
                 </span>
               )}
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs">
+              <table className="w-full text-left border-collapse text-sm">
                 <thead>
-                  <tr className="bg-[#154068] text-white font-bold uppercase text-[10px] tracking-wider">
+                  <tr className="bg-[#154068] text-white font-semibold uppercase text-[13px] tracking-wider">
                     <th className="p-3 w-8">#</th>
                     <th className="p-3">Item Name &amp; Specification</th>
                     <th className="p-3 w-20 text-center">Qty / UOM</th>
@@ -224,7 +224,7 @@ export const SalesOrderDetails: React.FC = () => {
                                 {item.itemName} {item.brand ? `· ${item.brand}` : ""}
                               </div>
                               {item.itemCode && (
-                                <div className="text-[10px] font-mono text-purple-600">
+                                <div className="text-[11px] text-purple-600 font-semibold">
                                   Code: {item.itemCode}
                                 </div>
                               )}
@@ -246,7 +246,7 @@ export const SalesOrderDetails: React.FC = () => {
                             <td className="p-3 align-top text-center text-gray-600">
                               {item.gstRate}%
                             </td>
-                            <td className="p-3 align-top text-right font-bold text-gray-900 font-mono">
+                            <td className="p-3 align-top text-right font-medium text-gray-900">
                               {item.lineTotal ? formatINR(item.lineTotal) : formatINR(total)}
                             </td>
                           </tr>
@@ -279,7 +279,7 @@ export const SalesOrderDetails: React.FC = () => {
                                   </td>
                                   <td className="p-2.5 text-center">{acc.discountPercentage}%</td>
                                   <td className="p-2.5 text-center">{acc.gstRate}%</td>
-                                  <td className="p-2.5 text-right font-bold text-gray-800 font-mono">
+                                  <td className="p-2.5 text-right font-medium text-gray-800">
                                     {acc.lineTotal ? formatINR(acc.lineTotal) : formatINR(aTotal)}
                                   </td>
                                 </tr>
@@ -379,18 +379,18 @@ export const SalesOrderDetails: React.FC = () => {
             {order.taxableAmount && (
               <div className="flex justify-between text-gray-600">
                 <span>Taxable Base:</span>
-                <span className="font-mono">{formatINR(order.taxableAmount)}</span>
+                <span>{formatINR(order.taxableAmount)}</span>
               </div>
             )}
             {order.taxAmount && (
               <div className="flex justify-between text-gray-600">
                 <span>GST Amount:</span>
-                <span className="font-mono">{formatINR(order.taxAmount)}</span>
+                <span>{formatINR(order.taxAmount)}</span>
               </div>
             )}
             <div className="flex justify-between items-baseline pt-2 border-t border-gray-100 font-bold text-sm">
               <span>Grand Total:</span>
-              <span className="text-purple-800 font-mono">
+              <span className="text-purple-800">
                 {order.grandTotal ? formatINR(order.grandTotal) : "—"}
               </span>
             </div>

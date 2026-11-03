@@ -456,7 +456,7 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
         {/* Customer-Facing Quotation Sheet Body (matches Reference Screenshot) */}
         <div
           id="printableDocument"
-          className="p-6 sm:p-8 overflow-y-auto space-y-4 flex-1 text-xs text-slate-800 bg-white relative font-sans print:p-0 print:overflow-visible print:max-h-none"
+          className="p-6 sm:p-8 overflow-y-auto space-y-4 flex-1 text-xs text-slate-800 bg-white relative print:p-0 print:overflow-visible print:max-h-none"
           style={{ minHeight: "100%" }}
         >
           {/* Customer file notice banner (if uploaded format) */}
@@ -523,7 +523,7 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
                 </div>
                 <div>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-2xl font-black tracking-tight text-[#00234a] font-sans">
+                    <span className="text-2xl font-black tracking-tight text-[#00234a]">
                       iSQUARE
                     </span>
                     <span className="text-xs font-bold text-[#FF5500]">®</span>
@@ -556,7 +556,7 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
                     Quotation No.
                   </span>
                 </div>
-                <span className="text-lg sm:text-xl font-black tracking-tight text-white font-mono mt-0.5">
+                <span className="text-lg sm:text-xl font-black tracking-tight text-white mt-0.5">
                   {quotationNumber}
                 </span>
                 <div className="mt-2 space-y-1 text-[11px] text-blue-100 font-medium">
@@ -765,7 +765,7 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
                           </td>
 
                           {/* 4. HSN Code */}
-                          <td className="p-2.5 align-middle text-center font-mono text-[11px] text-slate-700 border-r border-slate-300">
+                          <td className="p-2.5 align-middle text-center text-[11px] text-slate-700 border-r border-slate-300">
                             {hsnCode}
                           </td>
 
@@ -854,7 +854,7 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
                                     )}
                                   </div>
                                 </td>
-                                <td className="p-2 align-middle text-center font-mono text-[10px] text-slate-600 border-r border-slate-300">
+                                <td className="p-2 align-middle text-center text-[10px] text-slate-600 border-r border-slate-300">
                                   {accHsn}
                                 </td>
                                 <td className="p-2 align-middle text-center font-semibold text-slate-800 border-r border-slate-300">
@@ -926,7 +926,7 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
                 <div className="space-y-1.5 text-xs text-slate-700">
                   <div className="flex justify-between items-center">
                     <span className="text-slate-600">Subtotal:</span>
-                    <span className="font-bold text-slate-900 font-mono">
+                    <span className="font-bold text-slate-900">
                       {formatINR(quotation.taxableAmount || quotation.subtotal)}
                     </span>
                   </div>
@@ -934,14 +934,14 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
                     <span className="text-slate-600">
                       Total GST {primaryGstRate ? `(${primaryGstRate}%)` : ""}:
                     </span>
-                    <span className="font-bold text-slate-900 font-mono">
+                    <span className="font-bold text-slate-900">
                       {formatINR(quotation.taxAmount)}
                     </span>
                   </div>
                   {quotation.freightCharges > 0 && (
                     <div className="flex justify-between items-center">
                       <span className="text-slate-600">Freight Charges:</span>
-                      <span className="font-bold text-slate-900 font-mono">
+                      <span className="font-bold text-slate-900">
                         {formatINR(quotation.freightCharges)}
                       </span>
                     </div>
@@ -949,7 +949,7 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
                   {quotation.installationCharges > 0 && (
                     <div className="flex justify-between items-center">
                       <span className="text-slate-600">Installation Charges:</span>
-                      <span className="font-bold text-slate-900 font-mono">
+                      <span className="font-bold text-slate-900">
                         {formatINR(quotation.installationCharges)}
                       </span>
                     </div>
@@ -957,7 +957,7 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
                   {quotation.otherCharges > 0 && (
                     <div className="flex justify-between items-center">
                       <span className="text-slate-600">{otherDesc}:</span>
-                      <span className="font-bold text-slate-900 font-mono">
+                      <span className="font-bold text-slate-900">
                         {formatINR(quotation.otherCharges)}
                       </span>
                     </div>
@@ -965,7 +965,7 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
                   {(quotation.charges || []).map((ch, cIdx) => (
                     <div key={cIdx} className="flex justify-between items-center">
                       <span className="text-slate-600">{ch.chargeName}:</span>
-                      <span className="font-bold text-slate-900 font-mono">
+                      <span className="font-bold text-slate-900">
                         {formatINR(ch.totalAmount || ch.chargeAmount)}
                       </span>
                     </div>
@@ -979,7 +979,7 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
                   <span className="text-sm font-black tracking-tight">Grand Total:</span>
                 </div>
                 <div className="bg-[#FF7900] text-white py-2 px-3.5 flex items-center justify-end w-1/2">
-                  <span className="text-base sm:text-lg font-black tracking-tight font-mono">
+                  <span className="text-base sm:text-lg font-black tracking-tight">
                     {formatINR(quotation.grandTotal)}
                   </span>
                 </div>

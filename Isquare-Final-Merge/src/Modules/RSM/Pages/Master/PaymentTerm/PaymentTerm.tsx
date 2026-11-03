@@ -177,7 +177,7 @@ const PaymentTerm: React.FC<PaymentTermProps> = ({ isTab = false }) => {
             <Receipt className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-xl md:text-2xl font-bold text-[#172B4D] tracking-tight">Payment Terms</h1>
+            <h1 className="text-2xl font-bold text-[#00234a] tracking-tight">Payment Terms</h1>
             <p className="text-xs text-slate-500 font-medium mt-0.5">Manage credit terms, schedules, and payment conditions.</p>
           </div>
         </div>
@@ -286,7 +286,7 @@ const PaymentTerm: React.FC<PaymentTermProps> = ({ isTab = false }) => {
       <div className="bg-white rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.04)] overflow-hidden border border-slate-200">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-[#FF7900] text-white text-xs uppercase tracking-wider">
+            <thead className="bg-[#FF7900] text-white text-[13px] font-semibold uppercase tracking-wider">
               <tr>
                 <th className="px-5 py-3.5 text-left font-bold w-20 border-r border-[#e06800]">
                   Sr. No.

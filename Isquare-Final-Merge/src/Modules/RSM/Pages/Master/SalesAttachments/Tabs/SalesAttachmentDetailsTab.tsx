@@ -295,7 +295,7 @@ const SalesAttachmentDetailsTab = forwardRef<
                   <span className="text-xs font-semibold text-slate-700 line-clamp-2 max-w-[130px] break-all">
                     {formData.file.name}
                   </span>
-                  <span className="text-[10px] text-slate-400 mt-1 font-mono">
+                  <span className="text-[11px] text-slate-400 mt-1 font-medium">
                     {(formData.file.size / 1024).toFixed(0)} KB
                   </span>
                 </div>

@@ -302,7 +302,7 @@ export const QuotationList: React.FC = () => {
       {/* Listing Header & Actions matching Customer Master */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="border-b-2 border-[#FF7900] pb-2 text-2xl sm:text-3xl font-bold tracking-tight text-[#00234a]">
+          <h2 className="border-b-2 border-[#FF7900] pb-2 text-3xl font-bold tracking-[-0.03em] text-[#00234a]">
             All Quotations
           </h2>
         </div>
@@ -311,7 +311,7 @@ export const QuotationList: React.FC = () => {
           <button
             type="button"
             onClick={fetchData}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer"
             title="Refresh list"
           >
             <RefreshCw size={15} className={isLoading ? "animate-spin" : ""} />
@@ -320,7 +320,7 @@ export const QuotationList: React.FC = () => {
           <button
             type="button"
             onClick={handleExportExcel}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer"
           >
             <FileSpreadsheet size={15} className="text-emerald-600" />
             <span>Export Excel</span>
@@ -328,7 +328,7 @@ export const QuotationList: React.FC = () => {
           <button
             type="button"
             onClick={() => setIsUploadModalOpen(true)}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer"
             title="Upload customer-formatted Excel quotation"
           >
             <UploadCloud size={15} className="text-blue-600" />
@@ -336,7 +336,7 @@ export const QuotationList: React.FC = () => {
           </button>
           <Link
             to="/rsm/quotations/create"
-            className="rounded-xl bg-[#00234a] hover:bg-[#FF7900] px-5 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-[0_10px_18px_rgba(0,35,74,0.18)] transition cursor-pointer flex items-center gap-2"
+            className="rounded-xl bg-[#00234a] hover:bg-[#FF7900] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_18px_rgba(0,35,74,0.18)] transition cursor-pointer flex items-center gap-2"
           >
             <Plus size={14} />
             <span>Create Quotation</span>
@@ -356,13 +356,13 @@ export const QuotationList: React.FC = () => {
               setSearchText(e.target.value);
               setCurrentPage(1);
             }}
-            className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#FF8500]/20 focus:border-[#FF8500] text-gray-800"
+            className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm text-slate-700 placeholder:text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8500]/20 focus:border-[#FF8500]"
           />
         </div>
 
         <div className="flex items-center justify-between sm:justify-start gap-3 w-full md:w-auto">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-gray-500 whitespace-nowrap flex items-center gap-1">
+            <span className="text-sm font-medium text-slate-600 whitespace-nowrap flex items-center gap-1">
               <Filter size={13} /> Status:
             </span>
             <select
@@ -371,7 +371,7 @@ export const QuotationList: React.FC = () => {
                 setStatusFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="border border-gray-200 rounded-lg px-3 py-1.5 text-xs font-medium text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#FF8500]/20 focus:border-[#FF8500] cursor-pointer"
+              className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#FF8500]/20 focus:border-[#FF8500] cursor-pointer"
             >
               <option value="All">All Statuses</option>
               <option value="Draft">Draft</option>
@@ -383,7 +383,7 @@ export const QuotationList: React.FC = () => {
             </select>
           </div>
 
-          <div className="text-xs text-gray-500 font-medium">
+          <div className="text-sm text-slate-500 font-medium">
             Showing <span className="font-bold text-gray-800">{filteredQuotations.length}</span> records
           </div>
         </div>
@@ -392,9 +392,9 @@ export const QuotationList: React.FC = () => {
       {/* Main Table with Customer Master Orange Header */}
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[980px] border-collapse text-left text-xs">
+          <table className="w-full min-w-[980px] border-collapse text-left text-sm">
             <thead>
-              <tr className="bg-[#FF7900] text-white text-[12px] font-bold uppercase tracking-wider">
+              <tr className="bg-[#FF7900] text-white text-[13px] font-semibold uppercase tracking-wider">
                 <th className="p-3.5 border-r border-[#e06800]">Quotation #</th>
                 <th className="p-3.5 w-20 text-center border-r border-[#e06800]">Rev</th>
                 <th className="p-3.5 border-r border-[#e06800]">Customer Name</th>
@@ -422,7 +422,7 @@ export const QuotationList: React.FC = () => {
               ) : (
                 paginatedQuotations.map((q) => (
                   <tr key={q.quotationId} className="hover:bg-[#f0f7ff] transition duration-150 min-h-[54px]">
-                    <td className="p-3.5 font-bold font-mono text-gray-900 border-r border-gray-100">
+                    <td className="p-3.5 font-semibold text-gray-900 border-r border-gray-100">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <Link
                           to={`/rsm/quotations/${q.quotationId}`}
@@ -442,22 +442,22 @@ export const QuotationList: React.FC = () => {
                       </div>
                     </td>
                     <td className="p-3.5 text-center border-r border-gray-100">
-                      <span className="px-2 py-0.5 rounded-full bg-orange-50 text-[#FF7900] border border-[#FF7900]/20 font-mono font-bold text-[11px]">
+                      <span className="px-2 py-0.5 rounded-full bg-orange-50 text-[#FF7900] border border-[#FF7900]/20 font-semibold text-xs">
                         R{q.revisionNumber}
                       </span>
                     </td>
-                    <td className="p-3.5 font-semibold text-gray-800 border-r border-gray-100">
+                    <td className="p-3.5 font-medium text-gray-800 border-r border-gray-100">
                       {resolveCustomerName(q)}
                     </td>
-                    <td className="p-3.5 text-gray-500 font-mono border-r border-gray-100">
+                    <td className="p-3.5 text-gray-600 font-medium border-r border-gray-100">
                       {resolveEnquiryRef(q)}
                     </td>
-                    <td className="p-3.5 text-gray-500 border-r border-gray-100">
+                    <td className="p-3.5 text-gray-600 font-medium border-r border-gray-100">
                       {q.quotationDate
                         ? new Date(q.quotationDate).toLocaleDateString("en-IN")
                         : "—"}
                     </td>
-                    <td className="p-3.5 text-right font-bold text-gray-900 font-mono border-r border-gray-100">
+                    <td className="p-3.5 text-right font-semibold text-gray-900 border-r border-gray-100">
                       {formatINR(q.grandTotal)}
                     </td>
                     <td className="p-3.5 text-center border-r border-gray-100">
@@ -603,7 +603,7 @@ export const QuotationList: React.FC = () => {
             <div className="p-6 space-y-4">
               <p className="text-xs text-gray-600">
                 Creating a revision will archive the current snapshot of{" "}
-                <span className="font-bold font-mono text-[#00234a]">
+                <span className="font-bold text-[#00234a]">
                   {selectedQuotation.quotationNumber || `QT-${selectedQuotation.quotationId}`} (R{selectedQuotation.revisionNumber})
                 </span>{" "}
                 into the revision history table.
@@ -620,7 +620,7 @@ export const QuotationList: React.FC = () => {
                     placeholder="e.g. Scope adjustment as per client request, rate discount applied."
                     value={revisionReason}
                     onChange={(e) => setRevisionReason(e.target.value)}
-                    className="w-full text-xs p-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF8500]/20 focus:border-[#FF8500]"
+                    className="w-full text-sm p-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF8500]/20 focus:border-[#FF8500]"
                   />
                 </div>
 
@@ -628,14 +628,14 @@ export const QuotationList: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setRevisionModalOpen(false)}
-                    className="px-5 py-2.5 text-xs font-semibold text-gray-700 hover:bg-gray-100 bg-gray-50 border border-gray-200 rounded-xl transition cursor-pointer"
+                    className="px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-100 bg-gray-50 border border-gray-200 rounded-xl transition cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmittingRevision}
-                    className="px-5 py-2.5 text-xs font-semibold text-white bg-[#00234a] hover:bg-[#FF7900] rounded-xl shadow-md transition disabled:opacity-50 cursor-pointer"
+                    className="px-5 py-2.5 text-sm font-semibold text-white bg-[#00234a] hover:bg-[#FF7900] rounded-xl shadow-md transition disabled:opacity-50 cursor-pointer"
                   >
                     {isSubmittingRevision ? "Creating..." : "Confirm Revision"}
                   </button>

@@ -71,6 +71,7 @@ namespace CompanyPlatform.CRM.Controllers
                     User.FindFirst(ClaimTypes.NameIdentifier)?.Value
                     ?? User.Identity?.Name;
 
+                
                 var result = await _service.CreateAsync(dto, userId);
 
                 return CreatedAtAction(

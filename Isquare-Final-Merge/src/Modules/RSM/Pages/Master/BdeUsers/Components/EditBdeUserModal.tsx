@@ -150,7 +150,7 @@ const EditBdeUserModal: React.FC<EditBdeUserModalProps> = ({
             <div>
               <label
                 htmlFor="editBdeUserDirector"
-                className="mb-1 block text-sm font-medium text-gray-700"
+                className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5"
               >
                 Director <span className="text-red-500">*</span>
               </label>
@@ -190,7 +190,7 @@ const EditBdeUserModal: React.FC<EditBdeUserModalProps> = ({
             <div>
               <label
                 htmlFor="editBdeUserValue"
-                className="mb-1 block text-sm font-medium text-gray-700"
+                className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5"
               >
                 Value / Name <span className="text-red-500">*</span>
               </label>
@@ -209,7 +209,7 @@ const EditBdeUserModal: React.FC<EditBdeUserModalProps> = ({
             <div>
               <label
                 htmlFor="editBdeUserCode"
-                className="mb-1 block text-sm font-medium text-gray-700"
+                className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5"
               >
                 Code <span className="text-red-500">*</span>
               </label>

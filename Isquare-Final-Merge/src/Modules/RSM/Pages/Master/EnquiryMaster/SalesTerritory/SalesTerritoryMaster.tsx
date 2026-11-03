@@ -200,7 +200,7 @@ export const SalesTerritoryMaster: React.FC<SalesTerritoryMasterProps> = ({ isTa
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#00234a]/10 text-[#00234a]">
             <MapPin size={16} />
           </div>
-          <span className="font-mono text-xs font-bold text-[#00234a]">
+          <span className="text-sm font-semibold text-[#00234a]">
             {row.salesTerritoryCode}
           </span>
         </div>
@@ -550,7 +550,7 @@ export const SalesTerritoryMaster: React.FC<SalesTerritoryMasterProps> = ({ isTa
                   <span className="text-[10px] font-extrabold uppercase text-gray-400 block tracking-widest">
                     Territory Code
                   </span>
-                  <p className="text-sm font-mono font-bold text-[#00234a]">
+                  <p className="text-sm font-semibold text-[#00234a]">
                     {selectedItem.salesTerritoryCode}
                   </p>
                 </div>

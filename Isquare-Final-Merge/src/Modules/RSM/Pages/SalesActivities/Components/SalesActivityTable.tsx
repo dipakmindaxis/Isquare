@@ -72,34 +72,34 @@ export const SalesActivityTable: React.FC<SalesActivityTableProps> = ({
           <table className="w-full text-sm">
             <thead className="bg-[#FF7900] text-white border-b border-[#e06800]">
               <tr>
-                <th className="px-4 py-3.5 text-left text-[12px] font-bold uppercase tracking-[0.5px]">
+                <th className="px-4 py-3.5 text-left text-[13px] font-semibold uppercase tracking-wider">
                   Sr.
                 </th>
-                <th className="px-4 py-3.5 text-left text-[12px] font-bold uppercase tracking-[0.5px]">
+                <th className="px-4 py-3.5 text-left text-[13px] font-semibold uppercase tracking-wider">
                   Activity / Code
                 </th>
-                <th className="px-4 py-3.5 text-left text-[12px] font-bold uppercase tracking-[0.5px]">
+                <th className="px-4 py-3.5 text-left text-[13px] font-semibold uppercase tracking-wider">
                   Subject & Notes
                 </th>
-                <th className="px-4 py-3.5 text-left text-[12px] font-bold uppercase tracking-[0.5px]">
+                <th className="px-4 py-3.5 text-left text-[13px] font-semibold uppercase tracking-wider">
                   Customer & Contact
                 </th>
-                <th className="px-4 py-3.5 text-left text-[12px] font-bold uppercase tracking-[0.5px]">
+                <th className="px-4 py-3.5 text-left text-[13px] font-semibold uppercase tracking-wider">
                   Email ID
                 </th>
-                <th className="px-4 py-3.5 text-left text-[12px] font-bold uppercase tracking-[0.5px]">
+                <th className="px-4 py-3.5 text-left text-[13px] font-semibold uppercase tracking-wider">
                   Assigned Rep
                 </th>
-                <th className="px-4 py-3.5 text-left text-[12px] font-bold uppercase tracking-[0.5px]">
+                <th className="px-4 py-3.5 text-left text-[13px] font-semibold uppercase tracking-wider">
                   Date & Time
                 </th>
-                <th className="px-4 py-3.5 text-center text-[12px] font-bold uppercase tracking-[0.5px]">
+                <th className="px-4 py-3.5 text-center text-[13px] font-semibold uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-4 py-3.5 text-left text-[12px] font-bold uppercase tracking-[0.5px]">
+                <th className="px-4 py-3.5 text-left text-[13px] font-semibold uppercase tracking-wider">
                   Next Action
                 </th>
-                <th className="px-4 py-3.5 text-center text-[12px] font-bold uppercase tracking-[0.5px]">
+                <th className="px-4 py-3.5 text-center text-[13px] font-semibold uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -134,7 +134,7 @@ export const SalesActivityTable: React.FC<SalesActivityTableProps> = ({
                     className="hover:bg-[#f0f7ff] transition-all duration-200"
                   >
                     {/* Sr No */}
-                    <td className="px-4 py-3.5 text-xs text-gray-500 font-medium">
+                    <td className="px-4 py-3.5 text-sm text-gray-500 font-medium">
                       {startIndex + idx + 1}
                     </td>
 
@@ -155,7 +155,7 @@ export const SalesActivityTable: React.FC<SalesActivityTableProps> = ({
                           <button
                             type="button"
                             onClick={() => onView(item)}
-                            className="text-left font-semibold text-gray-900 hover:text-[#154068] hover:underline cursor-pointer line-clamp-1 text-xs"
+                            className="text-left font-semibold text-gray-900 hover:text-[#154068] hover:underline cursor-pointer line-clamp-1 text-sm"
                           >
                             {item.subject}
                           </button>
@@ -184,7 +184,7 @@ export const SalesActivityTable: React.FC<SalesActivityTableProps> = ({
                     {/* Customer & Contact */}
                     <td className="px-4 py-3.5 align-middle max-w-[200px]">
                       <div>
-                        <div className="font-semibold text-gray-900 text-xs truncate">
+                        <div className="font-semibold text-gray-900 text-sm truncate">
                           {item.customerName}
                         </div>
                         {item.contactPerson && (

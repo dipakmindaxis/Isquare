@@ -28,7 +28,7 @@ const DetailCard: React.FC<{
   icon?: React.ElementType;
 }> = ({ label, value, icon: Icon }) => (
   <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl space-y-1">
-    <div className="flex items-center gap-1.5 text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+    <div className="flex items-center gap-1.5 text-slate-500 text-[11px] font-extrabold uppercase tracking-widest">
       {Icon && <Icon size={12} />}
       <span>{label}</span>
     </div>
@@ -154,11 +154,11 @@ export const ViewTaskModal: React.FC<ViewTaskModalProps> = ({
 
           {/* Description Section */}
           <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl space-y-1">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+            <p className="text-[11px] font-extrabold uppercase tracking-widest text-[#FF7900] flex items-center gap-1.5">
               <FileText size={12} />
               Description & Requirements
             </p>
-            <p className="text-xs sm:text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">
+            <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">
               {task.description || "No specific description provided."}
             </p>
           </div>
@@ -166,11 +166,11 @@ export const ViewTaskModal: React.FC<ViewTaskModalProps> = ({
           {/* Remarks Section */}
           {task.remarks && (
             <div className="p-3 bg-amber-50/50 border border-amber-200/50 rounded-xl space-y-1">
-              <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider flex items-center gap-1.5">
+              <p className="text-[11px] font-extrabold uppercase tracking-widest text-amber-700 flex items-center gap-1.5">
                 <AlertCircle size={12} />
                 Remarks / Instructions
               </p>
-              <p className="text-xs text-amber-900">{task.remarks}</p>
+              <p className="text-sm text-amber-900">{task.remarks}</p>
             </div>
           )}
 
@@ -202,7 +202,7 @@ export const ViewTaskModal: React.FC<ViewTaskModalProps> = ({
               type="button"
               onClick={handleMarkComplete}
               disabled={isCompleting}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-2 shadow-xs cursor-pointer"
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold transition flex items-center gap-2 shadow-xs cursor-pointer"
             >
               {isCompleting ? (
                 <>

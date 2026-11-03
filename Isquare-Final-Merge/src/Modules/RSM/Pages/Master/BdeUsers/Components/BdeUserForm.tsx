@@ -142,7 +142,7 @@ const BdeUserForm: React.FC<BdeUserFormProps> = ({
             <div>
               <label
                 htmlFor="bdeUserDirector"
-                className="mb-1 block text-sm font-medium text-gray-700"
+                className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5"
               >
                 Director <span className="text-red-500">*</span>
               </label>
@@ -182,7 +182,7 @@ const BdeUserForm: React.FC<BdeUserFormProps> = ({
             <div>
               <label
                 htmlFor="bdeUserValue"
-                className="mb-1 block text-sm font-medium text-gray-700"
+                className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5"
               >
                 Value / Name <span className="text-red-500">*</span>
               </label>
@@ -201,7 +201,7 @@ const BdeUserForm: React.FC<BdeUserFormProps> = ({
             <div>
               <label
                 htmlFor="bdeUserCode"
-                className="mb-1 block text-sm font-medium text-gray-700"
+                className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5"
               >
                 Code <span className="text-red-500">*</span>
               </label>

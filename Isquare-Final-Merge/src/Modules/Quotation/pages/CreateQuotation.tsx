@@ -284,13 +284,13 @@ export const CreateQuotation: React.FC = () => {
       <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="p-5 border-b border-gray-200 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="font-bold text-[#00234a] text-base">Recent Quotations</h2>
+            <h2 className="font-bold text-[#00234a] text-lg">Recent Quotations</h2>
             <p className="text-xs text-gray-500">Latest active commercial quotations</p>
           </div>
           <button
             type="button"
             onClick={() => navigate("/rsm/quotations")}
-            className="text-xs font-semibold text-[#FF7900] hover:text-[#e06800] flex items-center gap-1 transition cursor-pointer"
+            className="text-sm font-semibold text-[#FF7900] hover:text-[#e06800] flex items-center gap-1 transition cursor-pointer"
           >
             <span>View All Quotations</span>
             <ArrowRight size={14} />
@@ -298,9 +298,9 @@ export const CreateQuotation: React.FC = () => {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[820px] border-collapse text-left text-xs">
+          <table className="w-full min-w-[820px] border-collapse text-left text-sm">
             <thead>
-              <tr className="bg-[#FF7900] text-white font-bold uppercase text-[12px] tracking-wider">
+              <tr className="bg-[#FF7900] text-white font-semibold uppercase text-[13px] tracking-wider">
                 <th className="p-3.5 border-r border-[#e06800]">Quotation #</th>
                 <th className="p-3.5 border-r border-[#e06800]">Customer</th>
                 <th className="p-3.5 border-r border-[#e06800]">Enquiry Ref</th>
@@ -326,13 +326,13 @@ export const CreateQuotation: React.FC = () => {
               ) : (
                 recentQuotations.slice(0, 6).map((quotation) => (
                   <tr key={quotation.quotationId} className="hover:bg-[#f0f7ff] transition duration-150 min-h-[52px]">
-                    <td className="p-3.5 font-bold text-gray-900 font-mono border-r border-gray-100">
+                    <td className="p-3.5 font-semibold text-gray-900 border-r border-gray-100">
                       {quotation.quotationNumber || `QT-${quotation.quotationId}`}
-                      <span className="ml-1.5 px-2 py-0.5 rounded-full bg-orange-50 text-[#FF7900] border border-[#FF7900]/20 text-[10px] font-bold">
+                      <span className="ml-1.5 px-2 py-0.5 rounded-full bg-orange-50 text-[#FF7900] border border-[#FF7900]/20 text-xs font-semibold">
                         R{quotation.revisionNumber}
                       </span>
                     </td>
-                    <td className="p-3.5 font-semibold text-gray-800 border-r border-gray-100">
+                    <td className="p-3.5 font-medium text-gray-800 border-r border-gray-100">
                       {quotation.customerName ||
                         customers.find(
                           (c) =>
@@ -346,7 +346,7 @@ export const CreateQuotation: React.FC = () => {
                         )?.customerName ||
                         `Customer #${quotation.customerId}`}
                     </td>
-                    <td className="p-3.5 text-gray-500 font-mono border-r border-gray-100">
+                    <td className="p-3.5 text-gray-600 font-medium border-r border-gray-100">
                       {quotation.enquiryRef
                         ? quotation.enquiryRef.match(/(ENQ-[A-Za-z0-9-]+)/i)?.[1] ||
                           quotation.enquiryRef.split(" - ")[0].trim()
@@ -354,12 +354,12 @@ export const CreateQuotation: React.FC = () => {
                         ? `ENQ-${String(quotation.enquiryId).padStart(3, "0")}`
                         : "—"}
                     </td>
-                    <td className="p-3.5 text-gray-500 border-r border-gray-100">
+                    <td className="p-3.5 text-gray-600 font-medium border-r border-gray-100">
                       {quotation.quotationDate
                         ? new Date(quotation.quotationDate).toLocaleDateString("en-CA")
                         : "—"}
                     </td>
-                    <td className="p-3.5 text-right font-bold text-gray-900 font-mono border-r border-gray-100">
+                    <td className="p-3.5 text-right font-semibold text-gray-900 border-r border-gray-100">
                       {formatINR(quotation.grandTotal)}
                     </td>
                     <td className="p-3.5 text-center border-r border-gray-100">

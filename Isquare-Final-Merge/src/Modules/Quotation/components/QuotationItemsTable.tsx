@@ -24,10 +24,10 @@ export const QuotationItemsTable: React.FC<QuotationItemsTableProps> = ({
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2 pb-1">
         <div>
-          <h4 className="text-sm font-bold text-gray-900 tracking-tight">
+          <h4 className="text-base font-bold text-gray-900 tracking-tight">
             Line Items &amp; Products
           </h4>
-          <p className="text-xs text-gray-500">
+          <p className="text-sm text-gray-500">
             Add equipment, sensors, machines, and attach related accessories
           </p>
         </div>
@@ -36,7 +36,7 @@ export const QuotationItemsTable: React.FC<QuotationItemsTableProps> = ({
           <button
             type="button"
             onClick={onAddItem}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-[#00234a] hover:bg-[#FF7900] text-white shadow-sm transition cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold bg-[#00234a] hover:bg-[#FF7900] text-white shadow-sm transition cursor-pointer"
           >
             <Plus size={14} />
             <span>Add Product</span>
@@ -48,7 +48,7 @@ export const QuotationItemsTable: React.FC<QuotationItemsTableProps> = ({
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1450px] text-left border-collapse">
             <thead>
-              <tr className="bg-[#FF7900] text-white text-[11px] font-bold uppercase tracking-wider">
+              <tr className="bg-[#FF7900] text-white text-[13px] font-semibold uppercase tracking-wider">
                 <th className="p-3.5 min-w-[280px] border-r border-[#e06800]">Select / Code / Brand</th>
                 <th className="p-3.5 min-w-[340px] border-r border-[#e06800]">Technical Specification</th>
                 <th className="p-3.5 w-20 min-w-[80px] text-center border-r border-[#e06800]">Image</th>

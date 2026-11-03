@@ -136,14 +136,14 @@ export const QuotationDefaults: React.FC = () => {
 
       {/* Section Title & Actions */}
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h2 className="border-b-2 border-[#FF7900] pb-2 text-2xl sm:text-3xl font-bold tracking-tight text-[#00234a]">
+        <h2 className="border-b-2 border-[#FF7900] pb-2 text-3xl font-bold tracking-[-0.03em] text-[#00234a]">
           Proposal Defaults
         </h2>
 
         <button
           type="button"
           onClick={loadData}
-          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#00234a] shadow-xs transition hover:bg-slate-50 cursor-pointer"
+          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#00234a] shadow-xs transition hover:bg-slate-50 cursor-pointer"
           title="Reload defaults"
         >
           <RefreshCw size={14} className="text-[#FF7900]" />
@@ -160,10 +160,10 @@ export const QuotationDefaults: React.FC = () => {
           {/* Commercial Defaults Section */}
           <div className="space-y-5 rounded-xl border border-gray-200 bg-white p-5 sm:p-6 shadow-xs">
             <div className="border-b border-gray-200 pb-3 flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-md text-xs font-bold uppercase tracking-wider bg-orange-50 text-[#FF7900] border border-[#FF7900]/20">
+              <span className="px-2.5 py-0.5 rounded-md text-[11px] font-extrabold uppercase tracking-widest bg-orange-50 text-[#FF7900] border border-[#FF7900]/20">
                 Section 1
               </span>
-              <h3 className="text-sm font-bold uppercase tracking-wider text-[#FF7900]">
+              <h3 className="text-sm font-extrabold uppercase tracking-widest text-[#FF7900]">
                 Standard Delivery &amp; Commercial Terms
               </h3>
             </div>
@@ -179,7 +179,7 @@ export const QuotationDefaults: React.FC = () => {
                   value={defaultDeliveryPeriod}
                   onChange={(e) => setDefaultDeliveryPeriod(e.target.value)}
                   placeholder="e.g. 2-3 Weeks"
-                  className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs font-semibold text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
                 />
               </div>
 
@@ -190,7 +190,7 @@ export const QuotationDefaults: React.FC = () => {
                 <select
                   value={paymentTermId || ""}
                   onChange={(e) => setPaymentTermId(e.target.value ? parseInt(e.target.value, 10) : null)}
-                  className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs font-semibold text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs cursor-pointer"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs cursor-pointer"
                 >
                   <option value="">Select Payment Term...</option>
                   {paymentTerms.map((pt) => (
@@ -211,7 +211,7 @@ export const QuotationDefaults: React.FC = () => {
                   value={standardWarranty}
                   onChange={(e) => setStandardWarranty(e.target.value)}
                   placeholder="e.g. 1 Year Standard"
-                  className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs font-semibold text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
                 />
               </div>
 
@@ -225,7 +225,7 @@ export const QuotationDefaults: React.FC = () => {
                   value={quotationValidity}
                   onChange={(e) => setQuotationValidity(e.target.value)}
                   placeholder="e.g. 30 Days"
-                  className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs font-semibold text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
                 />
               </div>
             </div>
@@ -238,7 +238,7 @@ export const QuotationDefaults: React.FC = () => {
                 rows={4}
                 value={standardTermsAndConditions}
                 onChange={(e) => setStandardTermsAndConditions(e.target.value)}
-                className="w-full rounded-xl border border-gray-300 bg-white px-3.5 py-3 text-xs font-mono text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
+                className="w-full rounded-xl border border-gray-300 bg-white px-3.5 py-3 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
               />
             </div>
           </div>
@@ -246,10 +246,10 @@ export const QuotationDefaults: React.FC = () => {
           {/* Company & Bank Defaults Section */}
           <div className="space-y-5 rounded-xl border border-gray-200 bg-white p-5 sm:p-6 shadow-xs">
             <div className="border-b border-gray-200 pb-3 flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-md text-xs font-bold uppercase tracking-wider bg-orange-50 text-[#FF7900] border border-[#FF7900]/20">
+              <span className="px-2.5 py-0.5 rounded-md text-[11px] font-extrabold uppercase tracking-widest bg-orange-50 text-[#FF7900] border border-[#FF7900]/20">
                 Section 2
               </span>
-              <h3 className="text-sm font-bold uppercase tracking-wider text-[#FF7900]">
+              <h3 className="text-sm font-extrabold uppercase tracking-widest text-[#FF7900]">
                 Default Company Identification &amp; Bank Remittance
               </h3>
             </div>
@@ -263,7 +263,7 @@ export const QuotationDefaults: React.FC = () => {
                   type="text"
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs font-semibold text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
                 />
               </div>
 
@@ -275,7 +275,7 @@ export const QuotationDefaults: React.FC = () => {
                   type="text"
                   value={gstNumber}
                   onChange={(e) => setGstNumber(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs font-semibold text-gray-800 font-mono transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
                 />
               </div>
 
@@ -287,7 +287,7 @@ export const QuotationDefaults: React.FC = () => {
                   type="text"
                   value={companyAddress}
                   onChange={(e) => setCompanyAddress(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
                 />
               </div>
             </div>
@@ -301,7 +301,7 @@ export const QuotationDefaults: React.FC = () => {
                   type="text"
                   value={bankName}
                   onChange={(e) => setBankName(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs font-semibold text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
                 />
               </div>
 
@@ -313,7 +313,7 @@ export const QuotationDefaults: React.FC = () => {
                   type="text"
                   value={accountHolderName}
                   onChange={(e) => setAccountHolderName(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs font-semibold text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
                 />
               </div>
 
@@ -325,7 +325,7 @@ export const QuotationDefaults: React.FC = () => {
                   type="text"
                   value={accountNumber}
                   onChange={(e) => setAccountNumber(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs font-semibold text-gray-800 font-mono transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
                 />
               </div>
 
@@ -337,7 +337,7 @@ export const QuotationDefaults: React.FC = () => {
                   type="text"
                   value={ifscCode}
                   onChange={(e) => setIfscCode(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs font-semibold text-gray-800 font-mono transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
                 />
               </div>
             </div>
@@ -347,7 +347,7 @@ export const QuotationDefaults: React.FC = () => {
             <button
               type="submit"
               disabled={isSaving}
-              className="rounded-xl bg-[#00234a] hover:bg-[#FF7900] px-6 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-[0_10px_18px_rgba(0,35,74,0.18)] transition cursor-pointer flex items-center gap-2 disabled:opacity-50"
+              className="rounded-xl bg-[#00234a] hover:bg-[#FF7900] px-6 py-2.5 text-sm font-semibold text-white shadow-[0_10px_18px_rgba(0,35,74,0.18)] transition cursor-pointer flex items-center gap-2 disabled:opacity-50"
             >
               <Save size={15} />
               <span>{isSaving ? "Saving Defaults..." : "Save Quotation Defaults"}</span>

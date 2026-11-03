@@ -196,7 +196,7 @@ export const SalesAttachmentsMaster: React.FC = () => {
       cell: (row) => (
         <div className="text-xs">
           {row.enquiryId && (
-            <div className="font-mono text-slate-700">Enq: {row.enquiryId}</div>
+            <div className="text-slate-700 font-medium">Enq: {row.enquiryId}</div>
           )}
           {(row.salesActivityId || row.relatedActivityCode) && (
             <div className="text-slate-500">

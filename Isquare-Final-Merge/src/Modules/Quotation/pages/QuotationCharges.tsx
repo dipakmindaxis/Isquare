@@ -141,7 +141,7 @@ export const QuotationCharges: React.FC = () => {
 
       {/* Section Title & Action Buttons */}
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h2 className="border-b-2 border-[#FF7900] pb-2 text-2xl sm:text-3xl font-bold tracking-tight text-[#00234a]">
+        <h2 className="border-b-2 border-[#FF7900] pb-2 text-3xl font-bold tracking-[-0.03em] text-[#00234a]">
           Named Charges
         </h2>
 
@@ -149,7 +149,7 @@ export const QuotationCharges: React.FC = () => {
           <button
             type="button"
             onClick={fetchCharges}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#00234a] shadow-xs transition hover:bg-slate-50 cursor-pointer"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#00234a] shadow-xs transition hover:bg-slate-50 cursor-pointer"
             title="Refresh charges list"
           >
             <RefreshCw size={14} className="text-[#FF7900]" />
@@ -158,7 +158,7 @@ export const QuotationCharges: React.FC = () => {
           <button
             type="button"
             onClick={handleOpenAdd}
-            className="rounded-xl bg-[#00234a] hover:bg-[#FF7900] px-5 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-[0_10px_18px_rgba(0,35,74,0.18)] transition cursor-pointer flex items-center gap-2"
+            className="rounded-xl bg-[#00234a] hover:bg-[#FF7900] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_18px_rgba(0,35,74,0.18)] transition cursor-pointer flex items-center gap-2"
           >
             <Plus size={15} />
             <span>Add Named Charge</span>
@@ -169,9 +169,9 @@ export const QuotationCharges: React.FC = () => {
       {/* Table Container */}
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[820px] border-collapse text-left text-xs">
+          <table className="w-full min-w-[820px] border-collapse text-left text-sm">
             <thead>
-              <tr className="bg-[#FF7900] text-white font-bold uppercase text-[12px] tracking-wider">
+              <tr className="bg-[#FF7900] text-white font-semibold uppercase text-[13px] tracking-wider">
                 <th className="p-3.5 border-r border-[#e06800]">Charge Name</th>
                 <th className="p-3.5 border-r border-[#e06800]">Description</th>
                 <th className="p-3.5 text-center border-r border-[#e06800]">Type</th>
@@ -212,7 +212,7 @@ export const QuotationCharges: React.FC = () => {
                           {ch.chargeType}
                         </span>
                       </td>
-                      <td className="p-3.5 text-right font-mono font-medium text-gray-800">
+                      <td className="p-3.5 text-right font-medium text-gray-800">
                         {ch.chargeType === "Percentage" ? `${ch.chargeAmount}%` : formatINR(ch.chargeAmount)}
                       </td>
                       <td className="p-3.5 text-center">
@@ -223,7 +223,7 @@ export const QuotationCharges: React.FC = () => {
                         )}
                       </td>
                       <td className="p-3.5 text-center font-medium">{ch.isTaxable ? `${ch.taxRate}%` : "0%"}</td>
-                      <td className="p-3.5 text-right font-bold text-gray-900 font-mono">
+                      <td className="p-3.5 text-right font-semibold text-gray-900">
                         {formatINR(total)}
                       </td>
                       <td className="p-3.5 text-right space-x-1.5 whitespace-nowrap">
@@ -279,7 +279,7 @@ export const QuotationCharges: React.FC = () => {
                   placeholder="e.g. Calibration & Certification"
                   value={chargeName}
                   onChange={(e) => setChargeName(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs font-semibold text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm font-medium text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
                 />
               </div>
 
@@ -292,7 +292,7 @@ export const QuotationCharges: React.FC = () => {
                   placeholder="Optional details"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
                 />
               </div>
 
@@ -304,7 +304,7 @@ export const QuotationCharges: React.FC = () => {
                   <select
                     value={chargeType}
                     onChange={(e) => setChargeType(e.target.value as "Fixed" | "Percentage")}
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs font-semibold text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs cursor-pointer"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm font-normal text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs cursor-pointer"
                   >
                     <option value="Fixed">Fixed Amount (₹)</option>
                     <option value="Percentage">Percentage (%)</option>
@@ -322,7 +322,7 @@ export const QuotationCharges: React.FC = () => {
                     required
                     value={chargeAmount}
                     onChange={(e) => setChargeAmount(parseFloat(e.target.value) || 0)}
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-right text-xs font-semibold text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-right text-sm font-medium text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
                   />
                 </div>
               </div>
@@ -357,14 +357,14 @@ export const QuotationCharges: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-[#00234a] shadow-xs transition hover:bg-slate-50 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-[#00234a] shadow-xs transition hover:bg-slate-50 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="rounded-xl bg-[#00234a] hover:bg-[#FF7900] px-5 py-2 text-xs font-semibold text-white shadow-xs transition cursor-pointer disabled:opacity-50"
+                  className="rounded-xl bg-[#00234a] hover:bg-[#FF7900] px-5 py-2 text-sm font-semibold text-white shadow-xs transition cursor-pointer disabled:opacity-50"
                 >
                   {isSubmitting ? "Saving..." : editingCharge ? "Update Charge" : "Create Charge"}
                 </button>
