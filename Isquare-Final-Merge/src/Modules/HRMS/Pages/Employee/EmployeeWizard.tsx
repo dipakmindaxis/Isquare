@@ -33,7 +33,6 @@ import {
 import { API_ENDPOINTS } from "../../../../API/apiConfig";
 import axios, { AxiosError } from "axios";
 import ExpQualTab from "./Tabs/ExpQualTab";
-import { buttonStyles } from "../../../../Components/Common/buttonStyles";
 
 type FormValue =
   | string
@@ -71,6 +70,7 @@ export interface EmployeeFormData {
   designationName: string;
   departmentID: string | number;
   levelID: string | number;
+  reportingTo?: string | number;
   panNumber: string;
   aadhaarNumber: string;
   passportNumber: string;
@@ -143,7 +143,6 @@ const EmployeeWizard: React.FC<EmployeeWizardProps> = ({
   onSuccess,
   onCancel,
 }) => {
-  const [activeTab, setActiveTab] = useState(0);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [countries, setCountries] = useState<CountryItem[]>([]);
   const [states, setStates] = useState<StateItem[]>([]);
@@ -164,6 +163,7 @@ const EmployeeWizard: React.FC<EmployeeWizardProps> = ({
     designationName: "",
     departmentID: "",
     levelID: "",
+  reportingTo: "",
     panNumber: "",
     aadhaarNumber: "",
     passportNumber: "",
@@ -346,33 +346,6 @@ const EmployeeWizard: React.FC<EmployeeWizardProps> = ({
     return true;
   };
 
-  const validateExpQual = (): boolean => true; // No mandatory fields
-
-  const validateCurrentTab = (): boolean => {
-    switch (activeTab) {
-      case 0:
-        return validateEmployeeDetails();
-      case 1:
-        return validateCurrentAddress();
-      case 2:
-        return validatePermanentAddress();
-      case 3:
-        return validateBankDetails();
-      case 4:
-        return validateExpQual();
-      default:
-        return true;
-    }
-  };
-
-  const handleTabChange = (index: number) => {
-    if (index > activeTab && !validateCurrentTab()) {
-      toast.error("Please fill all required fields in current tab");
-      return;
-    }
-    setActiveTab(index);
-  };
-
   const handleSave = async () => {
     // Validate all tabs before saving
     const isValid =
@@ -381,10 +354,10 @@ const EmployeeWizard: React.FC<EmployeeWizardProps> = ({
       validatePermanentAddress() &&
       validateBankDetails();
     if (!isValid) {
-      if (!validateEmployeeDetails()) setActiveTab(0);
-      else if (!validateCurrentAddress()) setActiveTab(1);
-      else if (!validatePermanentAddress()) setActiveTab(2);
-      else if (!validateBankDetails()) setActiveTab(3);
+      if (!validateEmployeeDetails()) scrollToSection("emp-section-0");
+      else if (!validateCurrentAddress()) scrollToSection("emp-section-1");
+      else if (!validatePermanentAddress()) scrollToSection("emp-section-2");
+      else if (!validateBankDetails()) scrollToSection("emp-section-3");
       toast.error("Please fill all required fields");
       return;
     }
@@ -416,6 +389,7 @@ const EmployeeWizard: React.FC<EmployeeWizardProps> = ({
     appendIfValid("DepartmentID", formData.departmentID);
     appendIfValid("DesignationID", formData.designationID);
     appendIfValid("LevelID", formData.levelID);
+    appendIfValid("ReportingTo", formData.reportingTo);
     data.append("PANNumber", formData.panNumber);
     data.append("AadhaarNumber", formData.aadhaarNumber);
     data.append("PassportNumber", formData.passportNumber);
@@ -477,80 +451,74 @@ const EmployeeWizard: React.FC<EmployeeWizardProps> = ({
     }
   };
 
-  const hasErrorsInTab = (tabIndex: number): boolean => {
-    switch (tabIndex) {
-      case 0:
-        return !!(
-          errors.employeeCode ||
-          errors.firstName ||
-          errors.designationID ||
-          errors.companyId ||
-          errors.departmentID ||
-          errors.levelID ||
-          errors.roleId ||
-          errors.panNumber ||
-          errors.aadhaarNumber ||
-          errors.photoFile ||
-          errors.attachments
-        );
-      case 1:
-        return !!(errors.curMobileNo || errors.curEmail);
-      case 2:
-        return !!(errors.permMobileNo || errors.permEmail);
-      case 3:
-        return false;
-      default:
-        return false;
+    const scrollToSection = (sectionId: string) => {
+    const el = document.getElementById(sectionId);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };
 
-  const tabs = [
-    { label: "Employee Details", icon: <Building size={16} /> },
-    { label: "Current Address", icon: <MapPin size={16} /> },
-    { label: "Permanent Address", icon: <Globe size={16} /> },
-    { label: "Bank Details", icon: <CreditCard size={16} /> },
-    { label: "Exp / Qual", icon: <GraduationCap size={16} /> },
-  ];
+  const handleSamePermanent = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setFormData((prev) => ({
+        ...prev,
+        permFlatNo: prev.curFlatNo,
+        permPremisesName: prev.curPremisesName,
+        permRoadName: prev.curRoadName,
+        permLocality: prev.curLocality,
+        permTownDistrict: prev.curTownDistrict,
+        permPinNo: prev.curPinNo,
+        permCountryId: prev.curCountryId,
+        permStateId: prev.curStateId,
+        permMobileNo: prev.curMobileNo,
+        permAltMobileNo: prev.curAltMobileNo,
+        permEmail: prev.curEmail,
+        permAltEmail: prev.curAltEmail,
+      }));
+    }
+  };
 
   return (
-    <div className="bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden mb-8 animate-in slide-in-from-top-4 duration-500">
-      <div className="flex bg-[#154068] p-1.5 gap-1">
-        {tabs.map((tab, index) => (
-          <button
-            key={tab.label}
-            type="button"
-            onClick={() => handleTabChange(index)}
-            className={`flex-1 py-3 text-[11px] font-extrabold uppercase tracking-widest rounded-md transition-all duration-300 flex items-center justify-center gap-2 relative ${
-              activeTab === index
-                ? "bg-white text-[#154068] shadow-lg scale-[1.02]"
-                : "text-white hover:bg-white/10"
-            }`}
-          >
-            {tab.icon} {tab.label}
-            {hasErrorsInTab(index) && activeTab !== index && (
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse"></span>
-            )}
-          </button>
-        ))}
+    <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden mb-8 animate-in slide-in-from-top-4 duration-300">
+      {/* Orange Header - Only Employee Details */}
+      <div className="flex items-center justify-between bg-[#FF7900] px-6 py-4 rounded-t-2xl shadow-md text-white">
+        <div className="flex items-center gap-2.5">
+          <Building className="w-5 h-5 text-white" />
+          <h2 className="text-sm sm:text-base font-extrabold tracking-widest uppercase text-white">
+            Employee Details
+          </h2>
+        </div>
       </div>
 
-      <div className="p-8 bg-white min-h-[450px]">
-        {activeTab === 0 && (
+      {/* Single Page Section-Wise Content */}
+      <div className="p-6 sm:p-8 bg-gray-50/60 space-y-8">
+        {/* SECTION 1: EMPLOYEE DETAILS */}
+        <div id="emp-section-0" className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5 scroll-mt-16">
+          <div className="flex items-center gap-2.5 text-[#FF7900] font-bold text-base border-b border-orange-100 pb-3">
+            <Building size={20} className="text-[#FF7900]" />
+            <span>Section 1 - Employee Details</span>
+          </div>
           <EmployeeDetailsTab
-                      ref={employeeDetailsRef}
-                      formData={formData}
-                      setFormData={setFormData}
-                      photoFile={photoFile}
-                      setPhotoFile={setPhotoFile}
-                      companies={companies}
-                      departments={departments}
-                      designations={designations}
-                      roles={roles}
-                      levels={levels}
-                      errors={errors}
-                    />
-        )}
-        {activeTab === 1 && (
+            ref={employeeDetailsRef}
+            formData={formData}
+            setFormData={setFormData}
+            photoFile={photoFile}
+            setPhotoFile={setPhotoFile}
+            companies={companies}
+            departments={departments}
+            designations={designations}
+            roles={roles}
+            levels={levels}
+            errors={errors}
+          />
+        </div>
+
+        {/* SECTION 2: CURRENT ADDRESS */}
+        <div id="emp-section-1" className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5 scroll-mt-16">
+          <div className="flex items-center gap-2.5 text-[#FF7900] font-bold text-base border-b border-orange-100 pb-3">
+            <MapPin size={20} className="text-[#FF7900]" />
+            <span>Section 2 - Current Address</span>
+          </div>
           <EmployeeAddressTab
             type="cur"
             formData={formData}
@@ -559,8 +527,27 @@ const EmployeeWizard: React.FC<EmployeeWizardProps> = ({
             states={states}
             errors={errors}
           />
-        )}
-        {activeTab === 2 && (
+        </div>
+
+        {/* SECTION 3: PERMANENT ADDRESS */}
+        <div id="emp-section-2" className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5 scroll-mt-16">
+          <div className="flex items-center justify-between border-b border-orange-100 pb-3">
+            <div className="flex items-center gap-2.5 text-[#FF7900] font-bold text-base">
+              <Globe size={20} className="text-[#FF7900]" />
+              <span>Section 3 - Permanent Address</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="samePermAddress"
+                className="h-4 w-4 text-[#FF7900] rounded focus:ring-[#FF7900] cursor-pointer"
+                onChange={handleSamePermanent}
+              />
+              <label htmlFor="samePermAddress" className="text-xs font-semibold text-gray-700 cursor-pointer">
+                Same as Current Address
+              </label>
+            </div>
+          </div>
           <EmployeeAddressTab
             type="perm"
             formData={formData}
@@ -569,56 +556,50 @@ const EmployeeWizard: React.FC<EmployeeWizardProps> = ({
             states={states}
             errors={errors}
           />
-        )}
-        {activeTab === 3 && (
+        </div>
+
+        {/* SECTION 4: BANK DETAILS */}
+        <div id="emp-section-3" className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5 scroll-mt-16">
+          <div className="flex items-center gap-2.5 text-[#FF7900] font-bold text-base border-b border-orange-100 pb-3">
+            <CreditCard size={20} className="text-[#FF7900]" />
+            <span>Section 4 - Bank Details</span>
+          </div>
           <BankDetailsTab formData={formData} setFormData={setFormData} />
-        )}
-        {activeTab === 4 && (
+        </div>
+
+        {/* SECTION 5: EXPERIENCE & QUALIFICATIONS */}
+        <div id="emp-section-4" className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5 scroll-mt-16">
+          <div className="flex items-center gap-2.5 text-[#FF7900] font-bold text-base border-b border-orange-100 pb-3">
+            <GraduationCap size={20} className="text-[#FF7900]" />
+            <span>Section 5 - Experience & Qualifications</span>
+          </div>
           <ExpQualTab formData={formData} setFormData={setFormData} />
-        )}
+        </div>
       </div>
 
-      <div className="p-5 bg-gray-50 flex justify-end gap-3 border-t">
+      {/* Action Footer Bar */}
+      <div className="p-5 bg-white flex justify-end gap-3 border-t border-gray-200 sticky bottom-0 z-20 shadow-lg">
         <button
           type="button"
           onClick={onCancel}
-          className={buttonStyles.cancel}
+          className="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-semibold text-sm hover:bg-gray-50 transition cursor-pointer"
         >
           Cancel
         </button>
-        {activeTab > 0 && (
-          <button
-            type="button"
-            onClick={() => setActiveTab(activeTab - 1)}
-            className={buttonStyles.back}
-          >
-            Back
-          </button>
-        )}
-        {activeTab < tabs.length - 1 ? (
-          <button
-            type="button"
-            onClick={() => handleTabChange(activeTab + 1)}
-            className={buttonStyles.next}
-          >
-            Next
-          </button>
-        ) : (
-          <button
-            type="button"
-            disabled={isSaving}
-            onClick={handleSave}
-            className={buttonStyles.save}
-          >
-            {isSaving ? (
-              <>
-                <Loader2 className="animate-spin" size={16} /> Saving...
-              </>
-            ) : (
-              "Save"
-            )}
-          </button>
-        )}
+        <button
+          type="button"
+          disabled={isSaving}
+          onClick={handleSave}
+          className="px-6 py-2.5 rounded-lg bg-[#FF7900] hover:bg-[#e06800] text-white font-semibold text-sm shadow-md shadow-orange-500/20 transition cursor-pointer flex items-center gap-2 disabled:opacity-50"
+        >
+          {isSaving ? (
+            <>
+              <Loader2 className="animate-spin" size={16} /> Saving Employee...
+            </>
+          ) : (
+            "Save Employee"
+          )}
+        </button>
       </div>
     </div>
   );

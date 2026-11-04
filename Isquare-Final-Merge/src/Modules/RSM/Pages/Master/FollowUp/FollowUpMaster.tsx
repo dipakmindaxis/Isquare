@@ -40,10 +40,8 @@ import {
   getAllPriorities,
   type Priority,
 } from "../Priority/Services/PriorityService";
-import {
-  getAllBdeUsers,
-  type BdeUser,
-} from "../BdeUsers/Services/BdeUserService";
+import { getBdeUsers as getAllBdeUsers } from "../../Customer/Services/CustomerMasterDataService";
+type BdeUser = any;
 import {
   getAllCustomerStatuses,
   type CustomerStatus,

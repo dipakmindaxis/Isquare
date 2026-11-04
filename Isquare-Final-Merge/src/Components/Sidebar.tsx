@@ -182,16 +182,6 @@ export const rsmMenuConfig: MenuItem[] = [
         to: "/rsm/master/customer-classification",
       },
       {
-        icon: <UserCheck />,
-        label: "SALES TEAM MASTER",
-        to: "/rsm/master/sales-team",
-      },
-      {
-        icon: <UserCheck />,
-        label: "SALES COORDINATOR",
-        to: "/rsm/sales-coordinator",
-      },
-      {
         icon: <ShieldCheck />,
         label: "ROLE MASTER",
         to: "/rsm/role",
@@ -245,16 +235,6 @@ export const rsmMenuConfig: MenuItem[] = [
         icon: <MapPin />,
         label: "LOCATION MASTERS",
         to: "/rsm/master/country",
-      },
-      {
-        icon: <UserCheck />,
-        label: "BDE USERS",
-        to: "/rsm/bde-users",
-      },
-      {
-        icon: <UserCog />,
-        label: "SALES MANAGERS",
-        to: "/rsm/sales-user-manager",
       },
       {
         icon: <Users />,
@@ -505,6 +485,7 @@ export const Sidebar = ({ isOpen }: SidebarProps) => {
   const getVisibleMenu = (menuItems: MenuItem[]): MenuItem[] => {
     return menuItems
       .map((item) => {
+        if (item.to === "/rsm/master/follow-up") return null;
         if (item.subMenu && item.subMenu.length > 0) {
           const filteredSubMenu = getVisibleMenu(item.subMenu);
 

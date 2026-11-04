@@ -33,10 +33,10 @@ const SectionHeader: React.FC<{ icon: React.ElementType; title: string }> = ({
   title,
 }) => (
   <div className="flex items-center gap-2 pb-2 border-b border-gray-100 mb-4 mt-6 first:mt-0">
-    <div className="bg-[#133561] p-1.5 rounded-lg text-white">
+    <div className="bg-[#FF7900] p-1.5 rounded-lg text-white">
       <Icon size={16} />
     </div>
-    <h3 className="font-bold text-[#133561] uppercase text-xs tracking-wider">
+    <h3 className="font-bold text-[#FF7900] uppercase text-xs tracking-wider">
       {title}
     </h3>
   </div>
@@ -50,7 +50,7 @@ const DetailItem: React.FC<{
     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">
       {label}
     </p>
-    <p className="text-sm font-semibold text-[#133561] truncate">
+    <p className="text-sm font-semibold text-slate-800 truncate">
       {value || "—"}
     </p>
   </div>
@@ -128,7 +128,7 @@ const ViewEmployeeModal: React.FC<ViewEmployeeModalProps> = ({
     <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
         {/* Header Section */}
-        <div className="bg-[#133561] p-6 text-white flex justify-between items-center shrink-0">
+        <div className="bg-[#FF7900] p-6 text-white flex justify-between items-center shrink-0">
           <div className="flex items-center gap-5">
             <div className="w-20 h-20 rounded-2xl border-4 border-white/20 overflow-hidden bg-white shadow-lg">
               {employee?.photoPath ? (
@@ -138,7 +138,7 @@ const ViewEmployeeModal: React.FC<ViewEmployeeModalProps> = ({
                   alt="Profile"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gray-100 text-[#133561]">
+                <div className="w-full h-full flex items-center justify-center bg-gray-100 text-[#FF7900]">
                   <User size={40} />
                 </div>
               )}
@@ -167,7 +167,7 @@ const ViewEmployeeModal: React.FC<ViewEmployeeModalProps> = ({
 
         <div className="overflow-y-auto p-8 grid grid-cols-12 gap-8">
           {isLoading ? (
-            <div className="col-span-full flex flex-col justify-center items-center h-96 text-blue-600">
+            <div className="col-span-full flex flex-col justify-center items-center h-96 text-[#FF7900]">
               <Loader2 className="animate-spin mb-2" size={40} />
               <p className="font-bold">Loading Employee Profile...</p>
             </div>
@@ -178,15 +178,12 @@ const ViewEmployeeModal: React.FC<ViewEmployeeModalProps> = ({
                 <div>
                   <SectionHeader icon={Building} title="Organization" />
                   <div className="grid grid-cols-1 gap-3">
-                    <DetailItem label="Company" value={employee.companyName} />
+                    <DetailItem label="Company" value={employee.companyName || "I-Square Safety Equipments Pvt. Ltd."} />
                     <DetailItem
                       label="Department"
                       value={employee.departmentName}
                     />
-                    <DetailItem
-                      label="Work Location"
-                      value={employee.workLocationName}
-                    />
+                    <DetailItem label="Work Location" value={employee.workLocationName || "Head Office"} />
                     <DetailItem
                       label="Reporting To"
                       value={employee.reportingToName}
@@ -199,15 +196,15 @@ const ViewEmployeeModal: React.FC<ViewEmployeeModalProps> = ({
                   <div className="grid grid-cols-1 gap-3">
                     <DetailItem
                       label="Aadhaar Number"
-                      value={employee.statutoryDetails?.aadhaarNumber}
+                      value={employee.statutoryDetails?.aadhaarNumber || (employee as any).aadhaarNumber || (employee as any).AadhaarNumber || (employee as any).aadharNumber}
                     />
                     <DetailItem
                       label="PAN Number"
-                      value={employee.statutoryDetails?.panNumber}
+                      value={employee.statutoryDetails?.panNumber || (employee as any).panNumber || (employee as any).PANNumber || (employee as any).panNo}
                     />
                     <DetailItem
                       label="UAN Number"
-                      value={employee.statutoryDetails?.uanNo}
+                      value={employee.statutoryDetails?.uanNo || (employee as any).uanNo || (employee as any).uanNumber || (employee as any).UanNo}
                     />
                   </div>
                 </div>
@@ -217,18 +214,31 @@ const ViewEmployeeModal: React.FC<ViewEmployeeModalProps> = ({
               <div className="col-span-12 lg:col-span-4 space-y-6 border-x border-gray-100 px-4">
                 <div>
                   <SectionHeader icon={MapPin} title="Current Address" />
-                  <p className="text-sm text-gray-700 leading-relaxed font-medium">
-                    {employee.curFlatNo}, {employee.curPremisesName},{" "}
-                    {employee.curRoadName},<br />
-                    {employee.curLocality}, {employee.curTownDistrict} -{" "}
-                    {employee.curPinNo}
-                  </p>
+                  {(() => {
+                    const line1 = [employee.curFlatNo, employee.curPremisesName, employee.curRoadName].filter(Boolean).map(s => s?.trim()).filter(Boolean).join(", ");
+                    const line2 = [employee.curLocality, employee.curTownDistrict].filter(Boolean).map(s => s?.trim()).filter(Boolean).join(", ");
+                    const pin = employee.curPinNo?.trim() ? ` - ${employee.curPinNo.trim()}` : "";
+                    const addressLines = [line1, line2 ? line2 + pin : pin.trim()].filter(Boolean);
+                    const formattedAddress = addressLines.length > 0 ? addressLines.join("\n") : (employee as any).presentAddress || (employee as any).PresentAddress;
+                    return formattedAddress ? (
+                      <p className="text-sm text-gray-700 leading-relaxed font-medium whitespace-pre-line">
+                        {formattedAddress}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-gray-400 italic font-medium">
+                        Address not provided
+                      </p>
+                    );
+                  })()}
                   <div className="mt-4 space-y-2">
                     <DetailItem
                       label="Primary Mobile"
-                      value={employee.mobileNumber}
+                      value={employee.mobileNumber || employee.curMobileNo || (employee as any).MobileNumber || (employee as any).CurMobileNo || (employee as any).mobileNo || (employee as any).phone}
                     />
-                    <DetailItem label="Email" value={employee.emailAddress} />
+                    <DetailItem
+                      label="Email"
+                      value={employee.emailAddress || employee.curEmail || (employee as any).EmailAddress || (employee as any).Email}
+                    />
                   </div>
                 </div>
 
@@ -269,7 +279,7 @@ const ViewEmployeeModal: React.FC<ViewEmployeeModalProps> = ({
                     {employee.qualifications?.map((q, i) => (
                       <div
                         key={i}
-                        className="border-l-2 border-blue-500 pl-3 py-1"
+                        className="border-l-2 border-[#FF7900] pl-3 py-1"
                       >
                         <p className="text-sm font-bold text-gray-800">
                           {q.degree}
@@ -317,7 +327,7 @@ const ViewEmployeeModal: React.FC<ViewEmployeeModalProps> = ({
                         </div>
                         <button
                           onClick={() => handleDownloadDocument(doc)}
-                          className="text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="text-[#FF7900] opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                           <Download size={16} />
                         </button>

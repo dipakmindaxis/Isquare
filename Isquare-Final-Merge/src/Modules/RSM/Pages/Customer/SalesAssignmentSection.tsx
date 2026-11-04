@@ -14,6 +14,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
+import Select from "react-select";
 import {
   getEmployees,
   getDirectors,
@@ -74,6 +75,46 @@ export interface DynamicBdeUser {
 
 export const ASSIGNMENT_ROLES: RoleType[] = [
 ];
+const customSelectStyles = (hasError: boolean, isDisabled?: boolean) => ({
+  control: (base: any, state: any) => ({
+    ...base,
+    minHeight: "44px",
+    borderRadius: "0.5rem",
+    borderColor: hasError ? "#ef4444" : state.isFocused ? "#FF7900" : "#d1d5db",
+    boxShadow: state.isFocused ? (hasError ? "0 0 0 1px #ef4444" : "0 0 0 1px #FF7900") : "none",
+    backgroundColor: isDisabled ? "#f9fafb" : "#ffffff",
+    cursor: isDisabled ? "not-allowed" : "pointer",
+    opacity: isDisabled ? 0.6 : 1,
+    fontSize: "0.875rem",
+    "&:hover": {
+      borderColor: hasError ? "#ef4444" : "#FF7900",
+    },
+  }),
+  menu: (base: any) => ({
+    ...base,
+    borderRadius: "0.5rem",
+    zIndex: 9999,
+  }),
+  option: (base: any, state: any) => ({
+    ...base,
+    fontSize: "0.875rem",
+    backgroundColor: state.isSelected ? "#154068" : state.isFocused ? "#eff6ff" : "#ffffff",
+    color: state.isSelected ? "#ffffff" : "#1f2937",
+    cursor: "pointer",
+  }),
+  placeholder: (base: any) => ({
+    ...base,
+    color: "#6b7280",
+    fontSize: "0.875rem",
+  }),
+  singleValue: (base: any) => ({
+    ...base,
+    color: "#1f2937",
+    fontSize: "0.875rem",
+  }),
+});
+
+
 
 export interface SalesAssignmentFormValues {
   directorId?: number | "";
@@ -739,65 +780,10 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
   }, [selectedSalesPersonId, selectedDirectorObj, selectedBdeObj]);
 
   // 1. Handle Director Change: populates BDE Users under this Director
-  const handleDirectorChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const dirId = e.target.value ? Number(e.target.value) : "";
-    setSelectedDirectorId(dirId);
-    setSelectedBdeId("");
-    setSelectedSalesPersonId("");
-    setSelectedOwnerValue("");
-    setValidationErrors((prev) => ({
-      ...prev,
-      directorId: undefined,
-      bdeUserId: undefined,
-      salesCoordinatorId: undefined,
-      customerOwnerId: undefined,
-    }));
-
-    const dir = dirId
-      ? directors.find((d) => d.id === dirId) ||
-      employees.find((e) => e.id === dirId) ||
-      null
-      : null;
-
-    syncCascadingToParent(dir, null, null, null);
-
-    if (dirId) {
-      loadBdesForDirector(dirId, bdeUsers, employees);
-    } else {
-      setFilteredBdes([]);
-      setFilteredSalesPersons([]);
-    }
-  };
+  // handleDirectorChange replaced by onDirectorSelect
 
   // 2. Handle BDE Change: populates Sales Persons under this BDE User
-  const handleBdeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const bdeId = e.target.value ? Number(e.target.value) : "";
-    setSelectedBdeId(bdeId);
-    setSelectedSalesPersonId("");
-    setSelectedOwnerValue("");
-    setValidationErrors((prev) => ({
-      ...prev,
-      bdeUserId: undefined,
-      salesCoordinatorId: undefined,
-      customerOwnerId: undefined,
-    }));
-
-    const dir = selectedDirectorObj;
-    const bde = bdeId
-      ? filteredBdes.find((b) => b.id === bdeId) ||
-      bdeUsers.find((b) => b.id === bdeId) ||
-      employees.find((e) => e.id === bdeId) ||
-      null
-      : null;
-
-    syncCascadingToParent(dir, bde, null, null);
-
-    if (bdeId) {
-      loadSalesPersonsForBde(bdeId, allSalesCoordinators, employees);
-    } else {
-      setFilteredSalesPersons([]);
-    }
-  };
+  // handleBdeChange replaced by onBdeSelect
 
   // 3. Handle Sales Person Change: brings up Customer Owner column
   const handleSalesPersonChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -833,56 +819,7 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
   };
 
   // 4. Handle Customer Owner Change: user selects Director or BDE as Customer Owner
-  const handleCustomerOwnerChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const val = e.target.value;
-    setSelectedOwnerValue(val);
-    setValidationErrors((prev) => ({ ...prev, customerOwnerId: undefined }));
-
-    const dir = selectedDirectorObj;
-    const bde = selectedBdeObj;
-    const sp = selectedSalesPersonId
-      ? filteredSalesPersons.find((s) => s.salesCoordinatorId === selectedSalesPersonId) ||
-      allSalesCoordinators.find((s) => s.salesCoordinatorId === selectedSalesPersonId) ||
-      null
-      : null;
-
-    if (!val) {
-      syncCascadingToParent(
-        dir,
-        bde,
-        sp
-          ? {
-            id: sp.salesCoordinatorId,
-            name: (sp as any).salesCoordinatorName || (sp as any).name,
-            code: (sp as any).salesCoordinatorCode || (sp as any).code,
-          }
-          : null,
-        null
-      );
-      return;
-    }
-
-    const matchedOption = customerOwnerOptions.find((opt) => opt.value === val);
-    syncCascadingToParent(
-      dir,
-      bde,
-      sp
-        ? {
-          id: sp.salesCoordinatorId,
-          name: (sp as any).salesCoordinatorName || (sp as any).name,
-          code: (sp as any).salesCoordinatorCode || (sp as any).code,
-        }
-        : null,
-      matchedOption
-        ? {
-          id: matchedOption.id,
-          name: matchedOption.name,
-          type: matchedOption.type,
-          value: matchedOption.value,
-        }
-        : null
-    );
-  };
+  // handleCustomerOwnerChange replaced by onCustomerOwnerSelect
 
   // Reset Assignment Form
   const handleReset = () => {
@@ -1161,6 +1098,143 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
     return base;
   };
 
+  // Searchable Select Options for Required Fields
+  const directorSelectOptions = useMemo(() => {
+    const list = directors.length > 0
+      ? directors
+      : employees.filter((e) => (e.role || "").toLowerCase().includes("director"));
+    return list.map((dir) => ({
+      value: dir.id,
+      label: formatEmployeeDisplay(dir.name, dir.code),
+    }));
+  }, [directors, employees]);
+
+  const selectedDirectorOpt = directorSelectOptions.find((d) => d.value === selectedDirectorId) || null;
+
+  const bdeSelectOptions = useMemo(() => {
+    return bdeDisplayOptions.map((b) => ({
+      value: b.id,
+      label: formatEmployeeDisplay(b.name, b.code),
+    }));
+  }, [bdeDisplayOptions]);
+
+  const selectedBdeOpt = bdeSelectOptions.find((b) => b.value === selectedBdeId) || null;
+
+  const selectedOwnerOpt = customerOwnerOptions.find((o) => o.value === selectedOwnerValue) || null;
+
+  const onDirectorSelect = (opt: { value: number; label: string } | null) => {
+    const dirId = opt?.value ? Number(opt.value) : "";
+    setSelectedDirectorId(dirId);
+    setSelectedBdeId("");
+    setSelectedSalesPersonId("");
+    setSelectedOwnerValue("");
+
+    setValidationErrors((prev) => ({
+      ...prev,
+      directorId: undefined,
+      bdeUserId: undefined,
+      salesCoordinatorId: undefined,
+      customerOwnerId: undefined,
+    }));
+
+    const dir = dirId
+      ? directors.find((d) => d.id === dirId) ||
+      employees.find((e) => e.id === dirId) ||
+      null
+      : null;
+
+    syncCascadingToParent(dir, null, null, null);
+
+    if (dirId) {
+      loadBdesForDirector(dirId, bdeUsers, employees);
+    } else {
+      setFilteredBdes([]);
+      setFilteredSalesPersons([]);
+    }
+  };
+
+  const onBdeSelect = (opt: { value: number; label: string } | null) => {
+    const bdeId = opt?.value ? Number(opt.value) : "";
+    setSelectedBdeId(bdeId);
+    setSelectedSalesPersonId("");
+    setSelectedOwnerValue("");
+
+    setValidationErrors((prev) => ({
+      ...prev,
+      bdeUserId: undefined,
+      salesCoordinatorId: undefined,
+      customerOwnerId: undefined,
+    }));
+
+    const dir = selectedDirectorObj;
+    const bde = bdeId
+      ? filteredBdes.find((b) => b.id === bdeId) ||
+      bdeUsers.find((b) => b.id === bdeId) ||
+      employees.find((e) => e.id === bdeId) ||
+      null
+      : null;
+
+    syncCascadingToParent(dir, bde, null, null);
+
+    if (bdeId) {
+      loadSalesPersonsForBde(bdeId, allSalesCoordinators, employees);
+    } else {
+      setFilteredSalesPersons([]);
+    }
+  };
+
+  const onCustomerOwnerSelect = (opt: { value: string; label: string } | null) => {
+    const val = opt?.value || "";
+    setSelectedOwnerValue(val);
+    setValidationErrors((prev) => ({ ...prev, customerOwnerId: undefined }));
+
+    const dir = selectedDirectorObj;
+    const bde = selectedBdeObj;
+    const sp = selectedSalesPersonId
+      ? filteredSalesPersons.find((s) => s.salesCoordinatorId === selectedSalesPersonId) ||
+      allSalesCoordinators.find((s) => s.salesCoordinatorId === selectedSalesPersonId) ||
+      null
+      : null;
+
+    if (!val) {
+      syncCascadingToParent(
+        dir,
+        bde,
+        sp
+          ? {
+            id: sp.salesCoordinatorId,
+            name: (sp as any).salesCoordinatorName || (sp as any).name,
+            code: (sp as any).salesCoordinatorCode || (sp as any).code,
+          }
+          : null,
+        null
+      );
+      return;
+    }
+
+    const matchedOption = customerOwnerOptions.find((o) => o.value === val);
+    syncCascadingToParent(
+      dir,
+      bde,
+      sp
+        ? {
+          id: sp.salesCoordinatorId,
+          name: (sp as any).salesCoordinatorName || (sp as any).name,
+          code: (sp as any).salesCoordinatorCode || (sp as any).code,
+        }
+        : null,
+      matchedOption
+        ? {
+          id: matchedOption.id,
+          name: matchedOption.name,
+          type: matchedOption.type,
+          value: matchedOption.value,
+        }
+        : null
+    );
+  };
+
+
   // Level Modal Handlers
   const handleOpenAddLevel = () => {
     setEditingLevelId(null);
@@ -1326,38 +1400,27 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
             {/* Dynamic Grid: 4 columns if Sales Person is selected, otherwise 3 columns */}
             <div
               className={`grid grid-cols-1 ${selectedSalesPersonId ? "md:grid-cols-4" : "md:grid-cols-3"
-                } gap-5 transition-all duration-200`}
+                } gap-x-8 gap-y-6 transition-all duration-200`}
             >
               {/* FIELD 1: Select Director */}
               <div>
                 <label
                   htmlFor="role_assignment_director_select"
-                  className="text-xs font-semibold text-gray-700 block mb-1.5"
+                  className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block"
                 >
                   Select Director <span className="text-red-500">*</span>
                 </label>
-                <select
+                <Select
                   id="role_assignment_director_select"
-                  value={selectedDirectorId}
-                  onChange={handleDirectorChange}
-                  disabled={disabled || isLoadingDynamicData}
-                  className={`w-full rounded-lg px-3.5 py-2.5 outline-none border text-sm bg-white text-gray-800 transition focus:border-blue-500 focus:ring-1 focus:ring-blue-200 cursor-pointer shadow-xs ${validationErrors.directorId || propErrors.directorId
-                      ? "border-red-500 ring-1 ring-red-500/20"
-                      : "border-gray-300"
-                    } ${disabled || isLoadingDynamicData ? "opacity-60 bg-gray-50 cursor-not-allowed" : ""}`}
-                >
-                  <option value="">
-                    {isLoadingDynamicData ? "Loading directors..." : "-- Select Director --"}
-                  </option>
-                  {(directors.length > 0
-                    ? directors
-                    : employees.filter((e) => (e.role || "").toLowerCase().includes("director"))
-                  ).map((dir) => (
-                    <option key={dir.id} value={dir.id}>
-                      {formatEmployeeDisplay(dir.name, dir.code)}
-                    </option>
-                  ))}
-                </select>
+                  value={selectedDirectorOpt}
+                  onChange={onDirectorSelect}
+                  options={directorSelectOptions}
+                  isDisabled={disabled || isLoadingDynamicData}
+                  isSearchable
+                  isClearable
+                  placeholder={isLoadingDynamicData ? "Loading directors..." : "-- Search & Select Director --"}
+                  styles={customSelectStyles(Boolean(validationErrors.directorId || propErrors.directorId), disabled || isLoadingDynamicData)}
+                />
                 {validationErrors.directorId && (
                   <p className="text-xs text-red-500 mt-1 flex items-center gap-1 font-medium">
                     <AlertCircle size={12} /> {validationErrors.directorId}
@@ -1369,40 +1432,34 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
               <div>
                 <label
                   htmlFor="role_assignment_bde_select"
-                  className="text-xs font-semibold text-gray-700 block mb-1.5"
+                  className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block"
                 >
                   Select BDE User <span className="text-red-500">*</span>
                 </label>
-                <select
+                <Select
                   id="role_assignment_bde_select"
-                  value={selectedBdeId}
-                  onChange={handleBdeChange}
-                  disabled={disabled || isLoadingDynamicData || isLoadingBdes || (!standalone && !selectedDirectorId)}
-                  className={`w-full rounded-lg px-3.5 py-2.5 outline-none border text-sm bg-white text-gray-800 transition focus:border-blue-500 focus:ring-1 focus:ring-blue-200 shadow-xs ${validationErrors.bdeUserId || propErrors.bdeUserId
-                      ? "border-red-500 ring-1 ring-red-500/20"
-                      : "border-gray-300"
-                    } ${disabled || isLoadingDynamicData || isLoadingBdes || (!standalone && !selectedDirectorId)
-                      ? "opacity-60 bg-gray-100 cursor-not-allowed text-gray-400"
-                      : "cursor-pointer"
-                    }`}
-                >
-                  <option value="">
-                    {isLoadingBdes
+                  value={selectedBdeOpt}
+                  onChange={onBdeSelect}
+                  options={bdeSelectOptions}
+                  isDisabled={disabled || isLoadingDynamicData || isLoadingBdes || (!standalone && !selectedDirectorId)}
+                  isSearchable
+                  isClearable
+                  placeholder={
+                    isLoadingBdes
                       ? "Loading BDE users..."
                       : !selectedDirectorId && !standalone
                         ? "-- Select Director first --"
                         : standalone
-                          ? "-- Select BDE User to Assign --"
-                          : bdeDisplayOptions.length === 0
+                          ? "-- Search & Select BDE User --"
+                          : bdeSelectOptions.length === 0
                             ? "-- No BDE users available --"
-                            : "-- Select BDE User --"}
-                  </option>
-                  {bdeDisplayOptions.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {formatEmployeeDisplay(b.name, b.code)}
-                    </option>
-                  ))}
-                </select>
+                            : "-- Search & Select BDE User --"
+                  }
+                  styles={customSelectStyles(
+                    Boolean(validationErrors.bdeUserId || propErrors.bdeUserId),
+                    disabled || isLoadingDynamicData || isLoadingBdes || (!standalone && !selectedDirectorId)
+                  )}
+                />
                 {validationErrors.bdeUserId && (
                   <p className="text-xs text-red-500 mt-1 flex items-center gap-1 font-medium">
                     <AlertCircle size={12} /> {validationErrors.bdeUserId}
@@ -1419,40 +1476,52 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
               <div>
                 <label
                   htmlFor="role_assignment_sales_person_select"
-                  className="text-xs font-semibold text-gray-700 block mb-1.5"
+                  className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block"
                 >
                   Select Sales Person
                 </label>
-                <select
+                <Select
                   id="role_assignment_sales_person_select"
-                  value={selectedSalesPersonId}
-                  onChange={handleSalesPersonChange}
-                  disabled={disabled || isLoadingDynamicData || isLoadingSalesPersons || (!standalone && !selectedBdeId)}
-                  className={`w-full rounded-lg px-3.5 py-2.5 outline-none border text-sm bg-white text-gray-800 transition focus:border-blue-500 focus:ring-1 focus:ring-blue-200 shadow-xs ${validationErrors.salesCoordinatorId || propErrors.salesCoordinatorId
-                      ? "border-red-500 ring-1 ring-red-500/20"
-                      : "border-gray-300"
-                    } ${disabled || isLoadingDynamicData || isLoadingSalesPersons || (!standalone && !selectedBdeId)
-                      ? "opacity-60 bg-gray-100 cursor-not-allowed text-gray-400"
-                      : "cursor-pointer"
-                    }`}
-                >
-                  <option value="">
-                    {isLoadingSalesPersons
+                  value={
+                    salesPersonDisplayOptions.find((sp) => String(sp.salesCoordinatorId) === String(selectedSalesPersonId))
+                      ? {
+                          value: selectedSalesPersonId,
+                          label: getSalesPersonOptionLabel(
+                            salesPersonDisplayOptions.find((sp) => String(sp.salesCoordinatorId) === String(selectedSalesPersonId))!
+                          ),
+                        }
+                      : null
+                  }
+                  onChange={(opt: any) => {
+                    handleSalesPersonChange({
+                      target: { value: opt ? String(opt.value) : "" },
+                    } as any);
+                  }}
+                  options={salesPersonDisplayOptions.map((sp) => ({
+                    value: sp.salesCoordinatorId,
+                    label: getSalesPersonOptionLabel(sp),
+                  }))}
+                  isDisabled={disabled || isLoadingDynamicData || isLoadingSalesPersons || (!standalone && !selectedBdeId)}
+                  isSearchable
+                  isClearable
+                  placeholder={
+                    isLoadingSalesPersons
                       ? "Loading sales persons..."
                       : !selectedBdeId && !standalone
                         ? "-- Select BDE User first --"
                         : standalone
-                          ? "-- Select Sales Person to Assign --"
+                          ? "-- Search & Select Sales Person --"
                           : salesPersonDisplayOptions.length === 0
                             ? "-- No Sales Persons available --"
-                            : "-- Select Sales Person --"}
-                  </option>
-                  {salesPersonDisplayOptions.map((sp) => (
-                    <option key={sp.salesCoordinatorId} value={sp.salesCoordinatorId}>
-                      {getSalesPersonOptionLabel(sp)}
-                    </option>
-                  ))}
-                </select>
+                            : "-- Search & Select Sales Person --"
+                  }
+                  styles={customSelectStyles(
+                    Boolean(validationErrors.salesCoordinatorId || propErrors.salesCoordinatorId),
+                    disabled || isLoadingDynamicData || isLoadingSalesPersons || (!standalone && !selectedBdeId)
+                  )}
+                  menuPortalTarget={typeof document !== "undefined" ? document.body : undefined}
+                  menuPosition="fixed"
+                />
                 {validationErrors.salesCoordinatorId && (
                   <p className="text-xs text-red-500 mt-1 flex items-center gap-1 font-medium">
                     <AlertCircle size={12} /> {validationErrors.salesCoordinatorId}
@@ -1470,27 +1539,21 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
                 <div className="animate-in fade-in duration-200">
                   <label
                     htmlFor="role_assignment_customer_owner_select"
-                    className="text-xs font-semibold text-gray-700 block mb-1.5"
+                    className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block"
                   >
                     Select Customer Owner <span className="text-red-500">*</span>
                   </label>
-                  <select
+                  <Select
                     id="role_assignment_customer_owner_select"
-                    value={selectedOwnerValue}
-                    onChange={handleCustomerOwnerChange}
-                    disabled={disabled}
-                    className={`w-full rounded-lg px-3.5 py-2.5 outline-none border text-sm bg-white text-gray-800 transition focus:border-blue-500 focus:ring-1 focus:ring-blue-200 shadow-xs ${validationErrors.customerOwnerId || propErrors.customerOwnerId
-                        ? "border-red-500 ring-1 ring-red-500/20"
-                        : "border-gray-300"
-                      } ${disabled ? "opacity-60 bg-gray-50 cursor-not-allowed" : "cursor-pointer"}`}
-                  >
-                    <option value="">-- Select Customer Owner --</option>
-                    {customerOwnerOptions.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
+                    value={selectedOwnerOpt}
+                    onChange={onCustomerOwnerSelect}
+                    options={customerOwnerOptions}
+                    isDisabled={disabled}
+                    isSearchable
+                    isClearable
+                    placeholder="-- Search & Select Customer Owner --"
+                    styles={customSelectStyles(Boolean(validationErrors.customerOwnerId || propErrors.customerOwnerId), disabled)}
+                  />
                   {validationErrors.customerOwnerId && (
                     <p className="text-xs text-red-500 mt-1 flex items-center gap-1 font-medium">
                       <AlertCircle size={12} /> {validationErrors.customerOwnerId}

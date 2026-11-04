@@ -65,7 +65,7 @@ namespace CompanyPlatform.CRM.Services.Employee
             }
         }
 
-        public async Task<IEnumerable<EmployeeDto>> GetAllAsync(int? designationId = null, string? role = null)
+        public async Task<IEnumerable<EmployeeDto>> GetAllAsync(int? designationId = null, string? role = null, int? reportingTo = null)
         {
             _logger.LogInformation("Fetching all non-deleted employees.");
 
@@ -87,12 +87,17 @@ namespace CompanyPlatform.CRM.Services.Employee
                 query = query.Where(e => e.Designation != null && e.Designation.DesignationName.Contains(role));
             }
 
+            if (reportingTo.HasValue && reportingTo.Value > 0)
+            {
+                query = query.Where(e => e.ReportingTo == reportingTo.Value);
+            }
+
             var employees = await query.OrderBy(e => e.ID).ToListAsync();
 
             return employees.Select(MapToDto);
         }
 
-        public async Task<IEnumerable<EmployeeDto>> GetActiveAsync(int? designationId = null, string? role = null)
+        public async Task<IEnumerable<EmployeeDto>> GetActiveAsync(int? designationId = null, string? role = null, int? reportingTo = null)
         {
             _logger.LogInformation("Fetching all active non-deleted employees.");
 
@@ -112,6 +117,11 @@ namespace CompanyPlatform.CRM.Services.Employee
             if (!string.IsNullOrWhiteSpace(role))
             {
                 query = query.Where(e => e.Designation != null && e.Designation.DesignationName.Contains(role));
+            }
+
+            if (reportingTo.HasValue && reportingTo.Value > 0)
+            {
+                query = query.Where(e => e.ReportingTo == reportingTo.Value);
             }
 
             var employees = await query
@@ -207,10 +217,7 @@ namespace CompanyPlatform.CRM.Services.Employee
             }
 
             int? repId = (dto.ReportingTo.HasValue && dto.ReportingTo.Value > 0) ? dto.ReportingTo.Value : null;
-            if (repId.HasValue && !await _context.Tbl_Employee.AnyAsync(e => e.ID == repId.Value))
-            {
-                repId = null;
-            }
+            await ValidateReportingRelationshipAsync(null, desigId, repId);
 
             DateTime? dob = (dto.DateOfBirth.HasValue && dto.DateOfBirth.Value.Year >= 1900) ? dto.DateOfBirth.Value : null;
             DateTime? doj = (dto.DateOfJoining.HasValue && dto.DateOfJoining.Value.Year >= 1900) ? dto.DateOfJoining.Value : DateTime.UtcNow;
@@ -302,10 +309,7 @@ namespace CompanyPlatform.CRM.Services.Employee
             }
 
             int? repId = (dto.ReportingTo.HasValue && dto.ReportingTo.Value > 0) ? dto.ReportingTo.Value : null;
-            if (repId.HasValue && !await _context.Tbl_Employee.AnyAsync(e => e.ID == repId.Value))
-            {
-                repId = null;
-            }
+            await ValidateReportingRelationshipAsync(id, desigId, repId);
 
             DateTime? dob = (dto.DateOfBirth.HasValue && dto.DateOfBirth.Value.Year >= 1900) ? dto.DateOfBirth.Value : null;
             DateTime? doj = (dto.DateOfJoining.HasValue && dto.DateOfJoining.Value.Year >= 1900) ? dto.DateOfJoining.Value : entity.DateOfJoining;
@@ -362,6 +366,106 @@ namespace CompanyPlatform.CRM.Services.Employee
             await _context.SaveChangesAsync();
 
             return true;
+        }
+
+        private async Task ValidateReportingRelationshipAsync(int? employeeId, int? designationId, int? reportingTo)
+        {
+            if (designationId.HasValue && designationId.Value > 0)
+            {
+                var desig = await _context.Designations.FirstOrDefaultAsync(d => d.ID == designationId.Value);
+                string dName = desig?.DesignationName?.Trim().ToLower() ?? "";
+
+                // Director requires no reporting manager
+                if (dName.Contains("director"))
+                {
+                    if (reportingTo.HasValue && reportingTo.Value > 0)
+                    {
+                        throw new InvalidOperationException("A Director cannot report to another employee.");
+                    }
+                    return;
+                }
+
+                // BDE User must report to an active Director
+                if (dName.Contains("bde"))
+                {
+                    if (!reportingTo.HasValue || reportingTo.Value <= 0)
+                    {
+                        throw new InvalidOperationException("A BDE User must report to an active Director.");
+                    }
+                }
+
+                // Sales Coordinator must report to an active BDE User
+                if (dName.Contains("sales coordinator") || dName.Contains("coordinator"))
+                {
+                    if (!reportingTo.HasValue || reportingTo.Value <= 0)
+                    {
+                        throw new InvalidOperationException("A Sales Coordinator must report to an active BDE User.");
+                    }
+                }
+            }
+
+            if (!reportingTo.HasValue || reportingTo.Value <= 0)
+            {
+                return;
+            }
+
+            // 1. Employee cannot report to themselves
+            if (employeeId.HasValue && employeeId.Value == reportingTo.Value)
+            {
+                throw new InvalidOperationException("An employee cannot report to themselves.");
+            }
+
+            // 2. Reporting manager must exist and be active
+            var manager = await _context.Tbl_Employee
+                .Include(m => m.Designation)
+                .FirstOrDefaultAsync(e => e.ID == reportingTo.Value && !e.IsDeleted);
+
+            if (manager == null || !manager.IsActive)
+            {
+                throw new InvalidOperationException("The selected reporting manager does not exist or is inactive.");
+            }
+
+            // 3. Designation-specific hierarchy checks on manager
+            if (designationId.HasValue && designationId.Value > 0)
+            {
+                var desig = await _context.Designations.FirstOrDefaultAsync(d => d.ID == designationId.Value);
+                string dName = desig?.DesignationName?.Trim().ToLower() ?? "";
+                string mDesigName = manager.Designation?.DesignationName?.Trim().ToLower() ?? "";
+
+                if (dName.Contains("bde") && !mDesigName.Contains("director"))
+                {
+                    throw new InvalidOperationException("A BDE User must report to an active Director.");
+                }
+
+                if ((dName.Contains("sales coordinator") || dName.Contains("coordinator")) && !mDesigName.Contains("bde"))
+                {
+                    throw new InvalidOperationException("A Sales Coordinator must report to an active BDE User.");
+                }
+            }
+
+            // 4. Prevent circular reporting relationships
+            if (employeeId.HasValue)
+            {
+                int currentManagerId = reportingTo.Value;
+                var visited = new HashSet<int> { employeeId.Value };
+
+                while (currentManagerId > 0)
+                {
+                    if (visited.Contains(currentManagerId))
+                    {
+                        throw new InvalidOperationException("Circular reporting relationship detected.");
+                    }
+                    visited.Add(currentManagerId);
+
+                    var nextManager = await _context.Tbl_Employee
+                        .Where(e => e.ID == currentManagerId && !e.IsDeleted)
+                        .Select(e => e.ReportingTo)
+                        .FirstOrDefaultAsync();
+
+                    if (!nextManager.HasValue) break;
+                    currentManagerId = nextManager.Value;
+                }
+            }
         }
 
         private static EmployeeDto MapToDto(EmployeeEntity e)

@@ -1,3 +1,4 @@
+import { SearchableSelect } from "../../../../Components/Common/SearchableSelect";
 import React, { useEffect, useState } from "react";
 import {
   X,
@@ -23,8 +24,7 @@ import type {
   PaymentTermItem,
   CountryItem,
   AddressTypeItem,
-  SalesCoordinatorItem,
-} from "./Types/CustomerTypes";
+  } from "./Types/CustomerTypes";
 import { createCustomer, getNextCustomerCode } from "./Services/CustomerService";
 import {
   getIndustries,
@@ -40,7 +40,6 @@ import {
 } from "./Services/CustomerMasterDataService";
 import CustomerAddressSection from "./CustomerAddressSection";
 import SalesAssignmentSection from "./SalesAssignmentSection";
-import AddSalesCoordinatorModal from "../Master/SalesCoordinator/Components/AddSalesCoordinatorModal";
 
 interface AddCustomerModalProps {
   isOpen: boolean;
@@ -164,16 +163,10 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
   const [paymentTerms, setPaymentTerms] = useState<PaymentTermItem[]>([]);
   const [countries, setCountries] = useState<CountryItem[]>([]);
   const [addressTypes, setAddressTypes] = useState<AddressTypeItem[]>([]);
-  const [, setSalesCoordinators] = useState<SalesCoordinatorItem[]>([]);
-  const [isAddCoordinatorOpen, setIsAddCoordinatorOpen] = useState(false);
+  
+  
 
-  const refreshSalesCoordinators = async () => {
-    const list = await getSalesCoordinators();
-    if (Array.isArray(list)) {
-      setSalesCoordinators(list);
-    }
-  };
-
+  
   // Support ESC key to close modal
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -220,7 +213,7 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
           if (results[4].status === "fulfilled" && Array.isArray(results[4].value)) setPaymentTerms(results[4].value);
           if (results[6].status === "fulfilled" && Array.isArray(results[6].value)) setCountries(results[6].value);
           if (results[7].status === "fulfilled" && Array.isArray(results[7].value)) setAddressTypes(results[7].value);
-          if (results[8].status === "fulfilled" && Array.isArray(results[8].value)) setSalesCoordinators(results[8].value);
+          
         } catch (err) {
           console.error("Error loading dropdown data:", err);
         } finally {
@@ -522,7 +515,7 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
 
       {/* Single Unified Customer Form */}
       <form onSubmit={handleSubmit} className="bg-white">
-        <div className="p-6 sm:p-8 space-y-8">
+        <div className="p-6 sm:p-8 bg-gray-50/60 space-y-8">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-24 text-[#FF7900]">
               <Loader2 size={36} className="animate-spin mb-3 text-[#FF7900]" />
@@ -534,11 +527,9 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
             <div className="space-y-8 animate-in fade-in duration-300">
               {/* SECTION 1: BASIC CUSTOMER DETAILS */}
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
-                <div className="border-b border-gray-200 pb-2.5">
-                  <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
+                <div className="flex items-center gap-2.5 text-[#FF7900] font-bold text-base border-b border-orange-100 pb-3">
                     <Building size={16} /> Section 1 - Basic Customer Details
-                  </h3>
-                </div>
+                  </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                   <div>
                     <div className="flex items-center justify-between mb-1">
@@ -557,11 +548,11 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
                         readOnly
                         disabled
                         placeholder={isFetchingCode ? "Generating code..." : "e.g. CUST001"}
-                        className="w-full border border-gray-200 rounded-lg px-4 py-2.5 bg-gray-100 text-gray-600 text-sm cursor-not-allowed select-none font-medium"
+                        className="w-full border border-gray-200 rounded-lg px-4 py-2.5 min-h-[44px] bg-gray-100 text-gray-600 text-sm cursor-not-allowed select-none font-medium"
                       />
                       {isFetchingCode && (
                         <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                          <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                          <Loader2 className="w-4 h-4 animate-spin text-[#FF7900]" />
                         </div>
                       )}
                     </div>
@@ -579,7 +570,7 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
                       onChange={handleInputChange}
                       placeholder="Enter Customer Name"
                       required
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-700 placeholder:text-gray-400 min-h-[44px]"
                     />
                   </div>
 
@@ -593,7 +584,7 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
                       value={formData.customerShortName || ""}
                       onChange={handleInputChange}
                       placeholder="Enter Short Name"
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-700 placeholder:text-gray-400 min-h-[44px]"
                     />
                   </div>
 
@@ -607,7 +598,7 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
                       value={formData.companyName || ""}
                       onChange={handleInputChange}
                       placeholder="Enter Company Name"
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-700 placeholder:text-gray-400 min-h-[44px]"
                     />
                   </div>
 
@@ -621,7 +612,7 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
                       value={formData.companyGroup || ""}
                       onChange={handleInputChange}
                       placeholder="Enter Company Group"
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-700 placeholder:text-gray-400 min-h-[44px]"
                     />
                   </div>
 
@@ -635,7 +626,7 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
                       value={formData.plantCode || ""}
                       onChange={handleInputChange}
                       placeholder="Enter Plant Code"
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-700 placeholder:text-gray-400 min-h-[44px]"
                     />
                   </div>
                 </div>
@@ -643,128 +634,122 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
 
               {/* SECTION 2: BUSINESS INFORMATION */}
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
-                <div className="border-b border-gray-200 pb-2.5">
-                  <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
+                <div className="flex items-center gap-2.5 text-[#FF7900] font-bold text-base border-b border-orange-100 pb-3">
                     <Briefcase size={16} /> Section 2 - Business Information
-                  </h3>
-                </div>
+                  </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
                       Industry
                     </label>
-                    <select
+                    <SearchableSelect
                       name="industryId"
                       value={formData.industryId ?? ""}
-                      onChange={handleInputChange}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800"
-                    >
-                      <option value="">Select Industry...</option>
-                      {industries.map((ind) => (
-                        <option key={ind.industryId} value={ind.industryId}>
-                          {ind.industryName}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(val: any) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          industryId: val !== "" ? Number(val) : "",
+                        }))
+                      }
+                      options={industries.map((ind) => ({
+                        value: ind.industryId,
+                        label: ind.industryName,
+                      }))}
+                      placeholder="Select Industry..."
+                    />
                   </div>
 
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
                       Customer Status
                     </label>
-                    <select
+                    <SearchableSelect
                       name="customerStatusId"
                       value={formData.customerStatusId ?? ""}
-                      onChange={handleInputChange}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800"
-                    >
-                      <option value="">Select Customer Status...</option>
-                      {statuses.map((st) => (
-                        <option
-                          key={st.customerStatusId}
-                          value={st.customerStatusId}
-                        >
-                          {st.statusName}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(val: any) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          customerStatusId: val !== "" ? Number(val) : "",
+                        }))
+                      }
+                      options={statuses.map((st) => ({
+                        value: st.customerStatusId,
+                        label: st.statusName,
+                      }))}
+                      placeholder="Select Customer Status..."
+                    />
                   </div>
 
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
                       Customer Source
                     </label>
-                    <select
+                    <SearchableSelect
                       name="customerSourceId"
                       value={formData.customerSourceId ?? ""}
-                      onChange={handleInputChange}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800"
-                    >
-                      <option value="">Select Customer Source...</option>
-                      {sources.map((src) => (
-                        <option
-                          key={src.customerSourceId}
-                          value={src.customerSourceId}
-                        >
-                          {src.sourceName}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(val: any) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          customerSourceId: val !== "" ? Number(val) : "",
+                        }))
+                      }
+                      options={sources.map((src) => ({
+                        value: src.customerSourceId,
+                        label: src.sourceName,
+                      }))}
+                      placeholder="Select Customer Source..."
+                    />
                   </div>
 
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
                       Customer Area
                     </label>
-                    <select
+                    <SearchableSelect
                       name="customerAreaId"
                       value={formData.customerAreaId ?? ""}
-                      onChange={handleInputChange}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800"
-                    >
-                      <option value="">Select Customer Area...</option>
-                      {areas.map((ar) => (
-                        <option
-                          key={ar.customerAreaId}
-                          value={ar.customerAreaId}
-                        >
-                          {ar.areaName}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(val: any) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          customerAreaId: val !== "" ? Number(val) : "",
+                        }))
+                      }
+                      options={areas.map((ar) => ({
+                        value: ar.customerAreaId,
+                        label: ar.areaName,
+                      }))}
+                      placeholder="Select Customer Area..."
+                    />
                   </div>
 
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
                       Payment Terms
                     </label>
-                    <select
+                    <SearchableSelect
                       name="paymentTermsId"
                       value={formData.paymentTermsId ?? ""}
-                      onChange={handleInputChange}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800"
-                    >
-                      <option value="">Select Payment Terms...</option>
-                      {paymentTerms.map((pt) => (
-                        <option
-                          key={pt.paymentTermId}
-                          value={pt.paymentTermId}
-                        >
-                          {pt.paymentTermName}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(val: any) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          paymentTermsId: val !== "" ? Number(val) : "",
+                        }))
+                      }
+                      options={paymentTerms.map((pt) => ({
+                        value: pt.paymentTermId,
+                        label: pt.paymentTermName,
+                      }))}
+                      placeholder="Select Payment Terms..."
+                    />
                   </div>
                 </div>
               </div>
 
               {/* SECTION 3: REGISTRATION & TAX INFORMATION */}
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
-                <div className="border-b border-gray-200 pb-2.5">
-                  <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
+                <div className="flex items-center gap-2.5 text-[#FF7900] font-bold text-base border-b border-orange-100 pb-3">
                     <FileText size={16} /> Section 3 - Registration & Tax Information
-                  </h3>
-                </div>
+                  </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
@@ -776,7 +761,7 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
                       value={formData.pan || ""}
                       onChange={handleInputChange}
                       placeholder="Enter PAN Number"
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-700 placeholder:text-gray-400 min-h-[44px]"
                     />
                   </div>
 
@@ -790,7 +775,7 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
                       value={formData.tan || ""}
                       onChange={handleInputChange}
                       placeholder="Enter TAN Number"
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-700 placeholder:text-gray-400 min-h-[44px]"
                     />
                   </div>
 
@@ -804,7 +789,7 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
                       value={formData.gstin || ""}
                       onChange={handleInputChange}
                       placeholder="Enter GSTIN Number"
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-700 placeholder:text-gray-400 min-h-[44px]"
                     />
                   </div>
 
@@ -818,7 +803,7 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
                       value={formData.cin || ""}
                       onChange={handleInputChange}
                       placeholder="Enter CIN Number"
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-700 placeholder:text-gray-400 min-h-[44px]"
                     />
                   </div>
 
@@ -832,7 +817,7 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
                       value={formData.msmeNumber || ""}
                       onChange={handleInputChange}
                       placeholder="Enter MSME Number"
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-700 placeholder:text-gray-400 min-h-[44px]"
                     />
                   </div>
                 </div>
@@ -840,11 +825,9 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
 
               {/* SECTION 4: SALES ASSIGNMENT (Cascading Flow) */}
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
-                <div className="border-b border-gray-200 pb-2.5">
-                  <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
+                <div className="flex items-center gap-2.5 text-[#FF7900] font-bold text-base border-b border-orange-100 pb-3">
                     <Users size={16} /> Section 4 - Sales Assignment
-                  </h3>
-                </div>
+                  </div>
                 <SalesAssignmentSection
                   hideHeader={true}
                   values={{
@@ -870,11 +853,9 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
 
               {/* SECTION 5: ADDRESSES */}
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
-                <div className="border-b border-gray-200 pb-2.5">
-                  <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
+                <div className="flex items-center gap-2.5 text-[#FF7900] font-bold text-base border-b border-orange-100 pb-3">
                     <MapPin size={16} /> Section 5 - Customer Addresses
-                  </h3>
-                </div>
+                  </div>
                 <CustomerAddressSection
                   addresses={formData.addresses || []}
                   onChange={handleAddressesChange}
@@ -885,11 +866,9 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
 
               {/* SECTION 6: OTHER DETAILS & REMARKS */}
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
-                <div className="border-b border-gray-200 pb-2.5">
-                  <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
+                <div className="flex items-center gap-2.5 text-[#FF7900] font-bold text-base border-b border-orange-100 pb-3">
                     <Calendar size={16} /> Section 6 - Other Details & Remarks
-                  </h3>
-                </div>
+                  </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
@@ -900,7 +879,7 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
                       name="registrationDate"
                       value={formData.registrationDate || ""}
                       onChange={handleInputChange}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-800"
                     />
                   </div>
 
@@ -913,7 +892,7 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
                       name="visitedDate"
                       value={formData.visitedDate || ""}
                       onChange={handleInputChange}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-800"
                     />
                   </div>
 
@@ -927,7 +906,7 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
                       value={formData.remarks || ""}
                       onChange={handleInputChange}
                       placeholder="Enter observations, commercial agreements or special requirements..."
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-700 placeholder:text-gray-400 min-h-[44px]"
                     />
                   </div>
 
@@ -977,11 +956,7 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
         </div>
       </form>
 
-      <AddSalesCoordinatorModal
-        isOpen={isAddCoordinatorOpen}
-        onClose={() => setIsAddCoordinatorOpen(false)}
-        onSuccess={refreshSalesCoordinators}
-      />
+      {/* AddSalesCoordinatorModal removed */}
     </div>
   );
 };

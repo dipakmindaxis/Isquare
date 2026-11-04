@@ -73,7 +73,7 @@ export interface Customer {
   registrationDate?: string;
   visitedDate?: string;
   remarks?: string;
-  isActive: boolean;
+  isActive?: boolean;
   isDeleted?: boolean;
 }
 
@@ -97,6 +97,8 @@ export interface CustomerCreatePayload {
   companyName?: string | null;
   companyGroup?: string | null;
   plantCode?: string | null;
+  email?: string | null;
+  mobile?: string | null;
 
   // Business Information
   industryId?: number | null;
@@ -138,7 +140,7 @@ export interface CustomerCreatePayload {
   registrationDate?: string | null;
   visitedDate?: string | null;
   remarks?: string | null;
-  isActive: boolean;
+  isActive?: boolean;
 }
 
 export interface CustomerUpdatePayload extends CustomerCreatePayload {

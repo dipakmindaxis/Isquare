@@ -1,3 +1,4 @@
+import { SearchableSelect } from "../../../../Components/Common/SearchableSelect";
 import React, { useEffect, useState } from "react";
 import {
   X,
@@ -11,6 +12,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { buttonStyles } from "../../../../Components/Common/buttonStyles";
+import { validatePAN, validateTAN, validateGSTIN, validateEmail, validateMobile, validateVAN } from "./Utils/CustomerValidation";
 import type {
   CustomerUpdatePayload,
   CustomerAddress,
@@ -44,7 +46,6 @@ import {
 } from "./Services/CustomerMasterDataService";
 import CustomerAddressSection from "./CustomerAddressSection";
 import SalesAssignmentSection from "./SalesAssignmentSection";
-import AddSalesCoordinatorModal from "../Master/SalesCoordinator/Components/AddSalesCoordinatorModal";
 
 interface EditCustomerModalProps {
   isOpen: boolean;
@@ -52,6 +53,29 @@ interface EditCustomerModalProps {
   onClose: () => void;
   onSuccess: () => void;
 }
+
+const formatDateForApi = (dateStr?: string | null): string | null => {
+  if (!dateStr || !dateStr.trim()) return null;
+  const trimmed = dateStr.trim();
+  const dmyMatch = trimmed.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+  if (dmyMatch) {
+    const day = parseInt(dmyMatch[1], 10);
+    const month = parseInt(dmyMatch[2], 10) - 1;
+    const year = parseInt(dmyMatch[3], 10);
+    const d = new Date(Date.UTC(year, month, day));
+    return !isNaN(d.getTime()) ? d.toISOString() : null;
+  }
+  const ymdMatch = trimmed.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+  if (ymdMatch) {
+    const year = parseInt(ymdMatch[1], 10);
+    const month = parseInt(ymdMatch[2], 10) - 1;
+    const day = parseInt(ymdMatch[3], 10);
+    const d = new Date(Date.UTC(year, month, day));
+    return !isNaN(d.getTime()) ? d.toISOString() : null;
+  }
+  const d = new Date(trimmed);
+  return !isNaN(d.getTime()) ? d.toISOString() : null;
+};
 
 const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
   isOpen,
@@ -77,15 +101,9 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
   const [salesCoordinators, setSalesCoordinators] = useState<SalesCoordinatorItem[]>([]);
   const [selectedCoordinatorIds, setSelectedCoordinatorIds] = useState<number[]>([]);
   const [customerOwnerValue, setCustomerOwnerValue] = useState<string>("");
-  const [isAddCoordinatorOpen, setIsAddCoordinatorOpen] = useState(false);
+  // isAddCoordinatorOpen removed
 
-  const refreshSalesCoordinators = async () => {
-    const list = await getSalesCoordinators();
-    if (Array.isArray(list)) {
-      setSalesCoordinators(list);
-    }
-  };
-
+  
   useEffect(() => {
     if (isOpen && customerId) {
 
@@ -162,7 +180,7 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
           };
 
           // Restore Customer Owner
-          let resolvedOwnerType: "Director" | "BDE" | "" = "";
+          let resolvedOwnerType: "Director" | "BDE" | "Sales Person" | "Owner" | string = "";
           let resolvedOwnerId: number | "" = "";
           let resolvedOwnerName = "";
           let resolvedOwnerVal = "";
@@ -184,6 +202,14 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
             resolvedOwnerType = "Director";
             resolvedOwnerId = rawOwnerId || assignedDirId || "";
             resolvedOwnerName = rawOwnerName || assignedDirName;
+          } else if (rawOwnerType === "SALES PERSON" || rawOwnerType === "SALESPERSON" || rawOwnerType === "COORDINATOR") {
+            resolvedOwnerType = "Sales Person";
+            resolvedOwnerId = rawOwnerId || customerRes.salesCoordinatorId || "";
+            resolvedOwnerName = rawOwnerName || customerRes.salesCoordinatorName || "";
+          } else if (rawOwnerType === "OWNER" || rawOwnerType === "CUSTOMEROWNER") {
+            resolvedOwnerType = "Owner";
+            resolvedOwnerId = rawOwnerId || "";
+            resolvedOwnerName = rawOwnerName;
           }
 
           // 2. Direct comparison against customer's assigned BDE User and Director
@@ -364,10 +390,41 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
       return;
     }
 
+    const emailErr = validateEmail(formData.email);
+    if (emailErr) {
+      toast.error(emailErr);
+      return;
+    }
+    const mobileErr = validateMobile(formData.mobile);
+    if (mobileErr) {
+      toast.error(mobileErr);
+      return;
+    }
+    const panErr = validatePAN(formData.pan);
+    if (panErr) {
+      toast.error(panErr);
+      return;
+    }
+    const tanErr = validateTAN(formData.tan);
+    if (tanErr) {
+      toast.error(tanErr);
+      return;
+    }
+    const gstinErr = validateGSTIN(formData.gstin);
+    if (gstinErr) {
+      toast.error(gstinErr);
+      return;
+    }
+    const vanErr = validateVAN((formData as any).van || (formData as any).virtualAccountNumber);
+    if (vanErr) {
+      toast.error(vanErr);
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const payload: CustomerUpdatePayload = {
-        ...formData,
+
         customerId,
         customerName: formData.customerName.trim(),
         customerCode: formData.customerCode?.trim() || undefined,
@@ -375,6 +432,8 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
         companyName: formData.companyName?.trim() || undefined,
         companyGroup: formData.companyGroup?.trim() || undefined,
         plantCode: formData.plantCode?.trim() || undefined,
+        email: formData.email?.trim() || null,
+        mobile: formData.mobile?.trim() || null,
         pan: formData.pan?.trim() || undefined,
         tan: formData.tan?.trim() || undefined,
         gstin: formData.gstin?.trim() || undefined,
@@ -437,7 +496,11 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
           formData.customerOwnerType ||
           (customerOwnerValue.includes(":") ? customerOwnerValue.split(":")[0] : null),
 
-        remarks: formData.remarks?.trim() || undefined,
+
+        remarks: formData.remarks?.trim() || null,
+        registrationDate: formatDateForApi(formData.registrationDate),
+        visitedDate: formatDateForApi(formData.visitedDate),
+        isActive: formData.isActive !== false,
         addresses: (formData.addresses || [])
           .filter((addr) => Boolean(addr.address?.trim()))
           .map((addr) => ({
@@ -492,7 +555,7 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
 
       {/* Single Unified Customer Form */}
       <form onSubmit={handleSubmit} className="bg-white">
-        <div className="p-6 sm:p-8 space-y-8">
+        <div className="p-6 sm:p-8 bg-gray-50/60 space-y-8">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-20 text-[#FF7900]">
               <Loader2 className="animate-spin mb-2" size={32} />
@@ -502,11 +565,9 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
             <div className="space-y-8 animate-in fade-in duration-300">
               {/* SECTION 1: BASIC CUSTOMER DETAILS */}
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
-                <div className="border-b border-gray-200 pb-2.5">
-                  <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
+                <div className="flex items-center gap-2.5 text-[#FF7900] font-bold text-base border-b border-orange-100 pb-3">
                     <Building2 size={16} /> Section 1 - Basic Customer Details
-                  </h3>
-                </div>
+                  </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                   <div>
                     <div className="flex items-center justify-between mb-1">
@@ -524,7 +585,7 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
                       readOnly
                       disabled
                       placeholder="e.g. CUST001"
-                      className="w-full border border-gray-200 rounded-lg px-4 py-2.5 bg-gray-100 text-gray-600 text-sm cursor-not-allowed select-none font-medium"
+                      className="w-full border border-gray-200 rounded-lg px-4 py-2.5 min-h-[44px] bg-gray-100 text-gray-600 text-sm cursor-not-allowed select-none font-medium"
                     />
                   </div>
 
@@ -539,7 +600,7 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
                       onChange={handleInputChange}
                       required
                       placeholder="Enter full legal customer name"
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-700 placeholder:text-gray-400 min-h-[44px]"
                     />
                   </div>
 
@@ -553,7 +614,7 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
                       value={formData.customerShortName || ""}
                       onChange={handleInputChange}
                       placeholder="e.g. Acme Corp"
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-700 placeholder:text-gray-400 min-h-[44px]"
                     />
                   </div>
 
@@ -567,7 +628,7 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
                       value={formData.companyName || ""}
                       onChange={handleInputChange}
                       placeholder="e.g. Acme Industries Ltd"
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-700 placeholder:text-gray-400 min-h-[44px]"
                     />
                   </div>
 
@@ -581,7 +642,7 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
                       value={formData.companyGroup || ""}
                       onChange={handleInputChange}
                       placeholder="e.g. Acme Holdings Group"
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-700 placeholder:text-gray-400 min-h-[44px]"
                     />
                   </div>
 
@@ -595,7 +656,7 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
                       value={formData.plantCode || ""}
                       onChange={handleInputChange}
                       placeholder="e.g. PL-01"
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-700 placeholder:text-gray-400 min-h-[44px]"
                     />
                   </div>
                 </div>
@@ -603,128 +664,122 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
 
               {/* SECTION 2: BUSINESS INFORMATION */}
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
-                <div className="border-b border-gray-200 pb-2.5">
-                  <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
+                <div className="flex items-center gap-2.5 text-[#FF7900] font-bold text-base border-b border-orange-100 pb-3">
                     <Briefcase size={16} /> Section 2 - Business Information
-                  </h3>
-                </div>
+                  </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
                       Industry
                     </label>
-                    <select
+                    <SearchableSelect
                       name="industryId"
                       value={formData.industryId ?? ""}
-                      onChange={handleInputChange}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800"
-                    >
-                      <option value="">Select Industry</option>
-                      {industries.map((ind) => (
-                        <option key={ind.industryId} value={ind.industryId}>
-                          {ind.industryName}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(val: any) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          industryId: val !== "" ? Number(val) : null,
+                        }))
+                      }
+                      options={industries.map((ind) => ({
+                        value: ind.industryId,
+                        label: ind.industryName,
+                      }))}
+                      placeholder="Select Industry..."
+                    />
                   </div>
 
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
                       Customer Status
                     </label>
-                    <select
+                    <SearchableSelect
                       name="customerStatusId"
                       value={formData.customerStatusId ?? ""}
-                      onChange={handleInputChange}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800"
-                    >
-                      <option value="">Select Customer Status</option>
-                      {statuses.map((st) => (
-                        <option
-                          key={st.customerStatusId}
-                          value={st.customerStatusId}
-                        >
-                          {st.statusName}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(val: any) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          customerStatusId: val !== "" ? Number(val) : null,
+                        }))
+                      }
+                      options={statuses.map((st) => ({
+                        value: st.customerStatusId,
+                        label: st.statusName,
+                      }))}
+                      placeholder="Select Customer Status..."
+                    />
                   </div>
 
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
                       Customer Source
                     </label>
-                    <select
+                    <SearchableSelect
                       name="customerSourceId"
                       value={formData.customerSourceId ?? ""}
-                      onChange={handleInputChange}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800"
-                    >
-                      <option value="">Select Customer Source</option>
-                      {sources.map((src) => (
-                        <option
-                          key={src.customerSourceId}
-                          value={src.customerSourceId}
-                        >
-                          {src.sourceName}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(val: any) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          customerSourceId: val !== "" ? Number(val) : null,
+                        }))
+                      }
+                      options={sources.map((src) => ({
+                        value: src.customerSourceId,
+                        label: src.sourceName,
+                      }))}
+                      placeholder="Select Customer Source..."
+                    />
                   </div>
 
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
                       Customer Area
                     </label>
-                    <select
+                    <SearchableSelect
                       name="customerAreaId"
                       value={formData.customerAreaId ?? ""}
-                      onChange={handleInputChange}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800"
-                    >
-                      <option value="">Select Customer Area</option>
-                      {areas.map((ar) => (
-                        <option
-                          key={ar.customerAreaId}
-                          value={ar.customerAreaId}
-                        >
-                          {ar.areaName}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(val: any) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          customerAreaId: val !== "" ? Number(val) : null,
+                        }))
+                      }
+                      options={areas.map((ar) => ({
+                        value: ar.customerAreaId,
+                        label: ar.areaName,
+                      }))}
+                      placeholder="Select Customer Area..."
+                    />
                   </div>
 
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
                       Payment Terms
                     </label>
-                    <select
+                    <SearchableSelect
                       name="paymentTermsId"
                       value={formData.paymentTermsId ?? ""}
-                      onChange={handleInputChange}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800"
-                    >
-                      <option value="">Select Payment Terms</option>
-                      {paymentTerms.map((pt) => (
-                        <option
-                          key={pt.paymentTermId}
-                          value={pt.paymentTermId}
-                        >
-                          {pt.paymentTermName}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(val: any) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          paymentTermsId: val !== "" ? Number(val) : null,
+                        }))
+                      }
+                      options={paymentTerms.map((pt) => ({
+                        value: pt.paymentTermId,
+                        label: pt.paymentTermName,
+                      }))}
+                      placeholder="Select Payment Terms..."
+                    />
                   </div>
                 </div>
               </div>
 
               {/* SECTION 3: REGISTRATION & TAX INFORMATION */}
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
-                <div className="border-b border-gray-200 pb-2.5">
-                  <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
+                <div className="flex items-center gap-2.5 text-[#FF7900] font-bold text-base border-b border-orange-100 pb-3">
                     <FileText size={16} /> Section 3 - Registration & Tax Information
-                  </h3>
-                </div>
+                  </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
@@ -736,7 +791,7 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
                       value={formData.pan || ""}
                       onChange={handleInputChange}
                       placeholder="e.g. ABCDE1234F"
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-700 placeholder:text-gray-400 min-h-[44px]"
                     />
                   </div>
 
@@ -750,7 +805,7 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
                       value={formData.tan || ""}
                       onChange={handleInputChange}
                       placeholder="e.g. ABCD12345E"
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-700 placeholder:text-gray-400 min-h-[44px]"
                     />
                   </div>
 
@@ -764,7 +819,7 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
                       value={formData.gstin || ""}
                       onChange={handleInputChange}
                       placeholder="e.g. 27ABCDE1234F1Z5"
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-700 placeholder:text-gray-400 min-h-[44px]"
                     />
                   </div>
 
@@ -778,7 +833,7 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
                       value={formData.cin || ""}
                       onChange={handleInputChange}
                       placeholder="e.g. U12345MH2020PTC123456"
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-700 placeholder:text-gray-400 min-h-[44px]"
                     />
                   </div>
 
@@ -792,7 +847,7 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
                       value={formData.msmeNumber || ""}
                       onChange={handleInputChange}
                       placeholder="e.g. UDYAM-MH-01-0000000"
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-700 placeholder:text-gray-400 min-h-[44px]"
                     />
                   </div>
                 </div>
@@ -800,11 +855,9 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
 
               {/* SECTION 4: SALES ASSIGNMENT (Cascading Flow) */}
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
-                <div className="border-b border-gray-200 pb-2.5">
-                  <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
+                <div className="flex items-center gap-2.5 text-[#FF7900] font-bold text-base border-b border-orange-100 pb-3">
                     <Users size={16} /> Section 4 - Sales Assignment
-                  </h3>
-                </div>
+                  </div>
                 <SalesAssignmentSection
                   hideHeader={true}
                   values={{
@@ -879,17 +932,18 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
                           ? updates.customerOwnerValue
                           : (prev as any).customerOwnerValue,
                     }));
+                    if (updates.customerOwnerValue !== undefined) {
+                      setCustomerOwnerValue(updates.customerOwnerValue);
+                    }
                   }}
                 />
               </div>
 
               {/* SECTION 5: ADDRESSES */}
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
-                <div className="border-b border-gray-200 pb-2.5">
-                  <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
+                <div className="flex items-center gap-2.5 text-[#FF7900] font-bold text-base border-b border-orange-100 pb-3">
                     <MapPin size={16} /> Section 5 - Customer Addresses
-                  </h3>
-                </div>
+                  </div>
                 <CustomerAddressSection
                   addresses={formData.addresses || []}
                   onChange={handleAddressesChange}
@@ -900,11 +954,9 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
 
               {/* SECTION 6: OTHER DETAILS & REMARKS */}
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
-                <div className="border-b border-gray-200 pb-2.5">
-                  <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
+                <div className="flex items-center gap-2.5 text-[#FF7900] font-bold text-base border-b border-orange-100 pb-3">
                     <Calendar size={16} /> Section 6 - Other Details & Remarks
-                  </h3>
-                </div>
+                  </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
@@ -915,7 +967,7 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
                       name="registrationDate"
                       value={formData.registrationDate || ""}
                       onChange={handleInputChange}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-800"
                     />
                   </div>
 
@@ -928,7 +980,7 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
                       name="visitedDate"
                       value={formData.visitedDate || ""}
                       onChange={handleInputChange}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-800"
                     />
                   </div>
 
@@ -942,7 +994,7 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
                       onChange={handleInputChange}
                       rows={3}
                       placeholder="Add internal notes, communication highlights, or account instructions..."
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm placeholder:text-gray-400"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-700 placeholder:text-gray-400 min-h-[44px]"
                     />
                   </div>
 
@@ -992,11 +1044,7 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
         </div>
       </form>
 
-      <AddSalesCoordinatorModal
-        isOpen={isAddCoordinatorOpen}
-        onClose={() => setIsAddCoordinatorOpen(false)}
-        onSuccess={refreshSalesCoordinators}
-      />
+      
     </div>
   );
 };

@@ -1,3 +1,4 @@
+import { SearchableSelect } from "../../../../../Components/Common/SearchableSelect";
 import React from "react";
 import { FaSearch } from "react-icons/fa";
 import type {
@@ -65,32 +66,34 @@ export const SalesActivityFilterBar: React.FC<SalesActivityFilterBarProps> = ({
       {/* Filter Controls matching CustomerMaster */}
       <div className="flex flex-wrap items-center justify-between sm:justify-start gap-2.5 w-full md:w-auto">
         {/* Activity Type Dropdown */}
-        <select
-          value={selectedType}
-          onChange={(e) => onTypeChange(e.target.value as ActivityType | "All")}
-          className="px-3 py-1.5 border border-gray-200 rounded-lg text-xs text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 focus:border-[#FF7900]"
-        >
-          <option value="All">All Activity Types</option>
-          {activityTypes.map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
-          ))}
-        </select>
+        <div className="min-w-[160px]">
+          <SearchableSelect
+            value={selectedType}
+            onChange={(val) => onTypeChange((val as ActivityType) || "All")}
+            options={[
+              { value: "All", label: "All Activity Types" },
+              ...activityTypes.map((t) => ({ value: t, label: t })),
+            ]}
+            placeholder="All Activity Types"
+            isClearable={false}
+            minHeight="34px"
+          />
+        </div>
 
         {/* Customer Dropdown */}
-        <select
-          value={selectedCustomerId}
-          onChange={(e) => onCustomerChange(e.target.value)}
-          className="px-3 py-1.5 border border-gray-200 rounded-lg text-xs text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 focus:border-[#FF7900] max-w-[170px] truncate"
-        >
-          <option value="All">All Customers</option>
-          {customers.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
+        <div className="min-w-[170px] max-w-[220px]">
+          <SearchableSelect
+            value={selectedCustomerId}
+            onChange={(val) => onCustomerChange(String(val || "All"))}
+            options={[
+              { value: "All", label: "All Customers" },
+              ...customers.map((c) => ({ value: String(c.id), label: c.name })),
+            ]}
+            placeholder="All Customers"
+            isClearable={false}
+            minHeight="34px"
+          />
+        </div>
 
         {/* Status Pills matching CustomerMaster exactly */}
         <div className="flex items-center gap-1.5">

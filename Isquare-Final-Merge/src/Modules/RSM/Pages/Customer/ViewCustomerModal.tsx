@@ -18,16 +18,25 @@ import type {
   IndustryItem,
   CustomerAreaItem,
   BdeUserItem,
+  EmployeeSelectItem,
+  DirectorItem,
+  SalesCoordinatorItem,
+  SalesUserManagerItem,
 } from "./Types/CustomerTypes";
 import {
   getCustomerById,
   getCustomerAddresses,
   validateCustomerAddress,
+  type CustomerApiRecord,
 } from "./Services/CustomerService";
 import {
   getIndustries,
   getCustomerAreas,
   getBdeUsers,
+  getEmployees,
+  getDirectors,
+  getSalesCoordinators,
+  getSalesManagers,
 } from "./Services/CustomerMasterDataService";
 
 interface ViewCustomerModalProps {
@@ -74,6 +83,10 @@ const ViewCustomerModal: React.FC<ViewCustomerModalProps> = ({
   const [industries, setIndustries] = useState<IndustryItem[]>([]);
   const [areas, setAreas] = useState<CustomerAreaItem[]>([]);
   const [bdeUsers, setBdeUsers] = useState<BdeUserItem[]>([]);
+  const [employees, setEmployees] = useState<EmployeeSelectItem[]>([]);
+  const [directors, setDirectors] = useState<DirectorItem[]>([]);
+  const [salesCoordinators, setSalesCoordinators] = useState<SalesCoordinatorItem[]>([]);
+  const [, setSalesManagers] = useState<SalesUserManagerItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [validatingAddrId, setValidatingAddrId] = useState<number | null>(null);
   const [validationMsg, setValidationMsg] = useState<{
@@ -82,20 +95,42 @@ const ViewCustomerModal: React.FC<ViewCustomerModalProps> = ({
 
   useEffect(() => {
     if (isOpen && customerId) {
+      let isMounted = true;
       const fetchData = async () => {
         setIsLoading(true);
         try {
-          const [custData, addrData, indData, areaData, bdeData] = await Promise.all([
+          const [
+            custData,
+            addrData,
+            indData,
+            areaData,
+            bdeData,
+            empData,
+            dirData,
+            scData,
+            smData,
+          ] = await Promise.all([
             getCustomerById(customerId),
             getCustomerAddresses(customerId).catch(() => []),
             getIndustries().catch(() => []),
             getCustomerAreas().catch(() => []),
             getBdeUsers().catch(() => []),
+            getEmployees().catch(() => []),
+            getDirectors().catch(() => []),
+            getSalesCoordinators().catch(() => []),
+            getSalesManagers().catch(() => []),
           ]);
+
+          if (!isMounted) return;
+
           setCustomer(custData);
           setIndustries(Array.isArray(indData) ? indData : []);
           setAreas(Array.isArray(areaData) ? areaData : []);
           setBdeUsers(Array.isArray(bdeData) ? bdeData : []);
+          setEmployees(Array.isArray(empData) ? empData : []);
+          setDirectors(Array.isArray(dirData) ? dirData : []);
+          setSalesCoordinators(Array.isArray(scData) ? scData : []);
+          setSalesManagers(Array.isArray(smData) ? smData : []);
           setAddresses(
             addrData && addrData.length > 0
               ? addrData
@@ -106,10 +141,13 @@ const ViewCustomerModal: React.FC<ViewCustomerModalProps> = ({
           toast.error("Failed to load customer profile details.");
           onClose();
         } finally {
-          setIsLoading(false);
+          if (isMounted) setIsLoading(false);
         }
       };
       fetchData();
+      return () => {
+        isMounted = false;
+      };
     }
   }, [isOpen, customerId, onClose]);
 
@@ -139,6 +177,127 @@ const ViewCustomerModal: React.FC<ViewCustomerModalProps> = ({
   };
 
   if (!isOpen) return null;
+  const custRecord = customer as CustomerApiRecord | null;
+
+  const resolvedDirectorName =
+    customer?.directorName ||
+    custRecord?.DirectorName ||
+    (customer?.directorId
+      ? directors.find((d) => d.directorId === Number(customer.directorId))?.directorName ||
+      employees.find((e) => e.id === Number(customer.directorId))?.fullName ||
+      employees.find((e) => e.id === Number(customer.directorId))?.firstName ||
+      `Director #${customer.directorId}`
+      : "-");
+
+  const resolvedBdeUserName =
+    customer?.bdeUserName ||
+    custRecord?.BDEUserName ||
+    (customer?.bdeUserId && bdeUsers.length > 0
+      ? bdeUsers.find(
+        (b) =>
+          b.id === Number(customer.bdeUserId) ||
+          (b.code && b.code === String(customer.bdeUserId))
+      )?.value
+      : null) ||
+    (customer?.bdeUserId && employees.length > 0
+      ? employees.find((e) => e.id === Number(customer.bdeUserId))?.fullName ||
+      employees.find((e) => e.id === Number(customer.bdeUserId))?.firstName
+      : null) ||
+    (customer?.salesCoordinatorId && salesCoordinators.length > 0
+      ? (() => {
+        const sc = salesCoordinators.find(
+          (s) => s.salesCoordinatorId === Number(customer.salesCoordinatorId)
+        );
+        if (sc?.bdeUserId) {
+          const matchedBde = bdeUsers.find((b) => b.id === sc.bdeUserId);
+          return matchedBde?.value || sc.bdeUserName || null;
+        }
+        return null;
+      })()
+      : null) ||
+    "-";
+
+  const resolvedSalesPersonName =
+    customer?.salesCoordinatorName ||
+    custRecord?.SalesCoordinatorName ||
+    (customer?.salesCoordinatorId && salesCoordinators.length > 0
+      ? salesCoordinators.find(
+        (s) => s.salesCoordinatorId === Number(customer.salesCoordinatorId)
+      )?.salesCoordinatorName
+      : null) ||
+    (customer?.salesCoordinatorId && employees.length > 0
+      ? employees.find((e) => e.id === Number(customer.salesCoordinatorId))?.fullName
+      : null) ||
+    (customer?.salesCoordinatorId ? `Sales Person #${customer.salesCoordinatorId}` : "-");
+
+  const resolvedCustomerOwnerName = (() => {
+    const rawOwnerName =
+      customer?.customerOwnerName ||
+      custRecord?.CustomerOwnerName ||
+      custRecord?.OwnerName ||
+      "";
+    const rawOwnerType = (
+      customer?.customerOwnerType ||
+      custRecord?.CustomerOwnerType ||
+      ""
+    ).toUpperCase();
+    const rawOwnerVal =
+      customer?.customerOwnerValue ||
+      custRecord?.CustomerOwnerValue ||
+      "";
+
+    // 1. Explicit owner type is BDE
+    if (rawOwnerType === "BDE" || rawOwnerVal.startsWith("BDE:")) {
+      return resolvedBdeUserName !== "-" ? resolvedBdeUserName : rawOwnerName || "-";
+    }
+
+    // 2. Explicit owner type is Director
+    if (rawOwnerType === "DIRECTOR" || rawOwnerVal.startsWith("DIRECTOR:")) {
+      return resolvedDirectorName !== "-" ? resolvedDirectorName : rawOwnerName || "-";
+    }
+
+    // 3. If customerOwnerId directly matches customer's assigned BDE User
+    if (
+      customer?.customerOwnerId &&
+      customer?.bdeUserId &&
+      Number(customer.customerOwnerId) === Number(customer.bdeUserId)
+    ) {
+      return resolvedBdeUserName !== "-" ? resolvedBdeUserName : rawOwnerName || "-";
+    }
+
+    // 4. If customerOwnerId directly matches customer's assigned Director
+    if (
+      customer?.customerOwnerId &&
+      customer?.directorId &&
+      Number(customer.customerOwnerId) === Number(customer.directorId)
+    ) {
+      return resolvedDirectorName !== "-" ? resolvedDirectorName : rawOwnerName || "-";
+    }
+
+    // 5. If raw owner name is directly present
+    if (rawOwnerName && rawOwnerName.trim()) {
+      return rawOwnerName.trim();
+    }
+
+    // 6. Match by customerOwnerId against BDEs, Directors, Employees
+    if (customer?.customerOwnerId) {
+      const ownerId = Number(customer.customerOwnerId);
+      const matchedBde = bdeUsers.find(
+        (b) => b.id === ownerId || (b.code && b.code === String(ownerId))
+      );
+      if (matchedBde) return matchedBde.value;
+
+      const matchedDir = directors.find((d) => d.directorId === ownerId);
+      if (matchedDir) return matchedDir.directorName;
+
+      const matchedEmp = employees.find((e) => e.id === ownerId);
+      if (matchedEmp) return matchedEmp.fullName;
+
+      return `Owner #${ownerId}`;
+    }
+
+    return "-";
+  })();
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-2 sm:p-4">
@@ -158,171 +317,196 @@ const ViewCustomerModal: React.FC<ViewCustomerModalProps> = ({
                 </h2>
                 <span
                   className={`px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider shrink-0 ${customer?.isActive
-                      ? "bg-emerald-500 text-white"
-                      : "bg-red-500 text-white"
+                    ? "bg-emerald-500 text-white"
+                    : "bg-red-500 text-white"
                     }`}
                 >
                   {customer?.isActive ? "Active" : "Inactive"}
                 </span>
               </div>
-              <p className="text-[11px] sm:text-xs text-orange-100 opacity-90 mt-0.5 truncate">
-                Code: {customer?.customerCode || "-"} | Short Name:{" "}
-                {customer?.customerShortName || "-"} | ID: #{customerId}
+              <p className="text-xs text-orange-100 flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5 sm:mt-1">
+                <span>Code: {customer?.customerCode || "-"}</span>
+                <span className="hidden sm:inline opacity-60">•</span>
+                <span className="truncate">
+                  Company: {customer?.companyName || "-"}
+                </span>
               </p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white shrink-0 min-w-[36px] min-h-[36px] flex items-center justify-center"
+            className="p-1.5 sm:p-2 hover:bg-white/10 rounded-full transition-colors text-white shrink-0"
+            aria-label="Close"
           >
-            <X size={20} />
+            <X size={18} className="sm:w-5 sm:h-5" />
           </button>
         </div>
 
         {/* Modal Body */}
-        <div className="overflow-y-auto p-4 sm:p-6 space-y-5 sm:space-y-6 flex-1">
+        <div className="p-4 sm:p-6 overflow-y-auto space-y-4 sm:space-y-6 flex-1 min-h-0">
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-24 text-[#FF7900]">
-              <Loader2 className="animate-spin mb-2" size={36} />
-              <p className="font-semibold text-sm">
-                Loading customer profile...
+            <div className="flex flex-col items-center justify-center py-16 gap-3">
+              <Loader2 className="w-8 h-8 animate-spin text-[#FF7900]" />
+              <p className="text-sm font-medium text-gray-500">
+                Loading complete customer profile...
               </p>
             </div>
           ) : customer ? (
             <>
-              {/* SECTION 1 - BASIC DETAILS */}
+              {/* SECTION 1 - BASIC INFORMATION */}
               <div>
-                <SectionHeader icon={Building2} title="Basic Details" />
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
-                  <DetailItem label="Customer Code" value={customer.customerCode} />
-                  <DetailItem label="Customer Name" value={customer.customerName} />
-                  <DetailItem label="Customer Short Name" value={customer.customerShortName} />
-                  <DetailItem label="Company Name" value={customer.companyName} />
-                  <DetailItem label="Company Group" value={customer.companyGroup} />
+                <SectionHeader
+                  icon={Building2}
+                  title="Basic Business Information"
+                />
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+                  <DetailItem
+                    label="Customer Code"
+                    value={customer.customerCode}
+                  />
+                  <DetailItem
+                    label="Customer Name"
+                    value={customer.customerName}
+                  />
+                  <DetailItem
+                    label="Company Name"
+                    value={customer.companyName}
+                  />
+                  <DetailItem
+                    label="Short Name"
+                    value={customer.customerShortName}
+                  />
+                  <DetailItem
+                    label="Company Group"
+                    value={customer.companyGroup}
+                  />
                   <DetailItem label="Plant Code" value={customer.plantCode} />
+                  <DetailItem label="Email Address" value={customer.email || customer.emailAddress} />
+                  <DetailItem label="Mobile Number" value={customer.mobile || customer.phone} />
+                  <DetailItem
+                    label="Industry Type"
+                    value={
+                      customer.industryName ||
+                      industries.find((i) => i.industryId === customer.industryId)
+                        ?.industryName ||
+                      customer.industryId
+                    }
+                  />
                 </div>
               </div>
 
-              {/* SECTION 2 - BUSINESS INFORMATION */}
+              {/* SECTION 2 - CATEGORIZATION */}
               <div>
-                <SectionHeader icon={Briefcase} title="Business Information" />
+                <SectionHeader
+                  icon={Briefcase}
+                  title="Status & Categorization"
+                />
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
                   <DetailItem
-                    label="Industry"
+                    label="Customer Status"
                     value={
-                      customer.industryName ||
-                      (customer.industryId
-                        ? industries.find(
-                          (i) => i.industryId === Number(customer.industryId)
-                        )?.industryName || customer.industryId
-                        : "-")
+                      customer.customerStatusName ||
+                      customer.customerStatusId
                     }
                   />
                   <DetailItem
-                    label="Customer Status"
-                    value={customer.customerStatusName || customer.customerStatusId}
-                  />
-                  <DetailItem
                     label="Customer Source"
-                    value={customer.customerSourceName || customer.customerSourceId}
+                    value={
+                      customer.customerSourceName ||
+                      customer.customerSourceId
+                    }
                   />
                   <DetailItem
                     label="Customer Area"
                     value={
                       customer.customerAreaName ||
-                      (customer.customerAreaId
-                        ? areas.find(
-                          (a) =>
-                            a.customerAreaId ===
-                            Number(customer.customerAreaId)
-                        )?.areaName || customer.customerAreaId
-                        : "-")
+                      areas.find((a) => a.customerAreaId === customer.customerAreaId)
+                        ?.areaName ||
+                      customer.customerAreaId
                     }
                   />
-                  <DetailItem label="Payment Terms" value={customer.paymentTermName || customer.paymentTermsId || customer.paymentTermId} />
                 </div>
               </div>
 
-              {/* SECTION 3 - REGISTRATION & TAX INFORMATION */}
+              {/* SECTION 3 - TAX & STATUTORY */}
               <div>
-                <SectionHeader icon={FileText} title="Registration & Tax Information" />
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2.5 sm:gap-3">
-                  <DetailItem label="PAN" value={customer.pan} />
-                  <DetailItem label="TAN" value={customer.tan} />
-                  <DetailItem label="GSTIN" value={customer.gstin} />
-                  <DetailItem label="CIN" value={customer.cin} />
+                <SectionHeader
+                  icon={FileText}
+                  title="Tax & Statutory Information"
+                />
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
+                  <DetailItem label="PAN Number" value={customer.pan} />
+                  <DetailItem label="TAN Number" value={customer.tan} />
+                  <DetailItem label="GSTIN Number" value={customer.gstin} />
+                  <DetailItem label="CIN Number" value={customer.cin} />
                   <DetailItem label="MSME Number" value={customer.msmeNumber} />
+                  <DetailItem
+                    label="Payment Term"
+                    value={
+                      customer.paymentTermName ||
+                      customer.paymentTermId ||
+                      customer.paymentTermsId
+                    }
+                  />
                 </div>
               </div>
 
               {/* SECTION 4 - SALES ASSIGNMENT */}
               <div>
-                <SectionHeader icon={Users} title="Sales Assignment" />
+                <SectionHeader
+                  icon={Users}
+                  title="Sales & Organization Assignment"
+                />
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
                   <DetailItem
                     label="Director Name"
-                    value={
-                      customer.directorName ||
-                      (customer.directorId ? `Director #${customer.directorId}` : "-")
-                    }
+                    value={resolvedDirectorName}
                   />
                   <DetailItem
                     label="BDE User"
-                    value={
-                      customer.bdeUserName ||
-                      (customer as any).BDEUserName ||
-                      (customer.bdeUserId && bdeUsers.length > 0
-                        ? bdeUsers.find((b) => b.id === Number(customer.bdeUserId) || (b.code && b.code === String(customer.bdeUserId)))?.value
-                        : null) ||
-                      "-"
-                    }
+                    value={resolvedBdeUserName}
                   />
                   <DetailItem
                     label="Sales Person"
-                    value={
-                      customer.salesCoordinatorName ||
-                      (customer.salesCoordinatorId ? `Sales Person #${customer.salesCoordinatorId}` : "-")
-                    }
+                    value={resolvedSalesPersonName}
                   />
                   <DetailItem
                     label="Customer Owner"
-                    value={
-                      customer.customerOwnerName
-                        ? (customer.customerOwnerType
-                            ? `${customer.customerOwnerName} (${customer.customerOwnerType})`
-                            : customer.customerOwnerName)
-                        : (customer.customerOwnerId ? `Owner #${customer.customerOwnerId}` : "-")
-                    }
+                    value={resolvedCustomerOwnerName}
                   />
                 </div>
               </div>
 
               {/* SECTION 5 - CUSTOMER ADDRESSES */}
               <div>
-                <SectionHeader icon={MapPin} title={`Customer Addresses (${addresses.length})`} />
+                <SectionHeader
+                  icon={MapPin}
+                  title={`Customer Addresses (${addresses.length})`}
+                />
                 {addresses.length === 0 ? (
-                  <div className="bg-gray-50 border border-dashed border-gray-300 rounded-xl p-8 text-center text-gray-500">
-                    <MapPin className="mx-auto mb-2 text-gray-400" size={28} />
-                    <p className="text-sm font-medium">No customer addresses registered.</p>
+                  <div className="p-6 text-center bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                    <p className="text-xs text-gray-500">
+                      No addresses configured for this customer.
+                    </p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
                     {addresses.map((addr, idx) => (
                       <div
                         key={addr.addressId || idx}
                         className={`p-4 rounded-xl border transition-all ${addr.isPrimary
-                            ? "border-blue-300 bg-blue-50/30 ring-1 ring-blue-300/50"
-                            : "border-gray-200 bg-white"
+                          ? "border-blue-300 bg-blue-50/30 ring-1 ring-blue-300/50"
+                          : "border-gray-200 bg-white"
                           }`}
                       >
                         <div className="flex justify-between items-start mb-2">
                           <div className="flex items-center gap-2">
-                            <span className="font-semibold text-xs text-[#154068] uppercase tracking-wider bg-[#154068]/10 px-2 py-0.5 rounded">
-                              {addr.addressType || "General"}
+                            <span className="font-bold text-xs uppercase text-gray-700 bg-gray-100 px-2 py-0.5 rounded">
+                              {addr.addressType || "Billing"}
                             </span>
                             {addr.isPrimary && (
-                              <span className="text-[10px] font-bold uppercase tracking-wider bg-blue-600 text-white px-2 py-0.5 rounded-full">
+                              <span className="text-[10px] font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded">
                                 Primary
                               </span>
                             )}
@@ -368,8 +552,8 @@ const ViewCustomerModal: React.FC<ViewCustomerModalProps> = ({
                         {addr.addressId && validationMsg[addr.addressId] && (
                           <div
                             className={`mt-2.5 p-2 rounded text-xs flex items-center gap-1.5 ${validationMsg[addr.addressId].success
-                                ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
-                                : "bg-red-50 text-red-800 border border-red-200"
+                              ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                              : "bg-red-50 text-red-800 border border-red-200"
                               }`}
                           >
                             {validationMsg[addr.addressId].success ? (

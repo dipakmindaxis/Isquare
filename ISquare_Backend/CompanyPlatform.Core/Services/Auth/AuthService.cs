@@ -111,6 +111,7 @@ namespace CompanyPlatform.Core.Services.Auth
                     DepartmentID = registerDto.DepartmentID,
                     DesignationID = registerDto.DesignationID,
                     LevelID = registerDto.LevelID,
+                    ReportingTo = (registerDto.ReportingTo.HasValue && registerDto.ReportingTo.Value > 0) ? registerDto.ReportingTo.Value : null,
                     PhotoPath = photoPath,
                     // Use provided values or defaults for Payroll compatibility
                     DateOfBirth = registerDto.DateOfBirth ?? DateTime.MinValue,
