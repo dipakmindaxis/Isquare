@@ -232,7 +232,7 @@ export const ActivityTypeMaster: React.FC<ActivityTypeMasterProps> = ({ isTab = 
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#00234a]/10 text-[#00234a]">
             <CheckCircle2 size={16} />
           </div>
-          <span className="font-mono text-xs font-bold text-[#00234a]">
+          <span className="text-sm font-semibold text-[#00234a]">
             {row.code}
           </span>
         </div>
@@ -406,7 +406,7 @@ export const ActivityTypeMaster: React.FC<ActivityTypeMasterProps> = ({ isTab = 
                             {formData.activitySubType}
                           </span>
                         )}
-                        <span className="text-[10px] font-mono text-slate-400 mt-0.5">
+                        <span className="text-[11px] font-medium text-slate-400 mt-0.5">
                           {formData.code || "CODE"}
                         </span>
                       </div>
@@ -540,7 +540,7 @@ export const ActivityTypeMaster: React.FC<ActivityTypeMasterProps> = ({ isTab = 
               <div className="rounded-xl bg-slate-50 p-4 border border-slate-100 space-y-3">
                 <div>
                   <span className="text-[10px] font-extrabold uppercase text-gray-400 block tracking-widest">Activity Code</span>
-                  <p className="text-sm font-mono font-bold text-[#00234a]">{selectedItem.code}</p>
+                  <p className="text-sm font-semibold text-[#00234a]">{selectedItem.code}</p>
                 </div>
                 <div>
                   <span className="text-[10px] font-extrabold uppercase text-gray-400 block tracking-widest">Activity Type Name</span>

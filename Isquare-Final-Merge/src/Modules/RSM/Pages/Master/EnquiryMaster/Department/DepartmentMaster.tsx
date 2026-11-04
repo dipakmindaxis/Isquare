@@ -161,7 +161,7 @@ export const DepartmentMaster: React.FC<DepartmentMasterProps> = ({ isTab = fals
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#00234a]/10 text-[#00234a]">
             <Building2 size={16} />
           </div>
-          <span className="font-mono text-xs font-bold text-[#00234a]">
+          <span className="text-sm font-semibold text-[#00234a]">
             #{getItemId(row)}
           </span>
         </div>
@@ -380,7 +380,7 @@ export const DepartmentMaster: React.FC<DepartmentMasterProps> = ({ isTab = fals
                   <span className="text-[10px] font-extrabold uppercase text-gray-400 block tracking-widest">
                     Department ID
                   </span>
-                  <p className="text-sm font-mono font-bold text-[#00234a]">
+                  <p className="text-sm font-semibold text-[#00234a]">
                     #{getItemId(selectedItem)}
                   </p>
                 </div>

@@ -738,7 +738,7 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
 
   return (
     <>
-      <tr className="hover:bg-[#f0f7ff] border-b border-gray-100 transition text-xs min-h-[52px]">
+      <tr className="hover:bg-[#f0f7ff] border-b border-gray-100 transition text-sm min-h-[52px]">
         {/* 1. Select / Code / Brand */}
         <td className="p-3 align-top min-w-[280px] border-r border-gray-100">
           <div className="space-y-2">
@@ -747,7 +747,7 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
               value={item.productId ? String(item.productId) : ""}
               onChange={(e) => handleProductSelect(e.target.value)}
               disabled={disabled}
-              className="w-full text-xs h-9 py-1.5 px-2.5 bg-white border border-gray-200 rounded-lg font-semibold text-gray-800 focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none cursor-pointer truncate shadow-2xs"
+              className="w-full text-sm h-9 py-1.5 px-2.5 bg-white border border-gray-200 rounded-lg font-medium text-gray-800 focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none cursor-pointer truncate shadow-2xs"
             >
               <option value="">-- Choose Existing Product or Custom --</option>
               {availableProducts.map((p: any) => {
@@ -771,7 +771,7 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
                   onUpdate({ ...item, itemCode: e.target.value })
                 }
                 disabled={disabled}
-                className="w-full text-xs h-8 py-1.5 px-2.5 bg-white border border-gray-200 rounded-lg font-mono text-gray-800 placeholder:text-gray-400 focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none shadow-2xs truncate"
+                className="w-full text-sm h-8 py-1.5 px-2.5 bg-white border border-gray-200 rounded-lg text-gray-800 placeholder:text-gray-400 focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none shadow-2xs truncate"
               />
               <input
                 type="text"
@@ -781,7 +781,7 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
                   onUpdate({ ...item, brand: e.target.value })
                 }
                 disabled={disabled}
-                className="w-full text-xs h-8 py-1.5 px-2.5 bg-white border border-gray-200 rounded-lg text-gray-700 placeholder:text-gray-400 focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none shadow-2xs truncate"
+                className="w-full text-sm h-8 py-1.5 px-2.5 bg-white border border-gray-200 rounded-lg text-gray-700 placeholder:text-gray-400 focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none shadow-2xs truncate"
               />
             </div>
 
@@ -794,7 +794,7 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
               }
               disabled={disabled}
               required
-              className="w-full text-xs h-8 py-1.5 px-2.5 bg-white border border-gray-200 rounded-lg font-semibold text-gray-900 placeholder:text-gray-400 focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none shadow-2xs truncate"
+              className="w-full text-sm h-8 py-1.5 px-2.5 bg-white border border-gray-200 rounded-lg font-medium text-gray-900 placeholder:text-gray-400 focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none shadow-2xs truncate"
             />
           </div>
         </td>
@@ -813,7 +813,7 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
               })
             }
             disabled={disabled}
-            className="w-full h-[114px] text-xs leading-relaxed py-2 px-2.5 bg-white border border-gray-200 rounded-lg placeholder:text-gray-400 focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none resize-none transition shadow-2xs overflow-y-auto"
+            className="w-full h-[114px] text-sm leading-relaxed py-2 px-2.5 bg-white border border-gray-200 rounded-lg placeholder:text-gray-400 focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none resize-none transition shadow-2xs overflow-y-auto"
           />
         </td>
 
@@ -868,7 +868,7 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
 
         {/* 4. HSN Code */}
         <td className="p-3 align-top text-center w-24 min-w-[90px] border-r border-gray-100">
-          <div className="py-2 px-2 bg-gray-50 border border-gray-200 rounded-lg text-center font-mono text-xs font-semibold text-gray-800">
+          <div className="py-2 px-2 bg-gray-50 border border-gray-200 rounded-lg text-center text-sm font-medium text-gray-800">
             {hsnCodeValue}
           </div>
         </td>
@@ -882,13 +882,13 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
             value={item.quantity ?? 1}
             onChange={(e) => handleFieldChange("quantity", e.target.value)}
             disabled={disabled}
-            className="w-full text-xs h-9 py-1.5 px-2 text-center bg-white border border-gray-200 rounded-lg font-bold text-gray-900 focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none shadow-2xs"
+            className="w-full text-sm h-9 py-1.5 px-2 text-center bg-white border border-gray-200 rounded-lg font-medium text-gray-900 focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none shadow-2xs"
           />
         </td>
 
         {/* 6. UOM */}
         <td className="p-3 align-top text-center w-24 min-w-[80px] border-r border-gray-100">
-          <div className="py-2 px-2 bg-gray-50 border border-gray-200 rounded-lg text-center text-xs font-semibold text-gray-800">
+          <div className="py-2 px-2 bg-gray-50 border border-gray-200 rounded-lg text-center text-sm font-medium text-gray-800">
             {displayUom}
           </div>
         </td>
@@ -902,7 +902,7 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
             value={item.rate ?? 0}
             onChange={(e) => handleFieldChange("rate", e.target.value)}
             disabled={disabled}
-            className="w-full text-xs h-9 py-1.5 px-2 bg-white border border-gray-200 rounded-lg font-semibold text-right focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none font-mono shadow-2xs"
+            className="w-full text-sm h-9 py-1.5 px-2 bg-white border border-gray-200 rounded-lg font-medium text-right focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none shadow-2xs"
           />
         </td>
 
@@ -916,7 +916,7 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
             value={item.discountPercentage ?? 0}
             onChange={(e) => handleFieldChange("discountPercentage", e.target.value)}
             disabled={disabled}
-            className="w-full text-xs h-9 py-1.5 px-2 text-center bg-white border border-gray-200 rounded-lg focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none font-mono shadow-2xs"
+            className="w-full text-sm h-9 py-1.5 px-2 text-center bg-white border border-gray-200 rounded-lg focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none shadow-2xs"
           />
           {item.discountPercentage > 15 && (
             <div className="text-[9px] text-amber-600 font-bold mt-0.5 text-center" title="Requires Approval">
@@ -935,13 +935,13 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
             value={item.gstRate ?? 18}
             onChange={(e) => handleFieldChange("gstRate", e.target.value)}
             disabled={disabled}
-            className="w-full text-xs h-9 py-1.5 px-2 text-center bg-white border border-gray-200 rounded-lg focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none font-mono shadow-2xs"
+            className="w-full text-sm h-9 py-1.5 px-2 text-center bg-white border border-gray-200 rounded-lg focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none shadow-2xs"
           />
         </td>
 
         {/* 10. Total (₹) */}
         <td className="p-3 align-top w-28 min-w-[110px] text-right border-r border-gray-100">
-          <div className="text-xs font-bold text-gray-900 font-mono py-1">
+          <div className="text-sm font-semibold text-gray-900 py-1">
             {formatINR(combinedTotal)}
           </div>
           {item.accessories && item.accessories.length > 0 ? (
@@ -969,7 +969,7 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
             onChange={(e) => handlePurchaseRateChange(e.target.value)}
             disabled={disabled}
             placeholder=""
-            className="w-full text-xs h-9 py-1.5 px-2 bg-white border border-gray-200 rounded-lg font-medium text-right font-mono focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none shadow-2xs"
+            className="w-full text-sm h-9 py-1.5 px-2 bg-white border border-gray-200 rounded-lg font-medium text-right focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none shadow-2xs"
           />
         </td>
 
@@ -982,7 +982,7 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
             onChange={(e) => handleProfitPercentageChange(e.target.value)}
             disabled={disabled}
             placeholder=""
-            className="w-full text-xs h-9 py-1.5 px-2 text-center bg-white border border-gray-200 rounded-lg font-medium font-mono focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none shadow-2xs"
+            className="w-full text-sm h-9 py-1.5 px-2 text-center bg-white border border-gray-200 rounded-lg font-medium focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none shadow-2xs"
           />
         </td>
 
@@ -996,7 +996,7 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
             onChange={(e) => handleStockChange(e.target.value)}
             disabled={disabled}
             placeholder=""
-            className="w-full text-xs h-9 py-1.5 px-2 text-center bg-white border border-gray-200 rounded-lg font-medium font-mono focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none shadow-2xs"
+            className="w-full text-sm h-9 py-1.5 px-2 text-center bg-white border border-gray-200 rounded-lg font-medium focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none shadow-2xs"
           />
         </td>
 

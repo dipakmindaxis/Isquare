@@ -283,7 +283,7 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
               {/* 01. Enquiry Basic Details */}
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
                 <div className="border-b border-gray-200 pb-2.5">
-                  <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
+                  <h3 className="text-sm font-extrabold uppercase tracking-widest text-[#FF7900] flex items-center gap-2">
                     <FileText size={16} /> Section 1 - Enquiry Basic Details
                   </h3>
                 </div>
@@ -350,7 +350,7 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
               {/* 02. Enquiry Contact */}
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
                 <div className="border-b border-gray-200 pb-2.5">
-                  <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
+                  <h3 className="text-sm font-extrabold uppercase tracking-widest text-[#FF7900] flex items-center gap-2">
                     <Phone size={16} /> Section 2 - Enquiry Contact
                   </h3>
                 </div>
@@ -398,27 +398,25 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
               {/* 03. Requirement Details */}
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
                 <div className="border-b border-gray-200 pb-2.5">
-                  <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
+                  <h3 className="text-sm font-extrabold uppercase tracking-widest text-[#FF7900] flex items-center gap-2">
                     <Building size={16} /> Section 3 - Requirement Details
                   </h3>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-x-8 gap-y-6">
-                  <div className="md:col-span-4">
+                  {/* Row 1 – Two Columns */}
+                  <div className="md:col-span-2">
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Product Category <span className="text-red-500">*</span></label>
-                    <select required name="productCategoryId" value={formData.productCategoryId || ""} onChange={handleInputChange} className="w-full md:w-1/4 border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800">
+                    <select required name="productCategoryId" value={formData.productCategoryId || ""} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800">
                       <option value="">Select Category</option>
                       {masters.categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
                   </div>
-                  <div className="md:col-span-4">
+                  <div className="md:col-span-2">
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Requirement Subject <span className="text-red-500">*</span></label>
                     <input type="text" required name="requirementSubject" value={formData.requirementSubject || ""} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm" />
                   </div>
-                  <div className="md:col-span-4">
-                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Customer Requirement <span className="text-red-500">*</span></label>
-                    <textarea required name="customerRequirement" rows={3} value={formData.customerRequirement || ""} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm" />
-                  </div>
 
+                  {/* Row 2 – Four Columns */}
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Required Quantity</label>
                     <input type="number" name="requiredQuantity" value={formData.requiredQuantity || ""} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm" />
@@ -442,6 +440,13 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
                     </select>
                   </div>
 
+                  {/* Row 3 – Full Width */}
+                  <div className="md:col-span-4">
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Customer Requirement <span className="text-red-500">*</span></label>
+                    <textarea required name="customerRequirement" rows={3} value={formData.customerRequirement || ""} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm" />
+                  </div>
+
+                  {/* Row 4 – Full Width */}
                   <div className="md:col-span-4">
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Technical Specification / Notes</label>
                     <textarea name="technicalSpecificationNotes" rows={3} value={formData.technicalSpecificationNotes || ""} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm" />
@@ -452,7 +457,7 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
               {/* 05. Commercial Details */}
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
                 <div className="border-b border-gray-200 pb-2.5">
-                  <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
+                  <h3 className="text-sm font-extrabold uppercase tracking-widest text-[#FF7900] flex items-center gap-2">
                     <IndianRupee size={16} /> Section 4 - Commercial Details
                   </h3>
                 </div>
@@ -502,7 +507,7 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
               {/* 06. Sales Assignment & Pipeline */}
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
                 <div className="border-b border-gray-200 pb-2.5">
-                  <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
+                  <h3 className="text-sm font-extrabold uppercase tracking-widest text-[#FF7900] flex items-center gap-2">
                     <Layers size={16} /> Section 5 - Sales Assignment & Pipeline
                   </h3>
                 </div>
@@ -605,7 +610,7 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
               {/* 07. Follow-up / Sales Activity */}
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
                 <div className="border-b border-gray-200 pb-2.5">
-                  <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
+                  <h3 className="text-sm font-extrabold uppercase tracking-widest text-[#FF7900] flex items-center gap-2">
                     <Calendar size={16} /> Section 6 - Follow-up / Sales Activity
                   </h3>
                 </div>
@@ -640,7 +645,7 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
               {/* 08. Outcome / Lost Reason */}
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
                 <div className="border-b border-gray-200 pb-2.5">
-                  <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
+                  <h3 className="text-sm font-extrabold uppercase tracking-widest text-[#FF7900] flex items-center gap-2">
                     <AlertTriangle size={16} /> Section 7 - Outcome / Lost Reason
                   </h3>
                 </div>
@@ -663,7 +668,7 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
               {/* 09. Documents & Terms */}
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
                 <div className="border-b border-gray-200 pb-2.5">
-                  <h3 className="text-xs font-bold text-[#FF7900] uppercase tracking-wider flex items-center gap-2">
+                  <h3 className="text-sm font-extrabold uppercase tracking-widest text-[#FF7900] flex items-center gap-2">
                     <Briefcase size={16} /> Section 8 - Documents & Terms
                   </h3>
                 </div>

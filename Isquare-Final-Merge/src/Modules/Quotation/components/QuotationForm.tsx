@@ -681,11 +681,11 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
         <form onSubmit={handleSubmit} className="space-y-6">
           <section className="min-w-0 rounded-xl border border-gray-200 bg-white p-5 shadow-xs sm:p-6 space-y-5">
             <div className="mb-5 flex items-center gap-2 border-b border-gray-200 pb-3">
-              <span className="px-2.5 py-0.5 rounded-md text-xs font-bold uppercase tracking-wider bg-orange-50 text-[#FF7900] border border-[#FF7900]/20">
+              <span className="px-2.5 py-0.5 rounded-md text-[11px] font-extrabold uppercase tracking-widest bg-orange-50 text-[#FF7900] border border-[#FF7900]/20">
                 Section 1
               </span>
               <FileText size={16} className="text-[#FF7900]" />
-              <h3 className="text-sm font-bold uppercase tracking-wider text-[#FF7900]">
+              <h3 className="text-sm font-extrabold uppercase tracking-widest text-[#FF7900]">
                 Quotation Info
               </h3>
             </div>
@@ -715,10 +715,10 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
 
           <section className="min-w-0 rounded-xl border border-gray-200 bg-white p-5 shadow-xs sm:p-6 space-y-5">
             <div className="mb-5 flex items-center gap-2 border-b border-gray-200 pb-3">
-              <span className="px-2.5 py-0.5 rounded-md text-xs font-bold uppercase tracking-wider bg-orange-50 text-[#FF7900] border border-[#FF7900]/20">
+              <span className="px-2.5 py-0.5 rounded-md text-[11px] font-extrabold uppercase tracking-widest bg-orange-50 text-[#FF7900] border border-[#FF7900]/20">
                 Section 2
               </span>
-              <h3 className="text-sm font-bold uppercase tracking-wider text-[#FF7900]">
+              <h3 className="text-sm font-extrabold uppercase tracking-widest text-[#FF7900]">
                 Product Details
               </h3>
             </div>
@@ -733,10 +733,10 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
 
           <section className="min-w-0 rounded-xl border border-gray-200 bg-white p-5 shadow-xs sm:p-6 space-y-5">
             <div className="mb-5 flex items-center gap-2 border-b border-gray-200 pb-3">
-              <span className="px-2.5 py-0.5 rounded-md text-xs font-bold uppercase tracking-wider bg-orange-50 text-[#FF7900] border border-[#FF7900]/20">
+              <span className="px-2.5 py-0.5 rounded-md text-[11px] font-extrabold uppercase tracking-widest bg-orange-50 text-[#FF7900] border border-[#FF7900]/20">
                 Section 3
               </span>
-              <h3 className="text-sm font-bold uppercase tracking-wider text-[#FF7900]">
+              <h3 className="text-sm font-extrabold uppercase tracking-widest text-[#FF7900]">
                 Pricing &amp; Charges
               </h3>
             </div>
@@ -762,10 +762,10 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
 
           <section className="min-w-0 rounded-xl border border-gray-200 bg-white p-5 shadow-xs sm:p-6 space-y-5">
             <div className="mb-5 flex items-center gap-2 border-b border-gray-200 pb-3">
-              <span className="px-2.5 py-0.5 rounded-md text-xs font-bold uppercase tracking-wider bg-orange-50 text-[#FF7900] border border-[#FF7900]/20">
+              <span className="px-2.5 py-0.5 rounded-md text-[11px] font-extrabold uppercase tracking-widest bg-orange-50 text-[#FF7900] border border-[#FF7900]/20">
                 Section 4
               </span>
-              <h3 className="text-sm font-bold uppercase tracking-wider text-[#FF7900]">
+              <h3 className="text-sm font-extrabold uppercase tracking-widest text-[#FF7900]">
                 Terms &amp; Delivery
               </h3>
             </div>
@@ -791,10 +791,10 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
 
           <section className="min-w-0 rounded-xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
             <div className="mb-5 flex items-center gap-2 border-b border-gray-200 pb-3">
-              <span className="rounded border border-blue-200 bg-blue-50 px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-[#154068]">
+              <span className="rounded border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-[11px] font-extrabold uppercase tracking-widest text-[#154068]">
                 Section 5
               </span>
-              <h3 className="text-sm font-bold uppercase tracking-wider text-[#154068]">
+              <h3 className="text-sm font-extrabold uppercase tracking-widest text-[#154068]">
                 Proposal Summary
               </h3>
             </div>

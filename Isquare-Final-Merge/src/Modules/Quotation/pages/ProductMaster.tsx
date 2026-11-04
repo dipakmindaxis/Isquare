@@ -437,7 +437,7 @@ export const ProductMaster: React.FC = () => {
 
       {/* Section Title & Actions */}
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h2 className="border-b-2 border-[#FF7900] pb-2 text-2xl sm:text-3xl font-bold tracking-tight text-[#00234a]">
+        <h2 className="border-b-2 border-[#FF7900] pb-2 text-3xl font-bold tracking-[-0.03em] text-[#00234a]">
           Products
         </h2>
 
@@ -445,7 +445,7 @@ export const ProductMaster: React.FC = () => {
           <button
             type="button"
             onClick={fetchProducts}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#00234a] shadow-xs transition hover:bg-slate-50 cursor-pointer"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#00234a] shadow-xs transition hover:bg-slate-50 cursor-pointer"
             title="Refresh"
           >
             <RefreshCw size={14} className="text-[#FF7900]" />
@@ -454,7 +454,7 @@ export const ProductMaster: React.FC = () => {
           <button
             type="button"
             onClick={handleOpenAdd}
-            className="rounded-xl bg-[#00234a] hover:bg-[#FF7900] px-5 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-[0_10px_18px_rgba(0,35,74,0.18)] transition cursor-pointer flex items-center gap-2"
+            className="rounded-xl bg-[#00234a] hover:bg-[#FF7900] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_18px_rgba(0,35,74,0.18)] transition cursor-pointer flex items-center gap-2"
           >
             <Plus size={15} />
             <span>Add Product</span>
@@ -473,11 +473,11 @@ export const ProductMaster: React.FC = () => {
             placeholder="Search products by code, name, or brand..."
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            className="w-full text-xs pl-9 pr-3 py-2 bg-gray-50/70 border border-gray-200 rounded-lg text-gray-800 focus:bg-white focus:border-[#FF7900] focus:ring-2 focus:ring-[#FF7900]/20 focus:outline-none transition shadow-2xs"
+            className="w-full text-sm pl-9 pr-3 py-2 bg-gray-50/70 border border-gray-200 rounded-lg text-slate-700 placeholder:text-sm focus:bg-white focus:border-[#FF7900] focus:ring-2 focus:ring-[#FF7900]/20 focus:outline-none transition shadow-2xs"
           />
         </div>
 
-        <div className="text-xs text-gray-500 font-medium">
+        <div className="text-sm text-slate-500 font-medium">
           Showing <span className="font-bold text-[#00234a]">{filteredProducts.length}</span> products
         </div>
       </div>
@@ -485,9 +485,9 @@ export const ProductMaster: React.FC = () => {
       {/* Table Container */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
+          <table className="w-full text-left border-collapse text-sm">
             <thead>
-              <tr className="bg-[#FF7900] text-white font-bold uppercase text-[12px] tracking-wider">
+              <tr className="bg-[#FF7900] text-white font-semibold uppercase text-[13px] tracking-wider">
                 <th className="p-3.5 w-14 text-center border-r border-[#e06800]">Image</th>
                 <th className="p-3.5 w-24 border-r border-[#e06800]">Item Code</th>
                 <th className="p-3.5 border-r border-[#e06800]">Product Name</th>
@@ -521,12 +521,12 @@ export const ProductMaster: React.FC = () => {
                         alt={p.productName}
                       />
                     </td>
-                    <td className="p-3.5 font-bold font-mono text-[#00234a]">
+                    <td className="p-3.5 font-semibold text-[#00234a]">
                       {p.itemCode || `PRD-${p.productId}`}
                     </td>
                     <td className="p-3.5 font-bold text-gray-900">{p.productName}</td>
                     <td className="p-3.5 text-gray-600 font-medium">{p.brand || "ISQUARE"}</td>
-                    <td className="p-3.5 font-mono text-center text-gray-700 font-semibold">
+                    <td className="p-3.5 text-center text-gray-700 font-medium">
                       {p.hsnCode || "—"}
                     </td>
                     <td className="p-3.5 text-gray-500 max-w-xs align-top">
@@ -537,7 +537,7 @@ export const ProductMaster: React.FC = () => {
                         {p.specification || "—"}
                       </div>
                     </td>
-                    <td className="p-3.5 text-right font-bold text-gray-900 font-mono">
+                    <td className="p-3.5 text-right font-semibold text-gray-900">
                       {formatINR(p.standardRate ?? 0)}
                     </td>
                     <td className="p-3.5 text-center font-semibold text-gray-700">
@@ -595,7 +595,7 @@ export const ProductMaster: React.FC = () => {
                     value={itemCode}
                     onChange={(e) => setItemCode(e.target.value)}
                     placeholder="e.g. PRD-01"
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs font-mono"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
                   />
                 </div>
 
@@ -608,7 +608,7 @@ export const ProductMaster: React.FC = () => {
                     value={brand}
                     onChange={(e) => setBrand(e.target.value)}
                     placeholder="e.g. Siemens"
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
                   />
                 </div>
               </div>
@@ -623,7 +623,7 @@ export const ProductMaster: React.FC = () => {
                   value={productName}
                   onChange={(e) => setProductName(e.target.value)}
                   placeholder="e.g. CNC Spindle Motor 5kW"
-                  className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs font-semibold"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs font-medium"
                 />
               </div>
 
@@ -637,7 +637,7 @@ export const ProductMaster: React.FC = () => {
                   value={specification}
                   onChange={(e) => setSpecification(e.target.value)}
                   placeholder="Detailed parameters, voltage, RPM, mounting details"
-                  className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
                 />
               </div>
 
@@ -704,7 +704,7 @@ export const ProductMaster: React.FC = () => {
                       value={productImage}
                       onChange={(e) => handleImageUrlChange(e.target.value)}
                       placeholder="Or enter image URL / path (e.g. /images/...)"
-                      className="w-full rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-xs text-gray-700 font-mono transition focus:border-[#FF7900] focus:outline-none focus:ring-1 focus:ring-[#FF7900]"
+                      className="w-full rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-sm text-gray-700 transition focus:border-[#FF7900] focus:outline-none focus:ring-1 focus:ring-[#FF7900]"
                     />
 
                     <p className="text-[10px] text-gray-500">
@@ -725,7 +725,7 @@ export const ProductMaster: React.FC = () => {
                     value={hsnCode}
                     onChange={(e) => setHsnCode(e.target.value)}
                     placeholder="e.g. 8466"
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs font-mono"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
                   />
                 </div>
 
@@ -738,7 +738,7 @@ export const ProductMaster: React.FC = () => {
                     value={defaultUom}
                     onChange={(e) => setDefaultUom(e.target.value)}
                     placeholder="e.g. Nos, Pcs, Kg, Boxes"
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs font-medium"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
                   />
                 </div>
               </div>
@@ -763,7 +763,7 @@ export const ProductMaster: React.FC = () => {
                       }
                     }}
                     placeholder="e.g. 25000"
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-800 text-right font-semibold transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs font-mono"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 text-right font-medium transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
                   />
                 </div>
 
@@ -778,7 +778,7 @@ export const ProductMaster: React.FC = () => {
                     value={gstRate}
                     onChange={(e) => setGstRate(parseFloat(e.target.value) || 0)}
                     placeholder="e.g. 18"
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-800 text-center font-semibold transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 text-center font-medium transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
                   />
                 </div>
               </div>
@@ -804,7 +804,7 @@ export const ProductMaster: React.FC = () => {
                       }
                     }}
                     placeholder="e.g. 175"
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-800 text-right font-semibold transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs font-mono"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 text-right font-medium transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
                   />
                 </div>
 
@@ -818,7 +818,7 @@ export const ProductMaster: React.FC = () => {
                     value={profitPercentage}
                     onChange={(e) => setProfitPercentage(e.target.value)}
                     placeholder="e.g. 1.7"
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-800 text-center font-semibold transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 text-center font-medium transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
                   />
                 </div>
 
@@ -833,7 +833,7 @@ export const ProductMaster: React.FC = () => {
                     value={stock}
                     onChange={(e) => setStock(e.target.value)}
                     placeholder="e.g. 50"
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-800 text-center font-semibold transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs font-mono"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 text-center font-medium transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
                   />
                 </div>
               </div>
@@ -842,14 +842,14 @@ export const ProductMaster: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-[#00234a] shadow-xs transition hover:bg-slate-50 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#00234a] shadow-xs transition hover:bg-slate-50 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-[#00234a] hover:bg-[#FF7900] px-5 py-2.5 text-xs font-semibold text-white shadow-xs transition cursor-pointer disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-[#00234a] hover:bg-[#FF7900] px-5 py-2.5 text-sm font-semibold text-white shadow-xs transition cursor-pointer disabled:opacity-50"
                 >
                   {isSubmitting ? "Saving..." : editingProduct ? "Update Product" : "Save Product"}
                 </button>

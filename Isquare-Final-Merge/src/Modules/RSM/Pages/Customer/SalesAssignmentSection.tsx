@@ -1354,7 +1354,7 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
                 <Users className="w-5 h-5" />
               </div>
               <div>
-                <h1 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight font-serif">
+                <h1 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">
                   Hierarchy Management
                 </h1>
                 <p className="text-xs md:text-sm text-gray-500 mt-1">
@@ -1628,9 +1628,9 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs border-collapse">
+                <table className="w-full text-left text-sm border-collapse">
                   <thead>
-                    <tr className="bg-gray-100/75 border-b border-gray-200 text-gray-600 font-bold uppercase tracking-wider text-[11px]">
+                    <tr className="bg-gray-100/75 border-b border-gray-200 text-gray-600 font-semibold uppercase tracking-wider text-[13px]">
                       <th className="py-3 px-4">Sr. No.</th>
                       <th className="py-3 px-4">Director Name</th>
                       <th className="py-3 px-4">BDE User</th>
@@ -1718,7 +1718,7 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
         <div className={standalone ? "p-5 md:p-6 space-y-6" : "space-y-4"}>
           <div className="bg-white rounded-xl border border-gray-200 shadow-xs p-5 md:p-6 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-gray-100">
-              <h2 className="text-base sm:text-lg font-bold text-gray-800 font-serif tracking-tight border-b-2 border-[#154068] pb-1 inline-block">
+              <h2 className="text-base sm:text-lg font-bold text-gray-800 tracking-tight border-b-2 border-[#154068] pb-1 inline-block">
                 Listing of Levels
               </h2>
 
@@ -1749,7 +1749,7 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
             <div className="overflow-x-auto border border-gray-200 rounded-lg">
               <table className="w-full text-left text-sm border-collapse">
                 <thead>
-                  <tr className="bg-[#0f2c4d] text-white text-xs font-bold uppercase tracking-wider">
+                  <tr className="bg-[#0f2c4d] text-white text-[13px] font-semibold uppercase tracking-wider">
                     <th className="py-3 px-4 border-r border-[#154068]/40">Sr. No.</th>
                     <th className="py-3 px-4 border-r border-[#154068]/40">Level Name</th>
                     <th className="py-3 px-4 border-r border-[#154068]/40">Level Order</th>
@@ -1827,7 +1827,7 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
           <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             {/* Modal Header */}
             <div className="p-5 pb-3 border-b border-gray-100 flex items-center justify-between">
-              <h3 className="text-base font-bold text-gray-900 font-serif">
+              <h3 className="text-base font-bold text-gray-900">
                 {editingLevelId ? "Edit Level" : "Add Level"}
               </h3>
               <button

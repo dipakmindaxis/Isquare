@@ -31,7 +31,7 @@ const DetailItem: React.FC<{
       className || ""
     }`}
   >
-    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">
+    <p className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest mb-0.5">
       {label}
     </p>
     <p className="text-sm font-semibold text-[#154068] break-words">
@@ -52,7 +52,7 @@ const SectionHeader: React.FC<{
       <div className="bg-[#FF7900] p-1.5 rounded text-white">
         <Icon size={14} />
       </div>
-      <h3 className="font-bold text-[#FF7900] uppercase text-xs tracking-wider">
+      <h3 className="text-sm font-extrabold uppercase tracking-widest text-[#FF7900]">
         {title}
       </h3>
     </div>

@@ -114,7 +114,7 @@ const CustomerAddressSection: React.FC<CustomerAddressSectionProps> = ({
           <button
             type="button"
             onClick={handleAddAddress}
-            className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 bg-[#FF7900] text-white text-xs font-semibold rounded-lg hover:bg-[#e06800] transition shadow-xs cursor-pointer"
+            className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 bg-[#FF7900] text-white text-sm font-semibold rounded-lg hover:bg-[#e06800] transition shadow-xs cursor-pointer"
           >
             <Plus size={14} /> Add Address
           </button>

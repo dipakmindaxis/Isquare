@@ -89,7 +89,7 @@ const ViewSalesAttachmentModal: React.FC<ViewSalesAttachmentModalProps> = ({
                   {attachment.fileName || attachment.name}
                 </h4>
                 <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
-                  <span className="font-mono">{attachment.fileSizeKB || 0} KB</span>
+                  <span>{attachment.fileSizeKB || 0} KB</span>
                   <span>•</span>
                   <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-orange-100 text-[#F37021]">
                     {attachment.documentType || attachment.category || "Attachment"}
@@ -136,7 +136,7 @@ const ViewSalesAttachmentModal: React.FC<ViewSalesAttachmentModalProps> = ({
                   <span className="text-[10px] font-extrabold uppercase text-gray-400 block tracking-widest">
                     Customer ID
                   </span>
-                  <p className="text-xs font-mono text-slate-600">
+                  <p className="text-sm font-medium text-slate-600">
                     {attachment.customerId}
                   </p>
                 </div>
@@ -159,7 +159,7 @@ const ViewSalesAttachmentModal: React.FC<ViewSalesAttachmentModalProps> = ({
                 <span className="text-[10px] font-extrabold uppercase text-gray-400 block tracking-widest">
                   Sales Activity ID
                 </span>
-                <p className="text-xs font-mono text-slate-600">
+                <p className="text-sm font-medium text-slate-600">
                   {attachment.salesActivityId || attachment.relatedActivityCode || "-"}
                 </p>
               </div>
@@ -195,7 +195,7 @@ const ViewSalesAttachmentModal: React.FC<ViewSalesAttachmentModalProps> = ({
                 <span className="text-[10px] font-extrabold uppercase text-gray-400 block tracking-widest">
                   File Type / Format
                 </span>
-                <p className="text-xs font-mono text-slate-800">
+                <p className="text-sm font-medium text-slate-800">
                   {attachment.fileType || "application/octet-stream"}
                 </p>
               </div>

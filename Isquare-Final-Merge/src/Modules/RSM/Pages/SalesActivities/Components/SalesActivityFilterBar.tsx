@@ -59,7 +59,7 @@ export const SalesActivityFilterBar: React.FC<SalesActivityFilterBarProps> = ({
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Search by subject, customer, code, employee, notes..."
-          className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 focus:border-[#FF7900]"
+          className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 focus:border-[#FF7900]"
         />
       </div>
 
@@ -79,6 +79,18 @@ export const SalesActivityFilterBar: React.FC<SalesActivityFilterBarProps> = ({
             minHeight="34px"
           />
         </div>
+        <select
+          value={selectedType}
+          onChange={(e) => onTypeChange(e.target.value as ActivityType | "All")}
+          className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 focus:border-[#FF7900]"
+        >
+          <option value="All">All Activity Types</option>
+          {activityTypes.map((t) => (
+            <option key={t} value={t}>
+              {t}
+            </option>
+          ))}
+        </select>
 
         {/* Customer Dropdown */}
         <div className="min-w-[170px] max-w-[220px]">
@@ -94,10 +106,22 @@ export const SalesActivityFilterBar: React.FC<SalesActivityFilterBarProps> = ({
             minHeight="34px"
           />
         </div>
+        <select
+          value={selectedCustomerId}
+          onChange={(e) => onCustomerChange(e.target.value)}
+          className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 focus:border-[#FF7900] max-w-[170px] truncate"
+        >
+          <option value="All">All Customers</option>
+          {customers.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
 
         {/* Status Pills matching CustomerMaster exactly */}
         <div className="flex items-center gap-1.5">
-          <span className="text-xs font-semibold text-gray-500 whitespace-nowrap">
+          <span className="text-sm font-semibold text-gray-500 whitespace-nowrap">
             Status:
           </span>
           <div className="flex bg-gray-100 p-1 rounded-lg">

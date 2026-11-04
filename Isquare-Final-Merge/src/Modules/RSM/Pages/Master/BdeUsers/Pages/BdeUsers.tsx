@@ -1,0 +1,154 @@
+import React, { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
+import { Plus } from "lucide-react";
+
+import BdeUserTable from "../Components/BdeUserTable";
+import BdeUserForm from "../Components/BdeUserForm";
+import EditBdeUserModal from "../Components/EditBdeUserModal";
+
+import {
+  deleteBdeUser,
+  getAllBdeUsers,
+  getDirectorEmployees,
+} from "../Services/BdeUserService";
+
+import type { BdeUser as BdeUserType } from "../Types/BdeUser";
+
+interface BdeUsersProps {
+  isTab?: boolean;
+}
+
+const BdeUsers: React.FC<BdeUsersProps> = ({ isTab = false }) => {
+  const [data, setData] = useState<BdeUserType[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<BdeUserType | null>(null);
+
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const fetchBdeUsers = useCallback(async () => {
+    setIsLoading(true);
+
+    try {
+      const [responseData, directorsData] = await Promise.all([
+        getAllBdeUsers(),
+        getDirectorEmployees().catch(() => []),
+      ]);
+      const directorMap = new Map<number, string>(
+        directorsData.map((d) => [d.id, d.name])
+      );
+      const list: BdeUserType[] = Array.isArray(responseData) ? responseData : [];
+      const normalized: BdeUserType[] = list.map((item: BdeUserType) => {
+        const dirId = item.directorEmployeeId ?? null;
+        const dirName =
+          item.directorName ||
+          (dirId ? directorMap.get(dirId) : null) ||
+          null;
+        return {
+          id: item.id ?? 0,
+          value: item.value ?? "",
+          code: item.code ?? "",
+          directorEmployeeId: dirId,
+          directorName: dirName,
+          isActive: item.isActive !== false,
+          isDeleted: item.isDeleted || false,
+        };
+      });
+      setData(normalized);
+    } catch (error) {
+      console.error("Error fetching BDE users:", error);
+      toast.error("Failed to load BDE users.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchBdeUsers();
+  }, [fetchBdeUsers]);
+
+  const handleEdit = (item: BdeUserType) => {
+    setSelectedItem(item);
+    setIsEditModalOpen(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+    setSelectedItem(null);
+  };
+
+  const handleDelete = async (item: BdeUserType) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${item.value}"?`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await deleteBdeUser(item.id);
+      toast.success("BDE user deleted successfully.");
+
+      if (selectedItem?.id === item.id) {
+        setSelectedItem(null);
+      }
+
+      await fetchBdeUsers();
+    } catch (error) {
+      console.error("Error deleting BDE user:", error);
+      toast.error("Failed to delete BDE user.");
+    }
+  };
+
+  return (
+    <div className={isTab ? "w-full" : "min-h-full bg-[#f5f6f8] p-6"}>
+      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h5 className="text-[#FF7900] text-[11px] font-extrabold uppercase tracking-widest">MASTER TABLE</h5>
+
+          <h1 className="text-2xl font-bold text-[#00234a]">
+            BDE Users
+          </h1>
+
+          <p className="mt-1 text-xs text-gray-500">
+            Business development executive assignment list.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setIsAddModalOpen(true)}
+            className="flex items-center gap-2 rounded-lg bg-[#FF7900] px-4 py-2 text-sm font-semibold text-white hover:bg-[#E66D00] transition-colors shadow-md shadow-orange-500/25 cursor-pointer"
+          >
+            <Plus size={16} />
+            <span>Add BDE User</span>
+          </button>
+        </div>
+      </div>
+
+      <BdeUserTable
+        bdeUsers={data}
+        isLoading={isLoading}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
+
+      <BdeUserForm
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSuccess={fetchBdeUsers}
+      />
+
+      <EditBdeUserModal
+        isOpen={isEditModalOpen}
+        bdeUser={selectedItem}
+        onClose={handleCloseEditModal}
+        onSuccess={fetchBdeUsers}
+      />
+    </div>
+  );
+};
+
+export default BdeUsers;

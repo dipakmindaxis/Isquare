@@ -170,7 +170,7 @@ const RoleMaster: React.FC<RoleMasterProps> = ({ isTab = false }) => {
             <button
               onClick={fetchItems}
               disabled={isLoading}
-              className="flex items-center gap-2 px-3.5 py-2.5 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 rounded-lg text-sm font-medium transition cursor-pointer shadow-xs disabled:opacity-50"
+              className="flex items-center gap-2 px-3.5 py-2.5 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 rounded-lg text-sm font-semibold transition cursor-pointer shadow-xs disabled:opacity-50"
               title="Refresh records"
             >
               <RefreshCw
@@ -183,7 +183,7 @@ const RoleMaster: React.FC<RoleMasterProps> = ({ isTab = false }) => {
 
             <button
               onClick={handleExportExcel}
-              className="flex items-center gap-2 px-3.5 py-2.5 bg-white hover:bg-gray-50 text-emerald-700 border border-emerald-300 rounded-lg text-sm font-medium transition cursor-pointer shadow-xs"
+              className="flex items-center gap-2 px-3.5 py-2.5 bg-white hover:bg-gray-50 text-emerald-700 border border-emerald-300 rounded-lg text-sm font-semibold transition cursor-pointer shadow-xs"
               title="Export to Excel"
             >
               <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
@@ -192,7 +192,7 @@ const RoleMaster: React.FC<RoleMasterProps> = ({ isTab = false }) => {
 
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="flex items-center gap-2 bg-[#FF7900] hover:bg-[#e06800] text-white font-medium px-5 py-2.5 rounded-lg transition shadow-xs cursor-pointer text-sm"
+              className="flex items-center gap-2 bg-[#FF7900] hover:bg-[#e06800] text-white font-semibold px-5 py-2.5 rounded-lg transition shadow-xs cursor-pointer text-sm"
             >
               <Plus size={18} />
               <span>Add Role</span>
@@ -242,7 +242,7 @@ const RoleMaster: React.FC<RoleMasterProps> = ({ isTab = false }) => {
       <div className="bg-white rounded-xl shadow-xs overflow-hidden border border-gray-200">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-[#FF7900] text-white text-xs uppercase tracking-wider border-b border-[#e06800]">
+            <thead className="bg-[#FF7900] text-white text-[13px] font-semibold uppercase tracking-wider border-b border-[#e06800]">
               <tr>
                 <th className="px-6 py-4 text-left font-bold w-24">Sr. No.</th>
                 <th className="px-6 py-4 text-left font-bold">Role Name</th>

@@ -195,7 +195,7 @@ export const ProductCategoryMaster: React.FC<ProductCategoryMasterProps> = ({ is
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#00234a]/10 text-[#00234a]">
             <Package size={16} />
           </div>
-          <span className="font-mono text-xs font-bold text-[#00234a]">
+          <span className="text-sm font-semibold text-[#00234a]">
             {row.productCategoryCode}
           </span>
         </div>
@@ -451,7 +451,7 @@ export const ProductCategoryMaster: React.FC<ProductCategoryMasterProps> = ({ is
               <div className="rounded-xl bg-slate-50 p-4 border border-slate-100 space-y-3">
                 <div>
                   <span className="text-[10px] font-extrabold uppercase text-gray-400 block tracking-widest">Category Code</span>
-                  <p className="text-sm font-mono font-bold text-[#00234a]">{selectedItem.productCategoryCode}</p>
+                  <p className="text-sm font-semibold text-[#00234a]">{selectedItem.productCategoryCode}</p>
                 </div>
                 <div>
                   <span className="text-[10px] font-extrabold uppercase text-gray-400 block tracking-widest">Category Name</span>

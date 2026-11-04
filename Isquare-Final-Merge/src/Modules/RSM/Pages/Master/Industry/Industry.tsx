@@ -175,7 +175,7 @@ const Industry: React.FC<IndustryProps> = ({ isTab = false }) => {
               <Factory className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-xl md:text-2xl font-bold text-gray-900">Industry</h1>
+              <h1 className="text-2xl font-bold text-[#00234a]">Industry</h1>
             </div>
           </div>
 
@@ -183,7 +183,7 @@ const Industry: React.FC<IndustryProps> = ({ isTab = false }) => {
             <button
               onClick={fetchItems}
               disabled={isLoading}
-              className="flex items-center gap-2 px-3.5 py-2.5 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 rounded-none text-sm font-medium transition cursor-pointer shadow-xs disabled:opacity-50"
+              className="flex items-center gap-2 px-3.5 py-2.5 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 rounded-none text-sm font-semibold transition cursor-pointer shadow-xs disabled:opacity-50"
               title="Refresh records"
             >
               <RefreshCw className={`w-4 h-4 text-gray-600 ${isLoading ? "animate-spin" : ""}`} />
@@ -192,7 +192,7 @@ const Industry: React.FC<IndustryProps> = ({ isTab = false }) => {
 
             <button
               onClick={handleExportExcel}
-              className="flex items-center gap-2 px-3.5 py-2.5 bg-white hover:bg-gray-50 text-emerald-700 border border-emerald-300 rounded-none text-sm font-medium transition cursor-pointer shadow-xs"
+              className="flex items-center gap-2 px-3.5 py-2.5 bg-white hover:bg-gray-50 text-emerald-700 border border-emerald-300 rounded-none text-sm font-semibold transition cursor-pointer shadow-xs"
               title="Export to Excel"
             >
               <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
@@ -201,7 +201,7 @@ const Industry: React.FC<IndustryProps> = ({ isTab = false }) => {
 
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="flex items-center gap-2 bg-[#FF7900] hover:bg-[#E66D00] text-white font-medium px-5 py-2.5 rounded-none transition shadow-sm cursor-pointer text-sm"
+              className="flex items-center gap-2 bg-[#FF7900] hover:bg-[#E66D00] text-white font-semibold px-5 py-2.5 rounded-none transition shadow-sm cursor-pointer text-sm"
             >
               <Plus size={18} />
               <span>Add Industry</span>
@@ -283,7 +283,7 @@ const Industry: React.FC<IndustryProps> = ({ isTab = false }) => {
       <div className="bg-white rounded-none shadow-xs overflow-hidden border border-gray-200">
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
-            <thead className="bg-[#FF7900] text-white text-xs uppercase tracking-wider border-b border-[#e06800]">
+            <thead className="bg-[#FF7900] text-white text-[13px] font-semibold uppercase tracking-wider border-b border-[#e06800]">
               <tr>
                 <th className="px-4 py-3.5 text-left font-bold w-16 border-r border-[#e06800]">
                   Sr. No.

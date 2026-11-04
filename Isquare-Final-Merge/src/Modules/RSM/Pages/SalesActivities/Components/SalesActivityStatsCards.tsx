@@ -72,7 +72,7 @@ export const SalesActivityStatsCards: React.FC<SalesActivityStatsCardsProps> = (
               {card.icon}
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase text-gray-400 tracking-wider truncate">
+              <p className="text-[11px] font-extrabold uppercase text-gray-400 tracking-widest truncate">
                 {card.label}
               </p>
               <p className={`text-2xl font-bold ${card.textColor}`}>
