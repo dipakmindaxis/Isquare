@@ -427,14 +427,6 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
                       isClearable={false}
                       minHeight="34px"
                     />
-                      onChange={(e) => setStatusFilter(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-700 outline-none focus:border-blue-500 bg-white"
-                    >
-                      <option value="All">All statuses</option>
-                      <option value="Pending">Pending</option>
-                      <option value="In Progress">In Progress</option>
-                      <option value="Completed">Completed</option>
-                    </select>
                   </div>
 
                   {/* Priority Filter */}
@@ -453,16 +445,6 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
                       isClearable={false}
                       minHeight="34px"
                     />
-                      onChange={(e) => setSelectedPriorityId(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-700 outline-none focus:border-blue-500 bg-white"
-                    >
-                      <option value="All">All Priorities</option>
-                      {priorities.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.name} Priority
-                        </option>
-                      ))}
-                    </select>
                   </div>
 
                   {/* Search */}

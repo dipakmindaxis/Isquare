@@ -566,10 +566,9 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
               {/* SECTION 1: BASIC CUSTOMER DETAILS */}
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
                 <div className="flex items-center gap-2.5 text-[#FF7900] font-bold text-base border-b border-orange-100 pb-3">
-                <div className="border-b border-gray-200 pb-2.5">
-                  <h3 className="text-sm font-extrabold uppercase tracking-widest text-[#FF7900] flex items-center gap-2">
-                    <Building2 size={16} /> Section 1 - Basic Customer Details
-                  </div>
+                  <Building2 size={16} />
+                  <span>Section 1 - Basic Customer Details</span>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                   <div>
                     <div className="flex items-center justify-between mb-1">
@@ -667,10 +666,9 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
               {/* SECTION 2: BUSINESS INFORMATION */}
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
                 <div className="flex items-center gap-2.5 text-[#FF7900] font-bold text-base border-b border-orange-100 pb-3">
-                <div className="border-b border-gray-200 pb-2.5">
-                  <h3 className="text-sm font-extrabold uppercase tracking-widest text-[#FF7900] flex items-center gap-2">
-                    <Briefcase size={16} /> Section 2 - Business Information
-                  </div>
+                  <Briefcase size={16} />
+                  <span>Section 2 - Business Information</span>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
@@ -782,10 +780,9 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
               {/* SECTION 3: REGISTRATION & TAX INFORMATION */}
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
                 <div className="flex items-center gap-2.5 text-[#FF7900] font-bold text-base border-b border-orange-100 pb-3">
-                <div className="border-b border-gray-200 pb-2.5">
-                  <h3 className="text-sm font-extrabold uppercase tracking-widest text-[#FF7900] flex items-center gap-2">
-                    <FileText size={16} /> Section 3 - Registration & Tax Information
-                  </div>
+                  <FileText size={16} />
+                  <span>Section 3 - Registration & Tax Information</span>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
@@ -862,10 +859,9 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
               {/* SECTION 4: SALES ASSIGNMENT (Cascading Flow) */}
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
                 <div className="flex items-center gap-2.5 text-[#FF7900] font-bold text-base border-b border-orange-100 pb-3">
-                <div className="border-b border-gray-200 pb-2.5">
-                  <h3 className="text-sm font-extrabold uppercase tracking-widest text-[#FF7900] flex items-center gap-2">
-                    <Users size={16} /> Section 4 - Sales Assignment
-                  </div>
+                  <Users size={16} />
+                  <span>Section 4 - Sales Assignment</span>
+                </div>
                 <SalesAssignmentSection
                   hideHeader={true}
                   values={{
@@ -950,10 +946,9 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
               {/* SECTION 5: ADDRESSES */}
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
                 <div className="flex items-center gap-2.5 text-[#FF7900] font-bold text-base border-b border-orange-100 pb-3">
-                <div className="border-b border-gray-200 pb-2.5">
-                  <h3 className="text-sm font-extrabold uppercase tracking-widest text-[#FF7900] flex items-center gap-2">
-                    <MapPin size={16} /> Section 5 - Customer Addresses
-                  </div>
+                  <MapPin size={16} />
+                  <span>Section 5 - Customer Addresses</span>
+                </div>
                 <CustomerAddressSection
                   addresses={formData.addresses || []}
                   onChange={handleAddressesChange}
@@ -965,10 +960,9 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
               {/* SECTION 6: OTHER DETAILS & REMARKS */}
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
                 <div className="flex items-center gap-2.5 text-[#FF7900] font-bold text-base border-b border-orange-100 pb-3">
-                <div className="border-b border-gray-200 pb-2.5">
-                  <h3 className="text-sm font-extrabold uppercase tracking-widest text-[#FF7900] flex items-center gap-2">
-                    <Calendar size={16} /> Section 6 - Other Details & Remarks
-                  </div>
+                  <Calendar size={16} />
+                  <span>Section 6 - Other Details & Remarks</span>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
