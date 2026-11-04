@@ -44,6 +44,7 @@ import {
 
 
 import { API_ENDPOINTS } from "../../../../API/apiConfig";
+import apiClient from "../../../../API/apiClient";
 import type { EmployeeFormData } from "./EmployeeWizard";
 import type { EmployeeDocument } from "./Services/EmployeeDocumentService";
 import Select from "react-select";
@@ -68,6 +69,9 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
   const [activeTab, setActiveTab] = useState<TabIndex>(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+
+  const [reportingManagers, setReportingManagers] = useState<{ value: number; label: string }[]>([]);
+  const [isLoadingManagers, setIsLoadingManagers] = useState(false);
 
   const [master, setMaster] = useState({
     locations: [] as MasterDataItem[],
@@ -244,6 +248,60 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
   useEffect(() => {
     if (isOpen && employeeId) fetchAllData();
   }, [isOpen, employeeId, fetchAllData]);
+
+  useEffect(() => {
+    if (!formData.designationID) {
+      setReportingManagers([]);
+      return;
+    }
+    const selectedDesig = master.designations.find(
+      (d: any) => String(d.id || d.designationID) === String(formData.designationID)
+    );
+    const desigName = ((selectedDesig as any)?.designationName || (selectedDesig as any)?.name || (selectedDesig as any)?.designationName || "").toLowerCase();
+
+    if (desigName.includes("director")) {
+      setReportingManagers([]);
+      return;
+    }
+
+    let isMounted = true;
+    setIsLoadingManagers(true);
+
+    const fetchManagers = async () => {
+      try {
+        let filterDesig = "";
+        if (desigName.includes("bde")) {
+          filterDesig = "Director";
+        } else if (desigName.includes("coordinator")) {
+          filterDesig = "BDE";
+        }
+
+        const res = await apiClient.get<any[]>(
+          `${API_ENDPOINTS.CRMEmployee || `${API_ENDPOINTS.BaseUrl}/employee`}/active`,
+          filterDesig ? { params: { designation: filterDesig } } : undefined
+        );
+
+        if (!isMounted) return;
+        const list = (Array.isArray(res.data) ? res.data : [])
+          .filter((e: any) => Number(e.id || e.ID) !== Number(employeeId))
+          .map((e: any) => ({
+            value: Number(e.id || e.ID),
+            label: `${e.fullName || e.FullName || `${e.firstName || ""} ${e.lastName || ""}`.trim() || `Employee #${e.id || e.ID}`} (${e.employeeCode || e.EmployeeCode || ""})`,
+          }));
+        setReportingManagers(list);
+      } catch (err) {
+        console.error("Failed to fetch reporting managers:", err);
+        setReportingManagers([]);
+      } finally {
+        if (isMounted) setIsLoadingManagers(false);
+      }
+    };
+
+    fetchManagers();
+    return () => {
+      isMounted = false;
+    };
+  }, [formData.designationID, master.designations, employeeId]);
 
   const handleGlobalChange = (
     e: React.ChangeEvent<
@@ -432,7 +490,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
 
   const departmentOptions = useMemo(
     () =>
-      master.departments.map((d) => ({
+      master.departments.map((d: any) => ({
         value: d.id,
         label: d.departmentName,
       })),
@@ -441,7 +499,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
 
   const designationOptions = useMemo(
     () =>
-      master.designations.map((d) => ({
+      master.designations.map((d: any) => ({
         value: d.id,
         label: d.designationName,
       })),
@@ -489,12 +547,12 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
 
   const selectedDepartmentValue =
     departmentOptions.find(
-      (d) => String(d.value) === String(formData.departmentID),
+      (d: any) => String(d.value) === String(formData.departmentID),
     ) || null;
 
   const selectedDesignationValue =
     designationOptions.find(
-      (d) => String(d.value) === String(formData.designationID),
+      (d: any) => String(d.value) === String(formData.designationID),
     ) || null;
 
   const selectedRoleValue =
@@ -521,7 +579,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
   };
 
   const inputStyle =
-    "w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm";
+    "w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm";
   const labelStyle =
     "text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest";
 
@@ -529,7 +587,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
     if (isLoading)
       return (
         <div className="flex justify-center p-20">
-          <Loader2 className="animate-spin text-blue-600" size={48} />
+          <Loader2 className="animate-spin text-[#FF7900]" size={48} />
         </div>
       );
 
@@ -539,7 +597,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
           <div className="p-8 space-y-8 animate-in fade-in duration-300">
             <div className="flex items-center gap-10">
               <div className="relative group">
-                <div className="w-32 h-32 rounded-4xl border-2 border-dashed border-green-400 flex items-center justify-center overflow-hidden bg-gray-50 shadow-inner">
+                <div className="w-32 h-32 rounded-4xl border-2 border-dashed border-[#FF7900] flex items-center justify-center overflow-hidden bg-gray-50 shadow-inner">
                   {photoPreview ? (
                     <img
                       src={photoPreview}
@@ -552,7 +610,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
                 <button
                   type="button"
                   onClick={() => photoInputRef.current?.click()}
-                  className="absolute -bottom-1 -right-1 bg-[#133561] text-white p-2.5 rounded-2xl shadow-lg hover:scale-110 transition-transform"
+                  className="absolute -bottom-1 -right-1 bg-[#FF7900] text-white p-2.5 rounded-2xl shadow-lg hover:bg-[#e66d00] hover:scale-110 transition-transform"
                 >
                   <Camera size={18} />
                 </button>
@@ -687,6 +745,75 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
                 />
               </div>
               <div className="relative">
+                <label className={labelStyle}>
+                  Reporting To
+                  {(() => {
+                    const selectedDesig = master.designations.find(
+                      (d: any) => String(d.id) === String(formData.designationID)
+                    );
+                    const desigName = ((selectedDesig as any)?.designationName || (selectedDesig as any)?.name || (selectedDesig as any)?.designationName || "").toLowerCase();
+                    if (desigName.includes("bde") || desigName.includes("coordinator")) {
+                      return <span className="text-red-500"> *</span>;
+                    }
+                    return null;
+                  })()}
+                </label>
+                <Select
+                  options={reportingManagers}
+                  value={
+                    reportingManagers.find(
+                      (m: any) => String(m.value) === String(formData.reportingTo)
+                    ) || null
+                  }
+                  onChange={(opt) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      reportingTo: opt?.value || "",
+                    }))
+                  }
+                  isDisabled={(() => {
+                    const selectedDesig = master.designations.find(
+                      (d: any) => String(d.id) === String(formData.designationID)
+                    );
+                    const desigName = ((selectedDesig as any)?.designationName || (selectedDesig as any)?.name || (selectedDesig as any)?.designationName || "").toLowerCase();
+                    return desigName.includes("director") || !formData.designationID;
+                  })()}
+                  isClearable
+                  isSearchable
+                  placeholder={
+                    (() => {
+                      const selectedDesig = master.designations.find(
+                        (d: any) => String(d.id) === String(formData.designationID)
+                      );
+                      const desigName = ((selectedDesig as any)?.designationName || (selectedDesig as any)?.name || (selectedDesig as any)?.designationName || "").toLowerCase();
+                      if (desigName.includes("director")) {
+                        return "No Reporting Manager (Director)";
+                      }
+                      if (isLoadingManagers) {
+                        return "Loading managers...";
+                      }
+                      if (!formData.designationID) {
+                        return "Select Designation First";
+                      }
+                      if (desigName.includes("bde")) {
+                        return "Select Director...";
+                      }
+                      if (desigName.includes("coordinator")) {
+                        return "Select BDE User...";
+                      }
+                      return "Select Reporting Manager...";
+                    })()
+                  }
+                  styles={{
+                    control: (base) => ({
+                      ...base,
+                      minHeight: 46,
+                      borderRadius: "0.5rem",
+                    }),
+                  }}
+                />
+              </div>
+              <div className="relative">
                 <label className={labelStyle}>PAN Number</label>
                 <input
                   name="panNumber"
@@ -774,7 +901,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
           <div className="p-8 space-y-10 overflow-y-auto max-h-[550px] animate-in fade-in duration-300">
             {(["cur", "perm"] as const).map((type) => (
               <div key={type} className="space-y-6">
-                <h3 className="text-sm font-black text-[#133561] uppercase border-b pb-2 flex items-center gap-2">
+                <h3 className="text-sm font-black text-[#FF7900] uppercase border-b pb-2 flex items-center gap-2">
                   <MapPin size={16} />{" "}
                   {type === "cur" ? "Current Address" : "Permanent Address"}
                 </h3>
@@ -875,7 +1002,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
           <div className="p-8 space-y-10 overflow-y-auto max-h-[550px] animate-in fade-in duration-300">
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <h3 className="font-bold flex items-center gap-2 text-[#133561]">
+                <h3 className="font-bold flex items-center gap-2 text-[#FF7900]">
                   <GraduationCap size={18} /> Qualifications
                 </h3>
                 <button
@@ -894,7 +1021,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
                       ],
                     })
                   }
-                  className="text-blue-600 text-xs font-bold underline"
+                  className="text-[#FF7900] text-xs font-bold underline"
                 >
                   + Add More
                 </button>
@@ -966,7 +1093,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
 
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <h3 className="font-bold flex items-center gap-2 text-[#133561]">
+                <h3 className="font-bold flex items-center gap-2 text-[#FF7900]">
                   <Briefcase size={18} /> Experience
                 </h3>
                 <button
@@ -986,7 +1113,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
                       ],
                     })
                   }
-                  className="text-blue-600 text-xs font-bold underline"
+                  className="text-[#FF7900] text-xs font-bold underline"
                 >
                   + Add More
                 </button>
@@ -1072,12 +1199,12 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
         return (
           <div className="p-8 animate-in zoom-in duration-300">
             <div className="p-8 bg-white rounded-3xl border border-gray-200 shadow-sm">
-              <h3 className="text-sm font-black text-[#133561] uppercase mb-6 flex items-center gap-2">
+              <h3 className="text-sm font-black text-[#FF7900] uppercase mb-6 flex items-center gap-2">
                 <FileUp size={18} /> HR DOCUMENTS
               </h3>
               <div className="flex items-center gap-4 mb-8">
                 <input
-                  className="grow h-[42px] border border-gray-200 rounded-2xl px-5 outline-none focus:border-blue-400 text-sm italic"
+                  className="grow h-[42px] border border-gray-200 rounded-2xl px-5 outline-none focus:border-[#FF7900] text-sm italic"
                   placeholder="Doc Name"
                   value={newDocumentName}
                   onChange={(e) => setNewDocumentName(e.target.value)}
@@ -1101,7 +1228,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
                   type="button"
                   onClick={handleUploadDocument}
                   disabled={isSaving}
-                  className={buttonStyles.save}
+                  className="px-10 py-2.5 bg-[#FF7900] text-white rounded-lg font-semibold text-sm hover:bg-[#e66d00] transition flex items-center gap-2"
                 >
                   {isSaving ? (
                     <Loader2 className="animate-spin" size={18} />
@@ -1116,10 +1243,10 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
                 {documents.map((doc) => (
                   <div
                     key={doc.id}
-                    className="flex items-center justify-between h-[42px] px-4 border border-black rounded-2xl bg-white group hover:border-[#133561] transition-all"
+                    className="flex items-center justify-between h-[42px] px-4 border border-black rounded-2xl bg-white group hover:border-[#FF7900] transition-all"
                   >
                     <div className="flex items-center gap-3 overflow-hidden">
-                      <Paperclip size={16} className="text-blue-500 shrink-0" />
+                      <Paperclip size={16} className="text-[#FF7900] shrink-0" />
                       <span className="text-[13px] font-black text-black truncate">
                         {doc.documentName}
                       </span>
@@ -1141,12 +1268,12 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
       case 5: // PAYROLL
         return (
           <div className="p-8 animate-in zoom-in duration-300">
-            <div className="p-10 bg-blue-50 rounded-4xl border border-blue-100 flex items-center justify-between">
+            <div className="p-10 bg-orange-50 rounded-4xl border border-orange-100 flex items-center justify-between">
               <div>
-                <h3 className="font-bold text-[#133561] text-lg">
+                <h3 className="font-bold text-[#FF7900] text-lg">
                   Payroll PF Settings
                 </h3>
-                <p className="text-sm text-blue-600">
+                <p className="text-sm text-[#FF7900]">
                   Manage deduction percentages and wage ceilings
                 </p>
               </div>
@@ -1184,7 +1311,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
   return (
     <div className="bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden mb-8 animate-in slide-in-from-top-4 duration-500">
       {/* --- TAB HEADER BAR (Matching Company/Create Design) --- */}
-      <div className="flex bg-[#0b2c52] p-1.5 gap-1">
+      <div className="flex bg-[#FF7900] p-1.5 gap-1">
         {tabs.map((tab, i) => (
           <button
             key={i}
@@ -1192,7 +1319,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
             onClick={() => setActiveTab(i as TabIndex)}
             className={`flex-1 py-3 text-[11px] font-extrabold uppercase tracking-widest rounded-md transition-all duration-300 flex items-center justify-center gap-2 ${
               activeTab === i
-                ? "bg-white text-[#0b2c52] shadow-lg scale-[1.02]"
+                ? "bg-white text-[#FF7900] shadow-md scale-[1.02]"
                 : "text-white hover:bg-white/10"
             }`}
           >
@@ -1206,7 +1333,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
         <div className="animate-in fade-in slide-in-from-left-4 duration-500">
           {isLoading ? (
             <div className="flex flex-col justify-center items-center h-64">
-              <Loader2 className="animate-spin text-blue-600 mb-2" size={48} />
+              <Loader2 className="animate-spin text-[#FF7900] mb-2" size={48} />
               <p className="text-gray-400 font-bold">Loading Data...</p>
             </div>
           ) : (
@@ -1236,7 +1363,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab((prev) => (prev + 1) as TabIndex)}
-            className={buttonStyles.next}
+            className="px-8 py-2.5 bg-[#FF7900] text-white rounded-lg font-semibold text-sm hover:bg-[#e66d00] transition"
           >
             Next
           </button>

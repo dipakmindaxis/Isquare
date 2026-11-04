@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { SearchableSelect } from "../../../../Components/Common/SearchableSelect";
 import { Plus, Trash2, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import type {
   CustomerAddress,
@@ -196,7 +197,7 @@ const CustomerAddressSection: React.FC<CustomerAddressSectionProps> = ({
                 </div>
               )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-x-8 gap-y-6 text-sm">
                 <div className="sm:col-span-3">
                   <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
                     Address Type
@@ -204,23 +205,17 @@ const CustomerAddressSection: React.FC<CustomerAddressSectionProps> = ({
                   {readOnly ? (
                     <p className="font-medium text-gray-900">{addr.addressType || "-"}</p>
                   ) : (
-                    <select
+                    <SearchableSelect
                       value={addr.addressType || ""}
-                      onChange={(e) =>
-                        handleFieldChange(idx, "addressType", e.target.value)
+                      onChange={(val) =>
+                        handleFieldChange(idx, "addressType", String(val))
                       }
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm"
-                    >
-                      <option value="">Select Address Type...</option>
-                      {addressTypes.map((t) => {
+                      options={addressTypes.map((t) => {
                         const val = t.addressTypeName || t.name || t.type || String(t.id);
-                        return (
-                          <option key={t.id || val} value={val}>
-                            {val}
-                          </option>
-                        );
+                        return { value: val, label: val };
                       })}
-                    </select>
+                      placeholder="Select Address Type..."
+                    />
                   )}
                 </div>
 
@@ -238,7 +233,7 @@ const CustomerAddressSection: React.FC<CustomerAddressSectionProps> = ({
                         handleFieldChange(idx, "address", e.target.value)
                       }
                       placeholder="Enter building, street, area details"
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 min-h-[44px] outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-700 placeholder:text-gray-400"
                     />
                   )}
                 </div>
@@ -258,7 +253,7 @@ const CustomerAddressSection: React.FC<CustomerAddressSectionProps> = ({
                       }
                       placeholder="e.g. 411026"
                       maxLength={10}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 min-h-[44px] outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-700 placeholder:text-gray-400"
                     />
                   )}
                 </div>
@@ -273,7 +268,7 @@ const CustomerAddressSection: React.FC<CustomerAddressSectionProps> = ({
                       onChange={(e) =>
                         handleFieldChange(idx, "isPrimary", e.target.checked)
                       }
-                      className="h-3.5 w-3.5 text-blue-600 rounded focus:ring-blue-500 border-gray-300"
+                      className="h-3.5 w-3.5 text-[#FF7900] rounded focus:ring-[#FF7900] border-gray-300"
                     />
                     <span className="text-gray-700 font-medium">Primary Address</span>
                   </label>
@@ -285,7 +280,7 @@ const CustomerAddressSection: React.FC<CustomerAddressSectionProps> = ({
                       onChange={(e) =>
                         handleFieldChange(idx, "isActive", e.target.checked)
                       }
-                      className="h-3.5 w-3.5 text-blue-600 rounded focus:ring-blue-500 border-gray-300"
+                      className="h-3.5 w-3.5 text-[#FF7900] rounded focus:ring-[#FF7900] border-gray-300"
                     />
                     <span className="text-gray-700 font-medium">Active</span>
                   </label>

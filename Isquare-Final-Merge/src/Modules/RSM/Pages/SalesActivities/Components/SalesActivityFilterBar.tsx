@@ -1,3 +1,4 @@
+import { SearchableSelect } from "../../../../../Components/Common/SearchableSelect";
 import React from "react";
 import { FaSearch } from "react-icons/fa";
 import type {
@@ -65,6 +66,19 @@ export const SalesActivityFilterBar: React.FC<SalesActivityFilterBarProps> = ({
       {/* Filter Controls matching CustomerMaster */}
       <div className="flex flex-wrap items-center justify-between sm:justify-start gap-2.5 w-full md:w-auto">
         {/* Activity Type Dropdown */}
+        <div className="min-w-[160px]">
+          <SearchableSelect
+            value={selectedType}
+            onChange={(val) => onTypeChange((val as ActivityType) || "All")}
+            options={[
+              { value: "All", label: "All Activity Types" },
+              ...activityTypes.map((t) => ({ value: t, label: t })),
+            ]}
+            placeholder="All Activity Types"
+            isClearable={false}
+            minHeight="34px"
+          />
+        </div>
         <select
           value={selectedType}
           onChange={(e) => onTypeChange(e.target.value as ActivityType | "All")}
@@ -79,6 +93,19 @@ export const SalesActivityFilterBar: React.FC<SalesActivityFilterBarProps> = ({
         </select>
 
         {/* Customer Dropdown */}
+        <div className="min-w-[170px] max-w-[220px]">
+          <SearchableSelect
+            value={selectedCustomerId}
+            onChange={(val) => onCustomerChange(String(val || "All"))}
+            options={[
+              { value: "All", label: "All Customers" },
+              ...customers.map((c) => ({ value: String(c.id), label: c.name })),
+            ]}
+            placeholder="All Customers"
+            isClearable={false}
+            minHeight="34px"
+          />
+        </div>
         <select
           value={selectedCustomerId}
           onChange={(e) => onCustomerChange(e.target.value)}

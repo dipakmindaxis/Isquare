@@ -1,3 +1,4 @@
+import { SearchableSelect } from "../../../../../Components/Common/SearchableSelect";
 import React, { useState, useEffect, useCallback } from "react";
 import {
   CheckSquare,
@@ -141,7 +142,7 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
   const getPriorityBadgeClass = (priorityName?: string) => {
     const p = (priorityName || "").toLowerCase();
     if (p.includes("urgent")) return "bg-rose-50 text-rose-700 border-rose-200";
-    if (p.includes("high")) return "bg-orange-50 text-orange-700 border-orange-200";
+    if (p.includes("high") || p.includes("hig")) return "bg-orange-50 text-orange-700 border-orange-200";
     if (p.includes("medium")) return "bg-blue-50 text-blue-700 border-blue-200";
     return "bg-slate-50 text-slate-600 border-slate-200";
   };
@@ -413,8 +414,19 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
                       Filter by Status
                     </label>
-                    <select
+                    <SearchableSelect
                       value={statusFilter}
+                      onChange={(val) => setStatusFilter(String(val || "All"))}
+                      options={[
+                        { value: "All", label: "All statuses" },
+                        { value: "Pending", label: "Pending" },
+                        { value: "In Progress", label: "In Progress" },
+                        { value: "Completed", label: "Completed" },
+                      ]}
+                      placeholder="All statuses"
+                      isClearable={false}
+                      minHeight="34px"
+                    />
                       onChange={(e) => setStatusFilter(e.target.value)}
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-700 outline-none focus:border-blue-500 bg-white"
                     >
@@ -430,8 +442,17 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
                       Priority Level
                     </label>
-                    <select
+                    <SearchableSelect
                       value={selectedPriorityId}
+                      onChange={(val) => setSelectedPriorityId(String(val || "All"))}
+                      options={[
+                        { value: "All", label: "All Priorities" },
+                        ...priorities.map((p) => ({ value: String(p.id), label: p.name })),
+                      ]}
+                      placeholder="All Priorities"
+                      isClearable={false}
+                      minHeight="34px"
+                    />
                       onChange={(e) => setSelectedPriorityId(e.target.value)}
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-700 outline-none focus:border-blue-500 bg-white"
                     >

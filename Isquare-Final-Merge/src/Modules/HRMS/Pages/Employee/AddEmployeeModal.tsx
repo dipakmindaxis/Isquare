@@ -28,6 +28,8 @@ import {
   type MasterDataItem,
   type Role,
 } from "../../../HRMS/Services/MasterDataService";
+import apiClient from "../../../../API/apiClient";
+import { API_ENDPOINTS } from "../../../../API/apiConfig";
 
 interface AddEmployeeModalProps {
   isOpen: boolean;
@@ -284,18 +286,61 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
   }, [isOpen]);
 
   useEffect(() => {
-    const { role, departmentID } = formData;
+    const { role, departmentID, designationID } = formData;
 
     const fetchManagers = async () => {
-      if (!role || !departmentID) {
+      const selectedDesig = designations.find(
+        (d) => String(d.id) === String(designationID)
+      );
+      const desigName = (selectedDesig?.name || "").toLowerCase();
+
+      // Hierarchy rule: Director has no reporting manager
+      if (desigName.includes("director")) {
         setReportingManagers([]);
-        setReportingToLabel("Reporting To");
+        setReportingToLabel("Reporting To (Not Required for Director)");
+        if (formData.reportingTo) {
+          setFormData((prev) => ({ ...prev, reportingTo: "" }));
+        }
         return;
       }
 
       try {
         let managers: EmployeeSelectItem[] = [];
-        if (role === "Employee") {
+
+        // Hierarchy rule: BDE reports to Director
+        if (desigName.includes("bde")) {
+          setReportingToLabel("Reporting To (Director) *");
+          const res = await apiClient.get<any[]>(
+            `${API_ENDPOINTS.CRMEmployee || `${API_ENDPOINTS.BaseUrl}/employee`}/active`,
+            { params: { designation: "Director" } }
+          );
+          managers = (Array.isArray(res.data) ? res.data : []).map((e: any) => ({
+            id: Number(e.id || e.ID),
+            fullName: e.fullName || e.FullName || `${e.firstName || ""} ${e.lastName || ""}`.trim() || `Employee #${e.id || e.ID}`,
+            employeeCode: e.employeeCode || e.EmployeeCode || "",
+            firstName: e.firstName || e.FirstName || "",
+            lastName: e.lastName || e.LastName || "",
+            designation: e.designationName || e.DesignationName || "Director",
+          }));
+        }
+        // Hierarchy rule: Sales Coordinator reports to BDE User
+        else if (desigName.includes("sales coordinator") || desigName.includes("coordinator")) {
+          setReportingToLabel("Reporting To (BDE User) *");
+          const res = await apiClient.get<any[]>(
+            `${API_ENDPOINTS.CRMEmployee || `${API_ENDPOINTS.BaseUrl}/employee`}/active`,
+            { params: { designation: "BDE" } }
+          );
+          managers = (Array.isArray(res.data) ? res.data : []).map((e: any) => ({
+            id: Number(e.id || e.ID),
+            fullName: e.fullName || e.FullName || `${e.firstName || ""} ${e.lastName || ""}`.trim() || `Employee #${e.id || e.ID}`,
+            employeeCode: e.employeeCode || e.EmployeeCode || "",
+            firstName: e.firstName || e.FirstName || "",
+            lastName: e.lastName || e.LastName || "",
+            designation: e.designationName || e.DesignationName || "BDE User",
+          }));
+        }
+        // Fallback for other roles/departments
+        else if (role === "Employee" && departmentID) {
           setReportingToLabel("Reporting To (HR)");
           managers = await getEmployeesByRoleAndDepartment(
             "HR",
@@ -322,7 +367,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
     };
 
     fetchManagers();
-  }, [formData.role, formData.departmentID, formData]);
+  }, [formData.role, formData.departmentID, formData.designationID, designations]);
 
   if (!isOpen) return null;
 

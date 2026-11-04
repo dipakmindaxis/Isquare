@@ -74,7 +74,7 @@
 //     ) || null;
 
 //   const inputStyle =
-//     "w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm";
+//     "w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm";
   
 //        const RequiredAst = () => <span className="text-red-500 ml-1">*</span>;
 
@@ -88,7 +88,7 @@
 //           <input
 //             type="checkbox"
 //             id="same"
-//             className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+//             className="h-4 w-4 text-[#FF7900] border-gray-300 rounded focus:ring-[#FF7900]"
 //             onChange={handleSame}
 //           />
 //           <label
@@ -344,7 +344,7 @@ const EmployeeAddressTab: React.FC<EmployeeAddressTabProps> = ({ type, formData,
   const selectedCountryValue = countryOptions.find((c) => String(c.value) === String(formData[`${prefix}CountryId`])) || null;
   const selectedStateValue = stateOptions.find((s) => String(s.value) === String(formData[`${prefix}StateId`])) || null;
 
-  const baseInputStyle = "w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm";
+  const baseInputStyle = "w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm";
   const inputStyle = (hasError: boolean) => `${baseInputStyle} ${hasError ? 'border-red-500 bg-red-50' : 'border-gray-300'}`;
   const labelStyle = "text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest";
   const RequiredAst = () => <span className="text-red-500 ml-1">*</span>;
@@ -355,7 +355,7 @@ const EmployeeAddressTab: React.FC<EmployeeAddressTabProps> = ({ type, formData,
     <div className="space-y-8 animate-in fade-in duration-300">
       {type === "perm" && (
         <div className="flex justify-end items-center">
-          <input type="checkbox" id="same" className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" onChange={handleSame} />
+          <input type="checkbox" id="same" className="h-4 w-4 text-[#FF7900] border-gray-300 rounded focus:ring-[#FF7900]" onChange={handleSame} />
           <label htmlFor="sameAsAbove" className="ml-2 block text-sm text-gray-900">Same as Current</label>
         </div>
       )}

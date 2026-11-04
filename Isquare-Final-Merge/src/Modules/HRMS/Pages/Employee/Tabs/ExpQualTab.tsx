@@ -13,7 +13,7 @@ interface ExpQualTabProps {
 
 const ExpQualTab: React.FC<ExpQualTabProps> = ({ formData, setFormData }) => {
   const inputStyle =
-    "w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm";
+    "w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm";
   const labelStyle =
     "text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest";
 
@@ -80,14 +80,14 @@ const ExpQualTab: React.FC<ExpQualTabProps> = ({ formData, setFormData }) => {
       {/* --- SECTION 1: QUALIFICATIONS --- */}
       <div className="space-y-4">
         <div className="flex items-center justify-between border-b pb-2">
-          <div className="flex items-center gap-2 text-[#154068] font-bold">
+          <div className="flex items-center gap-2 text-[#FF7900] font-bold">
             <GraduationCap size={22} />
             <h3 className="text-lg">Educational Qualifications</h3>
           </div>
           <button
             type="button"
             onClick={addQual}
-            className="text-[#154068] font-bold text-sm flex items-center gap-1 hover:underline"
+            className="text-[#FF7900] font-bold text-sm flex items-center gap-1 hover:underline"
           >
             <Plus size={16} /> Add More
           </button>
@@ -146,14 +146,14 @@ const ExpQualTab: React.FC<ExpQualTabProps> = ({ formData, setFormData }) => {
       {/* --- SECTION 2: EXPERIENCE --- */}
       <div className="space-y-4">
         <div className="flex items-center justify-between border-b pb-2">
-          <div className="flex items-center gap-2 text-[#154068] font-bold">
+          <div className="flex items-center gap-2 text-[#FF7900] font-bold">
             <Briefcase size={22} />
             <h3 className="text-lg">Work Experience</h3>
           </div>
           <button
             type="button"
             onClick={addExp}
-            className="text-[#154068] font-bold text-sm flex items-center gap-1 hover:underline"
+            className="text-[#FF7900] font-bold text-sm flex items-center gap-1 hover:underline"
           >
             <Plus size={16} /> Add More
           </button>

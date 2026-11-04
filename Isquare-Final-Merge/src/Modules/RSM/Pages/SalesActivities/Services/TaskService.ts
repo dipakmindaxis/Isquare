@@ -11,10 +11,7 @@ import type {
 } from "../Types/TaskTypes";
 import { getAllPriorities } from "../../Master/Priority/Services/PriorityService";
 import { createReminder } from "../../Master/Reminder/Services/ReminderService";
-import {
-  getDirectorEmployees,
-  getAllBdeUsers,
-} from "../../Master/BdeUsers/Services/BdeUserService";
+import { getDirectors as getDirectorEmployees, getBdeUsers as getAllBdeUsers } from "../../Customer/Services/CustomerMasterDataService";
 import { getAllCustomers } from "../../Customer/Services/CustomerService";
 
 const getAllDirectors = getDirectorEmployees;
@@ -190,8 +187,8 @@ export const getAllTasks = async (filters?: TaskFilterParams): Promise<TaskItem[
       const matchedToEmp = allEmployees.find((e: any) => Number(e.id || e.employeeId || 0) === task.assignedTo);
       const assignedToName =
         task.assignedToName ||
-        matchedDirectorEmp?.name ||
-        matchedDirector?.name ||
+        (matchedDirectorEmp as any)?.name || (matchedDirectorEmp as any)?.directorName ||
+        (matchedDirector as any)?.name || (matchedDirector as any)?.directorName ||
         (matchedToEmp ? `${matchedToEmp.firstName || ""} ${matchedToEmp.lastName || ""}`.trim() : undefined) ||
         (task.assignedTo > 0 ? `Director #${task.assignedTo}` : "Unassigned");
 
@@ -214,8 +211,8 @@ export const getAllTasks = async (filters?: TaskFilterParams): Promise<TaskItem[
         // Match against director employees
         if (!assignedByName) {
           const matchedByDirEmp = directorsEmp.find((d: any) => Number(d.id || 0) === task.assignedBy);
-          if (matchedByDirEmp?.name) {
-            assignedByName = matchedByDirEmp.name;
+          if ((matchedByDirEmp as any)?.name || (matchedByDirEmp as any)?.directorName) {
+            assignedByName = (matchedByDirEmp as any)?.name || (matchedByDirEmp as any)?.directorName;
           }
         }
 
@@ -225,7 +222,7 @@ export const getAllTasks = async (filters?: TaskFilterParams): Promise<TaskItem[
             (d: any) => Number(d.directorId || d.id || 0) === task.assignedBy
           );
           if (matchedByDir) {
-            assignedByName = matchedByDir.name;
+            assignedByName = (matchedByDir as any)?.name || (matchedByDir as any)?.directorName;
           }
         }
 

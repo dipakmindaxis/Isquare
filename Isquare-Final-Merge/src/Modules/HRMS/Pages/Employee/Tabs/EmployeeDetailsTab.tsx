@@ -2,10 +2,11 @@ import React, {
   useMemo,
   useRef,
   useState,
+  useEffect,
   forwardRef,
   useImperativeHandle,
 } from "react";
-import { Camera, UploadCloud, X } from "lucide-react";
+import { Camera, UploadCloud } from "lucide-react";
 import type { EmployeeFormData } from "../EmployeeWizard";
 import type {
   CompanyItem,
@@ -14,6 +15,8 @@ import type {
   Role,
 } from "../../../../HRMS/Services/MasterDataService";
 import Select from "react-select";
+import apiClient from "../../../../../API/apiClient";
+import { API_ENDPOINTS } from "../../../../../API/apiConfig";
 
 export interface Level {
   id: number;
@@ -67,19 +70,83 @@ const EmployeeDetailsTab = forwardRef<
 
     useImperativeHandle(ref, () => ({ validate }));
 
+    const [reportingManagers, setReportingManagers] = useState<
+      Array<{ value: number; label: string }>
+    >([]);
+    const [isLoadingManagers, setIsLoadingManagers] = useState(false);
+
+    useEffect(() => {
+      let isMounted = true;
+      const loadManagers = async () => {
+        const selectedDesig = designations.find(
+          (d) => String(d.id) === String(formData.designationID)
+        );
+        const desigName = (selectedDesig?.designationName || "").toLowerCase();
+
+        // Director: no reporting manager required
+        if (desigName.includes("director")) {
+          if (isMounted) {
+            setReportingManagers([]);
+            if (formData.reportingTo) {
+              setFormData((prev) => ({ ...prev, reportingTo: "" }));
+            }
+          }
+          return;
+        }
+
+        setIsLoadingManagers(true);
+        try {
+          let params: { designation?: string; role?: string } = {};
+          if (desigName.includes("bde")) {
+            params = { designation: "Director" };
+          } else if (
+            desigName.includes("sales coordinator") ||
+            desigName.includes("coordinator")
+          ) {
+            params = { designation: "BDE" };
+          }
+
+          const activeUrl = `${API_ENDPOINTS.CRMEmployee || `${API_ENDPOINTS.BaseUrl}/employee`}/active`;
+          const res = await apiClient.get<any[]>(activeUrl, { params });
+          const list = Array.isArray(res.data) ? res.data : [];
+          if (isMounted) {
+            const opts = list.map((e: any) => {
+              const name =
+                e.fullName ||
+                e.FullName ||
+                `${e.firstName || ""} ${e.lastName || ""}`.trim() ||
+                `Employee #${e.id || e.ID}`;
+              const code = e.employeeCode || e.EmployeeCode ? ` (${e.employeeCode || e.EmployeeCode})` : "";
+              const desig = e.designationName || e.DesignationName ? ` - ${e.designationName || e.DesignationName}` : "";
+              return {
+                value: Number(e.id || e.ID),
+                label: `${name}${code}${desig}`,
+              };
+            });
+            setReportingManagers(opts);
+
+            if (formData.reportingTo && !opts.some((o) => String(o.value) === String(formData.reportingTo))) {
+              setFormData((prev) => ({ ...prev, reportingTo: "" }));
+            }
+          }
+        } catch (err) {
+          console.error("Failed to load reporting managers:", err);
+        } finally {
+          if (isMounted) setIsLoadingManagers(false);
+        }
+      };
+
+      loadManagers();
+      return () => {
+        isMounted = false;
+      };
+    }, [formData.designationID, designations]);
+
     const handlePhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file) {
         setPhotoFile(file);
         setPreview(URL.createObjectURL(file));
-      }
-    };
-
-    const clearPhoto = () => {
-      setPhotoFile(null);
-      setPreview(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
       }
     };
 
@@ -104,6 +171,13 @@ const EmployeeDetailsTab = forwardRef<
         designations.map((c) => ({ value: c.id, label: c.designationName })),
       [designations],
     );
+
+    const roleOptions = useMemo(
+      () => roles.map((r) => ({ value: r.id, label: r.name })),
+      [roles]
+    );
+    const selectedRoleValue =
+      roleOptions.find((r) => String(r.value) === String(formData.roleId)) || null;
 
     const levelOptions = useMemo(
       () =>
@@ -135,17 +209,38 @@ const EmployeeDetailsTab = forwardRef<
         ? "border-red-500 shadow-sm shadow-red-200"
         : "border-gray-300";
     const baseInputStyle =
-      "w-full rounded-lg px-4 py-2.5 outline-none border bg-white text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition";
+      "w-full rounded-lg px-4 py-2.5 outline-none border bg-white text-sm focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition";
     const labelStyle =
       "text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest";
     const RequiredAst = () => <span className="text-red-500 ml-1">*</span>;
     const selectStyles = (hasError: boolean) => ({
-      control: (base: any) => ({
+      control: (base: any, state: any) => ({
         ...base,
-        minHeight: 46,
+        minHeight: 44,
         borderRadius: "0.5rem",
-        borderColor: hasError ? "#ef4444" : "#d1d5db",
-        boxShadow: hasError ? "0 1px 2px 0 rgb(255 192 203 / 0.5)" : "none",
+        borderColor: hasError ? "#ef4444" : state.isFocused ? "#FF7900" : "#d1d5db",
+        boxShadow: state.isFocused
+          ? hasError
+            ? "0 0 0 1px #ef4444"
+            : "0 0 0 1px #FF7900"
+          : "none",
+        "&:hover": {
+          borderColor: hasError ? "#ef4444" : "#FF7900",
+        },
+      }),
+      option: (base: any, state: any) => ({
+        ...base,
+        backgroundColor: state.isSelected
+          ? "#FF7900"
+          : state.isFocused
+          ? "#fff7ed"
+          : "transparent",
+        color: state.isSelected ? "#ffffff" : "#1f2937",
+        cursor: "pointer",
+        "&:active": {
+          backgroundColor: "#FF7900",
+          color: "#ffffff",
+        },
       }),
     });
 
@@ -224,6 +319,64 @@ const EmployeeDetailsTab = forwardRef<
 
             <div>
               <label className={labelStyle}>
+                Reporting To
+                {(() => {
+                  const selectedDesig = designations.find(
+                    (d) => String(d.id) === String(formData.designationID)
+                  );
+                  const desigName = (selectedDesig?.designationName || "").toLowerCase();
+                  if (desigName.includes("bde") || desigName.includes("coordinator")) {
+                    return <RequiredAst />;
+                  }
+                  return null;
+                })()}
+              </label>
+              <Select
+                options={reportingManagers}
+                value={
+                  reportingManagers.find(
+                    (m) => String(m.value) === String(formData.reportingTo)
+                  ) || null
+                }
+                onChange={(opt) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    reportingTo: opt?.value || "",
+                  }))
+                }
+                isDisabled={(() => {
+                  const selectedDesig = designations.find(
+                    (d) => String(d.id) === String(formData.designationID)
+                  );
+                  const desigName = (selectedDesig?.designationName || "").toLowerCase();
+                  return desigName.includes("director") || !formData.designationID;
+                })()}
+                isClearable
+                isSearchable
+                placeholder={
+                  (() => {
+                    const selectedDesig = designations.find(
+                      (d) => String(d.id) === String(formData.designationID)
+                    );
+                    const desigName = (selectedDesig?.designationName || "").toLowerCase();
+                    if (desigName.includes("director")) {
+                      return "No Reporting Manager (Director)";
+                    }
+                    if (isLoadingManagers) {
+                      return "Loading managers...";
+                    }
+                    if (!formData.designationID) {
+                      return "Select Designation First";
+                    }
+                    return "Select Reporting Manager...";
+                  })()
+                }
+                styles={selectStyles(false)}
+              />
+            </div>
+
+            <div>
+              <label className={labelStyle}>
                 Select Company
                 <RequiredAst />
               </label>
@@ -278,12 +431,8 @@ const EmployeeDetailsTab = forwardRef<
                 <RequiredAst />
               </label>
               <Select
-                options={roles.map((r) => ({ value: r.name, label: r.name }))}
-                value={
-                  roles
-                    .map((r) => ({ value: r.name, label: r.name }))
-                    .find((r) => r.value === formData.roleId) || null
-                }
+                options={roleOptions}
+                value={selectedRoleValue}
                 onChange={(opt) =>
                   setFormData((prev) => ({ ...prev, roleId: opt?.value || "" }))
                 }
@@ -306,10 +455,7 @@ const EmployeeDetailsTab = forwardRef<
                 options={levelOptions}
                 value={selectedLevelValue}
                 onChange={(opt) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    levelID: opt?.value || "",
-                  }))
+                  setFormData((prev) => ({ ...prev, levelID: opt?.value || "" }))
                 }
                 isClearable
                 isSearchable
@@ -320,103 +466,6 @@ const EmployeeDetailsTab = forwardRef<
                 <p className="text-xs text-red-500 mt-1">{errors.levelID[0]}</p>
               )}
             </div>
-
-            <div className="relative">
-              <label className={labelStyle}>
-                PAN No.
-                <RequiredAst />
-              </label>
-              <input
-                placeholder="Enter PAN Number"
-                className={`${baseInputStyle} ${getInputBorderClass("panNumber")}`}
-                value={String(formData.panNumber ?? "")}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, panNumber: e.target.value }))
-                }
-              />
-              {errors.panNumber && (
-                <p className="text-xs text-red-500 mt-1">{errors.panNumber[0]}</p>
-              )}
-            </div>
-
-            <div className="relative">
-              <label className={labelStyle}>
-                Aadhar No.
-                <RequiredAst />
-              </label>
-              <input
-                placeholder="Enter Aadhaar Number"
-                className={`${baseInputStyle} ${getInputBorderClass("aadhaarNumber")}`}
-                value={String(formData.aadhaarNumber ?? "")}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    aadhaarNumber: e.target.value,
-                  }))
-                }
-              />
-              {errors.aadhaarNumber && (
-                <p className="text-xs text-red-500 mt-1">
-                  {errors.aadhaarNumber[0]}
-                </p>
-              )}
-            </div>
-
-            <div className="relative">
-              <label className={labelStyle}>Passport No.</label>
-              <input
-                placeholder="Enter Passport Number"
-                className={`${baseInputStyle} ${getInputBorderClass("passportNumber")}`}
-                value={String(formData.passportNumber ?? "")}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    passportNumber: e.target.value,
-                  }))
-                }
-              />
-            </div>
-
-            <div className="relative md:col-span-2">
-              <label className={labelStyle}>
-                Docs Attachments
-                <RequiredAst />
-              </label>
-              <div className="flex border border-gray-300 rounded-2xl overflow-hidden bg-white">
-                <div
-                  className="grow px-4 py-2.5 text-gray-700 text-xs italic truncate"
-                  title={
-                    Array.isArray(formData.attachments)
-                      ? formData.attachments.map((f: File) => f.name).join(", ")
-                      : ""
-                  }
-                >
-                  {Array.isArray(formData.attachments) &&
-                  formData.attachments.length > 0
-                    ? formData.attachments.map((f: File) => f.name).join(", ")
-                    : "Choose files..."}
-                </div>
-                <input
-                  type="file"
-                  ref={docInputRef}
-                  multiple
-                  className="hidden"
-                  onChange={handleAttachments}
-                />
-                <button
-                  type="button"
-                  onClick={() => docInputRef.current?.click()}
-                  className="bg-[#154068] text-white px-6 font-bold text-sm hover:bg-[#0d3357] transition-colors"
-                >
-                  Browse
-                </button>
-              </div>
-              {errors.attachments && (
-                <p className="text-xs text-red-500 mt-1">
-                  {errors.attachments[0]}
-                </p>
-              )}
-            </div>
           </div>
 
           <aside className="xl:pt-2">
@@ -425,14 +474,15 @@ const EmployeeDetailsTab = forwardRef<
                 <h3 className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-slate-500">
                   Employee Photo
                 </h3>
-                {errors.photoFile && (
-                  <span className="text-[10px] font-semibold text-red-500">
-                    Required
-                  </span>
-                )}
+                <span className="text-[10px] font-bold text-red-500 uppercase tracking-widest">
+                  Required
+                </span>
               </div>
 
-              <div className="mx-auto flex h-48 w-40 items-center justify-center overflow-hidden rounded-2xl border border-dashed border-slate-300 bg-white shadow-inner">
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="group relative flex aspect-square w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-white transition hover:border-[#FF7900] hover:bg-orange-50/20"
+              >
                 {photoUrl ? (
                   <img
                     src={photoUrl}
@@ -440,56 +490,141 @@ const EmployeeDetailsTab = forwardRef<
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  <div className="flex flex-col items-center justify-center gap-2 text-slate-400">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
-                      <Camera className="h-7 w-7" />
-                    </div>
-                    <span className="text-center text-[11px] font-medium uppercase tracking-[0.2em]">
+                  <div className="flex flex-col items-center gap-2 text-slate-400 group-hover:text-[#FF7900]">
+                    <Camera size={32} />
+                    <span className="text-xs font-semibold uppercase tracking-wider">
                       Upload
                     </span>
                   </div>
                 )}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={handlePhoto}
+                />
               </div>
 
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handlePhoto}
-              />
-
-              <div className="mt-4 flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#154068] px-3 py-2.5 text-xs font-bold uppercase tracking-[0.18em] text-white transition hover:bg-[#0d3357]"
-                >
-                  <UploadCloud className="h-4 w-4" />
-                  Upload
-                </button>
-                {photoFile && (
-                  <button
-                    type="button"
-                    onClick={clearPhoto}
-                    className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white p-2.5 text-slate-500 transition hover:border-red-200 hover:text-red-500"
-                    aria-label="Remove photo"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
-
-              <p className="mt-3 text-center text-[10px] uppercase tracking-[0.18em] text-slate-400">
-                JPG / PNG up to 5MB
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#FF7900] px-4 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-md shadow-orange-500/20 transition hover:bg-[#e06800] cursor-pointer"
+              >
+                <UploadCloud size={16} />
+                <span>Upload</span>
+              </button>
+              <p className="mt-2 text-center text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
+                JPG / PNG UP TO 5MB
               </p>
               {errors.photoFile && (
-                <p className="mt-2 text-center text-xs text-red-500">
+                <p className="text-xs text-red-500 mt-2 text-center font-medium">
                   {errors.photoFile[0]}
                 </p>
               )}
             </div>
           </aside>
+        </div>
+
+        {/* BELOW PHOTO: 1 LINE ME 3 ATTRIBUTES (COLUMNS) SAME ALIGNMENT */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-6 pt-2">
+          <div className="relative">
+            <label className={labelStyle}>
+              PAN No.
+              <RequiredAst />
+            </label>
+            <input
+              placeholder="Enter PAN Number"
+              className={`${baseInputStyle} ${getInputBorderClass("panNumber")}`}
+              value={String(formData.panNumber ?? "")}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, panNumber: e.target.value.toUpperCase() }))
+              }
+            />
+            {errors.panNumber && (
+              <p className="text-xs text-red-500 mt-1">{errors.panNumber[0]}</p>
+            )}
+          </div>
+
+          <div className="relative">
+            <label className={labelStyle}>
+              Aadhar No.
+              <RequiredAst />
+            </label>
+            <input
+              placeholder="Enter Aadhaar Number"
+              className={`${baseInputStyle} ${getInputBorderClass("aadhaarNumber")}`}
+              value={String(formData.aadhaarNumber ?? "")}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  aadhaarNumber: e.target.value,
+                }))
+              }
+            />
+            {errors.aadhaarNumber && (
+              <p className="text-xs text-red-500 mt-1">
+                {errors.aadhaarNumber[0]}
+              </p>
+            )}
+          </div>
+
+          <div className="relative">
+            <label className={labelStyle}>Passport No.</label>
+            <input
+              placeholder="Enter Passport Number"
+              className={`${baseInputStyle} ${getInputBorderClass("passportNumber")}`}
+              value={String(formData.passportNumber ?? "")}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  passportNumber: e.target.value,
+                }))
+              }
+            />
+          </div>
+        </div>
+
+        {/* Docs Attachments */}
+        <div className="relative pt-1">
+          <label className={labelStyle}>
+            Docs Attachments
+            <RequiredAst />
+          </label>
+          <div className="flex border border-gray-300 rounded-2xl overflow-hidden bg-white">
+            <div
+              className="grow px-4 py-2.5 text-gray-700 text-xs italic truncate"
+              title={
+                Array.isArray(formData.attachments)
+                  ? formData.attachments.map((f: File) => f.name).join(", ")
+                  : ""
+              }
+            >
+              {Array.isArray(formData.attachments) &&
+              formData.attachments.length > 0
+                ? formData.attachments.map((f: File) => f.name).join(", ")
+                : "Choose files..."}
+            </div>
+            <input
+              type="file"
+              ref={docInputRef}
+              multiple
+              className="hidden"
+              onChange={handleAttachments}
+            />
+            <button
+              type="button"
+              onClick={() => docInputRef.current?.click()}
+              className="bg-[#FF7900] text-white px-6 font-bold text-sm hover:bg-[#e06800] transition-colors cursor-pointer"
+            >
+              Browse
+            </button>
+          </div>
+          {errors.attachments && (
+            <p className="text-xs text-red-500 mt-1">
+              {errors.attachments[0]}
+            </p>
+          )}
         </div>
       </div>
     );
