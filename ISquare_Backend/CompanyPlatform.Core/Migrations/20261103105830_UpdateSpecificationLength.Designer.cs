@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CompanyPlatform.Core.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    [Migration("20261016054952_UpdateMigration")]
-    partial class UpdateMigration
+    [Migration("20261103105830_UpdateSpecificationLength")]
+    partial class UpdateSpecificationLength
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -147,6 +147,9 @@ namespace CompanyPlatform.Core.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("DirectorEmployeeId")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -158,6 +161,8 @@ namespace CompanyPlatform.Core.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("ID");
+
+                    b.HasIndex("DirectorEmployeeId");
 
                     b.ToTable("bde_user");
                 });
@@ -415,11 +420,20 @@ namespace CompanyPlatform.Core.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("ActivitySubType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DiscussionNotesMOM")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
+
+                    b.Property<string>("SubjectPurpose")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("ID");
 
@@ -672,7 +686,8 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.Property<string>("CompanyCode")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("CompanyGroup")
                         .HasColumnType("nvarchar(max)");
@@ -762,6 +777,9 @@ namespace CompanyPlatform.Core.Migrations
                     b.Property<int?>("SalesCoordinatorId")
                         .HasColumnType("int");
 
+                    b.Property<string>("SalesCoordinatorName")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int?>("SalesManagerId")
                         .HasColumnType("int");
 
@@ -795,6 +813,10 @@ namespace CompanyPlatform.Core.Migrations
                     b.HasIndex("ClientTypeId");
 
                     b.HasIndex("CompanyCategoryId");
+
+                    b.HasIndex("CompanyCode")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
 
                     b.HasIndex("CompanyStatusId");
 
@@ -1348,6 +1370,75 @@ namespace CompanyPlatform.Core.Migrations
                     b.ToTable("tbl_CompanyVisit");
                 });
 
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.Contact", b =>
+                {
+                    b.Property<int>("ContactId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ContactId"));
+
+                    b.Property<string>("AltEmailAddress")
+                        .HasMaxLength(254)
+                        .HasColumnType("nvarchar(254)");
+
+                    b.Property<string>("AltMobileNo")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Department")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Designation")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("EmailAddress")
+                        .IsRequired()
+                        .HasMaxLength(254)
+                        .HasColumnType("nvarchar(254)");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("MobileNo")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("ContactId");
+
+                    b.HasIndex("CompanyId");
+
+                    b.ToTable("tbl_Contact");
+                });
+
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.Country", b =>
                 {
                     b.Property<int>("CountryId")
@@ -1561,6 +1652,9 @@ namespace CompanyPlatform.Core.Migrations
                     b.Property<string>("Gender")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("GoogleCalendarId")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -1571,11 +1665,17 @@ namespace CompanyPlatform.Core.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("LevelID")
+                        .HasColumnType("int");
+
                     b.Property<string>("MiddleName")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("MobileNumber")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhotoPath")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PresentAddress")
@@ -1596,11 +1696,18 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("DesignationID");
 
+                    b.HasIndex("LevelID");
+
                     b.HasIndex("ReportingTo");
 
                     b.HasIndex("WorkLocationID");
 
-                    b.ToTable("tbl_Employee");
+                    b.ToTable("tbl_Employee", null, t =>
+                        {
+                            t.HasTrigger("trg_tbl_Employee");
+                        });
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.FollowUp", b =>
@@ -2306,6 +2413,10 @@ namespace CompanyPlatform.Core.Migrations
                     b.Property<decimal>("GSTRate")
                         .HasColumnType("decimal(5,2)");
 
+                    b.Property<string>("HsnCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -2317,10 +2428,20 @@ namespace CompanyPlatform.Core.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<string>("ProductImage")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<string>("ProductName")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<decimal?>("ProfitPercentage")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<decimal?>("PurchaseRate")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Specification")
                         .HasMaxLength(1000)
@@ -2328,6 +2449,9 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.Property<decimal>("StandardRate")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("Stock")
+                        .HasColumnType("int");
 
                     b.Property<int?>("UnitOfMeasurementId")
                         .HasColumnType("int");
@@ -3338,8 +3462,7 @@ namespace CompanyPlatform.Core.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Specification")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("TaxAmount")
                         .HasColumnType("decimal(18,2)");
@@ -3904,6 +4027,51 @@ namespace CompanyPlatform.Core.Migrations
                     b.ToTable("tbl_ContactType");
                 });
 
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Currency", b =>
+                {
+                    b.Property<int>("CurrencyId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CurrencyId"));
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime>("CurrencyCreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CurrencyDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("CurrencyIsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CurrencyIsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("CurrencyName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int?>("CurrencySortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CurrencyUpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("CurrencyId");
+
+                    b.HasIndex("CurrencyCode")
+                        .IsUnique();
+
+                    b.ToTable("Currencies");
+                });
+
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.CustomerArea.CustomerArea", b =>
                 {
                     b.Property<int>("CustomerAreaId")
@@ -4006,9 +4174,6 @@ namespace CompanyPlatform.Core.Migrations
                     b.Property<int>("EmployeeID")
                         .HasColumnType("int");
 
-                    b.Property<int?>("EmployeesID")
-                        .HasColumnType("int");
-
                     b.Property<string>("FlatNo")
                         .HasColumnType("nvarchar(max)");
 
@@ -4032,7 +4197,7 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("ID");
 
-                    b.HasIndex("EmployeesID");
+                    b.HasIndex("EmployeeID");
 
                     b.ToTable("tbl_EmployeeAddress");
                 });
@@ -4132,9 +4297,6 @@ namespace CompanyPlatform.Core.Migrations
                     b.Property<int>("EmployeeID")
                         .HasColumnType("int");
 
-                    b.Property<int?>("EmployeesID")
-                        .HasColumnType("int");
-
                     b.Property<DateTime?>("FromDate")
                         .HasColumnType("datetime2");
 
@@ -4149,7 +4311,7 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("ID");
 
-                    b.HasIndex("EmployeesID");
+                    b.HasIndex("EmployeeID");
 
                     b.ToTable("tbl_EmployeeExperience");
                 });
@@ -4256,49 +4418,122 @@ namespace CompanyPlatform.Core.Migrations
                     b.ToTable("tbl_EmployeeStatutoryDetails");
                 });
 
-            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Employee.Employees", b =>
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Enquiry", b =>
                 {
-                    b.Property<int>("ID")
+                    b.Property<int>("EnquiryId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ID"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EnquiryId"));
 
-                    b.Property<string>("ApplicationUserId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<string>("ActivityDiscussionNotes")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("DateOfBirth")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("DateOfJoining")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("DateOfLeaving")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("DepartmentID")
+                    b.Property<int?>("ActivityTypeId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("DesignationID")
+                    b.Property<int?>("BDEUserId")
                         .HasColumnType("int");
 
-                    b.Property<string>("EmailAddress")
+                    b.Property<string>("BDEUserName")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("ContactEmail")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int?>("ContactId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ContactMobile")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("ContactName")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CurrencyId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("CustomerBudget")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("CustomerCreditLimit")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CustomerRequirement")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("EmployeeCode")
+                    b.Property<string>("DeliveryTimeline")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("DepartmentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DepartmentName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Designation")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("DocumentFilePath")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("DocumentName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("DocumentReference")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("EnquiryDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("EnquiryNumber")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("EnquiryPriorityId")
+                        .HasColumnType("int");
 
-                    b.Property<string>("Gender")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("EnquirySourceId")
+                        .HasColumnType("int");
 
-                    b.Property<string>("GoogleCalendarId")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("EnquiryStageId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EnquiryStatusId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EnquiryTypeId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("EstimatedTaxPercent")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<DateTime?>("ExpectedClosingDate")
+                        .HasColumnType("date");
+
+                    b.Property<decimal?>("ExpectedOrderValue")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -4306,47 +4541,339 @@ namespace CompanyPlatform.Core.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<string>("LastName")
+                    b.Property<int?>("LostReasonId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("NextAction")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<DateTime?>("NextFollowUpDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("OutcomeInternalRemarks")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("PaymentTermId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PlaceOfSupplyId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("ProbabilityPercentage")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<int>("ProductCategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Reminder")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<decimal?>("RequiredQuantity")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("RequirementSubject")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
 
-                    b.Property<int?>("LevelID")
+                    b.Property<string>("ResponsiblePerson")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int?>("SalesManagerId")
                         .HasColumnType("int");
 
-                    b.Property<string>("MiddleName")
+                    b.Property<string>("SalesManagerName")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int?>("SalesTerritoryId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TechnicalSpecificationNotes")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("MobileNumber")
+                    b.Property<string>("TermsAndConditions")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("UnitOfMeasureId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("EnquiryId");
+
+                    b.ToTable("tbl_Enquiries");
+                });
+
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.EnquiryPriority", b =>
+                {
+                    b.Property<int>("EnquiryPriorityId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EnquiryPriorityId"));
+
+                    b.Property<string>("EnquiryPriorityCode")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
-                    b.Property<string>("PhotoPath")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<DateTime>("EnquiryPriorityCreatedAt")
+                        .HasColumnType("datetime2");
 
-                    b.Property<string>("PresentAddress")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("EnquiryPriorityDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
-                    b.Property<int?>("ReportingTo")
+                    b.Property<bool>("EnquiryPriorityIsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("EnquiryPriorityIsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("EnquiryPriorityName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int?>("EnquiryPrioritySortOrder")
                         .HasColumnType("int");
 
-                    b.Property<int?>("WorkLocationID")
+                    b.Property<DateTime?>("EnquiryPriorityUpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("EnquiryPriorityId");
+
+                    b.HasIndex("EnquiryPriorityCode")
+                        .IsUnique();
+
+                    b.ToTable("EnquiryPriorities");
+                });
+
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.EnquirySource", b =>
+                {
+                    b.Property<int>("EnquirySourceId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.HasKey("ID");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EnquirySourceId"));
 
-                    b.HasIndex("ApplicationUserId");
+                    b.Property<string>("EnquirySourceCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
-                    b.HasIndex("DepartmentID");
+                    b.Property<DateTime>("EnquirySourceCreatedAt")
+                        .HasColumnType("datetime2");
 
-                    b.HasIndex("DesignationID");
+                    b.Property<string>("EnquirySourceDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
-                    b.HasIndex("LevelID");
+                    b.Property<bool>("EnquirySourceIsActive")
+                        .HasColumnType("bit");
 
-                    b.HasIndex("ReportingTo");
+                    b.Property<string>("EnquirySourceName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
 
-                    b.HasIndex("WorkLocationID");
+                    b.Property<int?>("EnquirySourceSortOrder")
+                        .HasColumnType("int");
 
-                    b.ToTable("tbl_Employees");
+                    b.Property<DateTime?>("EnquirySourceUpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("EnquirySourceId");
+
+                    b.HasIndex("EnquirySourceCode")
+                        .IsUnique();
+
+                    b.ToTable("EnquirySources");
+                });
+
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.EnquiryStage", b =>
+                {
+                    b.Property<int>("EnquiryStageId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EnquiryStageId"));
+
+                    b.Property<string>("EnquiryStageCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime>("EnquiryStageCreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EnquiryStageDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("EnquiryStageIsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("EnquiryStageIsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("EnquiryStageName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int?>("EnquiryStageSortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("EnquiryStageUpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("EnquiryStageId");
+
+                    b.HasIndex("EnquiryStageCode")
+                        .IsUnique();
+
+                    b.ToTable("EnquiryStages");
+                });
+
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.EnquiryStatus", b =>
+                {
+                    b.Property<int>("EnquiryStatusId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EnquiryStatusId"));
+
+                    b.Property<string>("EnquiryStatusCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime>("EnquiryStatusCreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EnquiryStatusDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("EnquiryStatusIsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("EnquiryStatusIsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("EnquiryStatusName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int?>("EnquiryStatusSortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("EnquiryStatusUpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("EnquiryStatusId");
+
+                    b.HasIndex("EnquiryStatusCode")
+                        .IsUnique();
+
+                    b.ToTable("EnquiryStatuses");
+                });
+
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.EnquiryType", b =>
+                {
+                    b.Property<int>("EnquiryTypeId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EnquiryTypeId"));
+
+                    b.Property<string>("EnquiryTypeCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime>("EnquiryTypeCreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EnquiryTypeDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("EnquiryTypeIsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("EnquiryTypeName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int?>("EnquiryTypeSortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("EnquiryTypeUpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("EnquiryTypeId");
+
+                    b.HasIndex("EnquiryTypeCode")
+                        .IsUnique();
+
+                    b.ToTable("EnquiryTypes");
+                });
+
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.LostReason", b =>
+                {
+                    b.Property<int>("LostReasonId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("LostReasonId"));
+
+                    b.Property<string>("LostReasonCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime>("LostReasonCreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LostReasonDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("LostReasonIsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("LostReasonIsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LostReasonName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int?>("LostReasonSortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("LostReasonUpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("LostReasonId");
+
+                    b.HasIndex("LostReasonCode")
+                        .IsUnique();
+
+                    b.ToTable("LostReasons");
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Notification.NotificationLogs", b =>
@@ -4515,6 +5042,153 @@ namespace CompanyPlatform.Core.Migrations
                     b.ToTable("tbl_PaymentTerm");
                 });
 
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.PlaceOfSupply", b =>
+                {
+                    b.Property<int>("PlaceOfSupplyId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PlaceOfSupplyId"));
+
+                    b.Property<string>("PlaceOfSupplyCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime>("PlaceOfSupplyCreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PlaceOfSupplyDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("PlaceOfSupplyIsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("PlaceOfSupplyIsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("PlaceOfSupplyName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int?>("PlaceOfSupplySortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("PlaceOfSupplyUpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("PlaceOfSupplyId");
+
+                    b.HasIndex("PlaceOfSupplyCode")
+                        .IsUnique();
+
+                    b.ToTable("PlaceOfSupplies");
+                });
+
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.ProductCategory", b =>
+                {
+                    b.Property<int>("ProductCategoryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProductCategoryId"));
+
+                    b.Property<string>("ProductCategoryCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime>("ProductCategoryCreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ProductCategoryCreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ProductCategoryDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("ProductCategoryIsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ProductCategoryIsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ProductCategoryName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int?>("ProductCategorySortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ProductCategoryUpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ProductCategoryUpdatedBy")
+                        .HasColumnType("int");
+
+                    b.HasKey("ProductCategoryId");
+
+                    b.HasIndex("ProductCategoryCode")
+                        .IsUnique();
+
+                    b.ToTable("ProductCategories");
+                });
+
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.ProductServiceItem", b =>
+                {
+                    b.Property<int>("ProductServiceId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProductServiceId"));
+
+                    b.Property<string>("ProductServiceCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime>("ProductServiceCreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ProductServiceCreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ProductServiceDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("ProductServiceIsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ProductServiceIsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ProductServiceName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int?>("ProductServiceSortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ProductServiceUpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ProductServiceUpdatedBy")
+                        .HasColumnType("int");
+
+                    b.HasKey("ProductServiceId");
+
+                    b.HasIndex("ProductServiceCode")
+                        .IsUnique();
+
+                    b.ToTable("ProductServices");
+                });
+
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.SalesAttachment", b =>
                 {
                     b.Property<int>("SalesAttachmentId")
@@ -4575,6 +5249,95 @@ namespace CompanyPlatform.Core.Migrations
                     b.ToTable("tbl_SalesAttachment");
                 });
 
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.SalesCoordinator.SalesCoordinator", b =>
+                {
+                    b.Property<int>("SalesCoordinatorId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SalesCoordinatorId"));
+
+                    b.Property<int?>("BDEUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("SalesCoordinatorCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SalesCoordinatorName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("SalesCoordinatorId");
+
+                    b.HasIndex("BDEUserId");
+
+                    b.ToTable("tbl_SalesCoordinator");
+                });
+
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.SalesTerritory", b =>
+                {
+                    b.Property<int>("SalesTerritoryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SalesTerritoryId"));
+
+                    b.Property<string>("SalesTerritoryCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime>("SalesTerritoryCreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("SalesTerritoryDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("SalesTerritoryIsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("SalesTerritoryIsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("SalesTerritoryName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int?>("SalesTerritorySortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("SalesTerritoryUpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("SalesTerritoryId");
+
+                    b.HasIndex("SalesTerritoryCode")
+                        .IsUnique();
+
+                    b.ToTable("SalesTerritories");
+                });
+
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.SalesUserManager", b =>
                 {
                     b.Property<int>("ID")
@@ -4600,6 +5363,51 @@ namespace CompanyPlatform.Core.Migrations
                     b.HasKey("ID");
 
                     b.ToTable("sales_user_manager");
+                });
+
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.UnitOfMeasure", b =>
+                {
+                    b.Property<int>("UnitOfMeasureId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UnitOfMeasureId"));
+
+                    b.Property<string>("UnitOfMeasureCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime>("UnitOfMeasureCreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UnitOfMeasureDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("UnitOfMeasureIsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("UnitOfMeasureIsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("UnitOfMeasureName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int?>("UnitOfMeasureSortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UnitOfMeasureUpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("UnitOfMeasureId");
+
+                    b.HasIndex("UnitOfMeasureCode")
+                        .IsUnique();
+
+                    b.ToTable("UnitOfMeasures");
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.Department", b =>
@@ -5050,6 +5858,15 @@ namespace CompanyPlatform.Core.Migrations
                     b.Navigation("Employee");
                 });
 
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.BDEUser", b =>
+                {
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "DirectorEmployee")
+                        .WithMany()
+                        .HasForeignKey("DirectorEmployeeId");
+
+                    b.Navigation("DirectorEmployee");
+                });
+
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Call.Call", b =>
                 {
                     b.HasOne("CompanyPlatform.Core.Models.CRM.Call.CallType", "CallType")
@@ -5064,13 +5881,13 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "CreatedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "CreatedByEmployee")
                         .WithMany()
                         .HasForeignKey("CreatedBy")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "User")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -5093,7 +5910,7 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "UploadedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "UploadedByEmployee")
                         .WithMany()
                         .HasForeignKey("UploadedBy")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -5134,7 +5951,7 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "User")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -5278,7 +6095,7 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "CreatedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "CreatedByEmployee")
                         .WithMany()
                         .HasForeignKey("CreatedBy")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -5301,7 +6118,7 @@ namespace CompanyPlatform.Core.Migrations
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.CompanyContact", b =>
                 {
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "CreatedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "CreatedByEmployee")
                         .WithMany()
                         .HasForeignKey("CreatedBy")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -5332,7 +6149,7 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "UploadedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "UploadedByEmployee")
                         .WithMany()
                         .HasForeignKey("UploadedBy")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -5364,7 +6181,7 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "User")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -5383,7 +6200,7 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "User")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -5396,7 +6213,7 @@ namespace CompanyPlatform.Core.Migrations
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.CompanyPhone", b =>
                 {
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "CreatedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "CreatedByEmployee")
                         .WithMany()
                         .HasForeignKey("CreatedBy")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -5413,7 +6230,7 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "User")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -5432,6 +6249,17 @@ namespace CompanyPlatform.Core.Migrations
                     b.Navigation("VisitType");
                 });
 
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.Contact", b =>
+                {
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Company", "Company")
+                        .WithMany()
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Company");
+                });
+
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.Employee", b =>
                 {
                     b.HasOne("CompanyPlatform.Core.Models.Department", "Department")
@@ -5442,17 +6270,23 @@ namespace CompanyPlatform.Core.Migrations
                         .WithMany()
                         .HasForeignKey("DesignationID");
 
+                    b.HasOne("CompanyPlatform.Core.Models.HRMS.LevelMaster", "Level")
+                        .WithMany()
+                        .HasForeignKey("LevelID");
+
                     b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "ReportingToManager")
                         .WithMany()
                         .HasForeignKey("ReportingTo");
 
                     b.HasOne("CompanyPlatform.Core.Models.WorkLocation", "WorkLocation")
-                        .WithMany()
+                        .WithMany("Employees")
                         .HasForeignKey("WorkLocationID");
 
                     b.Navigation("Department");
 
                     b.Navigation("Designation");
+
+                    b.Navigation("Level");
 
                     b.Navigation("ReportingToManager");
 
@@ -5479,7 +6313,7 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "User")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -5508,13 +6342,13 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "CreatedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "CreatedByEmployee")
                         .WithMany()
                         .HasForeignKey("CreatedBy")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "UpdatedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "UpdatedByEmployee")
                         .WithMany()
                         .HasForeignKey("UpdatedBy");
 
@@ -5557,7 +6391,7 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "CreatedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "CreatedByEmployee")
                         .WithMany()
                         .HasForeignKey("CreatedBy")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -5569,12 +6403,12 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "UpdatedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "UpdatedByEmployee")
                         .WithMany()
                         .HasForeignKey("UpdatedBy")
                         .OnDelete(DeleteBehavior.NoAction);
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "User")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -5670,7 +6504,7 @@ namespace CompanyPlatform.Core.Migrations
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.Reminder", b =>
                 {
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "AssignedEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "AssignedEmployee")
                         .WithMany()
                         .HasForeignKey("AssignedTo")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -5682,7 +6516,7 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "CreatedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "CreatedByEmployee")
                         .WithMany()
                         .HasForeignKey("CreatedBy")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -5725,7 +6559,7 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "UpdatedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "UpdatedByEmployee")
                         .WithMany()
                         .HasForeignKey("UpdatedBy")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -5746,7 +6580,7 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "Employee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "Employee")
                         .WithMany()
                         .HasForeignKey("SentBy")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -5789,13 +6623,13 @@ namespace CompanyPlatform.Core.Migrations
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.TaskAssignment", b =>
                 {
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "AssignedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "AssignedByEmployee")
                         .WithMany()
                         .HasForeignKey("AssignedBy")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "AssignedToEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "AssignedToEmployee")
                         .WithMany()
                         .HasForeignKey("AssignedTo")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -5816,19 +6650,19 @@ namespace CompanyPlatform.Core.Migrations
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.TaskAssignments", b =>
                 {
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "AssignedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "AssignedByEmployee")
                         .WithMany()
                         .HasForeignKey("AssignedBy")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "AssignedToEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "AssignedToEmployee")
                         .WithMany()
                         .HasForeignKey("AssignedTo")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "CreatedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "CreatedByEmployee")
                         .WithMany()
                         .HasForeignKey("CreatedBy")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -5840,7 +6674,7 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "UpdatedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "UpdatedByEmployee")
                         .WithMany()
                         .HasForeignKey("UpdatedBy")
                         .OnDelete(DeleteBehavior.NoAction);
@@ -5864,7 +6698,7 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "UploadedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "UploadedByEmployee")
                         .WithMany()
                         .HasForeignKey("UploadedBy")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -5888,7 +6722,7 @@ namespace CompanyPlatform.Core.Migrations
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.TaskComment", b =>
                 {
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "CommentedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "CommentedByEmployee")
                         .WithMany()
                         .HasForeignKey("CommentedBy")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -5907,7 +6741,7 @@ namespace CompanyPlatform.Core.Migrations
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.TaskHistory", b =>
                 {
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "PerformedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "PerformedByEmployee")
                         .WithMany()
                         .HasForeignKey("PerformedBy")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -5926,7 +6760,7 @@ namespace CompanyPlatform.Core.Migrations
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.TaskReminderMapping", b =>
                 {
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "CreatedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "CreatedByEmployee")
                         .WithMany()
                         .HasForeignKey("CreatedBy")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -5944,7 +6778,7 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "UpdatedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "UpdatedByEmployee")
                         .WithMany()
                         .HasForeignKey("UpdatedBy")
                         .OnDelete(DeleteBehavior.NoAction);
@@ -5960,13 +6794,13 @@ namespace CompanyPlatform.Core.Migrations
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.Tasks", b =>
                 {
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "AssignedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "AssignedByEmployee")
                         .WithMany()
                         .HasForeignKey("AssignedBy")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "AssignedToEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "AssignedToEmployee")
                         .WithMany()
                         .HasForeignKey("AssignedTo")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -5978,7 +6812,7 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "CreatedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "CreatedByEmployee")
                         .WithMany()
                         .HasForeignKey("CreatedBy")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -6000,7 +6834,7 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "UpdatedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "UpdatedByEmployee")
                         .WithMany()
                         .HasForeignKey("UpdatedBy")
                         .OnDelete(DeleteBehavior.NoAction);
@@ -6035,21 +6869,25 @@ namespace CompanyPlatform.Core.Migrations
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Employee.EmployeeAddress", b =>
                 {
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", null)
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", null)
                         .WithMany("Addresses")
-                        .HasForeignKey("EmployeesID");
+                        .HasForeignKey("EmployeeID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Employee.EmployeeExperience", b =>
                 {
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", null)
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", null)
                         .WithMany("Experiences")
-                        .HasForeignKey("EmployeesID");
+                        .HasForeignKey("EmployeeID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Employee.EmployeeQualification", b =>
                 {
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "Employee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "Employee")
                         .WithMany("Qualifications")
                         .HasForeignKey("EmployeeID")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -6060,7 +6898,7 @@ namespace CompanyPlatform.Core.Migrations
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Employee.EmployeeStatutoryDetails", b =>
                 {
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "Employee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "Employee")
                         .WithMany()
                         .HasForeignKey("EmployeeID")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -6069,43 +6907,13 @@ namespace CompanyPlatform.Core.Migrations
                     b.Navigation("Employee");
                 });
 
-            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Employee.Employees", b =>
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.SalesCoordinator.SalesCoordinator", b =>
                 {
-                    b.HasOne("CompanyPlatform.Core.Models.ApplicationUser", "ApplicationUser")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.BDEUser", "BDEUser")
                         .WithMany()
-                        .HasForeignKey("ApplicationUserId");
+                        .HasForeignKey("BDEUserId");
 
-                    b.HasOne("CompanyPlatform.Core.Models.Department", "Department")
-                        .WithMany()
-                        .HasForeignKey("DepartmentID");
-
-                    b.HasOne("CompanyPlatform.Core.Models.Designation", "Designation")
-                        .WithMany()
-                        .HasForeignKey("DesignationID");
-
-                    b.HasOne("CompanyPlatform.Core.Models.HRMS.LevelMaster", "Level")
-                        .WithMany()
-                        .HasForeignKey("LevelID");
-
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "ReportingToManager")
-                        .WithMany()
-                        .HasForeignKey("ReportingTo");
-
-                    b.HasOne("CompanyPlatform.Core.Models.WorkLocation", "WorkLocation")
-                        .WithMany("Employees")
-                        .HasForeignKey("WorkLocationID");
-
-                    b.Navigation("ApplicationUser");
-
-                    b.Navigation("Department");
-
-                    b.Navigation("Designation");
-
-                    b.Navigation("Level");
-
-                    b.Navigation("ReportingToManager");
-
-                    b.Navigation("WorkLocation");
+                    b.Navigation("BDEUser");
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.EmployeeDeclarationDetail", b =>
@@ -6132,7 +6940,7 @@ namespace CompanyPlatform.Core.Migrations
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.EmployeeTDSDetails", b =>
                 {
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "Employee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "Employee")
                         .WithMany()
                         .HasForeignKey("EmployeeID")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -6194,7 +7002,13 @@ namespace CompanyPlatform.Core.Migrations
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.Employee", b =>
                 {
+                    b.Navigation("Addresses");
+
                     b.Navigation("ApplicationUser");
+
+                    b.Navigation("Experiences");
+
+                    b.Navigation("Qualifications");
 
                     b.Navigation("SalaryStructures");
                 });
@@ -6202,15 +7016,6 @@ namespace CompanyPlatform.Core.Migrations
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.ProformaInvoice", b =>
                 {
                     b.Navigation("ProformaInvoiceItems");
-                });
-
-            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Employee.Employees", b =>
-                {
-                    b.Navigation("Addresses");
-
-                    b.Navigation("Experiences");
-
-                    b.Navigation("Qualifications");
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.EmployeeDeclarationDetail", b =>

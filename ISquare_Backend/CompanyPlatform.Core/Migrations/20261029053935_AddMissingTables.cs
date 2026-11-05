@@ -5,7 +5,7 @@
 namespace CompanyPlatform.Core.Migrations
 {
     /// <inheritdoc />
-    public partial class Final0 : Migration
+    public partial class AddMissingTables : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

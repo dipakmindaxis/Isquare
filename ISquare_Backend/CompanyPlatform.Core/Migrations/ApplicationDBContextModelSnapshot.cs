@@ -417,11 +417,20 @@ namespace CompanyPlatform.Core.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("ActivitySubType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DiscussionNotesMOM")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
+
+                    b.Property<string>("SubjectPurpose")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("ID");
 
@@ -1640,6 +1649,9 @@ namespace CompanyPlatform.Core.Migrations
                     b.Property<string>("Gender")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("GoogleCalendarId")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -1650,11 +1662,17 @@ namespace CompanyPlatform.Core.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("LevelID")
+                        .HasColumnType("int");
+
                     b.Property<string>("MiddleName")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("MobileNumber")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhotoPath")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PresentAddress")
@@ -1674,6 +1692,8 @@ namespace CompanyPlatform.Core.Migrations
                     b.HasIndex("DepartmentID");
 
                     b.HasIndex("DesignationID");
+
+                    b.HasIndex("LevelID");
 
                     b.HasIndex("ReportingTo");
 
@@ -3439,8 +3459,7 @@ namespace CompanyPlatform.Core.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Specification")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("TaxAmount")
                         .HasColumnType("decimal(18,2)");
@@ -4128,45 +4147,6 @@ namespace CompanyPlatform.Core.Migrations
                     b.ToTable("tbl_CustomerSource");
                 });
 
-            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Director.Director", b =>
-                {
-                    b.Property<int>("DirectorId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("DirectorId"));
-
-                    b.Property<int?>("CreatedBy")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("DirectorCode")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DirectorName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<int?>("UpdatedBy")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("DirectorId");
-
-                    b.ToTable("tbl_Director");
-                });
-
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Employee.EmployeeAddress", b =>
                 {
                     b.Property<int>("ID")
@@ -4189,9 +4169,6 @@ namespace CompanyPlatform.Core.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("EmployeeID")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("EmployeesID")
                         .HasColumnType("int");
 
                     b.Property<string>("FlatNo")
@@ -4217,7 +4194,7 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("ID");
 
-                    b.HasIndex("EmployeesID");
+                    b.HasIndex("EmployeeID");
 
                     b.ToTable("tbl_EmployeeAddress");
                 });
@@ -4317,9 +4294,6 @@ namespace CompanyPlatform.Core.Migrations
                     b.Property<int>("EmployeeID")
                         .HasColumnType("int");
 
-                    b.Property<int?>("EmployeesID")
-                        .HasColumnType("int");
-
                     b.Property<DateTime?>("FromDate")
                         .HasColumnType("datetime2");
 
@@ -4334,7 +4308,7 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("ID");
 
-                    b.HasIndex("EmployeesID");
+                    b.HasIndex("EmployeeID");
 
                     b.ToTable("tbl_EmployeeExperience");
                 });
@@ -4441,49 +4415,122 @@ namespace CompanyPlatform.Core.Migrations
                     b.ToTable("tbl_EmployeeStatutoryDetails");
                 });
 
-            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Employee.Employees", b =>
+            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Enquiry", b =>
                 {
-                    b.Property<int>("ID")
+                    b.Property<int>("EnquiryId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ID"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EnquiryId"));
 
-                    b.Property<string>("ApplicationUserId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<string>("ActivityDiscussionNotes")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("DateOfBirth")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("DateOfJoining")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("DateOfLeaving")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("DepartmentID")
+                    b.Property<int?>("ActivityTypeId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("DesignationID")
+                    b.Property<int?>("BDEUserId")
                         .HasColumnType("int");
 
-                    b.Property<string>("EmailAddress")
+                    b.Property<string>("BDEUserName")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("ContactEmail")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int?>("ContactId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ContactMobile")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("ContactName")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CurrencyId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("CustomerBudget")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("CustomerCreditLimit")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CustomerRequirement")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("EmployeeCode")
+                    b.Property<string>("DeliveryTimeline")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("DepartmentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DepartmentName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Designation")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("DocumentFilePath")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("DocumentName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("DocumentReference")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("EnquiryDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("EnquiryNumber")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("EnquiryPriorityId")
+                        .HasColumnType("int");
 
-                    b.Property<string>("Gender")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("EnquirySourceId")
+                        .HasColumnType("int");
 
-                    b.Property<string>("GoogleCalendarId")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("EnquiryStageId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EnquiryStatusId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EnquiryTypeId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("EstimatedTaxPercent")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<DateTime?>("ExpectedClosingDate")
+                        .HasColumnType("date");
+
+                    b.Property<decimal?>("ExpectedOrderValue")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -4491,52 +4538,75 @@ namespace CompanyPlatform.Core.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<string>("LastName")
+                    b.Property<int?>("LostReasonId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("NextAction")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<DateTime?>("NextFollowUpDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("OutcomeInternalRemarks")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("PaymentTermId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PlaceOfSupplyId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("ProbabilityPercentage")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<int>("ProductCategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Reminder")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<decimal?>("RequiredQuantity")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("RequirementSubject")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
 
-                    b.Property<int?>("LevelID")
+                    b.Property<string>("ResponsiblePerson")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int?>("SalesManagerId")
                         .HasColumnType("int");
 
-                    b.Property<string>("MiddleName")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("SalesManagerName")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
 
-                    b.Property<string>("MobileNumber")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PhotoPath")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PresentAddress")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("ReportingTo")
+                    b.Property<int?>("SalesTerritoryId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("WorkLocationID")
+                    b.Property<string>("TechnicalSpecificationNotes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TermsAndConditions")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("UnitOfMeasureId")
                         .HasColumnType("int");
 
-                    b.HasKey("ID");
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
 
-                    b.HasIndex("ApplicationUserId");
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
 
-                    b.HasIndex("DepartmentID");
+                    b.HasKey("EnquiryId");
 
-                    b.HasIndex("DesignationID");
-
-                    b.HasIndex("LevelID");
-
-                    b.HasIndex("ReportingTo");
-
-                    b.HasIndex("WorkLocationID");
-
-                    b.ToTable("tbl_Employees", null, t =>
-                        {
-                            t.HasTrigger("trg_tbl_Employees");
-                        });
-
-                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                    b.ToTable("tbl_Enquiries");
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.EnquiryPriority", b =>
@@ -5787,7 +5857,7 @@ namespace CompanyPlatform.Core.Migrations
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.BDEUser", b =>
                 {
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "DirectorEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "DirectorEmployee")
                         .WithMany()
                         .HasForeignKey("DirectorEmployeeId");
 
@@ -5808,13 +5878,13 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "CreatedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "CreatedByEmployee")
                         .WithMany()
                         .HasForeignKey("CreatedBy")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "User")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -5837,7 +5907,7 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "UploadedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "UploadedByEmployee")
                         .WithMany()
                         .HasForeignKey("UploadedBy")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -5878,7 +5948,7 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "User")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -6022,7 +6092,7 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "CreatedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "CreatedByEmployee")
                         .WithMany()
                         .HasForeignKey("CreatedBy")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -6045,7 +6115,7 @@ namespace CompanyPlatform.Core.Migrations
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.CompanyContact", b =>
                 {
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "CreatedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "CreatedByEmployee")
                         .WithMany()
                         .HasForeignKey("CreatedBy")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -6076,7 +6146,7 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "UploadedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "UploadedByEmployee")
                         .WithMany()
                         .HasForeignKey("UploadedBy")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -6108,7 +6178,7 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "User")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -6127,7 +6197,7 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "User")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -6140,7 +6210,7 @@ namespace CompanyPlatform.Core.Migrations
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.CompanyPhone", b =>
                 {
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "CreatedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "CreatedByEmployee")
                         .WithMany()
                         .HasForeignKey("CreatedBy")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -6157,7 +6227,7 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "User")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -6197,17 +6267,23 @@ namespace CompanyPlatform.Core.Migrations
                         .WithMany()
                         .HasForeignKey("DesignationID");
 
+                    b.HasOne("CompanyPlatform.Core.Models.HRMS.LevelMaster", "Level")
+                        .WithMany()
+                        .HasForeignKey("LevelID");
+
                     b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "ReportingToManager")
                         .WithMany()
                         .HasForeignKey("ReportingTo");
 
                     b.HasOne("CompanyPlatform.Core.Models.WorkLocation", "WorkLocation")
-                        .WithMany()
+                        .WithMany("Employees")
                         .HasForeignKey("WorkLocationID");
 
                     b.Navigation("Department");
 
                     b.Navigation("Designation");
+
+                    b.Navigation("Level");
 
                     b.Navigation("ReportingToManager");
 
@@ -6234,7 +6310,7 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "User")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -6263,13 +6339,13 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "CreatedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "CreatedByEmployee")
                         .WithMany()
                         .HasForeignKey("CreatedBy")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "UpdatedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "UpdatedByEmployee")
                         .WithMany()
                         .HasForeignKey("UpdatedBy");
 
@@ -6312,7 +6388,7 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "CreatedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "CreatedByEmployee")
                         .WithMany()
                         .HasForeignKey("CreatedBy")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -6324,12 +6400,12 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "UpdatedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "UpdatedByEmployee")
                         .WithMany()
                         .HasForeignKey("UpdatedBy")
                         .OnDelete(DeleteBehavior.NoAction);
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "User")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -6425,7 +6501,7 @@ namespace CompanyPlatform.Core.Migrations
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.Reminder", b =>
                 {
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "AssignedEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "AssignedEmployee")
                         .WithMany()
                         .HasForeignKey("AssignedTo")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -6437,7 +6513,7 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "CreatedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "CreatedByEmployee")
                         .WithMany()
                         .HasForeignKey("CreatedBy")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -6480,7 +6556,7 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "UpdatedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "UpdatedByEmployee")
                         .WithMany()
                         .HasForeignKey("UpdatedBy")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -6501,7 +6577,7 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "Employee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "Employee")
                         .WithMany()
                         .HasForeignKey("SentBy")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -6544,13 +6620,13 @@ namespace CompanyPlatform.Core.Migrations
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.TaskAssignment", b =>
                 {
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "AssignedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "AssignedByEmployee")
                         .WithMany()
                         .HasForeignKey("AssignedBy")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "AssignedToEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "AssignedToEmployee")
                         .WithMany()
                         .HasForeignKey("AssignedTo")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -6571,19 +6647,19 @@ namespace CompanyPlatform.Core.Migrations
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.TaskAssignments", b =>
                 {
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "AssignedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "AssignedByEmployee")
                         .WithMany()
                         .HasForeignKey("AssignedBy")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "AssignedToEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "AssignedToEmployee")
                         .WithMany()
                         .HasForeignKey("AssignedTo")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "CreatedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "CreatedByEmployee")
                         .WithMany()
                         .HasForeignKey("CreatedBy")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -6595,7 +6671,7 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "UpdatedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "UpdatedByEmployee")
                         .WithMany()
                         .HasForeignKey("UpdatedBy")
                         .OnDelete(DeleteBehavior.NoAction);
@@ -6619,7 +6695,7 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "UploadedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "UploadedByEmployee")
                         .WithMany()
                         .HasForeignKey("UploadedBy")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -6643,7 +6719,7 @@ namespace CompanyPlatform.Core.Migrations
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.TaskComment", b =>
                 {
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "CommentedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "CommentedByEmployee")
                         .WithMany()
                         .HasForeignKey("CommentedBy")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -6662,7 +6738,7 @@ namespace CompanyPlatform.Core.Migrations
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.TaskHistory", b =>
                 {
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "PerformedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "PerformedByEmployee")
                         .WithMany()
                         .HasForeignKey("PerformedBy")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -6681,7 +6757,7 @@ namespace CompanyPlatform.Core.Migrations
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.TaskReminderMapping", b =>
                 {
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "CreatedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "CreatedByEmployee")
                         .WithMany()
                         .HasForeignKey("CreatedBy")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -6699,7 +6775,7 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "UpdatedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "UpdatedByEmployee")
                         .WithMany()
                         .HasForeignKey("UpdatedBy")
                         .OnDelete(DeleteBehavior.NoAction);
@@ -6715,13 +6791,13 @@ namespace CompanyPlatform.Core.Migrations
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.Tasks", b =>
                 {
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "AssignedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "AssignedByEmployee")
                         .WithMany()
                         .HasForeignKey("AssignedBy")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "AssignedToEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "AssignedToEmployee")
                         .WithMany()
                         .HasForeignKey("AssignedTo")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -6733,7 +6809,7 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "CreatedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "CreatedByEmployee")
                         .WithMany()
                         .HasForeignKey("CreatedBy")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -6755,7 +6831,7 @@ namespace CompanyPlatform.Core.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "UpdatedByEmployee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "UpdatedByEmployee")
                         .WithMany()
                         .HasForeignKey("UpdatedBy")
                         .OnDelete(DeleteBehavior.NoAction);
@@ -6790,21 +6866,25 @@ namespace CompanyPlatform.Core.Migrations
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Employee.EmployeeAddress", b =>
                 {
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", null)
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", null)
                         .WithMany("Addresses")
-                        .HasForeignKey("EmployeesID");
+                        .HasForeignKey("EmployeeID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Employee.EmployeeExperience", b =>
                 {
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", null)
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", null)
                         .WithMany("Experiences")
-                        .HasForeignKey("EmployeesID");
+                        .HasForeignKey("EmployeeID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Employee.EmployeeQualification", b =>
                 {
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "Employee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "Employee")
                         .WithMany("Qualifications")
                         .HasForeignKey("EmployeeID")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -6815,52 +6895,13 @@ namespace CompanyPlatform.Core.Migrations
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Employee.EmployeeStatutoryDetails", b =>
                 {
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "Employee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "Employee")
                         .WithMany()
                         .HasForeignKey("EmployeeID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Employee");
-                });
-
-            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Employee.Employees", b =>
-                {
-                    b.HasOne("CompanyPlatform.Core.Models.ApplicationUser", "ApplicationUser")
-                        .WithMany()
-                        .HasForeignKey("ApplicationUserId");
-
-                    b.HasOne("CompanyPlatform.Core.Models.Department", "Department")
-                        .WithMany()
-                        .HasForeignKey("DepartmentID");
-
-                    b.HasOne("CompanyPlatform.Core.Models.Designation", "Designation")
-                        .WithMany()
-                        .HasForeignKey("DesignationID");
-
-                    b.HasOne("CompanyPlatform.Core.Models.HRMS.LevelMaster", "Level")
-                        .WithMany()
-                        .HasForeignKey("LevelID");
-
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "ReportingToManager")
-                        .WithMany()
-                        .HasForeignKey("ReportingTo");
-
-                    b.HasOne("CompanyPlatform.Core.Models.WorkLocation", "WorkLocation")
-                        .WithMany("Employees")
-                        .HasForeignKey("WorkLocationID");
-
-                    b.Navigation("ApplicationUser");
-
-                    b.Navigation("Department");
-
-                    b.Navigation("Designation");
-
-                    b.Navigation("Level");
-
-                    b.Navigation("ReportingToManager");
-
-                    b.Navigation("WorkLocation");
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.SalesCoordinator.SalesCoordinator", b =>
@@ -6896,7 +6937,7 @@ namespace CompanyPlatform.Core.Migrations
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.EmployeeTDSDetails", b =>
                 {
-                    b.HasOne("CompanyPlatform.Core.Models.CRM.Employee.Employees", "Employee")
+                    b.HasOne("CompanyPlatform.Core.Models.CRM.Company.Employee", "Employee")
                         .WithMany()
                         .HasForeignKey("EmployeeID")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -6958,7 +6999,13 @@ namespace CompanyPlatform.Core.Migrations
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.Employee", b =>
                 {
+                    b.Navigation("Addresses");
+
                     b.Navigation("ApplicationUser");
+
+                    b.Navigation("Experiences");
+
+                    b.Navigation("Qualifications");
 
                     b.Navigation("SalaryStructures");
                 });
@@ -6966,15 +7013,6 @@ namespace CompanyPlatform.Core.Migrations
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.ProformaInvoice", b =>
                 {
                     b.Navigation("ProformaInvoiceItems");
-                });
-
-            modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Employee.Employees", b =>
-                {
-                    b.Navigation("Addresses");
-
-                    b.Navigation("Experiences");
-
-                    b.Navigation("Qualifications");
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.EmployeeDeclarationDetail", b =>
