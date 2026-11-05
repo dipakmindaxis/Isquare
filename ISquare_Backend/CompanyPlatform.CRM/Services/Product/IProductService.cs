@@ -1,4 +1,4 @@
-﻿using CompanyPlatform.CRM.DTO.Product;
+using CompanyPlatform.CRM.DTO.Product;
 
 namespace CompanyPlatform.CRM.Services.Product
 {
@@ -13,5 +13,11 @@ namespace CompanyPlatform.CRM.Services.Product
         Task<bool> UpdateProductAsync(int id, ProductDto productDto);
 
         Task<bool> DeleteProductAsync(int id);
+
+        Task<ProductImportResultDto> ImportProductsFromExcelAsync(Stream fileStream);
+
+        Task<ProductImportResultDto> BulkImportProductsAsync(List<ProductExcelRowDto> records);
+
+        byte[] GenerateExcelTemplate();
     }
 }

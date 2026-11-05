@@ -1,6 +1,7 @@
-﻿using CompanyPlatform.CRM.DTO.Product;
+using CompanyPlatform.CRM.DTO.Product;
 using CompanyPlatform.CRM.Services.Product;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -87,6 +88,44 @@ namespace CompanyPlatform.CRM.Controllers
                 return NotFound(new { Message = "Product not found." });
 
             return Ok(new { Message = "Product deleted successfully." });
+        }
+
+        // POST: api/product/import
+        [HttpPost("import")]
+        public async Task<IActionResult> ImportExcel(IFormFile? file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest(new { Message = "Please select a valid Excel file (.xlsx or .xls)." });
+
+            var extension = Path.GetExtension(file.FileName).ToLower();
+            if (extension != ".xlsx" && extension != ".xls")
+                return BadRequest(new { Message = "Invalid file type. Only Excel files (.xlsx, .xls) are allowed." });
+
+            using var stream = file.OpenReadStream();
+            var result = await _productService.ImportProductsFromExcelAsync(stream);
+            return Ok(result);
+        }
+
+        // POST: api/product/bulk-import
+        [HttpPost("bulk-import")]
+        public async Task<IActionResult> BulkImport([FromBody] List<ProductExcelRowDto> records)
+        {
+            if (records == null || !records.Any())
+                return BadRequest(new { Message = "No product records provided for import." });
+
+            var result = await _productService.BulkImportProductsAsync(records);
+            return Ok(result);
+        }
+
+        // GET: api/product/import-template
+        [HttpGet("import-template")]
+        public IActionResult DownloadTemplate()
+        {
+            var bytes = _productService.GenerateExcelTemplate();
+            return File(
+                bytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "Product_Import_Template.xlsx");
         }
     }
 }

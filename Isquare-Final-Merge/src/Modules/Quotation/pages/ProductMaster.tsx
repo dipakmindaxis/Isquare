@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { Plus, Search, Edit, Trash2, RefreshCw, Upload, X, Package, Image as ImageIcon } from "lucide-react";
+import { Plus, Search, Edit, Trash2, RefreshCw, Upload, X, Package, Image as ImageIcon, FileSpreadsheet } from "lucide-react";
 import { toast } from "sonner";
 import {
   productService,
@@ -14,6 +14,7 @@ import {
 import type { Product } from "../models/quotationModels";
 import { formatINR, STANDARD_UOMS } from "../utils/quotationCalculations";
 import ConfirmationModal from "../../../Components/Common/ConfirmationModal";
+import { ProductExcelImportModal } from "../components/ProductExcelImportModal";
 
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 const ALLOWED_IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp"];
@@ -77,6 +78,7 @@ export const ProductMaster: React.FC = () => {
   // Delete Modal
   const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [importModalOpen, setImportModalOpen] = useState<boolean>(false);
 
   const fetchProducts = async () => {
     setIsLoading(true);
@@ -450,6 +452,15 @@ export const ProductMaster: React.FC = () => {
           >
             <RefreshCw size={14} className="text-[#FF7900]" />
             <span>Refresh</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setImportModalOpen(true)}
+            className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-white hover:bg-emerald-50 hover:border-emerald-300 px-4 py-2.5 text-sm font-semibold text-[#00234a] hover:text-emerald-800 shadow-xs transition cursor-pointer"
+            title="Import Excel"
+          >
+            <FileSpreadsheet size={16} className="text-emerald-600" />
+            <span>Import Excel</span>
           </button>
           <button
             type="button"
@@ -868,6 +879,26 @@ export const ProductMaster: React.FC = () => {
         cancelText="Cancel"
         confirmButtonVariant="danger"
         onConfirm={handleDeleteConfirm}
+        onClose={() => {
+          setDeleteModalOpen(false);
+          setProductToDelete(null);
+        }}
+      />
+
+      {/* Product Excel Import Modal */}
+      <ProductExcelImportModal
+        isOpen={importModalOpen}
+        onClose={() => setImportModalOpen(false)}
+        onImportSuccess={fetchProducts}
+        existingProducts={products}
+      />
+
+      <ConfirmationModal
+        isOpen={false}
+        title=""
+        message=""
+        confirmButtonVariant="danger"
+        onConfirm={() => {}}
         onClose={() => {
           setDeleteModalOpen(false);
           setProductToDelete(null);

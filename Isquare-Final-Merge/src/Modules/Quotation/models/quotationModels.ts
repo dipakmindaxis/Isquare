@@ -294,3 +294,40 @@ export interface Product {
   profit?: number | null;
   stock?: number | null;
 }
+
+
+export interface ProductImportRow {
+  rowIndex: number;
+  itemCode?: string;
+  productName: string;
+  brand?: string;
+  specification?: string;
+  defaultUom?: string;
+  unitOfMeasurementId?: number;
+  standardRate: number;
+  gstRate: number;
+  hsnCode?: string;
+  purchaseRate?: number | null;
+  profitPercentage?: number | null;
+  stock?: number | null;
+  productImage?: string;
+  isValid: boolean;
+  validationErrors: string[];
+}
+
+export interface ProductImportError {
+  rowNumber: number;
+  itemCode?: string;
+  productName?: string;
+  errorMessage: string;
+}
+
+export interface ProductImportResult {
+  totalRecords: number;
+  successCount: number;
+  duplicateCount: number;
+  failedCount: number;
+  errors: ProductImportError[];
+  importedProducts: Product[];
+  message?: string;
+}
