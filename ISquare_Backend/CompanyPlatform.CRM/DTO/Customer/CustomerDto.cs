@@ -21,6 +21,10 @@ namespace CompanyPlatform.CRM.DTO.Customer
         public string? CompanyName { get; set; }
         public string? CompanyGroup { get; set; }
         public string? PlantCode { get; set; }
+        public string? Email { get; set; }
+        public string? AlternateEmail { get; set; }
+        public string? Mobile { get; set; }
+        public string? AlternateMobile { get; set; }
 
         // Section 2: Business Information
         public int? IndustryId { get; set; }

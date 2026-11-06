@@ -390,11 +390,38 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
       return;
     }
 
+    if (formData.addresses && formData.addresses.length > 0) {
+      for (let i = 0; i < formData.addresses.length; i++) {
+        const addr = formData.addresses[i];
+        if (addr.address?.trim() || addr.locationName?.trim()) {
+          if (!addr.locationName?.trim()) {
+            toast.error(`Address #${i + 1}: Plant / Location Name is required.`);
+            return;
+          }
+          if (!addr.address?.trim()) {
+            toast.error(`Address #${i + 1}: Full Address is required.`);
+            return;
+          }
+          if (!addr.isBilling && !addr.isDelivery && !addr.isShipping) {
+            toast.error(`Address #${i + 1}: Please select at least one Address Use (Billing or Delivery).`);
+            return;
+          }
+        }
+      }
+    }
+    const primaryPlantCode = (formData.addresses || []).find(a => a.isPrimary)?.plantCode || (formData.addresses || [])[0]?.plantCode || null;
+
     const emailErr = validateEmail(formData.email);
     if (emailErr) {
       toast.error(emailErr);
       return;
     }
+    const altEmailErr = validateEmail(formData.alternateEmail);
+    if (altEmailErr) {
+      toast.error(altEmailErr);
+      return;
+    }
+
     const mobileErr = validateMobile(formData.mobile);
     if (mobileErr) {
       toast.error(mobileErr);
@@ -431,9 +458,10 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
         customerShortName: formData.customerShortName?.trim() || undefined,
         companyName: formData.companyName?.trim() || undefined,
         companyGroup: formData.companyGroup?.trim() || undefined,
-        plantCode: formData.plantCode?.trim() || undefined,
-        email: formData.email?.trim() || null,
+                email: formData.email?.trim() || null,
         mobile: formData.mobile?.trim() || null,
+        alternateEmail: formData.alternateEmail?.trim() || null,
+        alternateMobile: formData.alternateMobile?.trim() || null,
         pan: formData.pan?.trim() || undefined,
         tan: formData.tan?.trim() || undefined,
         gstin: formData.gstin?.trim() || undefined,
@@ -501,17 +529,23 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
         registrationDate: formatDateForApi(formData.registrationDate),
         visitedDate: formatDateForApi(formData.visitedDate),
         isActive: formData.isActive !== false,
+        plantCode: primaryPlantCode || undefined,
         addresses: (formData.addresses || [])
-          .filter((addr) => Boolean(addr.address?.trim()))
+          .filter((addr) => Boolean(addr.address?.trim() || addr.locationName?.trim()))
           .map((addr) => ({
             addressId: addr.addressId && addr.addressId > 0 ? addr.addressId : undefined,
             companyId: customerId,
-            addressType: addr.addressType?.trim() || "Billing",
+            locationName: addr.locationName?.trim() || null,
+            plantCode: addr.plantCode?.trim() || null,
+            addressType: addr.addressType?.trim() || "Plant / Factory",
             address: addr.address.trim(),
             countryId: addr.countryId ? Number(addr.countryId) : 1,
             stateId: addr.stateId ? Number(addr.stateId) : 1,
             cityId: addr.cityId ? Number(addr.cityId) : 1,
             pincode: addr.pincode?.trim() || "000000",
+            isBilling: !!addr.isBilling,
+            isDelivery: !!addr.isDelivery || !!addr.isShipping,
+            isShipping: !!addr.isDelivery || !!addr.isShipping,
             isPrimary: !!addr.isPrimary,
             isActive: addr.isActive !== false,
           })),
@@ -649,14 +683,56 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
 
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
-                      Plant Code
+                      Email Address
                     </label>
                     <input
-                      type="text"
-                      name="plantCode"
-                      value={formData.plantCode || ""}
+                      type="email"
+                      name="email"
+                      value={formData.email || ""}
                       onChange={handleInputChange}
-                      placeholder="e.g. PL-01"
+                      placeholder="e.g. contact@company.com"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-700 placeholder:text-gray-400 min-h-[44px]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      Mobile Number
+                    </label>
+                    <input
+                      type="tel"
+                      name="mobile"
+                      value={formData.mobile || ""}
+                      onChange={handleInputChange}
+                      placeholder="e.g. 9876543210"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-700 placeholder:text-gray-400 min-h-[44px]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      Alternate Email
+                    </label>
+                    <input
+                      type="email"
+                      name="alternateEmail"
+                      value={formData.alternateEmail || ""}
+                      onChange={handleInputChange}
+                      placeholder="e.g. alternate@company.com"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-700 placeholder:text-gray-400 min-h-[44px]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      Alternate Mobile
+                    </label>
+                    <input
+                      type="tel"
+                      name="alternateMobile"
+                      value={formData.alternateMobile || ""}
+                      onChange={handleInputChange}
+                      placeholder="e.g. 9876543211"
                       className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-700 placeholder:text-gray-400 min-h-[44px]"
                     />
                   </div>

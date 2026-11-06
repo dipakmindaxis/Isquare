@@ -36,6 +36,10 @@ const normalizeCustomer = (customer: CustomerApiRecord): Customer => {
   const customerOwnerName = customer.customerOwnerName || customer.CustomerOwnerName || customer.OwnerName;
   const customerOwnerType = customer.customerOwnerType || customer.CustomerOwnerType;
   const customerOwnerValue = customer.customerOwnerValue || customer.CustomerOwnerValue;
+  const email = customer.email || (customer as any).Email || (customer as any).emailAddress || (customer as any).EmailAddress;
+  const alternateEmail = customer.alternateEmail || (customer as any).AlternateEmail;
+  const mobile = customer.mobile || (customer as any).Mobile || (customer as any).phone || (customer as any).Phone;
+  const alternateMobile = customer.alternateMobile || (customer as any).AlternateMobile;
 
   return {
     ...customer,
@@ -49,6 +53,10 @@ const normalizeCustomer = (customer: CustomerApiRecord): Customer => {
     ...(customerOwnerName ? { customerOwnerName: String(customerOwnerName) } : {}),
     ...(customerOwnerType ? { customerOwnerType: String(customerOwnerType) } : {}),
     ...(customerOwnerValue ? { customerOwnerValue: String(customerOwnerValue) } : {}),
+    ...(email ? { email: String(email) } : {}),
+    ...(alternateEmail ? { alternateEmail: String(alternateEmail) } : {}),
+    ...(mobile ? { mobile: String(mobile) } : {}),
+    ...(alternateMobile ? { alternateMobile: String(alternateMobile) } : {}),
   };
 };
 

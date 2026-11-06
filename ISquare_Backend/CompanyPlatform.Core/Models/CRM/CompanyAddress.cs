@@ -29,6 +29,21 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         [StringLength(500)]
         public string Address { get; set; }
 
+        [StringLength(150)]
+        public string? LocationName { get; set; }
+
+        [StringLength(50)]
+        public string? PlantCode { get; set; }
+
+        [DefaultValue(false)]
+        public bool IsBilling { get; set; } = false;
+
+        [DefaultValue(false)]
+        public bool IsDelivery { get; set; } = false;
+
+        [NotMapped]
+        public bool IsShipping { get => IsDelivery; set => IsDelivery = value; }
+
         [Required]
         public int CountryId { get; set; }
 

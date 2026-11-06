@@ -469,6 +469,9 @@ const CustomerMaster: React.FC<CustomerMasterProps> = ({
       "Customer Name": c.customerName,
       "Short Name": c.customerShortName || "-",
       "Company Name": c.companyName || "-",
+      "Mobile Number": c.mobile || c.phone || "-",
+      "Alternate Email": c.alternateEmail || "-",
+      "Alternate Mobile": c.alternateMobile || "-",
       "Email ID":
         c.email ||
         c.emailAddress ||
@@ -488,8 +491,8 @@ const CustomerMaster: React.FC<CustomerMasterProps> = ({
       CIN: c.cin || "-",
       "MSME Number": c.msmeNumber || "-",
       Director: c.directorName || "-",
-      "BDE User": c.bdeUserName || "-",
-      "Sales Coordinator": c.salesCoordinatorName || "-",
+      "Sales User": c.bdeUserName || "-",
+      "Sales Co-ordinator": c.salesCoordinatorName || "-",
       "Customer Owner": c.customerOwnerName || "-",
       Status: c.isActive ? "Active" : "Inactive",
       "Registration Date": c.registrationDate
