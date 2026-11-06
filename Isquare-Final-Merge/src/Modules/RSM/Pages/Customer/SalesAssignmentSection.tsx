@@ -769,7 +769,7 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
     if (selectedBdeObj) {
       list.push({
         value: `BDE:${selectedBdeObj.id}`,
-        label: `${formatEmployeeDisplay(selectedBdeObj.name, selectedBdeObj.code)} (BDE User)`,
+        label: `${formatEmployeeDisplay(selectedBdeObj.name, selectedBdeObj.code)} (Sales User)`,
         id: selectedBdeObj.id,
         name: selectedBdeObj.name,
         type: "BDE",
@@ -1434,7 +1434,7 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
                   htmlFor="role_assignment_bde_select"
                   className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block"
                 >
-                  Select BDE User <span className="text-red-500">*</span>
+                  Select Sales User <span className="text-red-500">*</span>
                 </label>
                 <Select
                   id="role_assignment_bde_select"
@@ -1446,14 +1446,14 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
                   isClearable
                   placeholder={
                     isLoadingBdes
-                      ? "Loading BDE users..."
+                      ? "Loading Sales Users..."
                       : !selectedDirectorId && !standalone
                         ? "-- Select Director first --"
                         : standalone
-                          ? "-- Search & Select BDE User --"
+                          ? "-- Search & Select Sales User --"
                           : bdeSelectOptions.length === 0
-                            ? "-- No BDE users available --"
-                            : "-- Search & Select BDE User --"
+                            ? "-- No Sales Users available --"
+                            : "-- Search & Select Sales User --"
                   }
                   styles={customSelectStyles(
                     Boolean(validationErrors.bdeUserId || propErrors.bdeUserId),
@@ -1467,7 +1467,7 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
                 )}
                 {!standalone && selectedDirectorId && !isLoadingBdes && filteredBdes.length === 0 && (
                   <p className="text-xs text-amber-600 mt-1 font-medium">
-                    No BDE users assigned under this Director.
+                    No Sales Users assigned under this Director.
                   </p>
                 )}
               </div>
@@ -1478,7 +1478,7 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
                   htmlFor="role_assignment_sales_person_select"
                   className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block"
                 >
-                  Select Sales Person
+                  Select Sales Co-ordinator
                 </label>
                 <Select
                   id="role_assignment_sales_person_select"
@@ -1506,14 +1506,14 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
                   isClearable
                   placeholder={
                     isLoadingSalesPersons
-                      ? "Loading sales persons..."
+                      ? "Loading Sales Co-ordinators..."
                       : !selectedBdeId && !standalone
-                        ? "-- Select BDE User first --"
+                        ? "-- Select Sales User first --"
                         : standalone
-                          ? "-- Search & Select Sales Person --"
+                          ? "-- Search & Select Sales Co-ordinator --"
                           : salesPersonDisplayOptions.length === 0
-                            ? "-- No Sales Persons available --"
-                            : "-- Search & Select Sales Person --"
+                            ? "-- No Sales Co-ordinators available --"
+                            : "-- Search & Select Sales Co-ordinator --"
                   }
                   styles={customSelectStyles(
                     Boolean(validationErrors.salesCoordinatorId || propErrors.salesCoordinatorId),
@@ -1529,7 +1529,7 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
                 )}
                 {!standalone && selectedBdeId && !isLoadingSalesPersons && filteredSalesPersons.length === 0 && (
                   <p className="text-xs text-amber-600 mt-1 font-medium">
-                    No Sales Persons assigned under this BDE.
+                    No Sales Co-ordinators assigned under this Sales User.
                   </p>
                 )}
               </div>

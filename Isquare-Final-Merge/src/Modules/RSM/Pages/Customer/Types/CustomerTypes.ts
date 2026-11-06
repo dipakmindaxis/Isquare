@@ -3,6 +3,8 @@
 export interface CustomerAddress {
   addressId?: number;
   companyId?: number;
+  locationName?: string | null;
+  plantCode?: string | null;
   addressType: string;
   address: string;
   countryId?: number;
@@ -12,6 +14,9 @@ export interface CustomerAddress {
   cityId?: number;
   cityName?: string;
   pincode: string;
+  isBilling?: boolean;
+  isDelivery?: boolean;
+  isShipping?: boolean;
   isPrimary?: boolean;
   isActive?: boolean;
   createdBy?: number | string;
@@ -31,6 +36,8 @@ export interface Customer {
   emailAddress?: string;
   phone?: string;
   mobile?: string;
+  alternateEmail?: string;
+  alternateMobile?: string;
   contactPerson?: string;
 
   // Business Information
@@ -80,12 +87,17 @@ export interface Customer {
 export interface CustomerAddressPayload {
   addressId?: number;
   companyId?: number;
+  locationName?: string | null;
+  plantCode?: string | null;
   addressType: string;
   address: string;
   countryId?: number;
   stateId?: number;
   cityId?: number;
   pincode: string;
+  isBilling?: boolean;
+  isDelivery?: boolean;
+  isShipping?: boolean;
   isPrimary?: boolean;
   isActive?: boolean;
 }
@@ -99,6 +111,8 @@ export interface CustomerCreatePayload {
   plantCode?: string | null;
   email?: string | null;
   mobile?: string | null;
+  alternateEmail?: string | null;
+  alternateMobile?: string | null;
 
   // Business Information
   industryId?: number | null;

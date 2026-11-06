@@ -24,7 +24,7 @@ import type {
   PaymentTermItem,
   CountryItem,
   AddressTypeItem,
-  } from "./Types/CustomerTypes";
+} from "./Types/CustomerTypes";
 import { createCustomer, getNextCustomerCode } from "./Services/CustomerService";
 import {
   getIndustries,
@@ -38,6 +38,7 @@ import {
   getSalesCoordinators,
   getDirectors,
 } from "./Services/CustomerMasterDataService";
+import { validateEmail, validateMobile } from "./Utils/CustomerValidation";
 import CustomerAddressSection from "./CustomerAddressSection";
 import SalesAssignmentSection from "./SalesAssignmentSection";
 
@@ -54,6 +55,10 @@ interface CustomerFormState {
   companyName: string;
   companyGroup: string;
   plantCode: string;
+  email: string;
+  alternateEmail: string;
+  mobile: string;
+  alternateMobile: string;
   industryId: number | "";
   customerStatusId: number | "";
   customerSourceId: number | "";
@@ -88,6 +93,10 @@ const INITIAL_FORM_STATE: CustomerFormState = {
   companyName: "",
   companyGroup: "",
   plantCode: "",
+  email: "",
+  alternateEmail: "",
+  mobile: "",
+  alternateMobile: "",
   industryId: "",
   customerStatusId: "",
   customerSourceId: "",
@@ -163,10 +172,10 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
   const [paymentTerms, setPaymentTerms] = useState<PaymentTermItem[]>([]);
   const [countries, setCountries] = useState<CountryItem[]>([]);
   const [addressTypes, setAddressTypes] = useState<AddressTypeItem[]>([]);
-  
-  
 
-  
+
+
+
   // Support ESC key to close modal
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -213,7 +222,7 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
           if (results[4].status === "fulfilled" && Array.isArray(results[4].value)) setPaymentTerms(results[4].value);
           if (results[6].status === "fulfilled" && Array.isArray(results[6].value)) setCountries(results[6].value);
           if (results[7].status === "fulfilled" && Array.isArray(results[7].value)) setAddressTypes(results[7].value);
-          
+
         } catch (err) {
           console.error("Error loading dropdown data:", err);
         } finally {
@@ -313,6 +322,27 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const emailErr = validateEmail(formData.email);
+    if (emailErr) {
+      toast.error(emailErr);
+      return;
+    }
+    const altEmailErr = validateEmail(formData.alternateEmail);
+    if (altEmailErr) {
+      toast.error(altEmailErr);
+      return;
+    }
+    const mobileErr = validateMobile(formData.mobile);
+    if (mobileErr) {
+      toast.error(mobileErr);
+      return;
+    }
+    const altMobileErr = validateMobile(formData.alternateMobile);
+    if (altMobileErr) {
+      toast.error(altMobileErr);
+      return;
+    }
+
     if (!formData.customerName?.trim()) {
       toast.error("Customer Name is required.");
       const el = document.getElementById("customer-name-field");
@@ -325,23 +355,36 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
     if (formData.addresses && formData.addresses.length > 0) {
       for (let i = 0; i < formData.addresses.length; i++) {
         const addr = formData.addresses[i];
-        const hasContent = Boolean(addr.address?.trim());
+        const hasContent = Boolean(addr.address?.trim() || addr.locationName?.trim());
 
         if (!hasContent) {
           continue; // skip completely empty address card
+        }
+        if (!addr.locationName?.trim()) {
+          toast.error(`Address #${i + 1}: Plant / Location Name is required.`);
+          return;
         }
         if (!addr.address?.trim()) {
           toast.error(`Address #${i + 1}: Full Address is required.`);
           return;
         }
+        if (!addr.isBilling && !addr.isDelivery && !addr.isShipping) {
+          toast.error(`Address #${i + 1}: Please select at least one Address Use (Billing or Delivery).`);
+          return;
+        }
         validAddresses.push({
           companyId: 0,
-          addressType: addr.addressType?.trim() || "Billing",
+          locationName: addr.locationName?.trim() || null,
+          plantCode: addr.plantCode?.trim() || null,
+          addressType: addr.addressType?.trim() || "Plant / Factory",
           address: addr.address.trim(),
           countryId: addr.countryId ? Number(addr.countryId) : 1,
           stateId: addr.stateId ? Number(addr.stateId) : 1,
           cityId: addr.cityId ? Number(addr.cityId) : 1,
           pincode: addr.pincode?.trim() || "000000",
+          isBilling: !!addr.isBilling,
+          isDelivery: !!addr.isDelivery || !!addr.isShipping,
+          isShipping: !!addr.isDelivery || !!addr.isShipping,
           isPrimary:
             addr.isPrimary !== undefined
               ? !!addr.isPrimary
@@ -350,6 +393,7 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
         });
       }
     }
+    const primaryPlantCode = validAddresses.find(a => a.isPrimary)?.plantCode || validAddresses[0]?.plantCode || null;
 
     setIsSubmitting(true);
     try {
@@ -365,7 +409,11 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
         customerShortName: formData.customerShortName?.trim() || null,
         companyName: formData.companyName?.trim() || null,
         companyGroup: formData.companyGroup?.trim() || null,
-        plantCode: formData.plantCode?.trim() || null,
+        plantCode: primaryPlantCode,
+        email: formData.email?.trim() || null,
+        alternateEmail: formData.alternateEmail?.trim() || null,
+        mobile: formData.mobile?.trim() || null,
+        alternateMobile: formData.alternateMobile?.trim() || null,
 
         // Section 2: Business Info
         industryId:
@@ -373,8 +421,8 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
         industryName:
           formData.industryId !== ""
             ? industries.find(
-                (i) => i.industryId === Number(formData.industryId)
-              )?.industryName || null
+              (i) => i.industryId === Number(formData.industryId)
+            )?.industryName || null
             : null,
         customerStatusId:
           formData.customerStatusId !== ""
@@ -383,8 +431,8 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
         customerStatusName:
           formData.customerStatusId !== ""
             ? statuses.find(
-                (s) => s.customerStatusId === Number(formData.customerStatusId)
-              )?.statusName || null
+              (s) => s.customerStatusId === Number(formData.customerStatusId)
+            )?.statusName || null
             : null,
         customerSourceId:
           formData.customerSourceId !== ""
@@ -393,8 +441,8 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
         customerSourceName:
           formData.customerSourceId !== ""
             ? sources.find(
-                (s) => s.customerSourceId === Number(formData.customerSourceId)
-              )?.sourceName || null
+              (s) => s.customerSourceId === Number(formData.customerSourceId)
+            )?.sourceName || null
             : null,
         customerAreaId:
           formData.customerAreaId !== ""
@@ -403,8 +451,8 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
         customerAreaName:
           formData.customerAreaId !== ""
             ? areas.find(
-                (a) => a.customerAreaId === Number(formData.customerAreaId)
-              )?.areaName || null
+              (a) => a.customerAreaId === Number(formData.customerAreaId)
+            )?.areaName || null
             : null,
         paymentTermsId:
           formData.paymentTermsId !== ""
@@ -413,8 +461,8 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
         paymentTermName:
           formData.paymentTermsId !== ""
             ? paymentTerms.find(
-                (p) => p.paymentTermId === Number(formData.paymentTermsId)
-              )?.paymentTermName || null
+              (p) => p.paymentTermId === Number(formData.paymentTermsId)
+            )?.paymentTermName || null
             : null,
 
         // Section 3: Registration & Tax Information
@@ -433,8 +481,8 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
         bdeUserName: formData.bdeUserName?.trim() || null,
         salesCoordinatorId:
           formData.salesCoordinatorId !== "" &&
-          formData.salesCoordinatorId !== undefined &&
-          formData.salesCoordinatorId !== null
+            formData.salesCoordinatorId !== undefined &&
+            formData.salesCoordinatorId !== null
             ? Number(formData.salesCoordinatorId)
             : null,
         salesCoordinatorName: formData.salesCoordinatorName?.trim() || null,
@@ -619,14 +667,56 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
 
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
-                      Plant Code
+                      Email Address
                     </label>
                     <input
-                      type="text"
-                      name="plantCode"
-                      value={formData.plantCode || ""}
+                      type="email"
+                      name="email"
+                      value={formData.email || ""}
                       onChange={handleInputChange}
-                      placeholder="Enter Plant Code"
+                      placeholder="e.g. contact@company.com"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-700 placeholder:text-gray-400 min-h-[44px]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      Mobile Number
+                    </label>
+                    <input
+                      type="tel"
+                      name="mobile"
+                      value={formData.mobile || ""}
+                      onChange={handleInputChange}
+                      placeholder="e.g. 9876543210"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-700 placeholder:text-gray-400 min-h-[44px]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      Alternate Email
+                    </label>
+                    <input
+                      type="email"
+                      name="alternateEmail"
+                      value={formData.alternateEmail || ""}
+                      onChange={handleInputChange}
+                      placeholder="e.g. alternate@company.com"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-700 placeholder:text-gray-400 min-h-[44px]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      Alternate Mobile
+                    </label>
+                    <input
+                      type="tel"
+                      name="alternateMobile"
+                      value={formData.alternateMobile || ""}
+                      onChange={handleInputChange}
+                      placeholder="e.g. 9876543211"
                       className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-700 placeholder:text-gray-400 min-h-[44px]"
                     />
                   </div>

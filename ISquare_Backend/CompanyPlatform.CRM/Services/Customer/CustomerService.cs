@@ -356,6 +356,10 @@ namespace CompanyPlatform.CRM.Services.Customer
                 CustomerShortName = dto.CustomerShortName,
                 CompanyGroup = dto.CompanyGroup,
                 PlantCode = dto.PlantCode,
+                Email = dto.Email,
+                AlternateEmail = dto.AlternateEmail,
+                Mobile = dto.Mobile,
+                AlternateMobile = dto.AlternateMobile,
 
                 IndustryId = validIndustryId,
                 CompanyStatusId = validStatusId,
@@ -428,6 +432,10 @@ namespace CompanyPlatform.CRM.Services.Customer
                         CompanyId = entity.CompanyId,
                         AddressType = string.IsNullOrWhiteSpace(addr.AddressType) ? "Registered" : addr.AddressType,
                         Address = addr.Address ?? string.Empty,
+                        LocationName = addr.LocationName,
+                        PlantCode = addr.PlantCode,
+                        IsBilling = addr.IsBilling,
+                        IsDelivery = addr.IsDelivery,
                         CountryId = cId,
                         StateId = sId,
                         CityId = cityId,
@@ -562,6 +570,10 @@ namespace CompanyPlatform.CRM.Services.Customer
             entity.CustomerShortName = dto.CustomerShortName;
             entity.CompanyGroup = dto.CompanyGroup;
             entity.PlantCode = dto.PlantCode;
+            entity.Email = dto.Email;
+            entity.AlternateEmail = dto.AlternateEmail;
+            entity.Mobile = dto.Mobile;
+            entity.AlternateMobile = dto.AlternateMobile;
 
             entity.IndustryId = validIndustryId;
             entity.CompanyStatusId = validStatusId;
@@ -627,6 +639,10 @@ namespace CompanyPlatform.CRM.Services.Customer
                         {
                             existingAddr.AddressType = string.IsNullOrWhiteSpace(addr.AddressType) ? "Registered" : addr.AddressType;
                             existingAddr.Address = addr.Address ?? string.Empty;
+                            existingAddr.LocationName = addr.LocationName;
+                            existingAddr.PlantCode = addr.PlantCode;
+                            existingAddr.IsBilling = addr.IsBilling;
+                            existingAddr.IsDelivery = addr.IsDelivery;
                             existingAddr.CountryId = cId;
                             existingAddr.StateId = sId;
                             existingAddr.CityId = cityId;
@@ -643,6 +659,10 @@ namespace CompanyPlatform.CRM.Services.Customer
                             CompanyId = id,
                             AddressType = string.IsNullOrWhiteSpace(addr.AddressType) ? "Registered" : addr.AddressType,
                             Address = addr.Address ?? string.Empty,
+                            LocationName = addr.LocationName,
+                            PlantCode = addr.PlantCode,
+                            IsBilling = addr.IsBilling,
+                            IsDelivery = addr.IsDelivery,
                             CountryId = cId,
                             StateId = sId,
                             CityId = cityId,
@@ -697,6 +717,10 @@ namespace CompanyPlatform.CRM.Services.Customer
                 CompanyId = a.CompanyId,
                 AddressType = a.AddressType,
                 Address = a.Address,
+                LocationName = a.LocationName,
+                PlantCode = a.PlantCode,
+                IsBilling = a.IsBilling,
+                IsDelivery = a.IsDelivery,
                 CountryId = a.CountryId,
                 StateId = a.StateId,
                 CityId = a.CityId,
@@ -765,6 +789,10 @@ namespace CompanyPlatform.CRM.Services.Customer
                     CompanyId = a.CompanyId,
                     AddressType = a.AddressType,
                     Address = a.Address,
+                    LocationName = a.LocationName,
+                    PlantCode = a.PlantCode,
+                    IsBilling = a.IsBilling,
+                    IsDelivery = a.IsDelivery,
                     CountryId = a.CountryId,
                     StateId = a.StateId,
                     CityId = a.CityId,
@@ -786,6 +814,10 @@ namespace CompanyPlatform.CRM.Services.Customer
                 CompanyName = c.CompanyName,
                 CompanyGroup = c.CompanyGroup,
                 PlantCode = c.PlantCode,
+                Email = c.Email,
+                AlternateEmail = c.AlternateEmail,
+                Mobile = c.Mobile,
+                AlternateMobile = c.AlternateMobile,
 
                 IndustryId = c.IndustryId,
 

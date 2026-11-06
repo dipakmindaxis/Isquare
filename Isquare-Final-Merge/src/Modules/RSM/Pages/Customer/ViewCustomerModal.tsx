@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+import { getContactsByCompanyId } from "../Master/Contact/Services/ContactService";
+import type { Contact } from "../Master/Contact/Types/ContactTypes";
 import {
   X,
   Loader2,
@@ -79,6 +81,7 @@ const ViewCustomerModal: React.FC<ViewCustomerModalProps> = ({
   onClose,
 }) => {
   const [customer, setCustomer] = useState<Customer | null>(null);
+  const [contacts, setContacts] = useState<Contact[]>([]);
   const [addresses, setAddresses] = useState<CustomerAddress[]>([]);
   const [industries, setIndustries] = useState<IndustryItem[]>([]);
   const [areas, setAreas] = useState<CustomerAreaItem[]>([]);
@@ -109,6 +112,7 @@ const ViewCustomerModal: React.FC<ViewCustomerModalProps> = ({
             dirData,
             scData,
             smData,
+            contactData,
           ] = await Promise.all([
             getCustomerById(customerId),
             getCustomerAddresses(customerId).catch(() => []),
@@ -119,6 +123,7 @@ const ViewCustomerModal: React.FC<ViewCustomerModalProps> = ({
             getDirectors().catch(() => []),
             getSalesCoordinators().catch(() => []),
             getSalesManagers().catch(() => []),
+            getContactsByCompanyId(customerId).catch(() => []),
           ]);
 
           if (!isMounted) return;
@@ -131,6 +136,7 @@ const ViewCustomerModal: React.FC<ViewCustomerModalProps> = ({
           setDirectors(Array.isArray(dirData) ? dirData : []);
           setSalesCoordinators(Array.isArray(scData) ? scData : []);
           setSalesManagers(Array.isArray(smData) ? smData : []);
+          setContacts(Array.isArray(contactData) ? contactData : []);
           setAddresses(
             addrData && addrData.length > 0
               ? addrData
@@ -299,6 +305,12 @@ const ViewCustomerModal: React.FC<ViewCustomerModalProps> = ({
     return "-";
   })();
 
+  const primaryContact = contacts.find((c) => c.isPrimary) || contacts[0];
+  const displayEmail = customer?.email || customer?.emailAddress || primaryContact?.emailAddress || (primaryContact as any)?.email;
+  const displayMobile = customer?.mobile || customer?.phone || primaryContact?.mobileNo || (primaryContact as any)?.mobile;
+  const displayAltEmail = customer?.alternateEmail || primaryContact?.altEmailAddress || (primaryContact as any)?.altEmail;
+  const displayAltMobile = customer?.alternateMobile || primaryContact?.altMobileNo || (primaryContact as any)?.altMobile;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-2 sm:p-4">
       <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-5xl h-[calc(100dvh-16px)] sm:h-auto sm:max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in duration-200 border border-gray-200">
@@ -381,9 +393,11 @@ const ViewCustomerModal: React.FC<ViewCustomerModalProps> = ({
                     label="Company Group"
                     value={customer.companyGroup}
                   />
-                  <DetailItem label="Plant Code" value={customer.plantCode} />
-                  <DetailItem label="Email Address" value={customer.email || customer.emailAddress} />
-                  <DetailItem label="Mobile Number" value={customer.mobile || customer.phone} />
+                  
+                  <DetailItem label="Email Address" value={displayEmail} />
+                  <DetailItem label="Mobile Number" value={displayMobile} />
+                  <DetailItem label="Alternate Email" value={displayAltEmail} />
+                  <DetailItem label="Alternate Mobile" value={displayAltMobile} />
                   <DetailItem
                     label="Industry Type"
                     value={
@@ -464,11 +478,11 @@ const ViewCustomerModal: React.FC<ViewCustomerModalProps> = ({
                     value={resolvedDirectorName}
                   />
                   <DetailItem
-                    label="BDE User"
+                    label="Sales User"
                     value={resolvedBdeUserName}
                   />
                   <DetailItem
-                    label="Sales Person"
+                    label="Sales Co-ordinator"
                     value={resolvedSalesPersonName}
                   />
                   <DetailItem
@@ -496,17 +510,35 @@ const ViewCustomerModal: React.FC<ViewCustomerModalProps> = ({
                       <div
                         key={addr.addressId || idx}
                         className={`p-4 rounded-xl border transition-all ${addr.isPrimary
-                          ? "border-blue-300 bg-blue-50/30 ring-1 ring-blue-300/50"
+                          ? "border-[#FF7900] bg-orange-50/20 ring-1 ring-orange-200"
                           : "border-gray-200 bg-white"
                           }`}
                       >
-                        <div className="flex justify-between items-start mb-2">
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-xs uppercase text-gray-700 bg-gray-100 px-2 py-0.5 rounded">
-                              {addr.addressType || "Billing"}
+                        <div className="flex justify-between items-start mb-2 gap-2 flex-wrap">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-bold text-xs text-[#FF7900] bg-orange-50 border border-orange-200 px-2 py-0.5 rounded">
+                              {addr.locationName || addr.addressType || "Address"}
                             </span>
+                            {addr.plantCode && (
+                              <span className="text-[10px] font-semibold text-gray-700 bg-gray-100 border border-gray-200 px-2 py-0.5 rounded">
+                                Plant Code: <strong>{addr.plantCode}</strong>
+                              </span>
+                            )}
+                            <span className="text-[10px] font-medium text-gray-600 bg-gray-50 border border-gray-200 px-1.5 py-0.5 rounded">
+                              {addr.addressType || "Plant / Factory"}
+                            </span>
+                            {addr.isBilling && (
+                              <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded">
+                                Bill To
+                              </span>
+                            )}
+                            {(addr.isDelivery || addr.isShipping) && (
+                              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
+                                Ship To
+                              </span>
+                            )}
                             {addr.isPrimary && (
-                              <span className="text-[10px] font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded">
+                              <span className="text-[10px] font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded">
                                 Primary
                               </span>
                             )}
