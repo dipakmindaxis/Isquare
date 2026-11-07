@@ -1,3 +1,4 @@
+import { SearchableSelect } from "../../../../../Components/Common/SearchableSelect";
 import React, { useState, useEffect } from "react";
 import { X, Loader2, CheckSquare } from "lucide-react";
 import { toast } from "sonner";
@@ -17,10 +18,7 @@ import {
   getAllEmployees,
   type Employee,
 } from "../../../../HRMS/Pages/Employee/Services/EmployeeSerivce";
-import {
-  getDirectorEmployees,
-  getAllBdeUsers,
-} from "../../Master/BdeUsers/Services/BdeUserService";
+import { getDirectors as getDirectorEmployees, getBdeUsers as getAllBdeUsers } from "../../Customer/Services/CustomerMasterDataService";
 import type { TaskCreatePayload, TaskStatusItem } from "../Types/TaskTypes";
 
 interface AddTaskModalProps {
@@ -110,6 +108,9 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
           setCustomers(custList);
           setPriorities(prioList);
           setStatuses(statusList);
+          if (prioList && prioList.length > 0) {
+            setPriorityId((prev) => (prioList.some((p) => Number(p.id) === prev) ? prev : Number(prioList[0].id)));
+          }
 
           // 1. Build Assignor List (Director & BDE User ONLY)
           const assignorMap = new Map<string, EmployeeAssignee>();
@@ -131,12 +132,14 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
             }
           });
 
-          dirEmpList.forEach((dir) => {
-            const key = dir.name.toLowerCase();
-            if (!assignorMap.has(key)) {
+          dirEmpList.forEach((dir: any) => {
+            const dirName = dir.name || dir.directorName || "";
+            const dirId = Number(dir.id || dir.directorId || 0);
+            const key = dirName.toLowerCase();
+            if (dirId > 0 && key && !assignorMap.has(key)) {
               assignorMap.set(key, {
-                id: dir.id,
-                name: dir.name,
+                id: dirId,
+                name: dirName,
                 designation: "Director",
               });
             }
@@ -375,24 +378,16 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
               <label className={labelStyle}>
                 Assigned By <RequiredAst />
               </label>
-              <select
+              <SearchableSelect
                 value={assignedBy}
-                onChange={(e) => setAssignedBy(e.target.value)}
-                className={`${baseInputStyle} ${
-                  isSubmitted && !assignedBy ? "border-red-500" : ""
-                }`}
-                required
-              >
-                <option value="">Select Assignor (Director / BDE User)...</option>
-                {assignors.map((opt) => {
-                  const val = `${opt.name} (${opt.designation})`;
-                  return (
-                    <option key={`by-${opt.id}-${opt.name}`} value={val}>
-                      {val}
-                    </option>
-                  );
-                })}
-              </select>
+                onChange={(val) => setAssignedBy(String(val))}
+                options={assignors.map((opt) => ({
+                  value: `${opt.name} (${opt.designation})`,
+                  label: `${opt.name} (${opt.designation})`,
+                }))}
+                placeholder="Select Assignor (Director / BDE User)..."
+                hasError={Boolean(isSubmitted && !assignedBy)}
+              />
             </div>
 
             {/* Assigned To (Employees Below Director & BDE) */}
@@ -400,45 +395,30 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
               <label className={labelStyle}>
                 Assigned To <RequiredAst />
               </label>
-              <select
+              <SearchableSelect
                 value={assignedTo}
-                onChange={(e) => setAssignedTo(e.target.value)}
-                className={`${baseInputStyle} ${
-                  isSubmitted && !assignedTo ? "border-red-500" : ""
-                }`}
-                required
-              >
-                <option value="">Select Assignee (Team / Staff)...</option>
-                {assignees.map((opt) => {
-                  const val = `${opt.name} (${opt.designation})`;
-                  return (
-                    <option key={`to-${opt.id}-${opt.name}`} value={val}>
-                      {val}
-                    </option>
-                  );
-                })}
-              </select>
+                onChange={(val) => setAssignedTo(String(val))}
+                options={assignees.map((opt) => ({
+                  value: `${opt.name} (${opt.designation})`,
+                  label: `${opt.name} (${opt.designation})`,
+                }))}
+                placeholder="Select Assignee (Team / Staff)..."
+                hasError={Boolean(isSubmitted && !assignedTo)}
+              />
             </div>
 
             {/* Related Customer */}
             <div>
               <label className={labelStyle}>Customer / Company Account</label>
-              <select
+              <SearchableSelect
                 value={companyId}
-                onChange={(e) => setCompanyId(e.target.value)}
-                className={baseInputStyle}
-              >
-                <option value="">Select Customer (Optional)...</option>
-                {customers.map((c: any) => {
-                  const id = c.customerId || c.id;
-                  const name = c.companyName || c.customerName;
-                  return (
-                    <option key={id} value={id}>
-                      {name}
-                    </option>
-                  );
-                })}
-              </select>
+                onChange={(val) => setCompanyId(val)}
+                options={customers.map((c: any) => ({
+                  value: c.customerId || c.id,
+                  label: c.companyName || c.customerName,
+                }))}
+                placeholder="Select Customer (Optional)..."
+              />
             </div>
 
             {/* Due Date */}
@@ -473,36 +453,31 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
               <label className={labelStyle}>
                 Priority <RequiredAst />
               </label>
-              <select
+              <SearchableSelect
                 value={priorityId}
-                onChange={(e) => setPriorityId(Number(e.target.value))}
-                className={baseInputStyle}
-              >
-                {priorities.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} Priority
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setPriorityId(Number(val))}
+                options={priorities.map((p) => ({
+                  value: p.id,
+                  label: p.name,
+                }))}
+                placeholder="Select Priority..."
+                isClearable={false}
+              />
             </div>
 
             {/* Status */}
             <div>
               <label className={labelStyle}>Status</label>
-              <select
+              <SearchableSelect
                 value={taskStatusId}
-                onChange={(e) => setTaskStatusId(Number(e.target.value))}
-                className={baseInputStyle}
-              >
-                {statuses.map((s) => (
-                  <option
-                    key={s.taskStatusId || s.id}
-                    value={s.taskStatusId || s.id}
-                  >
-                    {s.statusName}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setTaskStatusId(Number(val))}
+                options={statuses.map((s) => ({
+                  value: Number(s.taskStatusId || s.id || 0),
+                  label: s.statusName,
+                }))}
+                placeholder="Select Status..."
+                isClearable={false}
+              />
             </div>
 
             {/* Task Details / Instructions */}

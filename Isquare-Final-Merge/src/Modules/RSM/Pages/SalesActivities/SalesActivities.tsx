@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useLocation } from "react-router-dom";
 import {
   Layers,
   CheckSquare,
   RefreshCw,
   CheckCircle2,
-  UserCheck,
-  PieChart,
+    PieChart,
   Flag,
   Paperclip,
 } from "lucide-react";
@@ -38,7 +37,6 @@ import { FollowUpsMaster } from "../Sales/FollowUps/FollowUpsMaster";
 import { TasksMaster } from "./Components/TasksMaster";
 import { exportToExcel } from "../../../../Utils/exportToExcel";
 import ActivityTypeMaster from "../Master/ActivityType/ActivityTypeMaster";
-import BdeUsers from "../Master/BdeUsers/Pages/BdeUsers";
 import CustomerStatus from "../Master/CustomerStatus/CustomerStatus";
 import PriorityMaster from "../Master/Priority/PriorityMaster";
 import DocumentTypeMaster from "../Master/DocumentType/DocumentTypeMaster";
@@ -49,7 +47,6 @@ export type SalesActivityMasterTab =
   | "tasks"
   | "activity-types"
   | "customer-status"
-  | "bde-users"
   | "priority"
   | "document-types";
 
@@ -68,7 +65,6 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
       "tasks",
       "activity-types",
       "customer-status",
-      "bde-users",
       "priority",
       "document-types",
     ],
@@ -112,14 +108,6 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
         lower === "status"
       )
         return "customer-status";
-      if (
-        lower === "bde-users" ||
-        lower === "bde-user" ||
-        lower === "bde" ||
-        lower === "sales-rep" ||
-        lower === "assigned-sales-rep"
-      )
-        return "bde-users";
       if (lower === "priority" || lower === "priorities")
         return "priority";
       if (
@@ -135,8 +123,12 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
     []
   );
 
+  const location = useLocation();
+
   const [mainView, setMainView] = useState<SalesActivityMasterTab>(() => {
     if (urlTab) return resolveTab(urlTab);
+    if (location.pathname.includes("task-assignment")) return "tasks";
+    if (location.pathname.includes("sales-activities")) return "all";
     if (defaultTab && validTabs.includes(defaultTab)) return defaultTab;
     return "all";
   });
@@ -144,8 +136,14 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
   useEffect(() => {
     if (urlTab) {
       setMainView(resolveTab(urlTab));
+    } else if (location.pathname.includes("task-assignment")) {
+      setMainView("tasks");
+    } else if (location.pathname.includes("sales-activities")) {
+      setMainView("all");
+    } else if (defaultTab && validTabs.includes(defaultTab)) {
+      setMainView(defaultTab);
     }
-  }, [urlTab, resolveTab]);
+  }, [urlTab, location.pathname, defaultTab, resolveTab, validTabs]);
 
   const handleSwitchMainView = (tab: SalesActivityMasterTab) => {
     setMainView(tab);
@@ -342,11 +340,6 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
       icon: <PieChart size={16} />,
     },
     {
-      id: "bde-users" as const,
-      label: "Assigned Sales Rep / BDE User",
-      icon: <UserCheck size={16} />,
-    },
-    {
       id: "priority" as const,
       label: "Priority Master",
       icon: <Flag size={16} />,
@@ -377,7 +370,7 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
                 </span>
               </div>
               <p className="text-gray-500 mt-1 text-xs md:text-sm">
-                Unified master management for sales activities, follow-ups, tasks, activity types, customer statuses, BDE users, priorities, and document types.
+                Unified master management for sales activities, follow-ups, tasks, activity types, customer statuses, priorities, and document types.
               </p>
             </div>
           </div>
@@ -583,8 +576,7 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
       )}
       {mainView === "activity-types" && <ActivityTypeMaster isTab={true} />}
       {mainView === "customer-status" && <CustomerStatus isTab={true} />}
-      {mainView === "bde-users" && <BdeUsers isTab={true} />}
-      {mainView === "priority" && <PriorityMaster isTab={true} />}
+            {mainView === "priority" && <PriorityMaster isTab={true} />}
       {mainView === "document-types" && <DocumentTypeMaster isTab={true} />}
     </div>
   );

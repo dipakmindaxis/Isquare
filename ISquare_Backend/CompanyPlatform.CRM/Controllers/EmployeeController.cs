@@ -37,10 +37,10 @@ namespace CompanyPlatform.CRM.Controllers
 
         // GET: api/employee
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] string? role = null, [FromQuery] string? designation = null, [FromQuery] int? designationId = null)
+        public async Task<IActionResult> GetAll([FromQuery] string? role = null, [FromQuery] string? designation = null, [FromQuery] int? designationId = null, [FromQuery] int? reportingTo = null)
         {
             _logger.LogInformation("Fetching all Employee records.");
-            var employees = await _employeeService.GetAllAsync(designationId, role);
+            var employees = await _employeeService.GetAllAsync(designationId, role, reportingTo);
             if (!string.IsNullOrWhiteSpace(designation))
             {
                 employees = employees.Where(e => e.DesignationName != null && e.DesignationName.Contains(designation, StringComparison.OrdinalIgnoreCase));
@@ -50,10 +50,10 @@ namespace CompanyPlatform.CRM.Controllers
 
         // GET: api/employee/active
         [HttpGet("active")]
-        public async Task<IActionResult> GetActive([FromQuery] string? role = null, [FromQuery] string? designation = null, [FromQuery] int? designationId = null)
+        public async Task<IActionResult> GetActive([FromQuery] string? role = null, [FromQuery] string? designation = null, [FromQuery] int? designationId = null, [FromQuery] int? reportingTo = null)
         {
             _logger.LogInformation("Fetching active Employee records for dropdown/selection.");
-            var employees = await _employeeService.GetActiveAsync(designationId, role);
+            var employees = await _employeeService.GetActiveAsync(designationId, role, reportingTo);
             if (!string.IsNullOrWhiteSpace(designation))
             {
                 employees = employees.Where(e => e.DesignationName != null && e.DesignationName.Contains(designation, StringComparison.OrdinalIgnoreCase));

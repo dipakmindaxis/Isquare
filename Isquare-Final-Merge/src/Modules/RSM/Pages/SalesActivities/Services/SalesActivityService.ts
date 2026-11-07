@@ -9,11 +9,8 @@ import type {
   SalesActivityUpdatePayload,
 } from "../Types/SalesActivityTypes";
 import { getAllCustomers } from "../../Customer/Services/CustomerService";
-import {
-  getAllBdeUsers,
-  getDirectorEmployees,
-  type BdeUser,
-} from "../../Master/BdeUsers/Services/BdeUserService";
+import { getBdeUsers as getAllBdeUsers, getDirectors as getDirectorEmployees } from "../../Customer/Services/CustomerMasterDataService";
+type BdeUser = any;
 import { getAllDocumentTypes } from "../../Master/DocumentType/Services/DocumentTypeService";
 import { getAllCallTypes } from "../../Master/CallType/Services/CallTypeService";
 import {
@@ -967,7 +964,7 @@ export const getRoleBasedAssignees = async (
       const seen = new Set<string>();
       const list: AssigneeOption[] = [];
 
-      directorEmployees.forEach((d) => {
+      directorEmployees.forEach((d: any) => {
         if (d && d.id && !seen.has(String(d.id))) {
           seen.add(String(d.id));
           list.push({
@@ -1004,8 +1001,8 @@ export const getRoleBasedAssignees = async (
     try {
       const bdes = await getAllBdeUsers();
       return bdes
-        .filter((b) => b.isActive !== false)
-        .map((b) => ({
+        .filter((b: any) => b.isActive !== false)
+        .map((b: any) => ({
           id: String(b.id),
           name: b.value || b.code || `BDE User #${b.id}`,
           role: "BDE",
@@ -1041,7 +1038,7 @@ export const getRoleBasedAssignees = async (
       }
     });
 
-    bdes.forEach((b) => {
+    bdes.forEach((b: any) => {
       if (b && b.id && !seen.has(`bde-${b.id}`)) {
         seen.add(`bde-${b.id}`);
         list.push({

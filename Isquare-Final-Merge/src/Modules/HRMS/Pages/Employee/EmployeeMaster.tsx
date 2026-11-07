@@ -224,7 +224,7 @@ const EmployeeMaster: React.FC = () => {
     { name: "Sr. No.", cell: (_row, index) => (index ?? 0) + 1, width: "60px" },
     {
       name: "Company Name",
-      selector: (row) => row.companyName || "-",
+      selector: (row) => row.companyName || (row as any).CompanyName || "I-Square Safety Equipments Pvt. Ltd.",
       grow: 2,
       wrap: true,
     },
@@ -247,11 +247,11 @@ const EmployeeMaster: React.FC = () => {
     },
     {
       name: "PAN No.",
-      selector: (row) => row.panNumber || "-",
+      selector: (row) => row.panNumber || (row as any).PANNumber || (row as any).panNo || "-",
     },
     {
       name: "Aadhar No.",
-      selector: (row) => row.aadhaarNumber || "-",
+      selector: (row) => row.aadhaarNumber || (row as any).AadhaarNumber || (row as any).aadharNumber || "-",
     },
 
     {

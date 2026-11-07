@@ -92,18 +92,37 @@ namespace CompanyPlatform.CRM.Controllers
 
         // POST: api/product/import
         [HttpPost("import")]
-        public async Task<IActionResult> ImportExcel(IFormFile? file)
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> ImportExcel([FromForm] ProductImportRequestDto dto)
         {
-            if (file == null || file.Length == 0)
+            var targetExcel = dto?.ExcelFile ?? dto?.File;
+            if (targetExcel == null || targetExcel.Length == 0)
                 return BadRequest(new { Message = "Please select a valid Excel file (.xlsx or .xls)." });
 
-            var extension = Path.GetExtension(file.FileName).ToLower();
-            if (extension != ".xlsx" && extension != ".xls")
+            var excelExt = Path.GetExtension(targetExcel.FileName).ToLowerInvariant();
+            if (excelExt != ".xlsx" && excelExt != ".xls")
                 return BadRequest(new { Message = "Invalid file type. Only Excel files (.xlsx, .xls) are allowed." });
 
-            using var stream = file.OpenReadStream();
-            var result = await _productService.ImportProductsFromExcelAsync(stream);
-            return Ok(result);
+            Stream? zipStream = null;
+            if (dto?.ZipFile != null && dto.ZipFile.Length > 0)
+            {
+                var zipExt = Path.GetExtension(dto.ZipFile.FileName).ToLowerInvariant();
+                if (zipExt != ".zip")
+                    return BadRequest(new { Message = "Invalid file type for images. Only .zip files are allowed." });
+
+                zipStream = dto.ZipFile.OpenReadStream();
+            }
+
+            try
+            {
+                using var excelStream = targetExcel.OpenReadStream();
+                var result = await _productService.ImportProductsFromExcelAsync(excelStream, zipStream);
+                return Ok(result);
+            }
+            finally
+            {
+                zipStream?.Dispose();
+            }
         }
 
         // POST: api/product/bulk-import

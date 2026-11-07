@@ -11,16 +11,68 @@ import type {
 
 export type { Customer, CustomerAddress, CustomerCreatePayload, CustomerUpdatePayload, AddressValidationResult };
 
-type CustomerApiRecord = Customer & {
+export interface CustomerApiRecord extends Customer {
+  DirectorId?: number;
+  DirectorName?: string;
   BDEUserId?: number | null;
   BDEUserName?: string | null;
+  SalesCoordinatorId?: number;
+  SalesCoordinatorName?: string;
+  CustomerOwnerId?: number;
+  CustomerOwnerName?: string;
+  CustomerOwnerType?: string | null;
+  CustomerOwnerValue?: string | null;
+  OwnerName?: string | null;
+}
+
+const normalizeCustomer = (customer: CustomerApiRecord): Customer => {
+  const directorId = customer.directorId || customer.DirectorId;
+  const directorName = customer.directorName || customer.DirectorName;
+  const bdeUserId = customer.bdeUserId || customer.BDEUserId;
+  const bdeUserName = customer.bdeUserName || customer.BDEUserName;
+  const salesCoordinatorId = customer.salesCoordinatorId || customer.SalesCoordinatorId;
+  const salesCoordinatorName = customer.salesCoordinatorName || customer.SalesCoordinatorName;
+  const customerOwnerId = customer.customerOwnerId || customer.CustomerOwnerId;
+  const customerOwnerName = customer.customerOwnerName || customer.CustomerOwnerName || customer.OwnerName;
+  const customerOwnerType = customer.customerOwnerType || customer.CustomerOwnerType;
+  const customerOwnerValue = customer.customerOwnerValue || customer.CustomerOwnerValue;
+
+  return {
+    ...customer,
+    ...(directorId ? { directorId: Number(directorId) } : {}),
+    ...(directorName ? { directorName: String(directorName) } : {}),
+    ...(bdeUserId ? { bdeUserId: Number(bdeUserId) } : {}),
+    ...(bdeUserName ? { bdeUserName: String(bdeUserName) } : {}),
+    ...(salesCoordinatorId ? { salesCoordinatorId: Number(salesCoordinatorId) } : {}),
+    ...(salesCoordinatorName ? { salesCoordinatorName: String(salesCoordinatorName) } : {}),
+    ...(customerOwnerId ? { customerOwnerId: Number(customerOwnerId) } : {}),
+    ...(customerOwnerName ? { customerOwnerName: String(customerOwnerName) } : {}),
+    ...(customerOwnerType ? { customerOwnerType: String(customerOwnerType) } : {}),
+    ...(customerOwnerValue ? { customerOwnerValue: String(customerOwnerValue) } : {}),
+  };
 };
 
-const normalizeCustomer = (customer: CustomerApiRecord): Customer => ({
-  ...customer,
-  bdeUserId: customer.bdeUserId ?? customer.BDEUserId ?? undefined,
-  bdeUserName: customer.bdeUserName ?? customer.BDEUserName ?? undefined,
-});
+const extractErrorMessage = (error: unknown, defaultMsg: string): string => {
+  if (axios.isAxiosError(error)) {
+    const data = error.response?.data;
+    if (typeof data === "string" && data.trim()) return data;
+    if (data?.Message) return data.Message;
+    if (data?.message) return data.message;
+    if (data?.title) return data.title;
+    if (data?.Title) return data.Title;
+    if (data?.errors && typeof data.errors === "object") {
+      const msgs = Object.entries(data.errors)
+        .map(([key, errs]) => `${key}: ${Array.isArray(errs) ? errs.join(", ") : errs}`)
+        .join(" | ");
+      if (msgs) return msgs;
+    }
+    if (data?.error) return data.error;
+    if (error.response?.statusText) return `${error.response.statusText} (${error.response.status})`;
+    if (error.message) return error.message;
+  }
+  if (error instanceof Error && error.message) return error.message;
+  return defaultMsg;
+};
 
 export const getAllCustomers = async (): Promise<Customer[]> => {
   try {
@@ -81,7 +133,7 @@ export const createCustomer = async (
         data: error.response?.data,
       });
     }
-    throw error;
+    throw new Error(extractErrorMessage(error, "Failed to create customer."));
   }
 };
 
@@ -89,11 +141,31 @@ export const updateCustomer = async (
   id: number,
   payload: CustomerUpdatePayload
 ): Promise<void> => {
-  await apiClient.put(`${API_ENDPOINTS.Customer}/${id}`, payload);
+  try {
+    await apiClient.put(`${API_ENDPOINTS.Customer}/${id}`, payload);
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error("Customer PUT error response:", {
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+    }
+    throw new Error(extractErrorMessage(error, "Failed to update customer."));
+  }
 };
 
 export const deleteCustomer = async (id: number): Promise<void> => {
-  await apiClient.delete(`${API_ENDPOINTS.Customer}/${id}`);
+  try {
+    await apiClient.delete(`${API_ENDPOINTS.Customer}/${id}`);
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error("Customer DELETE error response:", {
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+    }
+    throw new Error(extractErrorMessage(error, "Failed to delete customer."));
+  }
 };
 
 export const getCustomerAddresses = async (

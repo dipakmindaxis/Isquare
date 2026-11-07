@@ -715,7 +715,18 @@ export function getProductImageCache(path?: string | null): string | null {
     const raw = localStorage.getItem(PRODUCT_IMAGE_STORAGE_KEY);
     if (raw) {
       const map = JSON.parse(raw);
-      return map[trimmed] || map[trimmed.toLowerCase()] || null;
+      const cleanBase = trimmed.replace(/^.*[\\\/]/, "").replace(/\.[^/.]+$/, "");
+      return (
+        map[trimmed] ||
+        map[trimmed.toLowerCase()] ||
+        map[cleanBase] ||
+        map[cleanBase.toLowerCase()] ||
+        map[trimmed.replace(/\s+/g, "-")] ||
+        map[trimmed.replace(/\s+/g, "-").toLowerCase()] ||
+        map[trimmed.replace(/-/g, " ")] ||
+        map[trimmed.replace(/-/g, " ").toLowerCase()] ||
+        null
+      );
     }
   } catch (e) {
     console.warn("Failed to get product image from cache", e);
@@ -746,8 +757,17 @@ export function resolveImageUrl(path?: string | null): string | null {
     return trimmed;
   }
 
+  // Windows local drive paths (e.g. D:\... or C:\...) cannot be loaded as browser image URLs
+  if (/^[a-zA-Z]:[\\\/]/.test(trimmed)) {
+    return null;
+  }
+
   // 2. Check local product image cache (saved on file upload in Product Master)
   const cached = getProductImageCache(trimmed);
+  if (cached) return cached;
+  const withPrefix = trimmed.startsWith("/") ? `/images/products${trimmed}` : `/images/products/${trimmed}`;
+  const cachedWithPrefix = getProductImageCache(withPrefix);
+  if (cachedWithPrefix) return cachedWithPrefix;
   if (cached) {
     return cached;
   }
@@ -949,6 +969,8 @@ export function mapProductFromApi(raw: any): Product {
   const isActive = raw.isActive ?? raw.IsActive ?? true;
   const isDeleted = raw.isDeleted ?? raw.IsDeleted ?? false;
   const productImage =
+    raw.productImageUrl ??
+    raw.ProductImageUrl ??
     raw.productImage ??
     raw.ProductImage ??
     raw.productImagePath ??
@@ -1051,6 +1073,7 @@ export function mapProductFromApi(raw: any): Product {
     isActive: Boolean(isActive),
     isDeleted: Boolean(isDeleted),
     productImage: productImage || null,
+    productImageUrl: resolved || productImage || null,
     productImagePath: productImage || null,
     imageUrl: resolved || productImage || null,
   };

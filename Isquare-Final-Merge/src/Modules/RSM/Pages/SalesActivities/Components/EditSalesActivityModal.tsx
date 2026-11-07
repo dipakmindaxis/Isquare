@@ -1,3 +1,4 @@
+import { SearchableSelect } from "../../../../../Components/Common/SearchableSelect";
 import React, { useState, useEffect, useRef } from "react";
 import {
   X,
@@ -845,27 +846,22 @@ export const EditSalesActivityModal: React.FC<EditSalesActivityModalProps> = ({
                   <label className={labelStyle}>
                     Company Name <RequiredAst />
                   </label>
-                  <select
+                  <SearchableSelect
                     value={customerId}
-                    onChange={(e) => handleCustomerChange(e.target.value)}
-                    className={`${baseInputStyle} ${
-                      isSubmitted && !customerId ? "border-red-500" : ""
-                    }`}
-                    required
-                  >
-                    <option value="">Select Company / Customer Account...</option>
-                    {customers.map((c) => {
+                    onChange={(val) => handleCustomerChange(String(val))}
+                    options={customers.map((c) => {
                       const displayTitle =
                         c.companyName && c.companyName !== c.name
                           ? `${c.companyName} (${c.name})`
                           : c.name || c.companyName;
-                      return (
-                        <option key={c.id} value={c.id}>
-                          {displayTitle}
-                        </option>
-                      );
+                      return {
+                        value: c.id,
+                        label: displayTitle || c.name || "Customer",
+                      };
                     })}
-                  </select>
+                    placeholder="Select Company / Customer Account..."
+                    hasError={Boolean(isSubmitted && !customerId)}
+                  />
                 </div>
 
                 {/* Assigned Sales Rep / Director - Role Based Visibility */}
@@ -878,40 +874,21 @@ export const EditSalesActivityModal: React.FC<EditSalesActivityModalProps> = ({
                         ? "Assigned BDE User"
                         : "Assigned Sales Rep"} <RequiredAst />
                     </label>
-                    <select
+                    <SearchableSelect
                       value={assignedEmployeeId}
-                      onChange={(e) => handleEmployeeChange(e.target.value)}
-                      disabled={!customerId}
-                      className={`${baseInputStyle} ${
-                        isSubmitted && !assignedEmployeeId ? "border-red-500" : ""
-                      }`}
-                      required
-                    >
-                      <option value="">
-                        {!customerId ? "Select a company first..." : "Select Sales Representative..."}
-
-
-
-
-                      </option>
-                      {companySalesReps.length > 0
-                        ? companySalesReps.map((e) => (
-                            <option key={e.id} value={e.id}>
-                              {e.name}
-                            </option>
-                          ))
-                        : roleAssignees.map((e) => (
-                        <option key={e.id} value={e.id}>
-                          {cleanName(e.name)} {e.role ? `(${e.role})` : ""}
-                        </option>
-                      ))}
-                      {false && roleAssignees.length === 0 &&
-                        employees.map((e) => (
-                          <option key={e.id} value={e.id}>
-                            {e.name}
-                          </option>
-                        ))}
-                    </select>
+                      onChange={(val) => handleEmployeeChange(String(val))}
+                      isDisabled={!customerId}
+                      options={
+                        companySalesReps.length > 0
+                          ? companySalesReps.map((e) => ({ value: e.id, label: e.name }))
+                          : roleAssignees.map((e) => ({
+                              value: e.id,
+                              label: `${cleanName(e.name)}${e.role ? ` (${e.role})` : ""}`,
+                            }))
+                      }
+                      placeholder={!customerId ? "Select a company first..." : "Select Sales Representative..."}
+                      hasError={Boolean(isSubmitted && !assignedEmployeeId)}
+                    />
                   </div>
                 ) : (
                   <div className="relative">
@@ -947,36 +924,24 @@ export const EditSalesActivityModal: React.FC<EditSalesActivityModalProps> = ({
                     </button>
                   </div>
                   <div className="relative">
-                    <select
+                    <SearchableSelect
                       value={contactPerson}
-                      onChange={(e) => handleContactPersonChange(e.target.value)}
-                      className={baseInputStyle}
-                      disabled={isLoadingContacts || !customerId}
-                    >
-                      <option value="">
-                        {!customerId
+                      onChange={(val) => handleContactPersonChange(String(val))}
+                      isDisabled={isLoadingContacts || !customerId}
+                      options={companyContacts.map((c) => ({
+                        value: c.fullName,
+                        label: `${c.fullName}${c.designation ? ` (${c.designation})` : ""}`,
+                      }))}
+                      placeholder={
+                        !customerId
                           ? "Select a company first..."
                           : isLoadingContacts
                           ? "Loading contact persons..."
                           : companyContacts.length === 0
                           ? "No contacts found - click + Add Contact"
-                          : "Select Contact Person..."}
-                      </option>
-                      {companyContacts.map((c) => (
-                        <option key={c.contactId || c.fullName} value={c.fullName}>
-                          {c.fullName} {c.designation ? `(${c.designation})` : ""}
-                        </option>
-                      ))}
-                      {contactPerson &&
-                        !companyContacts.some((c) => c.fullName === contactPerson) && (
-                          <option value={contactPerson}>{contactPerson}</option>
-                        )}
-                      {customerId && (
-                        <option value="__add_new__" className="font-semibold text-[#FF7900]">
-                          + Add New Contact...
-                        </option>
-                      )}
-                    </select>
+                          : "Select Contact Person..."
+                      }
+                    />
                   </div>
                 </div>
 
@@ -1015,42 +980,27 @@ export const EditSalesActivityModal: React.FC<EditSalesActivityModalProps> = ({
                   <label className={labelStyle}>
                     Activity Type <RequiredAst />
                   </label>
-                  <select
+                  <SearchableSelect
                     value={activityType}
-                    onChange={(e) => {
-                      const newType = e.target.value as ActivityType;
+                    onChange={(val) => {
+                      const newType = String(val) as ActivityType;
                       setActivityType(newType);
                       const matchedAct = masterActivityTypes.find(
                         (a) => a.activityName === newType
                       );
                       if (matchedAct) {
-                        if (matchedAct.activitySubType) {
-                          setSubType(matchedAct.activitySubType);
-                        }
-                        if (matchedAct.subjectPurpose) {
-                          setSubject(matchedAct.subjectPurpose);
-                        }
-                        if (matchedAct.discussionNotesMOM) {
-                          setDiscussionNotes(matchedAct.discussionNotesMOM);
-                        }
+                        if (matchedAct.activitySubType) setSubType(matchedAct.activitySubType);
+                        if (matchedAct.subjectPurpose) setSubject(matchedAct.subjectPurpose);
+                        if (matchedAct.discussionNotesMOM) setDiscussionNotes(matchedAct.discussionNotesMOM);
                       }
                     }}
-                    className={`${baseInputStyle} ${
-                      isSubmitted && !activityType ? "border-red-500" : ""
-                    }`}
-                    required
-                  >
-                    <option value="">Select Activity Type...</option>
-                    {masterActivityTypes.map((act) => (
-                      <option key={act.id} value={act.activityName}>
-                        {act.activityName}
-                      </option>
-                    ))}
-                    {activityType &&
-                      !masterActivityTypes.some(
-                        (a) => a.activityName === activityType
-                      ) && <option value={activityType}>{activityType}</option>}
-                  </select>
+                    options={masterActivityTypes.map((act) => ({
+                      value: act.activityName,
+                      label: act.activityName,
+                    }))}
+                    placeholder="Select Activity Type..."
+                    hasError={Boolean(isSubmitted && !activityType)}
+                  />
                 </div>
 
                 {/* Status */}
@@ -1058,10 +1008,10 @@ export const EditSalesActivityModal: React.FC<EditSalesActivityModalProps> = ({
                   <label className={labelStyle}>
                     Status <RequiredAst />
                   </label>
-                  <select
+                  <SearchableSelect
                     value={status}
-                    onChange={(e) => {
-                      const newStatus = e.target.value;
+                    onChange={(val) => {
+                      const newStatus = String(val);
                       setStatus(newStatus as ActivityStatus);
                       const matched = customerStatuses.find(
                         (cs) => cs.statusName.toLowerCase() === newStatus.toLowerCase()
@@ -1070,22 +1020,13 @@ export const EditSalesActivityModal: React.FC<EditSalesActivityModalProps> = ({
                         setStatusDescription(matched.description);
                       }
                     }}
-                    className={`${baseInputStyle} ${
-                      isSubmitted && !status ? "border-red-500" : ""
-                    }`}
-                    required
-                  >
-                    <option value="">Select Status...</option>
-                    {customerStatuses.map((cs) => (
-                      <option key={cs.customerStatusId} value={cs.statusName}>
-                        {cs.statusName}
-                      </option>
-                    ))}
-                    {status &&
-                      !customerStatuses.some(
-                        (cs) => cs.statusName.toLowerCase() === status.toLowerCase()
-                      ) && <option value={status}>{status}</option>}
-                  </select>
+                    options={customerStatuses.map((cs) => ({
+                      value: cs.statusName,
+                      label: cs.statusName,
+                    }))}
+                    placeholder="Select Status..."
+                    hasError={Boolean(isSubmitted && !status)}
+                  />
                 </div>
 
                 {/* Activity Date */}
@@ -1201,18 +1142,15 @@ export const EditSalesActivityModal: React.FC<EditSalesActivityModalProps> = ({
                     <label className={labelStyle}>
                       Document Type
                     </label>
-                    <select
+                    <SearchableSelect
                       value={documentType}
-                      onChange={(e) => setDocumentType(e.target.value)}
-                      className={baseInputStyle}
-                    >
-                      <option value="">Select Document Type...</option>
-                      {docTypes.map((d) => (
-                        <option key={d.id} value={d.value}>
-                          {d.label || d.value}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(val) => setDocumentType(String(val))}
+                      options={docTypes.map((d) => ({
+                        value: d.value,
+                        label: d.label || d.value,
+                      }))}
+                      placeholder="Select Document Type..."
+                    />
                   </div>
 
                   {/* Docs Attachments Browse */}
@@ -1250,22 +1188,15 @@ export const EditSalesActivityModal: React.FC<EditSalesActivityModalProps> = ({
                   {/* Master Linked Enquiry ID */}
                   <div className="relative">
                     <label className={labelStyle}>Enquiry ID</label>
-                    <select
+                    <SearchableSelect
                       value={enquiryRef}
-                      onChange={(e) => setEnquiryRef(e.target.value)}
-                      className={baseInputStyle}
-                    >
-                      <option value="">Select Enquiry ID...</option>
-                      {relatedOptions.map((opt) => (
-                        <option key={opt.code} value={opt.code}>
-                          {opt.title || opt.code}
-                        </option>
-                      ))}
-                      {enquiryRef &&
-                        !relatedOptions.some((opt) => opt.code === enquiryRef) && (
-                          <option value={enquiryRef}>{enquiryRef}</option>
-                        )}
-                    </select>
+                      onChange={(val) => setEnquiryRef(String(val))}
+                      options={relatedOptions.map((opt) => ({
+                        value: opt.code,
+                        label: opt.title || opt.code,
+                      }))}
+                      placeholder="Select Enquiry ID..."
+                    />
                   </div>
 
                   {/* Supported File Formats */}
@@ -1368,10 +1299,10 @@ export const EditSalesActivityModal: React.FC<EditSalesActivityModalProps> = ({
                 {/* Priority Level with Urgent, High, Medium, Low */}
                 <div className="relative">
                   <label className={labelStyle}>Priority Level</label>
-                  <select
+                  <SearchableSelect
                     value={priority}
-                    onChange={(e) => {
-                      const selVal = e.target.value;
+                    onChange={(val) => {
+                      const selVal = String(val);
                       setPriority(selVal);
                       const matched = priorityOptions.find(
                         (p) => p.name.toLowerCase() === selVal.toLowerCase()
@@ -1381,43 +1312,33 @@ export const EditSalesActivityModal: React.FC<EditSalesActivityModalProps> = ({
                         setReminderPriorityId(matched.id);
                       }
                     }}
-                    className={baseInputStyle}
-                  >
-                    <option value="">Select Priority Level</option>
-                    {priorityOptions.map((prio) => (
-                      <option key={prio.id} value={prio.name}>
-                        {prio.name}
-                      </option>
-                    ))}
-                  </select>
+                    options={priorityOptions.map((prio) => ({
+                      value: prio.name,
+                      label: prio.name,
+                    }))}
+                    placeholder="Select Priority Level..."
+                  />
                 </div>
 
                 {/* Follow-Up Status */}
                 <div className="relative">
                   <label className={labelStyle}>Follow-Up Status</label>
-                  <select
+                  <SearchableSelect
                     value={followUpStatusId}
-                    onChange={(e) => {
-                      const selId = e.target.value;
+                    onChange={(val) => {
+                      const selId = String(val);
                       setFollowUpStatusId(selId);
                       const matched = customerStatuses.find(
                         (cs) => String(cs.customerStatusId) === selId
                       );
-                      if (matched) {
-                        setFollowUpStatus(matched.statusName);
-                      } else {
-                        setFollowUpStatus("");
-                      }
+                      setFollowUpStatus(matched ? matched.statusName : "");
                     }}
-                    className={baseInputStyle}
-                  >
-                    <option value="">Select Follow-Up Status</option>
-                    {customerStatuses.map((cs) => (
-                      <option key={cs.customerStatusId} value={cs.customerStatusId}>
-                        {cs.statusName}
-                      </option>
-                    ))}
-                  </select>
+                    options={customerStatuses.map((cs) => ({
+                      value: cs.customerStatusId,
+                      label: cs.statusName,
+                    }))}
+                    placeholder="Select Follow-Up Status..."
+                  />
                 </div>
 
                 {/* Remarks / Next Action Details */}
@@ -1460,18 +1381,15 @@ export const EditSalesActivityModal: React.FC<EditSalesActivityModalProps> = ({
 
                 <div className="relative">
                   <label className={labelStyle}>Reminder Priority</label>
-                  <select
+                  <SearchableSelect
                     value={reminderPriorityId}
-                    onChange={(e) => setReminderPriorityId(e.target.value)}
-                    className={baseInputStyle}
-                  >
-                    <option value="">Select Priority</option>
-                    {priorityOptions.map((prio) => (
-                      <option key={prio.id} value={prio.id}>
-                        {prio.name}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(val) => setReminderPriorityId(String(val))}
+                    options={priorityOptions.map((prio) => ({
+                      value: prio.id,
+                      label: prio.name,
+                    }))}
+                    placeholder="Select Priority..."
+                  />
                 </div>
 
                 {/* Reminder Date & Time (2 columns) */}

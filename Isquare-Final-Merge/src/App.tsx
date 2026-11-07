@@ -13,7 +13,7 @@ import MultiLocation from "./Modules/HRMS/Pages/Location/MultiLocation";
 import BasicMasters from "./Modules/HRMS/Pages/Masters/BasicMasters/BasicMastersPage";
 import PaymentTerm from "./Modules/RSM/Pages/Master/PaymentTerm/PaymentTerm";
 import CustomerClassificationMaster from "./Modules/RSM/Pages/Master/CustomerClassification/CustomerClassificationMaster";
-import SalesTeamMaster from "./Modules/RSM/Pages/Master/SalesTeam/SalesTeamMaster";
+import RoleMaster from "./Modules/RSM/Pages/Master/Role/RoleMaster";
 import FollowUpContactUpdatesMaster from "./Modules/RSM/Pages/Master/FollowUpContactUpdates/FollowUpContactUpdatesMaster";
 import DocumentAddressSettingsMaster from "./Modules/RSM/Pages/Master/DocumentAddressSettings/DocumentAddressSettingsMaster";
 import Industry from "./Modules/RSM/Pages/Master/Industry/Industry";
@@ -235,11 +235,11 @@ const router = createBrowserRouter([
       },
       {
         path: "master/sales-team",
-        element: <SalesTeamMaster />,
+        element: <RoleMaster />,
       },
       {
         path: "sales-team",
-        element: <SalesTeamMaster />,
+        element: <RoleMaster />,
       },
       {
         path: "master/sales-assignment",
@@ -385,27 +385,27 @@ const router = createBrowserRouter([
       },
       {
         path: "bde-users",
-        element: <SalesTeamMaster initialTab="bde" />,
+        element: <RoleMaster />,
       },
       {
         path: "bde-user",
-        element: <SalesTeamMaster initialTab="bde" />,
+        element: <RoleMaster />,
       },
       {
         path: "de-user",
-        element: <SalesTeamMaster initialTab="bde" />,
+        element: <RoleMaster />,
       },
       {
         path: "deUser",
-        element: <SalesTeamMaster initialTab="bde" />,
+        element: <RoleMaster />,
       },
       {
         path: "recruitment/bde-users",
-        element: <SalesTeamMaster initialTab="bde" />,
+        element: <RoleMaster />,
       },
       {
         path: "recruitment/bde-user",
-        element: <SalesTeamMaster initialTab="bde" />,
+        element: <RoleMaster />,
       },
       {
         path: "contact-person",
@@ -441,23 +441,23 @@ const router = createBrowserRouter([
       },
       {
         path: "sales-user-manager",
-        element: <SalesTeamMaster initialTab="managers" />,
+        element: <RoleMaster />,
       },
       {
         path: "sales-user-managers",
-        element: <SalesTeamMaster initialTab="managers" />,
+        element: <RoleMaster />,
       },
       {
         path: "salesusermanager",
-        element: <SalesTeamMaster initialTab="managers" />,
+        element: <RoleMaster />,
       },
       {
         path: "recruitment/sales-user-manager",
-        element: <SalesTeamMaster initialTab="managers" />,
+        element: <RoleMaster />,
       },
       {
         path: "recruitment/sales-user-managers",
-        element: <SalesTeamMaster initialTab="managers" />,
+        element: <RoleMaster />,
       },
       {
         path: "master/payment-term",
@@ -497,11 +497,11 @@ const router = createBrowserRouter([
       },
       {
         path: "master/bde-users",
-        element: <SalesTeamMaster initialTab="bde" />,
+        element: <RoleMaster />,
       },
       {
         path: "master/bde-user",
-        element: <SalesTeamMaster initialTab="bde" />,
+        element: <RoleMaster />,
       },
       {
         path: "master/contact-types",
@@ -513,11 +513,11 @@ const router = createBrowserRouter([
       },
       {
         path: "master/sales-user-manager",
-        element: <SalesTeamMaster initialTab="managers" />,
+        element: <RoleMaster />,
       },
       {
         path: "master/sales-user-managers",
-        element: <SalesTeamMaster initialTab="managers" />,
+        element: <RoleMaster />,
       },
       {
         path: "master/customer",
@@ -529,35 +529,35 @@ const router = createBrowserRouter([
       },
       {
         path: "sales-coordinator",
-        element: <SalesTeamMaster initialTab="coordinators" />,
+        element: <RoleMaster />,
       },
       {
         path: "sales-coordinators",
-        element: <SalesTeamMaster initialTab="coordinators" />,
+        element: <RoleMaster />,
       },
       {
         path: "master/sales-coordinator",
-        element: <SalesTeamMaster initialTab="coordinators" />,
+        element: <RoleMaster />,
       },
       {
         path: "master/sales-coordinators",
-        element: <SalesTeamMaster initialTab="coordinators" />,
+        element: <RoleMaster />,
       },
       {
         path: "role",
-        element: <SalesTeamMaster initialTab="roles" />,
+        element: <RoleMaster />,
       },
       {
         path: "roles",
-        element: <SalesTeamMaster initialTab="roles" />,
+        element: <RoleMaster />,
       },
       {
         path: "master/role",
-        element: <SalesTeamMaster initialTab="roles" />,
+        element: <RoleMaster />,
       },
       {
         path: "master/roles",
-        element: <SalesTeamMaster initialTab="roles" />,
+        element: <RoleMaster />,
       },
     ],
   },
@@ -586,28 +586,28 @@ const router = createBrowserRouter([
       // Consolidated Masters (Root paths)
       { path: "/customer-classification", element: <CustomerClassificationMaster /> },
       { path: "/master/customer-classification", element: <CustomerClassificationMaster /> },
-      { path: "/sales-team", element: <SalesTeamMaster /> },
-      { path: "/master/sales-team", element: <SalesTeamMaster /> },
+      { path: "/sales-team", element: <RoleMaster /> },
+      { path: "/master/sales-team", element: <RoleMaster /> },
       { path: "/follow-up-contact-updates", element: <FollowUpContactUpdatesMaster /> },
       { path: "/master/follow-up-contact-updates", element: <FollowUpContactUpdatesMaster /> },
       { path: "/document-address-settings", element: <DocumentAddressSettingsMaster /> },
       { path: "/master/document-address-settings", element: <DocumentAddressSettingsMaster /> },
 
       // Legacy and Category mappings
-      { path: "/bde-users", element: <SalesTeamMaster initialTab="bde" /> },
-      { path: "/bde-user", element: <SalesTeamMaster initialTab="bde" /> },
-      { path: "/de-user", element: <SalesTeamMaster initialTab="bde" /> },
-      { path: "/deUser", element: <SalesTeamMaster initialTab="bde" /> },
-      { path: "/recruitment/bde-users", element: <SalesTeamMaster initialTab="bde" /> },
-      { path: "/recruitment/bde-user", element: <SalesTeamMaster initialTab="bde" /> },
+      { path: "/bde-users", element: <RoleMaster /> },
+      { path: "/bde-user", element: <RoleMaster /> },
+      { path: "/de-user", element: <RoleMaster /> },
+      { path: "/deUser", element: <RoleMaster /> },
+      { path: "/recruitment/bde-users", element: <RoleMaster /> },
+      { path: "/recruitment/bde-user", element: <RoleMaster /> },
       { path: "/contact-types", element: <FollowUpContactUpdatesMaster initialTab="contact-types" /> },
       { path: "/contact-type", element: <FollowUpContactUpdatesMaster initialTab="contact-types" /> },
       { path: "/recruitment/contact-types", element: <FollowUpContactUpdatesMaster initialTab="contact-types" /> },
       { path: "/recruitment/contact-type", element: <FollowUpContactUpdatesMaster initialTab="contact-types" /> },
-      { path: "/sales-user-manager", element: <SalesTeamMaster initialTab="managers" /> },
-      { path: "/sales-user-managers", element: <SalesTeamMaster initialTab="managers" /> },
-      { path: "/salesusermanager", element: <SalesTeamMaster initialTab="managers" /> },
-      { path: "/recruitment/sales-user-manager", element: <SalesTeamMaster initialTab="managers" /> },
+      { path: "/sales-user-manager", element: <RoleMaster /> },
+      { path: "/sales-user-managers", element: <RoleMaster /> },
+      { path: "/salesusermanager", element: <RoleMaster /> },
+      { path: "/recruitment/sales-user-manager", element: <RoleMaster /> },
       { path: "/payment-term", element: <PaymentTerm /> },
       { path: "/priority", element: <FollowUpContactUpdatesMaster initialTab="priority" /> },
       { path: "/priorities", element: <FollowUpContactUpdatesMaster initialTab="priority" /> },
@@ -618,11 +618,14 @@ const router = createBrowserRouter([
       { path: "/customer-source", element: <CustomerClassificationMaster initialTab="source" /> },
       { path: "/customer-area", element: <CustomerClassificationMaster initialTab="area" /> },
       { path: "/address-type", element: <DocumentAddressSettingsMaster initialTab="address-type" /> },
-      { path: "/sales-coordinator", element: <SalesTeamMaster initialTab="coordinators" /> },
-      { path: "/sales-coordinators", element: <SalesTeamMaster initialTab="coordinators" /> },
-      { path: "/master/sales-coordinator", element: <SalesTeamMaster initialTab="coordinators" /> },
-      { path: "/master/sales-coordinators", element: <SalesTeamMaster initialTab="coordinators" /> },
+      { path: "/sales-coordinator", element: <RoleMaster /> },
+      { path: "/sales-coordinators", element: <RoleMaster /> },
+      { path: "/master/sales-coordinator", element: <RoleMaster /> },
+      { path: "/master/sales-coordinators", element: <RoleMaster /> },
       { path: "/customers", element: <CustomerMaster /> },
+      { path: "/sales-activities", element: <SalesActivities defaultTab="all" key="all-sales-activities-root" /> },
+      { path: "/task-assignment", element: <SalesActivities defaultTab="tasks" key="task-assignment-root" /> },
+      { path: "/all-sales-activities", element: <SalesActivities defaultTab="all" key="all-sales-activities-alt" /> },
       { path: "/customer", element: <CustomerMaster /> },
       { path: "/rsm/customers", element: <CustomerMaster /> },
       { path: "/rsm/customer", element: <CustomerMaster /> },

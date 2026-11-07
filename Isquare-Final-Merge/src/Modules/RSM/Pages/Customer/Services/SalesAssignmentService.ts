@@ -339,6 +339,29 @@ export const getBdeUsersByDirectorId = async (
 ): Promise<BdeUserOption[]> => {
   if (directorId <= 0) return [];
 
+  // 1st Priority: Active employees in Employee Master reporting to this Director
+  try {
+    const activeUrl = `${API_ENDPOINTS.CRMEmployee || `${API_ENDPOINTS.BaseUrl}/employee`}/active`;
+    const empRes = await apiClient.get<ApiDataResponse<RawEmployeeApiRecord>>(activeUrl, {
+      params: { reportingTo: directorId },
+    });
+    const empList = ensureArray<RawEmployeeApiRecord>(empRes.data);
+    const matches = empList
+      .filter((e) => {
+        const d = (e.DesignationName || e.designationName || "").toLowerCase();
+        return d.includes("bde") || (e as any).designationId === 2 || (e as any).DesignationId === 2;
+      })
+      .map((e) => ({
+        id: Number(e.ID ?? e.id ?? 0),
+        value: (e.FullName ?? e.fullName ?? `${e.FirstName || ""} ${e.LastName || ""}`).trim(),
+        name: (e.FullName ?? e.fullName ?? `${e.FirstName || ""} ${e.LastName || ""}`).trim(),
+        code: (e.EmployeeCode ?? e.employeeCode ?? "").trim(),
+        directorId,
+        isActive: true,
+      }));
+    if (matches.length > 0) return matches;
+  } catch {}
+
   try {
     const res = await apiClient.get<ApiDataResponse<RawBdeApiRecord>>(
       `${API_ENDPOINTS.BaseUrl}/bdeuser/by-director/${directorId}`
@@ -398,6 +421,28 @@ export const getSalesCoordinatorsByBdeId = async (
   bdeUserId: number
 ): Promise<SalesCoordinatorOption[]> => {
   if (bdeUserId <= 0) return [];
+
+  // 1st Priority: Active employees in Employee Master reporting to this BDE User
+  try {
+    const activeUrl = `${API_ENDPOINTS.CRMEmployee || `${API_ENDPOINTS.BaseUrl}/employee`}/active`;
+    const empRes = await apiClient.get<ApiDataResponse<RawEmployeeApiRecord>>(activeUrl, {
+      params: { reportingTo: bdeUserId },
+    });
+    const empList = ensureArray<RawEmployeeApiRecord>(empRes.data);
+    const matches = empList
+      .filter((e) => {
+        const d = (e.DesignationName || e.designationName || "").toLowerCase();
+        return d.includes("coord") || d.includes("sales") || (e as any).designationId === 3 || (e as any).DesignationId === 3;
+      })
+      .map((e) => ({
+        salesCoordinatorId: Number(e.ID ?? e.id ?? 0),
+        salesCoordinatorName: (e.FullName ?? e.fullName ?? `${e.FirstName || ""} ${e.LastName || ""}`).trim(),
+        salesCoordinatorCode: (e.EmployeeCode ?? e.employeeCode ?? "").trim(),
+        bdeUserId,
+        isActive: true,
+      }));
+    if (matches.length > 0) return matches;
+  } catch {}
 
   try {
     const res = await apiClient.get<ApiDataResponse<RawCoordinatorApiRecord>>(

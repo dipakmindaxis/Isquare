@@ -13,20 +13,31 @@ import {
 } from "../services/quotationService";
 import type { Product } from "../models/quotationModels";
 import { formatINR, STANDARD_UOMS } from "../utils/quotationCalculations";
-import ConfirmationModal from "../../../Components/Common/ConfirmationModal";
 import { ProductExcelImportModal } from "../components/ProductExcelImportModal";
 
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 const ALLOWED_IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp"];
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
 
-const ProductThumbnail: React.FC<{ src?: string | null; alt: string }> = ({ src, alt }) => {
+const ProductThumbnail: React.FC<{ src?: string | null; alt: string; itemCode?: string | null }> = ({ src, alt, itemCode }) => {
   const [hasError, setHasError] = useState(false);
-  const resolved = resolveImageUrl(src) || src;
+  const cleanCode = itemCode ? itemCode.trim() : null;
+  const namePrefix = alt ? alt.split(/\s+/)[0]?.trim() : null;
+  const resolved =
+    resolveImageUrl(src) ||
+    (cleanCode ? resolveImageUrl(cleanCode) : null) ||
+    (cleanCode ? resolveImageUrl(cleanCode.replace(/\s+/g, "-")) : null) ||
+    (cleanCode ? resolveImageUrl(cleanCode.replace(/-/g, " ")) : null) ||
+    (namePrefix ? resolveImageUrl(namePrefix) : null) ||
+    (namePrefix ? resolveImageUrl(namePrefix.replace(/\s+/g, "-")) : null) ||
+    (alt ? resolveImageUrl(alt) : null) ||
+    (itemCode ? resolveImageUrl(`/images/products/${itemCode.trim().replace(/\s+/g, "-")}.png`) : null) ||
+    (itemCode ? resolveImageUrl(`/images/products/${itemCode.trim().replace(/-/g, " ")}.png`) : null) ||
+    src;
 
   useEffect(() => {
     setHasError(false);
-  }, [src, resolved]);
+  }, [src, resolved, itemCode, alt]);
 
   return (
     <div className="w-9 h-9 rounded-lg bg-gray-100 border border-gray-200/90 flex items-center justify-center overflow-hidden mx-auto shadow-2xs">
@@ -78,13 +89,21 @@ export const ProductMaster: React.FC = () => {
   // Delete Modal
   const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [isDeletingProduct, setIsDeletingProduct] = useState<boolean>(false);
   const [importModalOpen, setImportModalOpen] = useState<boolean>(false);
+
+  // Bulk Delete State
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [bulkDeleteModalOpen, setBulkDeleteModalOpen] = useState<boolean>(false);
+  const [isBulkDeleting, setIsBulkDeleting] = useState<boolean>(false);
 
   const fetchProducts = async () => {
     setIsLoading(true);
     try {
       const data = await productService.getAll();
       setProducts(data);
+      const newIdSet = new Set(data.map((p) => p.productId));
+      setSelectedIds((prev) => prev.filter((id) => newIdSet.has(id)));
     } catch (e: any) {
       console.error("Failed to fetch products:", e);
       const msg =
@@ -119,6 +138,75 @@ export const ProductMaster: React.FC = () => {
       );
     });
   }, [products, searchText]);
+
+  const isAllSelected = useMemo(() => {
+    return (
+      filteredProducts.length > 0 &&
+      filteredProducts.every((p) => selectedIds.includes(p.productId))
+    );
+  }, [filteredProducts, selectedIds]);
+
+  const isSomeSelected = useMemo(() => {
+    return (
+      filteredProducts.some((p) => selectedIds.includes(p.productId)) && !isAllSelected
+    );
+  }, [filteredProducts, selectedIds, isAllSelected]);
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const displayedIds = filteredProducts.map((p) => p.productId);
+      setSelectedIds((prev) => Array.from(new Set([...prev, ...displayedIds])));
+    } else {
+      const displayedSet = new Set(filteredProducts.map((p) => p.productId));
+      setSelectedIds((prev) => prev.filter((id) => !displayedSet.has(id)));
+    }
+  };
+
+  const handleSelectRow = (productId: number, checked: boolean) => {
+    setSelectedIds((prev) =>
+      checked ? [...prev, productId] : prev.filter((id) => id !== productId)
+    );
+  };
+
+  const handleClearSelection = () => {
+    setSelectedIds([]);
+  };
+
+  const handleBulkDeleteConfirm = async () => {
+    if (selectedIds.length === 0 || isBulkDeleting) return;
+
+    setIsBulkDeleting(true);
+    let deletedCount = 0;
+    let failedCount = 0;
+
+    try {
+      for (const id of selectedIds) {
+        try {
+          await productService.delete(id);
+          deletedCount++;
+        } catch (err) {
+          console.error(`Failed to delete product ID ${id}:`, err);
+          failedCount++;
+        }
+      }
+
+      if (deletedCount > 0) {
+        toast.success(`Successfully deleted ${deletedCount} ${deletedCount === 1 ? "product" : "products"}.`);
+        setSelectedIds([]);
+        setBulkDeleteModalOpen(false);
+        fetchProducts();
+      }
+
+      if (failedCount > 0) {
+        toast.error(`Failed to delete ${failedCount} product(s). Please try again.`);
+      }
+    } catch (err: any) {
+      console.error("Bulk delete error:", err);
+      toast.error("An error occurred during bulk deletion.");
+    } finally {
+      setIsBulkDeleting(false);
+    }
+  };
 
   const handleOpenAdd = () => {
     setEditingProduct(null);
@@ -398,10 +486,12 @@ export const ProductMaster: React.FC = () => {
 
   const handleDeleteConfirm = async () => {
     if (!productToDelete) return;
+    setIsDeletingProduct(true);
     try {
       await productService.delete(productToDelete.productId);
       toast.success(`Product '${productToDelete.productName}' deleted`);
       setProducts(products.filter((p) => p.productId !== productToDelete.productId));
+      setSelectedIds((prev) => prev.filter((id) => id !== productToDelete.productId));
       setDeleteModalOpen(false);
       setProductToDelete(null);
     } catch (err: any) {
@@ -410,6 +500,8 @@ export const ProductMaster: React.FC = () => {
         err?.message ||
         "Failed to delete product";
       toast.error(msg);
+    } finally {
+      setIsDeletingProduct(false);
     }
   };
 
@@ -493,12 +585,56 @@ export const ProductMaster: React.FC = () => {
         </div>
       </div>
 
+      {/* Bulk Action Buttons Section */}
+      {selectedIds.length > 0 && (
+        <div className="bg-orange-50/80 border border-[#FF7900]/30 rounded-xl px-4 py-3 flex flex-wrap items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#FF7900]" />
+            <span className="text-sm font-semibold text-[#00234a]">
+              Selected Products: <span className="font-bold text-[#FF7900] ml-1">{selectedIds.length}</span>
+            </span>
+          </div>
+          <div className="flex items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => setBulkDeleteModalOpen(true)}
+              disabled={isBulkDeleting}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50"
+            >
+              <Trash2 size={14} />
+              <span>Delete Selected</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleClearSelection}
+              disabled={isBulkDeleting}
+              className="inline-flex items-center gap-1 px-3 py-1.5 bg-white hover:bg-gray-100 text-gray-700 border border-gray-200 rounded-lg text-xs font-semibold transition cursor-pointer"
+            >
+              <X size={13} />
+              <span>Clear Selection</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Table Container */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
               <tr className="bg-[#FF7900] text-white font-semibold uppercase text-[13px] tracking-wider">
+                <th className="p-3.5 w-10 text-center border-r border-[#e06800]">
+                  <input
+                    type="checkbox"
+                    checked={isAllSelected}
+                    ref={(input) => {
+                      if (input) input.indeterminate = isSomeSelected;
+                    }}
+                    onChange={(e) => handleSelectAll(e.target.checked)}
+                    className="w-4 h-4 rounded border-gray-300 text-[#FF7900] focus:ring-[#FF7900] cursor-pointer accent-[#FF7900]"
+                    title={isAllSelected ? "Deselect All" : "Select All Displayed"}
+                  />
+                </th>
                 <th className="p-3.5 w-14 text-center border-r border-[#e06800]">Image</th>
                 <th className="p-3.5 w-24 border-r border-[#e06800]">Item Code</th>
                 <th className="p-3.5 border-r border-[#e06800]">Product Name</th>
@@ -513,23 +649,39 @@ export const ProductMaster: React.FC = () => {
             <tbody className="divide-y divide-gray-100">
               {isLoading ? (
                 <tr>
-                  <td colSpan={9} className="p-10 text-center text-gray-400 font-medium">
+                  <td colSpan={10} className="p-10 text-center text-gray-400 font-medium">
                     Loading products from API...
                   </td>
                 </tr>
               ) : filteredProducts.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="p-10 text-center text-gray-400 font-medium">
+                  <td colSpan={10} className="p-10 text-center text-gray-400 font-medium">
                     No products found. Click "Add Product" to create items.
                   </td>
                 </tr>
               ) : (
-                filteredProducts.map((p) => (
-                  <tr key={p.productId} className="hover:bg-[#f0f7ff] transition duration-150 min-h-[52px]">
+                filteredProducts.map((p) => {
+                  const isSelected = selectedIds.includes(p.productId);
+                  return (
+                    <tr
+                      key={p.productId}
+                      className={`transition duration-150 min-h-[52px] ${
+                        isSelected ? "bg-orange-50/50 hover:bg-orange-50/80" : "hover:bg-[#f0f7ff]"
+                      }`}
+                    >
+                      <td className="p-3.5 text-center w-10">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={(e) => handleSelectRow(p.productId, e.target.checked)}
+                          className="w-4 h-4 rounded border-gray-300 text-[#FF7900] focus:ring-[#FF7900] cursor-pointer accent-[#FF7900]"
+                        />
+                      </td>
                     <td className="p-3.5 text-center w-14">
                       <ProductThumbnail
                         src={p.productImage || p.productImagePath || p.imageUrl}
                         alt={p.productName}
+                        itemCode={p.itemCode}
                       />
                     </td>
                     <td className="p-3.5 font-semibold text-[#00234a]">
@@ -574,8 +726,9 @@ export const ProductMaster: React.FC = () => {
                       </button>
                     </td>
                   </tr>
-                ))
-              )}
+                );
+              })
+            )}
             </tbody>
           </table>
         </div>
@@ -870,20 +1023,130 @@ export const ProductMaster: React.FC = () => {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
-      <ConfirmationModal
-        isOpen={deleteModalOpen}
-        title="Delete Product"
-        message={`Are you sure you want to delete product '${productToDelete?.productName}'?`}
-        confirmText="Delete"
-        cancelText="Cancel"
-        confirmButtonVariant="danger"
-        onConfirm={handleDeleteConfirm}
-        onClose={() => {
-          setDeleteModalOpen(false);
-          setProductToDelete(null);
-        }}
-      />
+      {/* Delete Confirmation Modal – Modern Gradient Premium */}
+      {deleteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-[420px] rounded-[24px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.35)] border border-gray-100 overflow-hidden bg-white animate-in zoom-in-95 duration-200">
+            {/* Premium Header with Deep Red Gradient and Ambient Wave */}
+            <div className="relative bg-gradient-to-br from-[#E60033] via-[#C4002B] to-[#A90024] pt-7 pb-10 px-6 text-center overflow-hidden">
+              {/* Subtle ambient lighting */}
+              <div className="absolute -top-12 -left-12 w-44 h-44 rounded-full bg-white/10 blur-xl pointer-events-none" />
+              <div className="absolute top-2 right-4 w-36 h-36 rounded-full bg-black/15 blur-2xl pointer-events-none" />
+
+              {/* Close (X) Icon Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (!isDeletingProduct) {
+                    setDeleteModalOpen(false);
+                    setProductToDelete(null);
+                  }
+                }}
+                disabled={isDeletingProduct}
+                className="absolute top-4 right-4 text-white/80 hover:text-white hover:bg-white/10 p-1.5 rounded-full transition cursor-pointer disabled:opacity-40"
+                title="Close"
+              >
+                <X size={18} />
+              </button>
+
+              {/* Centered Glowing Red Circular Badge with Trash Icon */}
+              <div className="relative inline-flex items-center justify-center mb-1">
+                <div className="w-14 h-14 rounded-full bg-gradient-to-b from-[#FF2E55] to-[#B30026] flex items-center justify-center text-white shadow-[0_0_26px_rgba(255,46,85,0.75),0_4px_14px_rgba(0,0,0,0.25)] border border-white/25">
+                  <Trash2 size={24} className="text-white drop-shadow-xs" />
+                </div>
+              </div>
+
+              {/* Modal Title */}
+              <h3 className="text-xl font-bold text-white tracking-tight mt-2.5">
+                Delete Product
+              </h3>
+
+              {/* Ambient Layered Bottom Waves matching Option 1 reference */}
+              <div className="absolute bottom-0 left-0 right-0 pointer-events-none overflow-hidden leading-none">
+                {/* Secondary subtle shadow wave */}
+                <svg
+                  className="relative block w-full h-8 text-black/10 fill-current"
+                  viewBox="0 0 420 50"
+                  preserveAspectRatio="none"
+                >
+                  <path d="M0,15 C150,45 270,-5 420,18 L420,50 L0,50 Z" />
+                </svg>
+              </div>
+              <div className="absolute bottom-0 left-0 right-0 pointer-events-none overflow-hidden leading-none">
+                {/* Primary white wave flowing into body */}
+                <svg
+                  className="relative block w-full h-7 text-white fill-current"
+                  viewBox="0 0 420 50"
+                  preserveAspectRatio="none"
+                >
+                  <path d="M0,25 C130,50 280,2 420,24 L420,50 L0,50 Z" />
+                </svg>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="px-6 sm:px-8 pt-4 pb-7 text-center">
+              <p className="text-[13.5px] font-semibold text-[#082B50]">
+                Are you sure you want to delete this product?
+              </p>
+              <p className="text-[12px] text-gray-500 mt-1">
+                This action cannot be undone.
+              </p>
+
+              {/* Product Information Pill */}
+              <div className="my-5 mx-auto max-w-[340px] bg-[#FFF0F2] border border-[#FFE0E5] rounded-full px-4 py-2.5 flex items-center justify-between gap-2 shadow-2xs">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Package size={17} className="text-[#E60033] shrink-0" />
+                  <span
+                    className="text-xs font-bold text-[#082B50] truncate"
+                    title={productToDelete?.productName}
+                  >
+                    {productToDelete?.productName}
+                  </span>
+                </div>
+                {productToDelete?.itemCode && (
+                  <span className="text-[11px] font-mono font-bold text-[#E60033] bg-white border border-[#FFE0E5] px-2 py-0.5 rounded-md shrink-0">
+                    {productToDelete.itemCode}
+                  </span>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-center gap-3.5 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDeleteModalOpen(false);
+                    setProductToDelete(null);
+                  }}
+                  disabled={isDeletingProduct}
+                  className="min-w-[110px] px-6 py-2.5 bg-white hover:bg-gray-50 active:bg-gray-100 text-[#082B50] font-bold text-xs rounded-xl border border-[#E5E7EB] shadow-2xs transition-all cursor-pointer disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeleteConfirm}
+                  disabled={isDeletingProduct}
+                  className="min-w-[140px] px-6 py-2.5 bg-gradient-to-r from-[#E60033] to-[#A90024] hover:from-[#d1002e] hover:to-[#940020] text-white font-bold text-xs rounded-xl shadow-[0_4px_14px_rgba(230,0,51,0.35)] hover:shadow-[0_6px_20px_rgba(230,0,51,0.45)] hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {isDeletingProduct ? (
+                    <>
+                      <RefreshCw size={13} className="animate-spin" />
+                      <span>Deleting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 size={14} className="text-white" />
+                      <span>Confirm Delete</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Product Excel Import Modal */}
       <ProductExcelImportModal
@@ -893,17 +1156,117 @@ export const ProductMaster: React.FC = () => {
         existingProducts={products}
       />
 
-      <ConfirmationModal
-        isOpen={false}
-        title=""
-        message=""
-        confirmButtonVariant="danger"
-        onConfirm={() => {}}
-        onClose={() => {
-          setDeleteModalOpen(false);
-          setProductToDelete(null);
-        }}
-      />
+      {/* Bulk Delete Confirmation Modal – Modern Gradient Premium (Option 1) */}
+      {bulkDeleteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-[420px] rounded-[24px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.35)] border border-gray-100 overflow-hidden bg-white animate-in zoom-in-95 duration-200">
+            {/* Premium Header with Deep Red Gradient and Ambient Wave */}
+            <div className="relative bg-gradient-to-br from-[#E60033] via-[#C4002B] to-[#A90024] pt-7 pb-10 px-6 text-center overflow-hidden">
+              {/* Subtle ambient lighting */}
+              <div className="absolute -top-12 -left-12 w-44 h-44 rounded-full bg-white/10 blur-xl pointer-events-none" />
+              <div className="absolute top-2 right-4 w-36 h-36 rounded-full bg-black/15 blur-2xl pointer-events-none" />
+
+              {/* Close (X) Icon Button */}
+              <button
+                type="button"
+                onClick={() => !isBulkDeleting && setBulkDeleteModalOpen(false)}
+                disabled={isBulkDeleting}
+                className="absolute top-4 right-4 text-white/80 hover:text-white hover:bg-white/10 p-1.5 rounded-full transition cursor-pointer disabled:opacity-40"
+                title="Close"
+              >
+                <X size={18} />
+              </button>
+
+              {/* Centered Glowing Red Circular Badge with Trash Icon */}
+              <div className="relative inline-flex items-center justify-center mb-1">
+                <div className="w-14 h-14 rounded-full bg-gradient-to-b from-[#FF2E55] to-[#B30026] flex items-center justify-center text-white shadow-[0_0_26px_rgba(255,46,85,0.75),0_4px_14px_rgba(0,0,0,0.25)] border border-white/25">
+                  <Trash2 size={24} className="text-white drop-shadow-xs" />
+                </div>
+              </div>
+
+              {/* Modal Title */}
+              <h3 className="text-xl font-bold text-white tracking-tight mt-2.5">
+                Confirm Bulk Delete
+              </h3>
+
+              {/* Ambient Layered Bottom Waves matching Option 1 reference */}
+              <div className="absolute bottom-0 left-0 right-0 pointer-events-none overflow-hidden leading-none">
+                {/* Secondary subtle shadow wave */}
+                <svg
+                  className="relative block w-full h-8 text-black/10 fill-current"
+                  viewBox="0 0 420 50"
+                  preserveAspectRatio="none"
+                >
+                  <path d="M0,15 C150,45 270,-5 420,18 L420,50 L0,50 Z" />
+                </svg>
+              </div>
+              <div className="absolute bottom-0 left-0 right-0 pointer-events-none overflow-hidden leading-none">
+                {/* Primary white wave flowing into body */}
+                <svg
+                  className="relative block w-full h-7 text-white fill-current"
+                  viewBox="0 0 420 50"
+                  preserveAspectRatio="none"
+                >
+                  <path d="M0,25 C130,50 280,2 420,24 L420,50 L0,50 Z" />
+                </svg>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="px-6 sm:px-8 pt-4 pb-7 text-center">
+              <p className="text-[13.5px] font-semibold text-[#082B50]">
+                Are you sure you want to delete the selected products?
+              </p>
+              <p className="text-[12px] text-gray-500 mt-1">
+                This action cannot be undone.
+              </p>
+
+              {/* Selected Products Information Pill */}
+              <div className="my-5 mx-auto max-w-[280px] bg-[#FFF0F2] border border-[#FFE0E5] rounded-full px-5 py-2.5 flex items-center justify-between shadow-2xs">
+                <div className="flex items-center gap-2">
+                  <Package size={18} className="text-[#E60033]" />
+                  <span className="text-xs font-bold text-[#082B50]">
+                    Selected Products:
+                  </span>
+                </div>
+                <span className="text-base font-extrabold text-[#E60033]">
+                  {selectedIds.length}
+                </span>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-center gap-3.5 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setBulkDeleteModalOpen(false)}
+                  disabled={isBulkDeleting}
+                  className="min-w-[110px] px-6 py-2.5 bg-white hover:bg-gray-50 active:bg-gray-100 text-[#082B50] font-bold text-xs rounded-xl border border-[#E5E7EB] shadow-2xs transition-all cursor-pointer disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleBulkDeleteConfirm}
+                  disabled={isBulkDeleting}
+                  className="min-w-[140px] px-6 py-2.5 bg-gradient-to-r from-[#E60033] to-[#A90024] hover:from-[#d1002e] hover:to-[#940020] text-white font-bold text-xs rounded-xl shadow-[0_4px_14px_rgba(230,0,51,0.35)] hover:shadow-[0_6px_20px_rgba(230,0,51,0.45)] hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {isBulkDeleting ? (
+                    <>
+                      <RefreshCw size={13} className="animate-spin" />
+                      <span>Deleting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 size={14} className="text-white" />
+                      <span>Confirm Delete</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
