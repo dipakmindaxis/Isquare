@@ -6,10 +6,22 @@ import type {
   CustomerAddress,
   CustomerCreatePayload,
   CustomerUpdatePayload,
+  CustomerAddressPayload,
   AddressValidationResult,
+  CustomerDuplicateCheckPayload,
+  CustomerDuplicateCheckResult,
 } from "../Types/CustomerTypes";
 
-export type { Customer, CustomerAddress, CustomerCreatePayload, CustomerUpdatePayload, AddressValidationResult };
+export type {
+  Customer,
+  CustomerAddress,
+  CustomerCreatePayload,
+  CustomerUpdatePayload,
+  CustomerAddressPayload,
+  AddressValidationResult,
+  CustomerDuplicateCheckPayload,
+  CustomerDuplicateCheckResult,
+};
 
 export interface CustomerApiRecord extends Customer {
   DirectorId?: number;
@@ -26,6 +38,14 @@ export interface CustomerApiRecord extends Customer {
 }
 
 const normalizeCustomer = (customer: CustomerApiRecord): Customer => {
+  if (!customer) return {} as Customer;
+  const raw = customer as any;
+  const rawId = raw.customerId ?? raw.CustomerId ?? raw.companyId ?? raw.CompanyId ?? raw.id ?? raw.ID;
+  const custId = rawId ? Number(rawId) : 0;
+  const customerCode = raw.customerCode || raw.CustomerCode || raw.companyCode || raw.CompanyCode || "";
+  const customerName = raw.customerName || raw.CustomerName || raw.companyName || raw.CompanyName || "";
+  const companyName = raw.companyName || raw.CompanyName || customerName;
+
   const directorId = customer.directorId || customer.DirectorId;
   const directorName = customer.directorName || customer.DirectorName;
   const bdeUserId = customer.bdeUserId || customer.BDEUserId;
@@ -36,13 +56,18 @@ const normalizeCustomer = (customer: CustomerApiRecord): Customer => {
   const customerOwnerName = customer.customerOwnerName || customer.CustomerOwnerName || customer.OwnerName;
   const customerOwnerType = customer.customerOwnerType || customer.CustomerOwnerType;
   const customerOwnerValue = customer.customerOwnerValue || customer.CustomerOwnerValue;
-  const email = customer.email || (customer as any).Email || (customer as any).emailAddress || (customer as any).EmailAddress;
-  const alternateEmail = customer.alternateEmail || (customer as any).AlternateEmail;
-  const mobile = customer.mobile || (customer as any).Mobile || (customer as any).phone || (customer as any).Phone;
-  const alternateMobile = customer.alternateMobile || (customer as any).AlternateMobile;
+  const email = customer.email || raw.Email || raw.emailAddress || raw.EmailAddress;
+  const alternateEmail = customer.alternateEmail || raw.AlternateEmail;
+  const mobile = customer.mobile || raw.Mobile || raw.phone || raw.Phone;
+  const alternateMobile = customer.alternateMobile || raw.AlternateMobile;
 
   return {
     ...customer,
+    customerId: custId,
+    companyId: custId,
+    customerCode,
+    customerName,
+    companyName,
     ...(directorId ? { directorId: Number(directorId) } : {}),
     ...(directorName ? { directorName: String(directorName) } : {}),
     ...(bdeUserId ? { bdeUserId: Number(bdeUserId) } : {}),
@@ -119,10 +144,11 @@ export const getNextCustomerCode = async (): Promise<string> => {
 };
 
 export const getCustomerById = async (id: number): Promise<Customer> => {
-  const response = await apiClient.get<CustomerApiRecord>(
+  const response = await apiClient.get<CustomerApiRecord | { data?: CustomerApiRecord }>(
     `${API_ENDPOINTS.Customer}/${id}`
   );
-  return normalizeCustomer(response.data);
+  const data = (response.data && (response.data as any).data) ? (response.data as any).data : response.data;
+  return normalizeCustomer(data);
 };
 
 export const createCustomer = async (
@@ -203,4 +229,47 @@ export const validateCustomerAddress = async (
     `${API_ENDPOINTS.Customer}/${id}/validate-address/${addressId}`
   );
   return response.data;
+};
+
+export const checkCustomerDuplicate = async (
+  payload: CustomerDuplicateCheckPayload
+): Promise<CustomerDuplicateCheckResult> => {
+  try {
+    const response = await apiClient.post<CustomerDuplicateCheckResult>(
+      `${API_ENDPOINTS.Customer}/check-duplicate`,
+      payload
+    );
+    return response.data;
+  } catch (error) {
+    console.warn("Duplicate check API call failed:", error);
+    return {
+      isDuplicate: false,
+      isExactMatch: false,
+      isPossibleMatch: false,
+      matchType: "None",
+      message: "Duplicate check service unavailable.",
+      matchedCustomers: [],
+    };
+  }
+};
+
+export const addAddressToExistingCustomer = async (
+  customerId: number,
+  addressPayload: CustomerAddressPayload
+): Promise<CustomerAddress> => {
+  try {
+    const response = await apiClient.post<CustomerAddress>(
+      `${API_ENDPOINTS.Customer}/${customerId}/addresses`,
+      addressPayload
+    );
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error("Add customer address error response:", {
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+    }
+    throw new Error(extractErrorMessage(error, "Failed to add address to existing customer."));
+  }
 };

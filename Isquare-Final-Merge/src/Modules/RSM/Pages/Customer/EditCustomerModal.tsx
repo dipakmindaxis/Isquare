@@ -31,6 +31,7 @@ import {
   getCustomerById,
   getCustomerAddresses,
   updateCustomer,
+  checkCustomerDuplicate,
 } from "./Services/CustomerService";
 import {
   getIndustries,
@@ -101,9 +102,10 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
   const [salesCoordinators, setSalesCoordinators] = useState<SalesCoordinatorItem[]>([]);
   const [selectedCoordinatorIds, setSelectedCoordinatorIds] = useState<number[]>([]);
   const [customerOwnerValue, setCustomerOwnerValue] = useState<string>("");
+  const initialGstinRef = React.useRef<string>("");
   // isAddCoordinatorOpen removed
 
-  
+
   useEffect(() => {
     if (isOpen && customerId) {
 
@@ -299,6 +301,8 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
 
           setCustomerOwnerValue(resolvedOwnerVal);
 
+          initialGstinRef.current = (customerRes.gstin || "").trim().toUpperCase();
+
           const mergedAddresses =
             addressesRes && addressesRes.length > 0
               ? addressesRes
@@ -369,6 +373,8 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
         ...prev,
         [name]: value === "" ? undefined : Number(value),
       }));
+    } else if (name === "gstin") {
+      setFormData((prev) => ({ ...prev, gstin: value.toUpperCase() }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
@@ -388,6 +394,25 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
     if (!formData.customerName?.trim()) {
       toast.error("Customer Name is required.");
       return;
+    }
+
+    // Only check duplicate GSTIN if GSTIN was changed by the user to a different value
+    const currentGstin = (formData.gstin || "").trim().toUpperCase();
+    if (currentGstin && currentGstin !== initialGstinRef.current) {
+      try {
+        const dupCheck = await checkCustomerDuplicate({
+          gstin: currentGstin,
+          excludeCustomerId: customerId,
+        });
+        if (dupCheck && dupCheck.isExactMatch) {
+          toast.error(
+            `Cannot update: GSTIN '${currentGstin}' is already registered with another customer (${dupCheck.matchedCustomers[0]?.customerCode || ""}).`
+          );
+          return;
+        }
+      } catch {
+        // Continue if duplicate check service fails
+      }
     }
 
     if (formData.addresses && formData.addresses.length > 0) {
@@ -458,7 +483,7 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
         customerShortName: formData.customerShortName?.trim() || undefined,
         companyName: formData.companyName?.trim() || undefined,
         companyGroup: formData.companyGroup?.trim() || undefined,
-                email: formData.email?.trim() || null,
+        email: formData.email?.trim() || null,
         mobile: formData.mobile?.trim() || null,
         alternateEmail: formData.alternateEmail?.trim() || null,
         alternateMobile: formData.alternateMobile?.trim() || null,
@@ -511,9 +536,9 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
           formData.salesCoordinatorName?.trim() ||
           (selectedCoordinatorIds.length > 0
             ? salesCoordinators
-                .filter((sc) => selectedCoordinatorIds.includes(sc.salesCoordinatorId))
-                .map((sc) => sc.salesCoordinatorName)
-                .join(", ")
+              .filter((sc) => selectedCoordinatorIds.includes(sc.salesCoordinatorId))
+              .map((sc) => sc.salesCoordinatorName)
+              .join(", ")
             : null),
         customerOwnerId:
           formData.customerOwnerId !== undefined && formData.customerOwnerId !== null && Boolean(formData.customerOwnerId)
@@ -1126,7 +1151,7 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
         </div>
       </form>
 
-      
+
     </div>
   );
 };

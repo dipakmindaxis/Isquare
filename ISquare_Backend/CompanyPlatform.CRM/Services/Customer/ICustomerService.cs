@@ -15,5 +15,7 @@ namespace CompanyPlatform.CRM.Services.Customer
         Task<bool> DeleteCustomerAsync(int id);
         Task<IEnumerable<CompanyAddressDto>> GetCustomerAddressesAsync(int customerId);
         Task<bool> ValidateAddressOwnershipAsync(int customerId, int addressId);
+        Task<CustomerDuplicateCheckResultDto> CheckDuplicateAsync(CustomerDuplicateCheckDto dto);
+        Task<CompanyAddressDto> AddCustomerAddressAsync(int customerId, CompanyAddressDto addressDto);
     }
 }

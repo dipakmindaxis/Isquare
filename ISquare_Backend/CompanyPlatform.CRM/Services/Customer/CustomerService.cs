@@ -253,6 +253,24 @@ namespace CompanyPlatform.CRM.Services.Customer
             try
             {
                 var companies = (await _repository.GetAll()).ToList();
+
+                // Exact GSTIN duplicate check: Prevent duplicate Customer Master records with the same GSTIN
+                if (!string.IsNullOrWhiteSpace(dto.GSTIN))
+                {
+                    var normalizedGstin = NormalizeGstin(dto.GSTIN);
+                    var existingGstinCustomer = companies.FirstOrDefault(c =>
+                        !c.IsDeleted &&
+                        !string.IsNullOrWhiteSpace(c.GSTIN) &&
+                        NormalizeGstin(c.GSTIN) == normalizedGstin);
+
+                    if (existingGstinCustomer != null)
+                    {
+                        _logger.LogWarning("Duplicate GSTIN detected on create: '{GSTIN}' matches Customer {CustomerCode} ({CustomerName})",
+                            dto.GSTIN, existingGstinCustomer.CompanyCode, existingGstinCustomer.CompanyName);
+                        throw new InvalidOperationException($"Cannot create duplicate customer. A customer with GSTIN '{dto.GSTIN.Trim()}' already exists ({existingGstinCustomer.CompanyCode} - {existingGstinCustomer.CompanyName}). Please add an address to the existing customer instead.");
+                    }
+                }
+
                 var existingCodes = new HashSet<string>(
                     companies.Where(c => !string.IsNullOrWhiteSpace(c.CompanyCode))
                              .Select(c => c.CompanyCode.Trim()),
@@ -467,6 +485,27 @@ namespace CompanyPlatform.CRM.Services.Customer
             var entity = await _repository.GetByIdAsync(id);
             if (entity == null || entity.IsDeleted)
                 return false;
+
+            // Check duplicate GSTIN only if GSTIN was changed to a different value
+            if (!string.IsNullOrWhiteSpace(dto.GSTIN))
+            {
+                var normalizedGstin = NormalizeGstin(dto.GSTIN);
+                var currentNormalized = NormalizeGstin(entity.GSTIN);
+                if (normalizedGstin != currentNormalized)
+                {
+                    var allActiveCompanies = (await _repository.GetAll()).Where(c => !c.IsDeleted && c.CompanyId != id).ToList();
+                    var duplicateGstin = allActiveCompanies.FirstOrDefault(c =>
+                        !string.IsNullOrWhiteSpace(c.GSTIN) &&
+                        NormalizeGstin(c.GSTIN) == normalizedGstin);
+
+                    if (duplicateGstin != null)
+                    {
+                        _logger.LogWarning("Duplicate GSTIN detected on update: '{GSTIN}' matches Customer {CustomerCode} ({CustomerName})",
+                            dto.GSTIN, duplicateGstin.CompanyCode, duplicateGstin.CompanyName);
+                        throw new InvalidOperationException($"Cannot update customer. Another customer with GSTIN '{dto.GSTIN.Trim()}' already exists ({duplicateGstin.CompanyCode} - {duplicateGstin.CompanyName}).");
+                    }
+                }
+            }
 
             // Address ownership validation
             if (dto.Addresses != null && dto.Addresses.Any())
@@ -1018,6 +1057,223 @@ namespace CompanyPlatform.CRM.Services.Customer
                 IsActive = companyDto.IsActive
             };
             return UpdateCustomerAsync(id, updateDto);
+        }
+
+        private static string NormalizeGstin(string? gstin)
+        {
+            if (string.IsNullOrWhiteSpace(gstin)) return string.Empty;
+            return System.Text.RegularExpressions.Regex.Replace(gstin, @"\s+", "").ToUpperInvariant();
+        }
+
+        private static string NormalizeCompanyName(string? name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return string.Empty;
+            return System.Text.RegularExpressions.Regex.Replace(name.ToLowerInvariant(), @"[^\w\d]", "");
+        }
+
+        private static string NormalizePincode(string? pin)
+        {
+            if (string.IsNullOrWhiteSpace(pin)) return string.Empty;
+            return System.Text.RegularExpressions.Regex.Replace(pin, @"\s+", "").Trim();
+        }
+
+        public async Task<CustomerDuplicateCheckResultDto> CheckDuplicateAsync(CustomerDuplicateCheckDto dto)
+        {
+            _logger.LogInformation("Checking for duplicate customer. GSTIN: {GSTIN}, CompanyName: {CompanyName}, Pincode: {Pincode}",
+                dto.GSTIN, dto.CompanyName, dto.Pincode);
+
+            var result = new CustomerDuplicateCheckResultDto();
+            var allCompanies = (await _repository.GetAll()).Where(c => !c.IsDeleted).ToList();
+
+            if (dto.ExcludeCustomerId.HasValue && dto.ExcludeCustomerId.Value > 0)
+            {
+                allCompanies = allCompanies.Where(c => c.CompanyId != dto.ExcludeCustomerId.Value).ToList();
+            }
+
+            var normalizedGstin = NormalizeGstin(dto.GSTIN);
+
+            // 1. Exact GSTIN Match Check (Hard Block)
+            if (!string.IsNullOrWhiteSpace(normalizedGstin))
+            {
+                var gstinMatches = allCompanies.Where(c =>
+                    !string.IsNullOrWhiteSpace(c.GSTIN) &&
+                    NormalizeGstin(c.GSTIN) == normalizedGstin
+                ).ToList();
+
+                if (gstinMatches.Any())
+                {
+                    result.IsDuplicate = true;
+                    result.IsExactMatch = true;
+                    result.IsPossibleMatch = false;
+                    result.MatchType = "ExactGstinMatch";
+                    result.Message = $"Customer with GSTIN '{normalizedGstin}' already exists.";
+
+                    var allAddresses = (await _addressRepository.GetAll()).Where(a => !a.IsDeleted).ToList();
+                    var cities = (await _cityRepository.GetAll()).ToList();
+                    var states = (await _stateRepository.GetAll()).ToList();
+
+                    result.MatchedCustomers = gstinMatches.Select(c =>
+                    {
+                        var custAddrs = allAddresses.Where(a => a.CompanyId == c.CompanyId).ToList();
+                        var priAddr = custAddrs.FirstOrDefault(a => a.IsPrimary) ?? custAddrs.FirstOrDefault();
+                        var cityName = priAddr?.CityId > 0 ? cities.FirstOrDefault(ci => ci.CityId == priAddr.CityId)?.CityName : null;
+                        var stateName = priAddr?.StateId > 0 ? states.FirstOrDefault(s => s.StateId == priAddr.StateId)?.StateName : null;
+
+                        return new MatchedCustomerSummaryDto
+                        {
+                            CustomerId = c.CompanyId,
+                            CustomerCode = c.CompanyCode,
+                            CustomerName = !string.IsNullOrWhiteSpace(c.CustomerName) ? c.CustomerName : c.CompanyName,
+                            CompanyName = c.CompanyName,
+                            GSTIN = c.GSTIN,
+                            PlantCode = priAddr?.PlantCode ?? c.PlantCode,
+                            City = cityName,
+                            State = stateName,
+                            Pincode = priAddr?.Pincode ?? c.Pincode,
+                            OwnerName = c.OwnerName,
+                            ExistingAddressCount = custAddrs.Count
+                        };
+                    }).ToList();
+
+                    return result;
+                }
+            }
+
+            // 2. Possible Duplicate Match Check (Company Name + PIN Code)
+            var targetName = !string.IsNullOrWhiteSpace(dto.CompanyName) ? dto.CompanyName : dto.CustomerName;
+            var normalizedName = NormalizeCompanyName(targetName);
+            var normalizedPin = NormalizePincode(dto.Pincode);
+
+            if (!string.IsNullOrWhiteSpace(normalizedName) && !string.IsNullOrWhiteSpace(normalizedPin) && normalizedPin != "000000")
+            {
+                var allAddresses = (await _addressRepository.GetAll()).Where(a => !a.IsDeleted).ToList();
+                var cities = (await _cityRepository.GetAll()).ToList();
+                var states = (await _stateRepository.GetAll()).ToList();
+
+                var namePinMatches = new List<CompanyModel>();
+
+                foreach (var c in allCompanies)
+                {
+                    var cName = NormalizeCompanyName(c.CompanyName);
+                    var custName = NormalizeCompanyName(c.CustomerName);
+                    bool nameMatches = (!string.IsNullOrEmpty(cName) && cName == normalizedName) ||
+                                      (!string.IsNullOrEmpty(custName) && custName == normalizedName);
+
+                    if (nameMatches)
+                    {
+                        bool pinMatches = NormalizePincode(c.Pincode) == normalizedPin;
+                        if (!pinMatches)
+                        {
+                            pinMatches = allAddresses.Any(a => a.CompanyId == c.CompanyId && NormalizePincode(a.Pincode) == normalizedPin);
+                        }
+
+                        if (pinMatches)
+                        {
+                            namePinMatches.Add(c);
+                        }
+                    }
+                }
+
+                if (namePinMatches.Any())
+                {
+                    result.IsDuplicate = true;
+                    result.IsExactMatch = false;
+                    result.IsPossibleMatch = true;
+                    result.MatchType = "PossibleNamePinMatch";
+                    result.Message = $"Possible duplicate: {namePinMatches.Count} existing customer(s) share a matching company name and PIN code ({dto.Pincode}).";
+
+                    result.MatchedCustomers = namePinMatches.Select(c =>
+                    {
+                        var custAddrs = allAddresses.Where(a => a.CompanyId == c.CompanyId).ToList();
+                        var priAddr = custAddrs.FirstOrDefault(a => a.IsPrimary) ?? custAddrs.FirstOrDefault();
+                        var cityName = priAddr?.CityId > 0 ? cities.FirstOrDefault(ci => ci.CityId == priAddr.CityId)?.CityName : null;
+                        var stateName = priAddr?.StateId > 0 ? states.FirstOrDefault(s => s.StateId == priAddr.StateId)?.StateName : null;
+
+                        return new MatchedCustomerSummaryDto
+                        {
+                            CustomerId = c.CompanyId,
+                            CustomerCode = c.CompanyCode,
+                            CustomerName = !string.IsNullOrWhiteSpace(c.CustomerName) ? c.CustomerName : c.CompanyName,
+                            CompanyName = c.CompanyName,
+                            GSTIN = c.GSTIN,
+                            PlantCode = priAddr?.PlantCode ?? c.PlantCode,
+                            City = cityName,
+                            State = stateName,
+                            Pincode = priAddr?.Pincode ?? c.Pincode,
+                            OwnerName = c.OwnerName,
+                            ExistingAddressCount = custAddrs.Count
+                        };
+                    }).ToList();
+
+                    return result;
+                }
+            }
+
+            result.IsDuplicate = false;
+            result.IsExactMatch = false;
+            result.IsPossibleMatch = false;
+            result.MatchType = "None";
+            result.Message = "No duplicate customer found.";
+            return result;
+        }
+
+        public async Task<CompanyAddressDto> AddCustomerAddressAsync(int customerId, CompanyAddressDto addressDto)
+        {
+            var customer = await _repository.GetByIdAsync(customerId);
+            if (customer == null || customer.IsDeleted)
+            {
+                throw new InvalidOperationException($"Customer with ID {customerId} not found.");
+            }
+
+            var validCountries = (await _countryRepository.GetAll()).ToList();
+            var validStates = (await _stateRepository.GetAll()).ToList();
+            var validCities = (await _cityRepository.GetAll()).ToList();
+            var employees = (await _employeeRepository.GetAll()).ToList();
+            var validEmployeeIds = new HashSet<int>(employees.Where(e => !e.IsDeleted).Select(e => e.ID));
+
+            var (defaultCountryId, defaultStateId, defaultCityId) = await EnsureDefaultLocationMastersAsync(validCountries, validStates, validCities);
+            int defaultCreatedBy = validEmployeeIds.FirstOrDefault(id => id > 0);
+            if (defaultCreatedBy <= 0) defaultCreatedBy = employees.FirstOrDefault()?.ID ?? 1;
+
+            int cId = addressDto.CountryId > 0 && validCountries.Any(c => c.CountryId == addressDto.CountryId) ? addressDto.CountryId : defaultCountryId;
+            int sId = addressDto.StateId > 0 && validStates.Any(s => s.StateId == addressDto.StateId) ? addressDto.StateId : defaultStateId;
+            int cityId = addressDto.CityId > 0 && validCities.Any(c => c.CityId == addressDto.CityId) ? addressDto.CityId : defaultCityId;
+            int createdBy = (addressDto.CreatedBy > 0 && validEmployeeIds.Contains(addressDto.CreatedBy)) ? addressDto.CreatedBy : defaultCreatedBy;
+
+            if (addressDto.IsPrimary)
+            {
+                var existingAddresses = (await _addressRepository.FindByCondition(a => a.CompanyId == customerId && !a.IsDeleted)).ToList();
+                foreach (var ea in existingAddresses.Where(a => a.IsPrimary))
+                {
+                    ea.IsPrimary = false;
+                    await _addressRepository.Update(ea);
+                }
+            }
+
+            var addressEntity = new CompanyAddressModel
+            {
+                CompanyId = customerId,
+                AddressType = string.IsNullOrWhiteSpace(addressDto.AddressType) ? "Plant / Factory" : addressDto.AddressType,
+                Address = addressDto.Address ?? string.Empty,
+                LocationName = addressDto.LocationName,
+                PlantCode = addressDto.PlantCode,
+                IsBilling = addressDto.IsBilling,
+                IsDelivery = addressDto.IsDelivery,
+                CountryId = cId,
+                StateId = sId,
+                CityId = cityId,
+                Pincode = string.IsNullOrWhiteSpace(addressDto.Pincode) ? "000000" : addressDto.Pincode.Trim(),
+                IsPrimary = addressDto.IsPrimary,
+                IsActive = true,
+                IsDeleted = false,
+                CreatedBy = createdBy,
+                CreatedDate = DateTime.UtcNow
+            };
+
+            await _addressRepository.Create(addressEntity);
+            addressDto.AddressId = addressEntity.AddressId;
+            addressDto.CompanyId = customerId;
+            return addressDto;
         }
 
         Task<bool> ICompanyService.DeleteCompanyAsync(int id)

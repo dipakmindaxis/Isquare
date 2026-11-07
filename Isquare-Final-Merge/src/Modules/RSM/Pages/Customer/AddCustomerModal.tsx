@@ -9,11 +9,15 @@ import {
   Users,
   MapPin,
   Calendar,
+  AlertTriangle,
+  ExternalLink,
+  PlusCircle,
 } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
 import { buttonStyles } from "../../../../Components/Common/buttonStyles";
 import type {
+  Customer,
   CustomerCreatePayload,
   CustomerAddress,
   CustomerAddressPayload,
@@ -24,8 +28,15 @@ import type {
   PaymentTermItem,
   CountryItem,
   AddressTypeItem,
+  CustomerDuplicateCheckResult,
 } from "./Types/CustomerTypes";
-import { createCustomer, getNextCustomerCode } from "./Services/CustomerService";
+import {
+  createCustomer,
+  getNextCustomerCode,
+  checkCustomerDuplicate,
+  addAddressToExistingCustomer,
+  getAllCustomers,
+} from "./Services/CustomerService";
 import {
   getIndustries,
   getCustomerStatuses,
@@ -46,6 +57,8 @@ interface AddCustomerModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  onViewCustomer?: (customerId: number) => void;
+  existingCustomers?: Customer[];
 }
 
 interface CustomerFormState {
@@ -156,6 +169,8 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
   isOpen,
   onClose,
   onSuccess,
+  onViewCustomer,
+  existingCustomers,
 }) => {
   const [formData, setFormData] =
     useState<CustomerFormState>(INITIAL_FORM_STATE);
@@ -163,6 +178,16 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFetchingCode, setIsFetchingCode] = useState(false);
   const cachedNextCodeRef = React.useRef<string>("");
+
+  // Duplicate company detection state
+  const [duplicateResult, setDuplicateResult] =
+    useState<CustomerDuplicateCheckResult | null>(null);
+  const [isCheckingDuplicate, setIsCheckingDuplicate] = useState(false);
+  const [isConfirmedDifferentCompany, setIsConfirmedDifferentCompany] =
+    useState(false);
+  const [isAddingAddressToExisting, setIsAddingAddressToExisting] =
+    useState(false);
+  const [localCustomers, setLocalCustomers] = useState<Customer[]>([]);
 
   // Master dropdown data lists
   const [industries, setIndustries] = useState<IndustryItem[]>([]);
@@ -172,6 +197,197 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
   const [paymentTerms, setPaymentTerms] = useState<PaymentTermItem[]>([]);
   const [countries, setCountries] = useState<CountryItem[]>([]);
   const [addressTypes, setAddressTypes] = useState<AddressTypeItem[]>([]);
+
+  // Load customer list if not passed from parent
+  useEffect(() => {
+    if (isOpen) {
+      if (!existingCustomers || existingCustomers.length === 0) {
+        getAllCustomers().then((list) => {
+          if (Array.isArray(list) && list.length > 0) {
+            setLocalCustomers(list);
+          }
+        });
+      }
+    }
+  }, [isOpen, existingCustomers]);
+
+  const normalizeGstin = (val?: string) => (val || "").replace(/\s+/g, "").toUpperCase();
+  const normalizeName = (val?: string) => (val || "").toLowerCase().replace(/[^\w\d]/g, "");
+  const normalizePin = (val?: string) => (val || "").replace(/\s+/g, "").trim();
+
+  const performDuplicateCheck = async (
+    gstinVal?: string,
+    companyNameVal?: string,
+    pincodeVal?: string
+  ): Promise<CustomerDuplicateCheckResult | null> => {
+    const gstin = (gstinVal !== undefined ? gstinVal : formData.gstin || "").trim();
+    const companyName = (companyNameVal !== undefined ? companyNameVal : formData.companyName || formData.customerName || "").trim();
+    const pincode = (pincodeVal !== undefined ? pincodeVal : formData.addresses[0]?.pincode || "").trim();
+
+    // Check only if GSTIN is present OR if both Company Name and PIN are present
+    if (!gstin && (!companyName || !pincode || pincode === "000000")) {
+      setDuplicateResult(null);
+      return null;
+    }
+
+    // 1. Instant client-side check against existing customers in memory
+    const customerList =
+      existingCustomers && existingCustomers.length > 0
+        ? existingCustomers
+        : localCustomers;
+
+    if (gstin && customerList.length > 0) {
+      const targetGstin = normalizeGstin(gstin);
+      const matched = customerList.find(
+        (c) => c.gstin && normalizeGstin(c.gstin) === targetGstin
+      );
+
+      if (matched) {
+        const clientResult: CustomerDuplicateCheckResult = {
+          isDuplicate: true,
+          isExactMatch: true,
+          isPossibleMatch: false,
+          matchType: "ExactGstinMatch",
+          message: `Customer with GSTIN '${targetGstin}' already exists.`,
+          matchedCustomers: [
+            {
+              customerId: matched.customerId,
+              customerCode: matched.customerCode || "",
+              customerName: matched.customerName,
+              companyName: matched.companyName,
+              gstin: matched.gstin,
+              plantCode: matched.plantCode,
+              city: matched.addresses?.[0]?.cityName,
+              state: matched.addresses?.[0]?.stateName,
+              pincode: matched.addresses?.[0]?.pincode,
+              existingAddressCount: matched.addresses?.length || 1,
+            },
+          ],
+        };
+        setDuplicateResult(clientResult);
+        return clientResult;
+      }
+    } else if (
+      companyName &&
+      pincode &&
+      pincode !== "000000" &&
+      customerList.length > 0
+    ) {
+      const normTargetName = normalizeName(companyName);
+      const normTargetPin = normalizePin(pincode);
+      const matchedList = customerList.filter((c) => {
+        const cName = normalizeName(c.companyName || c.customerName);
+        if (cName !== normTargetName) return false;
+        const p1 = normalizePin(c.addresses?.[0]?.pincode);
+        return p1 === normTargetPin;
+      });
+
+      if (matchedList.length > 0) {
+        const clientResult: CustomerDuplicateCheckResult = {
+          isDuplicate: true,
+          isExactMatch: false,
+          isPossibleMatch: true,
+          matchType: "PossibleNamePinMatch",
+          message: `Possible duplicate: ${matchedList.length} existing customer(s) share a matching name and PIN code (${pincode}).`,
+          matchedCustomers: matchedList.map((m) => ({
+            customerId: m.customerId,
+            customerCode: m.customerCode || "",
+            customerName: m.customerName,
+            companyName: m.companyName,
+            gstin: m.gstin,
+            plantCode: m.plantCode,
+            city: m.addresses?.[0]?.cityName,
+            state: m.addresses?.[0]?.stateName,
+            pincode: m.addresses?.[0]?.pincode,
+            existingAddressCount: m.addresses?.length || 1,
+          })),
+        };
+        setDuplicateResult(clientResult);
+        return clientResult;
+      }
+    }
+
+    // 2. Call server-side API as well
+    setIsCheckingDuplicate(true);
+    try {
+      const res = await checkCustomerDuplicate({
+        gstin: gstin || undefined,
+        companyName: companyName || undefined,
+        pincode: pincode || undefined,
+      });
+      if (res && res.isDuplicate) {
+        setDuplicateResult(res);
+        return res;
+      } else {
+        setDuplicateResult(null);
+        return res;
+      }
+    } catch {
+      return null;
+    } finally {
+      setIsCheckingDuplicate(false);
+    }
+  };
+
+  // Debounced duplicate detection
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const timer = setTimeout(() => {
+      const gstin = formData.gstin?.trim() || "";
+      const companyName = (formData.companyName || formData.customerName || "").trim();
+      const pincode = formData.addresses[0]?.pincode?.trim() || "";
+
+      if (gstin.length >= 3 || (companyName.length >= 3 && pincode.length >= 3)) {
+        performDuplicateCheck(gstin, companyName, pincode);
+      } else {
+        setDuplicateResult(null);
+      }
+    }, 600);
+
+    return () => clearTimeout(timer);
+  }, [formData.gstin, formData.companyName, formData.customerName, formData.addresses[0]?.pincode, isOpen]);
+
+  const handleAddAddressToExisting = async (existingCustomerId: number) => {
+    const addr = formData.addresses.find(a => a.address?.trim() || a.locationName?.trim()) || formData.addresses[0];
+    if (!addr || !addr.address?.trim()) {
+      toast.error("Please enter a valid address in Section 5 before adding it to the existing company.");
+      return;
+    }
+    if (!addr.locationName?.trim()) {
+      toast.error("Please enter a Plant / Location Name in Section 5.");
+      return;
+    }
+
+    setIsAddingAddressToExisting(true);
+    try {
+      await addAddressToExistingCustomer(existingCustomerId, {
+        companyId: existingCustomerId,
+        locationName: addr.locationName.trim(),
+        plantCode: addr.plantCode?.trim() || null,
+        addressType: addr.addressType || "Plant / Factory",
+        address: addr.address.trim(),
+        countryId: addr.countryId ? Number(addr.countryId) : 1,
+        stateId: addr.stateId ? Number(addr.stateId) : 1,
+        cityId: addr.cityId ? Number(addr.cityId) : 1,
+        pincode: addr.pincode?.trim() || "000000",
+        isBilling: !!addr.isBilling,
+        isDelivery: !!addr.isDelivery || !!addr.isShipping,
+        isShipping: !!addr.isDelivery || !!addr.isShipping,
+        isPrimary: false,
+        isActive: true,
+      });
+
+      toast.success("New location address added successfully to existing customer!");
+      onSuccess();
+      onClose();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to add address to existing customer.";
+      toast.error(msg);
+    } finally {
+      setIsAddingAddressToExisting(false);
+    }
+  };
 
 
 
@@ -307,12 +523,25 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
         ...prev,
         [name]: value === "" ? "" : Number(value),
       }));
+    } else if (name === "gstin") {
+      const upperVal = value.toUpperCase();
+      setIsConfirmedDifferentCompany(false);
+      setFormData((prev) => ({ ...prev, gstin: upperVal }));
+      if (upperVal.trim().length >= 3) {
+        performDuplicateCheck(upperVal, formData.companyName || formData.customerName, formData.addresses[0]?.pincode);
+      } else {
+        setDuplicateResult(null);
+      }
+    } else if (name === "companyName") {
+      setIsConfirmedDifferentCompany(false);
+      setFormData((prev) => ({ ...prev, companyName: value }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
 
   const handleAddressesChange = (newAddresses: CustomerAddress[]) => {
+    setIsConfirmedDifferentCompany(false);
     setFormData((prev) => ({
       ...prev,
       addresses: newAddresses,
@@ -321,6 +550,21 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Verify duplicates before submission
+    const dupCheck = await performDuplicateCheck();
+    if (dupCheck && dupCheck.isExactMatch) {
+      toast.error(
+        `A customer with GSTIN '${formData.gstin.trim()}' already exists. Please review or add location to existing company.`
+      );
+      return;
+    }
+    if (dupCheck && dupCheck.isPossibleMatch && !isConfirmedDifferentCompany) {
+      toast.warning(
+        "Possible duplicate company found. Please review existing record(s) and check the confirmation box if this is a different company."
+      );
+      return;
+    }
 
     const emailErr = validateEmail(formData.email);
     if (emailErr) {
@@ -873,16 +1117,32 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
-                      GSTIN
-                    </label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block">
+                        GSTIN
+                      </label>
+                      {isCheckingDuplicate && (
+                        <span className="text-[10px] text-gray-400 flex items-center gap-1 font-medium">
+                          <Loader2 size={11} className="animate-spin text-[#FF7900]" /> Checking duplicate...
+                        </span>
+                      )}
+                      {!isCheckingDuplicate && duplicateResult?.isExactMatch && (
+                        <span className="text-[10px] text-red-600 font-bold uppercase tracking-wider flex items-center gap-1">
+                          <AlertTriangle size={11} /> Already Registered
+                        </span>
+                      )}
+                    </div>
                     <input
                       type="text"
                       name="gstin"
                       value={formData.gstin || ""}
                       onChange={handleInputChange}
-                      placeholder="Enter GSTIN Number"
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-700 placeholder:text-gray-400 min-h-[44px]"
+                      placeholder="Enter GSTIN Number (e.g. 27ABCDE1234F1Z5)"
+                      className={`w-full border rounded-lg px-4 py-2.5 outline-none transition bg-white text-sm text-gray-700 placeholder:text-gray-400 min-h-[44px] uppercase ${
+                        duplicateResult?.isExactMatch
+                          ? "border-red-400 focus:border-red-500 focus:ring-1 focus:ring-red-200"
+                          : "border-gray-300 focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200"
+                      }`}
                     />
                   </div>
 
@@ -1022,6 +1282,129 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
                   </div>
                 </div>
               </div>
+
+              {/* DUPLICATE DETECTION ALERT BANNER */}
+              {duplicateResult && duplicateResult.isDuplicate && (
+                <div
+                  className={`p-5 rounded-xl border transition-all shadow-sm ${
+                    duplicateResult.isExactMatch
+                      ? "bg-red-50/90 border-red-200 text-red-950"
+                      : "bg-amber-50/90 border-amber-200 text-amber-950"
+                  }`}
+                >
+                  <div className="flex items-start gap-3.5">
+                    <AlertTriangle
+                      size={22}
+                      className={`shrink-0 mt-0.5 ${
+                        duplicateResult.isExactMatch ? "text-red-600" : "text-amber-600"
+                      }`}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <h4 className="font-bold text-sm">
+                          {duplicateResult.isExactMatch
+                            ? "Duplicate Company Detected (GSTIN Match)"
+                            : "Possible Duplicate Company Found"}
+                        </h4>
+                        <span
+                          className={`text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full ${
+                            duplicateResult.isExactMatch
+                              ? "bg-red-200 text-red-800"
+                              : "bg-amber-200 text-amber-800"
+                          }`}
+                        >
+                          {duplicateResult.isExactMatch ? "Creation Blocked" : "Action Required"}
+                        </span>
+                      </div>
+
+                      <p className="text-xs mt-1 text-gray-700 leading-relaxed">
+                        {duplicateResult.isExactMatch
+                          ? "A Customer Master record with this exact GSTIN already exists. Under CRM business rules, one company cannot have duplicate Customer Master records. You can directly add this new address / plant location to the existing company."
+                          : duplicateResult.message}
+                      </p>
+
+                      {/* Matched Records */}
+                      <div className="mt-3 space-y-2">
+                        {duplicateResult.matchedCustomers.map((cust) => (
+                          <div
+                            key={cust.customerId}
+                            className="p-3 bg-white/95 border border-gray-200 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs"
+                          >
+                            <div className="text-xs space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-gray-900">
+                                  {cust.companyName || cust.customerName}
+                                </span>
+                                <span className="text-gray-500 font-mono text-[11px]">
+                                  ({cust.customerCode})
+                                </span>
+                              </div>
+                              <div className="text-gray-600 flex flex-wrap gap-x-3 gap-y-0.5">
+                                {cust.gstin && (
+                                  <span>
+                                    GSTIN: <strong className="text-gray-800">{cust.gstin}</strong>
+                                  </span>
+                                )}
+                                {cust.plantCode && (
+                                  <span>
+                                    Plant: <strong className="text-gray-800">{cust.plantCode}</strong>
+                                  </span>
+                                )}
+                                {cust.pincode && <span>PIN: {cust.pincode}</span>}
+                                {cust.city && <span>City: {cust.city}</span>}
+                                <span>Locations: {cust.existingAddressCount || 1}</span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 shrink-0">
+                              {onViewCustomer && (
+                                <button
+                                  type="button"
+                                  onClick={() => onViewCustomer(cust.customerId)}
+                                  className="px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition cursor-pointer flex items-center gap-1"
+                                >
+                                  <ExternalLink size={13} /> View Customer
+                                </button>
+                              )}
+
+                              {duplicateResult.isExactMatch && (
+                                <button
+                                  type="button"
+                                  disabled={isAddingAddressToExisting}
+                                  onClick={() => handleAddAddressToExisting(cust.customerId)}
+                                  className="px-3 py-1.5 text-xs font-semibold text-white bg-[#FF7900] hover:bg-[#e06800] rounded-lg transition shadow-xs cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                                >
+                                  {isAddingAddressToExisting ? (
+                                    <Loader2 size={13} className="animate-spin" />
+                                  ) : (
+                                    <PlusCircle size={13} />
+                                  )}
+                                  Add Location to This Customer
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Confirmation Checkbox for Possible Duplicate */}
+                      {duplicateResult.isPossibleMatch && (
+                        <label className="mt-3 flex items-center gap-2.5 cursor-pointer text-xs font-semibold text-gray-800 bg-white/90 p-2.5 rounded-lg border border-amber-300 select-none">
+                          <input
+                            type="checkbox"
+                            checked={isConfirmedDifferentCompany}
+                            onChange={(e) => setIsConfirmedDifferentCompany(e.target.checked)}
+                            className="w-4 h-4 text-[#FF7900] rounded border-gray-300 focus:ring-[#FF7900] cursor-pointer"
+                          />
+                          <span>
+                            I confirm that this is a genuinely different company with the same name and PIN code (Allow creating new Customer Master record).
+                          </span>
+                        </label>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
