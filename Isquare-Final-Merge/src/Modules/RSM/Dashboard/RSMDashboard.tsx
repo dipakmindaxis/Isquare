@@ -10,7 +10,7 @@ import {
   ArrowRight,
   TrendingUp,
   Clock,
-  Layers,
+
   CalendarCheck,
   AlertCircle,
   X,
@@ -592,8 +592,8 @@ const RSMDashboard: React.FC = () => {
     const total = dataset.length;
     const statusPalette: Record<string, string> = {
       new: "#FF7900", // Bright Orange
-      "in progress": "#FFA826", // Warm Orange / Amber
-      progress: "#FFA826",
+      "in progress": "#F59E0B", // Warm Amber / Golden Yellow
+      progress: "#F59E0B",
       converted: "#10B981", // Emerald
       won: "#10B981",
       lost: "#94A3B8",
@@ -603,7 +603,7 @@ const RSMDashboard: React.FC = () => {
       pending: "#FBBF24",
     };
 
-    const fallbackColors = ["#FF7900", "#FFA826", "#10B981", "#94A3B8", "#CBD5E1"];
+    const fallbackColors = ["#FF7900", "#F59E0B", "#FBBF24", "#FCD34D", "#94A3B8"];
     const items: Array<{ label: string; count: number; percentage: number; color: string }> = [];
 
     let colorIdx = 0;
@@ -667,7 +667,7 @@ const RSMDashboard: React.FC = () => {
       rejected: "#EF4444",
     };
 
-    const fallbackColors = ["#10B981", "#FF7900", "#FFA826", "#FBBF24", "#94A3B8"];
+    const fallbackColors = ["#10B981", "#059669", "#34D399", "#6EE7B7", "#A7F3D0"];
     const items: Array<{ label: string; count: number; percentage: number; color: string }> = [];
 
     let colorIdx = 0;
@@ -739,10 +739,10 @@ const RSMDashboard: React.FC = () => {
   const getEnquiryStatusBadge = (statusName?: string) => {
     const s = (statusName || "New").toLowerCase();
     if (s.includes("progress")) {
-      return "bg-[#EBF5FF] text-[#2563EB]";
+      return "bg-[#EBF5FF] text-[#2563EB] border border-[#BFDBFE]/60";
     }
     if (s.includes("converted") || s.includes("won") || s === "new") {
-      return "bg-[#ECFDF5] text-[#059669]";
+      return "bg-[#E8F8F0] text-[#059669] border border-[#A7F3D0]/60";
     }
     if (s.includes("review") || s.includes("pending")) {
       return "bg-[#FFFBEB] text-[#D97706]";
@@ -750,7 +750,7 @@ const RSMDashboard: React.FC = () => {
     if (s.includes("lost") || s.includes("rejected")) {
       return "bg-[#FEF2F2] text-[#DC2626]";
     }
-    return "bg-[#ECFDF5] text-[#059669]";
+    return "bg-[#E8F8F0] text-[#059669] border border-[#A7F3D0]/60";
   };
 
   // =====================================================
@@ -881,9 +881,23 @@ const RSMDashboard: React.FC = () => {
       {/* ========================================================= */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {/* Card 1: Total Customers */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex items-center gap-4">
-          <div className="w-13 h-13 rounded-2xl bg-orange-50/90 text-[#FF7900] flex items-center justify-center flex-shrink-0">
-            <Users size={24} />
+
+        <div
+          onClick={() => navigate("/rsm/customers")}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              navigate("/rsm/customers");
+            }
+          }}
+          className="group relative overflow-hidden bg-gradient-to-br from-white via-[#FFF9F3] to-[#FFF0E2] rounded-2xl border border-[#FFD8B3]/90 hover:border-[#FF7900] p-5 shadow-[0_4px_20px_rgba(255,121,0,0.06)] hover:shadow-[0_12px_28px_-6px_rgba(255,121,0,0.22)] hover:-translate-y-1 transition-all duration-300 ease-in-out cursor-pointer flex items-center gap-4"
+        >
+          {/* Animated Bottom Accent Border */}
+          <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#FF7900] to-[#FFA74D] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-in-out origin-left rounded-b-2xl pointer-events-none" />
+          <div className="w-13 h-13 rounded-2xl bg-gradient-to-tr from-[#FF7900] to-[#FFA74D] text-white shadow-[0_4px_14px_rgba(255,121,0,0.35)] flex items-center justify-center flex-shrink-0 transition-all duration-300 ease-in-out group-hover:scale-105">
+            <Users size={24} className="text-white transition-transform duration-300 ease-in-out" />
           </div>
           <div>
             <span className="text-xs font-bold text-[#00234a] block">Total Customers</span>
@@ -894,9 +908,23 @@ const RSMDashboard: React.FC = () => {
         </div>
 
         {/* Card 2: Total Enquiries */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex items-center gap-4">
-          <div className="w-13 h-13 rounded-2xl bg-blue-50/90 text-[#3B82F6] flex items-center justify-center flex-shrink-0">
-            <FileText size={24} />
+
+        <div
+          onClick={() => navigate("/rsm/enquiries")}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              navigate("/rsm/enquiries");
+            }
+          }}
+          className="group relative overflow-hidden bg-gradient-to-br from-white via-[#F4F8FF] to-[#E8F2FF] rounded-2xl border border-[#BFDBFE]/90 hover:border-[#3B82F6] p-5 shadow-[0_4px_20px_rgba(59,130,246,0.06)] hover:shadow-[0_12px_28px_-6px_rgba(59,130,246,0.22)] hover:-translate-y-1 transition-all duration-300 ease-in-out cursor-pointer flex items-center gap-4"
+        >
+          {/* Animated Bottom Accent Border */}
+          <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#2563EB] to-[#60A5FA] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-in-out origin-left rounded-b-2xl pointer-events-none" />
+          <div className="w-13 h-13 rounded-2xl bg-gradient-to-tr from-[#2563EB] to-[#60A5FA] text-white shadow-[0_4px_14px_rgba(37,99,235,0.35)] flex items-center justify-center flex-shrink-0 transition-all duration-300 ease-in-out group-hover:scale-105">
+            <FileText size={24} className="text-white transition-transform duration-300 ease-in-out" />
           </div>
           <div>
             <span className="text-xs font-bold text-[#00234a] block">Total Enquiries</span>
@@ -907,9 +935,23 @@ const RSMDashboard: React.FC = () => {
         </div>
 
         {/* Card 3: Total Quotations */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex items-center gap-4">
-          <div className="w-13 h-13 rounded-2xl bg-purple-50/90 text-[#8B5CF6] flex items-center justify-center flex-shrink-0">
-            <ClipboardList size={24} />
+
+        <div
+          onClick={() => navigate("/rsm/quotations")}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              navigate("/rsm/quotations");
+            }
+          }}
+          className="group relative overflow-hidden bg-gradient-to-br from-white via-[#FAF6FF] to-[#F1E8FF] rounded-2xl border border-[#DDD6FE]/90 hover:border-[#8B5CF6] p-5 shadow-[0_4px_20px_rgba(139,92,246,0.06)] hover:shadow-[0_12px_28px_-6px_rgba(139,92,246,0.22)] hover:-translate-y-1 transition-all duration-300 ease-in-out cursor-pointer flex items-center gap-4"
+        >
+          {/* Animated Bottom Accent Border */}
+          <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#7C3AED] to-[#A78BFA] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-in-out origin-left rounded-b-2xl pointer-events-none" />
+          <div className="w-13 h-13 rounded-2xl bg-gradient-to-tr from-[#7C3AED] to-[#A78BFA] text-white shadow-[0_4px_14px_rgba(124,58,237,0.35)] flex items-center justify-center flex-shrink-0 transition-all duration-300 ease-in-out group-hover:scale-105">
+            <ClipboardList size={24} className="text-white transition-transform duration-300 ease-in-out" />
           </div>
           <div>
             <span className="text-xs font-bold text-[#00234a] block">Total Quotations</span>
@@ -920,9 +962,23 @@ const RSMDashboard: React.FC = () => {
         </div>
 
         {/* Card 4: Open Tasks */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex items-center gap-4">
-          <div className="w-13 h-13 rounded-2xl bg-emerald-50/90 text-[#10B981] flex items-center justify-center flex-shrink-0">
-            <CheckCircle2 size={24} />
+
+        <div
+          onClick={() => navigate("/rsm/task-assignment")}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              navigate("/rsm/task-assignment");
+            }
+          }}
+          className="group relative overflow-hidden bg-gradient-to-br from-white via-[#F0FDF4] to-[#E3F9EC] rounded-2xl border border-[#A7F3D0]/90 hover:border-[#10B981] p-5 shadow-[0_4px_20px_rgba(16,185,129,0.06)] hover:shadow-[0_12px_28px_-6px_rgba(16,185,129,0.22)] hover:-translate-y-1 transition-all duration-300 ease-in-out cursor-pointer flex items-center gap-4"
+        >
+          {/* Animated Bottom Accent Border */}
+          <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#059669] to-[#34D399] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-in-out origin-left rounded-b-2xl pointer-events-none" />
+          <div className="w-13 h-13 rounded-2xl bg-gradient-to-tr from-[#059669] to-[#34D399] text-white shadow-[0_4px_14px_rgba(5,150,105,0.35)] flex items-center justify-center flex-shrink-0 transition-all duration-300 ease-in-out group-hover:scale-105">
+            <CheckCircle2 size={24} className="text-white transition-transform duration-300 ease-in-out" />
           </div>
           <div>
             <span className="text-xs font-bold text-[#00234a] block">Open Tasks</span>
@@ -938,7 +994,7 @@ const RSMDashboard: React.FC = () => {
       {/* ========================================================= */}
       <div className="flex flex-col lg:flex-row gap-5 items-stretch">
         {/* Card 1: Sales Performance (Takes ~42% width) */}
-        <div className="w-full lg:w-[42%] bg-white rounded-2xl border border-gray-100 p-5 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex flex-col justify-between">
+        <div className="w-full lg:w-[42%] bg-white hover:border-[#FF7900]/40 rounded-2xl border border-gray-100 p-5 shadow-[0_2px_10px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_25px_-5px_rgba(255,121,0,0.12),0_4px_10px_-2px_rgba(255,121,0,0.04)] hover:-translate-y-[2px] transition-all duration-300 ease-in-out motion-reduce:transition-none motion-reduce:hover:transform-none flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-2 pb-3 border-b border-gray-100">
               <TrendingUp size={18} className="text-[#FF7900]" />
@@ -953,7 +1009,8 @@ const RSMDashboard: React.FC = () => {
         </div>
 
         {/* Card 2: Enquiry Status (Takes ~29% width) */}
-        <div className="w-full lg:w-[29%] bg-white rounded-2xl border border-gray-100 p-5 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex flex-col justify-between">
+        <div className="w-full lg:w-[29%] bg-white hover:border-[#3B82F6]/40 rounded-2xl border border-gray-100 p-5 shadow-[0_2px_10px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_25px_-5px_rgba(59,130,246,0.12),0_4px_10px_-2px_rgba(59,130,246,0.04)] hover:-translate-y-[2px] transition-all duration-300 ease-in-out motion-reduce:transition-none motion-reduce:hover:transform-none flex flex-col justify-between">
+
           <div>
             <div className="flex items-center gap-2 pb-3 border-b border-gray-100">
               <Clock size={18} className="text-[#FF7900]" />
@@ -1002,10 +1059,11 @@ const RSMDashboard: React.FC = () => {
         </div>
 
         {/* Card 3: Quotation Status (Takes ~29% width) */}
-        <div className="w-full lg:w-[29%] bg-white rounded-2xl border border-gray-100 p-5 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex flex-col justify-between">
+        <div className="w-full lg:w-[29%] bg-white hover:border-[#10B981]/40 rounded-2xl border border-gray-100 p-5 shadow-[0_2px_10px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_25px_-5px_rgba(16,185,129,0.12),0_4px_10px_-2px_rgba(16,185,129,0.04)] hover:-translate-y-[2px] transition-all duration-300 ease-in-out motion-reduce:transition-none motion-reduce:hover:transform-none flex flex-col justify-between">
+
           <div>
             <div className="flex items-center gap-2 pb-3 border-b border-gray-100">
-              <Layers size={18} className="text-[#FF7900]" />
+              <CheckCircle2 size={18} className="text-[#10B981]" />
               <h3 className="text-sm font-bold text-[#00234a]">Quotation Status</h3>
             </div>
 
@@ -1102,7 +1160,7 @@ const RSMDashboard: React.FC = () => {
                         <tr
                           key={enq.enquiryId}
                           onClick={() => navigate("/rsm/enquiries")}
-                          className="hover:bg-orange-50/20 transition cursor-pointer group"
+                          className="hover:bg-[#F0F7FF] transition-colors duration-250 ease-in-out motion-reduce:transition-none cursor-pointer group"
                         >
                           <td className="py-3 px-2.5 font-bold text-[#00234a] group-hover:text-[#FF7900] transition">
                             {enqNum}
@@ -1169,7 +1227,7 @@ const RSMDashboard: React.FC = () => {
                   return (
                     <div
                       key={task.taskId}
-                      className="p-3 rounded-xl border border-gray-100 hover:bg-gray-50/50 transition flex items-center justify-between gap-3 group"
+                      className={`p-3 rounded-xl border transition-all duration-250 ease-in-out motion-reduce:transition-none motion-reduce:hover:transform-none flex items-center justify-between gap-3 group hover:-translate-y-[2px] ${isOverdue ? "border-red-200/80 border-l-4 border-l-[#EF4444] bg-white hover:bg-[#FFF9F9] hover:shadow-[0_4px_14px_rgba(239,68,68,0.08)]" : "border-gray-100 border-l-4 border-l-[#3B82F6] bg-white hover:bg-[#F8FAFF] hover:border-blue-200 hover:shadow-[0_4px_14px_rgba(59,130,246,0.08)]"}`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <button
@@ -1201,11 +1259,11 @@ const RSMDashboard: React.FC = () => {
                           <span>{dateText}</span>
                         </div>
                         {isOverdue ? (
-                          <span className="bg-[#FEF2F2] text-[#DC2626] font-semibold text-[11px] px-2.5 py-0.5 rounded-full border border-red-100 whitespace-nowrap">
+                          <span className="bg-[#FEF2F2] text-[#DC2626] font-semibold text-[11px] px-2.5 py-0.5 rounded-full border border-red-200 whitespace-nowrap">
                             Overdue
                           </span>
                         ) : (
-                          <span className="bg-[#ECFDF5] text-[#059669] font-semibold text-[11px] px-2.5 py-0.5 rounded-full border border-emerald-100 whitespace-nowrap">
+                          <span className="bg-[#EBF5FF] text-[#2563EB] font-semibold text-[11px] px-2.5 py-0.5 rounded-full border border-blue-200 whitespace-nowrap">
                             Upcoming
                           </span>
                         )}
