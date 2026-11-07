@@ -424,8 +424,7 @@ const CustomerMaster: React.FC<CustomerMasterProps> = ({
         isActive: updatedStatus,
       });
       toast.success(
-        `Customer "${row.customerName}" marked as ${
-          updatedStatus ? "Active" : "Inactive"
+        `Customer "${row.customerName}" marked as ${updatedStatus ? "Active" : "Inactive"
         }.`
       );
       fetchCustomers();
@@ -436,9 +435,19 @@ const CustomerMaster: React.FC<CustomerMasterProps> = ({
   };
 
   const handleDeleteRequest = (customer: Customer) => {
+    const custId = Number(
+      customer.customerId ||
+      (customer as any).companyId ||
+      (customer as any).CustomerId ||
+      (customer as any).CompanyId
+    );
+    if (!custId) {
+      toast.error("Invalid customer ID.");
+      return;
+    }
     setCustomerToDelete({
-      id: customer.customerId,
-      name: customer.customerName,
+      id: custId,
+      name: customer.customerName || customer.companyName || "Customer",
     });
     setIsDeleteModalOpen(true);
   };
@@ -605,9 +614,8 @@ const CustomerMaster: React.FC<CustomerMasterProps> = ({
                 className="sr-only"
               />
               <div
-                className={`w-11 h-6 rounded-full transition-colors relative ${
-                  isOn ? "bg-[#FF8500]" : "bg-gray-300"
-                }`}
+                className={`w-11 h-6 rounded-full transition-colors relative ${isOn ? "bg-[#FF8500]" : "bg-gray-300"
+                  }`}
               >
                 <span
                   className="absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform duration-200 ease-in-out"
@@ -626,44 +634,61 @@ const CustomerMaster: React.FC<CustomerMasterProps> = ({
     },
     {
       name: "Actions",
-      cell: (row) => (
-        <div className="flex justify-center items-center gap-3 w-full">
-          <button
-            type="button"
-            onClick={() => {
-              setSelectedCustomerId(row.customerId);
-              setIsViewModalOpen(true);
-            }}
-            className={`${actionButtonStyles.base} ${actionButtonStyles.view}`}
-            title="View Details"
-          >
-            <FaEye size={16} />
-          </button>
-          {canEdit && (
+      cell: (row) => {
+        const custId = Number(
+          row.customerId ||
+          (row as any).companyId ||
+          (row as any).CustomerId ||
+          (row as any).CompanyId
+        );
+
+        return (
+          <div className="flex justify-center items-center gap-3 w-full">
             <button
               type="button"
               onClick={() => {
-                setSelectedCustomerId(row.customerId);
-                setIsEditModalOpen(true);
+                if (custId) {
+                  setSelectedCustomerId(custId);
+                  setIsViewModalOpen(true);
+                } else {
+                  toast.error("Invalid customer identifier.");
+                }
               }}
-              className={`${actionButtonStyles.base} ${actionButtonStyles.edit}`}
-              title="Edit Customer"
+              className={`${actionButtonStyles.base} ${actionButtonStyles.view}`}
+              title="View Details"
             >
-              <FaEdit size={16} />
+              <FaEye size={16} />
             </button>
-          )}
-          {canDelete && (
-            <button
-              type="button"
-              onClick={() => handleDeleteRequest(row)}
-              className={`${actionButtonStyles.base} ${actionButtonStyles.delete}`}
-              title="Delete Customer"
-            >
-              <FaTrash size={16} />
-            </button>
-          )}
-        </div>
-      ),
+            {canEdit && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (custId) {
+                    setSelectedCustomerId(custId);
+                    setIsEditModalOpen(true);
+                  } else {
+                    toast.error("Invalid customer identifier.");
+                  }
+                }}
+                className={`${actionButtonStyles.base} ${actionButtonStyles.edit}`}
+                title="Edit Customer"
+              >
+                <FaEdit size={16} />
+              </button>
+            )}
+            {canDelete && (
+              <button
+                type="button"
+                onClick={() => handleDeleteRequest(row)}
+                className={`${actionButtonStyles.base} ${actionButtonStyles.delete}`}
+                title="Delete Customer"
+              >
+                <FaTrash size={16} />
+              </button>
+            )}
+          </div>
+        );
+      },
       width: "120px",
     },
   ];
@@ -702,11 +727,10 @@ const CustomerMaster: React.FC<CustomerMasterProps> = ({
                 key={tab.id}
                 type="button"
                 onClick={() => handleSelectTab(tab.id)}
-                className={`flex items-center gap-2.5 px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-all cursor-pointer ${
-                  isActive
+                className={`flex items-center gap-2.5 px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-all cursor-pointer ${isActive
                     ? "border-[#FF7900] text-[#FF7900] font-semibold bg-orange-50/50 rounded-t-lg"
                     : "border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300"
-                }`}
+                  }`}
               >
                 <span className={isActive ? "text-[#FF7900]" : "text-gray-400"}>
                   {tab.icon}
@@ -725,11 +749,17 @@ const CustomerMaster: React.FC<CustomerMasterProps> = ({
             {isAddModalOpen ? (
               <AddCustomerModal
                 isOpen={isAddModalOpen}
+                existingCustomers={customers}
                 onClose={() => setIsAddModalOpen(false)}
                 onSuccess={() => {
                   setIsAddModalOpen(false);
                   loadMasterData();
                   fetchCustomers();
+                }}
+                onViewCustomer={(id) => {
+                  setIsAddModalOpen(false);
+                  setSelectedCustomerId(id);
+                  setIsViewModalOpen(true);
                 }}
               />
             ) : isEditModalOpen && selectedCustomerId ? (
@@ -751,153 +781,152 @@ const CustomerMaster: React.FC<CustomerMasterProps> = ({
               <div className="space-y-6">
                 {/* Listing Header matching Referral Image */}
                 <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <h2 className="border-b-2 border-[#FF7900] pb-2 text-3xl font-bold tracking-[-0.03em] text-[#00234a]">
-                  Customers
-                </h2>
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    loadMasterData();
-                    fetchCustomers();
-                  }}
-                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer"
-                >
-                  <RefreshCw size={15} className={isLoading ? "animate-spin" : ""} />
-                  <span>Refresh</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={handleExportClick}
-                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer"
-                >
-                  <FaFileExcel className="text-emerald-600 text-sm" />
-                  <span>Export</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsAddModalOpen(true)}
-                  className="rounded-xl bg-[#00234a] hover:bg-[#FF7900] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_18px_rgba(0,35,74,0.18)] transition cursor-pointer flex items-center gap-2"
-                >
-                  <FaPlus size={12} />
-                  <span>Create New</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Analytics / Stats Bar */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-              <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 sm:gap-4">
-                <div className="p-3 bg-blue-50 text-blue-600 rounded-xl shrink-0">
-                  <FaBuilding size={20} />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold uppercase text-gray-400 tracking-wider truncate">
-                    Total Customers
-                  </p>
-                  <p className="text-2xl font-bold text-gray-800">{stats.total}</p>
-                </div>
-              </div>
-              <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 sm:gap-4">
-                <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl shrink-0">
-                  <FaUserCheck size={20} />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold uppercase text-gray-400 tracking-wider truncate">
-                    Active Accounts
-                  </p>
-                  <p className="text-2xl font-bold text-emerald-600">{stats.active}</p>
-                </div>
-              </div>
-              <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 sm:gap-4 sm:col-span-2 lg:col-span-1">
-                <div className="p-3 bg-rose-50 text-rose-600 rounded-xl shrink-0">
-                  <FaUserTimes size={20} />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold uppercase text-gray-400 tracking-wider truncate">
-                    Inactive Accounts
-                  </p>
-                  <p className="text-2xl font-bold text-rose-600">{stats.inactive}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Filter & Search Bar */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 sm:gap-4">
-              <div className="relative w-full md:w-96">
-                <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none" />
-                <input
-                  type="text"
-                  value={filterText}
-                  onChange={(e) => setFilterText(e.target.value)}
-                  placeholder="Search by name, code, company, GSTIN, PAN, area..."
-                  className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#FF8500]/20 focus:border-[#FF8500]"
-                />
-              </div>
-
-              <div className="flex items-center justify-between sm:justify-start gap-2 w-full md:w-auto">
-                <span className="text-xs font-semibold text-gray-500 whitespace-nowrap">
-                  Status:
-                </span>
-                <div className="flex bg-gray-100 p-1 rounded-lg flex-1 sm:flex-initial">
-                  {["All", "Active", "Inactive"].map((st) => (
+                  <div>
+                    <h2 className="border-b-2 border-[#FF7900] pb-2 text-3xl font-bold tracking-[-0.03em] text-[#00234a]">
+                      Customers
+                    </h2>
+                  </div>
+                  <div className="flex items-center gap-3">
                     <button
-                      key={st}
                       type="button"
-                      onClick={() => setSelectedStatus(st)}
-                      className={`flex-1 sm:flex-initial px-3 py-1.5 sm:py-1 text-xs font-medium rounded-md transition-all text-center ${
-                        selectedStatus === st
-                          ? "bg-white text-[#FF8500] shadow-sm font-semibold"
-                          : "text-gray-500 hover:text-gray-900"
-                      }`}
+                      onClick={() => {
+                        loadMasterData();
+                        fetchCustomers();
+                      }}
+                      className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer"
                     >
-                      {st}
+                      <RefreshCw size={15} className={isLoading ? "animate-spin" : ""} />
+                      <span>Refresh</span>
                     </button>
-                  ))}
+                    <button
+                      type="button"
+                      onClick={handleExportClick}
+                      className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer"
+                    >
+                      <FaFileExcel className="text-emerald-600 text-sm" />
+                      <span>Export</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsAddModalOpen(true)}
+                      className="rounded-xl bg-[#00234a] hover:bg-[#FF7900] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_18px_rgba(0,35,74,0.18)] transition cursor-pointer flex items-center gap-2"
+                    >
+                      <FaPlus size={12} />
+                      <span>Create New</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Data Table */}
-            <div className="bg-white rounded-none shadow-sm border border-gray-200 overflow-hidden">
-              <div className="overflow-x-auto w-full">
-                <div className="min-w-[850px]">
-                  <DataTable
-                    columns={columns}
-                    data={filteredCustomers}
-                    progressPending={isLoading}
-                    pagination
-                    paginationPerPage={10}
-                    paginationRowsPerPageOptions={[10, 25, 50, 100]}
-                    customStyles={customTableStyles}
-                    highlightOnHover
-                    pointerOnHover
-                    responsive
-                    noDataComponent={
-                      <div className="py-12 text-center text-gray-400">
-                        <FaUsers size={32} className="mx-auto mb-2 opacity-50" />
-                        <p className="text-sm font-medium">No customer records found</p>
-                      </div>
-                    }
-                  />
+                {/* Analytics / Stats Bar */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                  <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 sm:gap-4">
+                    <div className="p-3 bg-blue-50 text-blue-600 rounded-xl shrink-0">
+                      <FaBuilding size={20} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold uppercase text-gray-400 tracking-wider truncate">
+                        Total Customers
+                      </p>
+                      <p className="text-2xl font-bold text-gray-800">{stats.total}</p>
+                    </div>
+                  </div>
+                  <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 sm:gap-4">
+                    <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl shrink-0">
+                      <FaUserCheck size={20} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold uppercase text-gray-400 tracking-wider truncate">
+                        Active Accounts
+                      </p>
+                      <p className="text-2xl font-bold text-emerald-600">{stats.active}</p>
+                    </div>
+                  </div>
+                  <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 sm:gap-4 sm:col-span-2 lg:col-span-1">
+                    <div className="p-3 bg-rose-50 text-rose-600 rounded-xl shrink-0">
+                      <FaUserTimes size={20} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold uppercase text-gray-400 tracking-wider truncate">
+                        Inactive Accounts
+                      </p>
+                      <p className="text-2xl font-bold text-rose-600">{stats.inactive}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Filter & Search Bar */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 sm:gap-4">
+                  <div className="relative w-full md:w-96">
+                    <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none" />
+                    <input
+                      type="text"
+                      value={filterText}
+                      onChange={(e) => setFilterText(e.target.value)}
+                      placeholder="Search by name, code, company, GSTIN, PAN, area..."
+                      className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#FF8500]/20 focus:border-[#FF8500]"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between sm:justify-start gap-2 w-full md:w-auto">
+                    <span className="text-xs font-semibold text-gray-500 whitespace-nowrap">
+                      Status:
+                    </span>
+                    <div className="flex bg-gray-100 p-1 rounded-lg flex-1 sm:flex-initial">
+                      {["All", "Active", "Inactive"].map((st) => (
+                        <button
+                          key={st}
+                          type="button"
+                          onClick={() => setSelectedStatus(st)}
+                          className={`flex-1 sm:flex-initial px-3 py-1.5 sm:py-1 text-xs font-medium rounded-md transition-all text-center ${selectedStatus === st
+                              ? "bg-white text-[#FF8500] shadow-sm font-semibold"
+                              : "text-gray-500 hover:text-gray-900"
+                            }`}
+                        >
+                          {st}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Data Table */}
+                <div className="bg-white rounded-none shadow-sm border border-gray-200 overflow-hidden">
+                  <div className="overflow-x-auto w-full">
+                    <div className="min-w-[850px]">
+                      <DataTable
+                        columns={columns}
+                        data={filteredCustomers}
+                        progressPending={isLoading}
+                        pagination
+                        paginationPerPage={10}
+                        paginationRowsPerPageOptions={[10, 25, 50, 100]}
+                        customStyles={customTableStyles}
+                        highlightOnHover
+                        pointerOnHover
+                        responsive
+                        noDataComponent={
+                          <div className="py-12 text-center text-gray-400">
+                            <FaUsers size={32} className="mx-auto mb-2 opacity-50" />
+                            <p className="text-sm font-medium">No customer records found</p>
+                          </div>
+                        }
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         )}
-      </div>
-    )}
 
-      {/* Sub-Master Views for Dropdowns */}
-      {activeTab === "assignment" && <SalesAssignmentSection standalone={true} />}
-      {activeTab === "status" && <CustomerStatus isTab={true} />}
-      {activeTab === "source" && <CustomerSource isTab={true} />}
-      {activeTab === "industry" && <Industry isTab={true} />}
-      {activeTab === "area" && <CustomerArea isTab={true} />}
-      {activeTab === "payment-terms" && <PaymentTerm isTab={true} />}
-    </div>
+        {/* Sub-Master Views for Dropdowns */}
+        {activeTab === "assignment" && <SalesAssignmentSection standalone={true} />}
+        {activeTab === "status" && <CustomerStatus isTab={true} />}
+        {activeTab === "source" && <CustomerSource isTab={true} />}
+        {activeTab === "industry" && <Industry isTab={true} />}
+        {activeTab === "area" && <CustomerArea isTab={true} />}
+        {activeTab === "payment-terms" && <PaymentTerm isTab={true} />}
+      </div>
 
       {isViewModalOpen && (
         <ViewCustomerModal

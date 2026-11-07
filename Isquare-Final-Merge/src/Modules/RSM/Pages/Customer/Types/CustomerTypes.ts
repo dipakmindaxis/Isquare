@@ -303,3 +303,34 @@ export interface DirectorItem {
   directorCode?: string;
   isActive?: boolean;
 }
+
+export interface MatchedCustomerSummary {
+  customerId: number;
+  customerCode: string;
+  customerName: string;
+  companyName?: string;
+  gstin?: string;
+  plantCode?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
+  ownerName?: string;
+  existingAddressCount?: number;
+}
+
+export interface CustomerDuplicateCheckPayload {
+  gstin?: string;
+  companyName?: string;
+  customerName?: string;
+  pincode?: string;
+  excludeCustomerId?: number;
+}
+
+export interface CustomerDuplicateCheckResult {
+  isDuplicate: boolean;
+  isExactMatch: boolean;
+  isPossibleMatch: boolean;
+  matchType: "ExactGstinMatch" | "PossibleNamePinMatch" | "None";
+  message: string;
+  matchedCustomers: MatchedCustomerSummary[];
+}

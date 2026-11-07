@@ -8,7 +8,7 @@ namespace CompanyPlatform.CRM.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public class CustomerController : ControllerBase
     {
         private readonly ICustomerService _customerService;
@@ -116,6 +116,34 @@ namespace CompanyPlatform.CRM.Controllers
             {
                 Message = "Customer deleted successfully."
             });
+        }
+
+        [HttpPost("check-duplicate")]
+        [AllowAnonymous]
+        public async Task<IActionResult> CheckDuplicate([FromBody] CustomerDuplicateCheckDto dto)
+        {
+            _logger.LogInformation("Duplicate check requested for GSTIN: {GSTIN}, CompanyName: {CompanyName}, Pincode: {Pincode}",
+                dto.GSTIN, dto.CompanyName, dto.Pincode);
+
+            var result = await _customerService.CheckDuplicateAsync(dto);
+            return Ok(result);
+        }
+
+        [HttpPost("{id}/addresses")]
+        public async Task<IActionResult> AddAddress(int id, [FromBody] CompanyPlatform.CRM.DTO.CompanyAddressDto addressDto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            try
+            {
+                var created = await _customerService.AddCustomerAddressAsync(id, addressDto);
+                return Ok(created);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
         }
 
         [HttpGet("{id}/addresses")]
