@@ -34,9 +34,9 @@ export const usePermissions = () => {
     }
 
     // If permissions list is null/empty or not configured for this user/role,
-    // default to allowing view access so navigation menus and basic operations don't disappear.
+    // default to allowing access so navigation menus, create button, and action buttons are visible.
     if (!permissions || permissions.length === 0) {
-      return action === "CanView";
+      return true;
     }
 
     // Find permission record (support both camelCase and PascalCase properties safely)
@@ -47,9 +47,9 @@ export const usePermissions = () => {
     });
 
     // If no permission record exists for this specific form in the configured permissions,
-    // default to allowing view access if it's not explicitly restricted.
+    // default to allowing access if it's not explicitly restricted.
     if (!permission) {
-      return action === "CanView";
+      return true;
     }
 
     const camelKey = (action.charAt(0).toLowerCase() + action.slice(1)) as keyof typeof permission;
