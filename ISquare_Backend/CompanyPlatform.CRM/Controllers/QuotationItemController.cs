@@ -1,4 +1,4 @@
-﻿using CompanyPlatform.CRM.DTO.Quotation;
+using CompanyPlatform.CRM.DTO.Quotation;
 using CompanyPlatform.CRM.Services.Quotation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,7 +8,7 @@ namespace CompanyPlatform.CRM.Controllers
 {
     [Route("api/quotation-item")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public class QuotationItemController : ControllerBase
     {
         private readonly IQuotationItemService _service;

@@ -130,16 +130,26 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
   const isHRMS = location.pathname.startsWith("/hrms");
   const isCRM = location.pathname.startsWith("/rsm") || location.pathname.startsWith("/crm");
 
+  const isAdmin = useMemo(() => {
+    const roleNormalized = (user?.role || "").trim().toLowerCase();
+    return (
+      roleNormalized === "admin" ||
+      roleNormalized === "administrator" ||
+      roleNormalized === "superadmin" ||
+      roleNormalized.includes("system admin")
+    );
+  }, [user?.role]);
+
   // Permission-based menu filtering: follows existing sidebar logic
   const isMenuAllowed = (formName: string): boolean => {
-    if (user?.role === "Admin") return true;
+    if (isAdmin) return true;
     if (hasPermission(formName, "CanView")) return true;
     if (
       permissions &&
       permissions.some(
-        (p) =>
-          p.formName?.toLowerCase() === formName.toLowerCase() &&
-          p.canView === true,
+        (p: any) =>
+          (p.formName || p.FormName)?.toLowerCase() === formName.toLowerCase() &&
+          (p.canView || p.CanView) === true,
       )
     ) {
       return true;
@@ -152,7 +162,7 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
     const list: SearchMenuItem[] = [];
 
     const isItemAllowed = (item: MenuItem): boolean => {
-      if (user?.role === "Admin") return true;
+      if (isAdmin) return true;
       if (!item.formName) return true;
       if (hasPermission(item.formName, "CanView")) return true;
       if (
@@ -431,8 +441,8 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
     <>
       <header
         className={`${isHRMS
-            ? "bg-white border-b border-[#E2E8F0] shadow-xs px-6 py-2 h-[64px]"
-            : "bg-[#dbdcd6] border-b border-[#FF7900]/60 shadow-sm px-5 py-1 h-[60px]"
+          ? "bg-white border-b border-[#E2E8F0] shadow-xs px-6 py-2 h-[64px]"
+          : "bg-[#dbdcd6] border-b border-[#FF7900]/60 shadow-sm px-5 py-1 h-[60px]"
           } flex justify-between items-center sticky top-0 z-50 shrink-0`}
       >
         {/* Left Section */}
@@ -440,8 +450,8 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
           <button
             onClick={toggleSidebar}
             className={`p-1.5 rounded-lg transition-colors cursor-pointer ${isHRMS
-                ? "hover:bg-slate-100 text-[#17365D]"
-                : "hover:bg-gray-100 text-gray-700 focus:outline-none"
+              ? "hover:bg-slate-100 text-[#17365D]"
+              : "hover:bg-gray-100 text-gray-700 focus:outline-none"
               }`}
           >
             <Menu className={isHRMS ? "h-5 w-5" : "h-6 w-6"} />
@@ -451,8 +461,8 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
             <div className="relative hidden md:block" ref={searchRef}>
               <div
                 className={`relative flex items-center h-[42px] w-64 sm:w-72 md:w-80 lg:w-96 bg-white border rounded-full px-3.5 transition-all duration-200 shadow-2xs ${isSearchFocused || (isSearchOpen && searchQuery.trim().length > 0)
-                    ? "border-[#FF7900] shadow-[0_0_0_3px_rgba(255,121,0,0.18)]"
-                    : "border-[#E2E8F0] hover:border-slate-300"
+                  ? "border-[#FF7900] shadow-[0_0_0_3px_rgba(255,121,0,0.18)]"
+                  : "border-[#E2E8F0] hover:border-slate-300"
                   }`}
               >
                 <Search
@@ -518,15 +528,15 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
                               onClick={() => handleSelectMenu(item)}
                               onMouseEnter={() => setSelectedIndex(index)}
                               className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all duration-150 cursor-pointer ${isSelected
-                                  ? "bg-[#FFF1E6] text-[#FF7900]"
-                                  : "hover:bg-slate-50 text-[#17365D]"
+                                ? "bg-[#FFF1E6] text-[#FF7900]"
+                                : "hover:bg-slate-50 text-[#17365D]"
                                 }`}
                             >
                               <div className="flex items-center gap-3 min-w-0">
                                 <div
                                   className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors ${isSelected
-                                      ? "bg-white text-[#FF7900] shadow-2xs"
-                                      : "bg-[#FFF1E6]/80 text-[#FF7900]"
+                                    ? "bg-white text-[#FF7900] shadow-2xs"
+                                    : "bg-[#FFF1E6]/80 text-[#FF7900]"
                                     }`}
                                 >
                                   {item.icon}
@@ -543,8 +553,8 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
                               <ArrowRight
                                 size={14}
                                 className={`shrink-0 ml-2 transition-transform ${isSelected
-                                    ? "text-[#FF7900] translate-x-0.5"
-                                    : "text-[#94A3B8]"
+                                  ? "text-[#FF7900] translate-x-0.5"
+                                  : "text-[#94A3B8]"
                                   }`}
                               />
                             </button>
@@ -578,8 +588,8 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
           <button
             onClick={handleRefresh}
             className={`p-2 transition-colors cursor-pointer ${isHRMS
-                ? "text-slate-600 hover:text-[#FF7900] hover:bg-slate-100 rounded-full"
-                : "text-gray-500 hover:text-blue-600"
+              ? "text-slate-600 hover:text-[#FF7900] hover:bg-slate-100 rounded-full"
+              : "text-gray-500 hover:text-blue-600"
               }`}
             title="Refresh"
           >
@@ -590,8 +600,8 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
             <button
               onClick={() => setIsNotificationOpen(!isNotificationOpen)}
               className={`p-2 transition-colors relative cursor-pointer ${isHRMS
-                  ? "text-slate-600 hover:text-[#17365D] hover:bg-slate-100 rounded-full"
-                  : "text-red-500 hover:bg-red-50 rounded-full"
+                ? "text-slate-600 hover:text-[#17365D] hover:bg-slate-100 rounded-full"
+                : "text-red-500 hover:bg-red-50 rounded-full"
                 }`}
             >
               <Bell size={isHRMS ? 20 : 22} fill={isHRMS ? "none" : "currentColor"} />

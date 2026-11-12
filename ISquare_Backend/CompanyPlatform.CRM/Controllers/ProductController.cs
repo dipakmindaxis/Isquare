@@ -9,7 +9,7 @@ namespace CompanyPlatform.CRM.Controllers
 {
     [Route("api/product")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public class ProductController : ControllerBase
     {
         private readonly IProductService _productService;

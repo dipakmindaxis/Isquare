@@ -9,7 +9,7 @@ namespace CompanyPlatform.CRM.Controllers
 {
     [Route("api/customer-category")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public class CustomerCategoryController : ControllerBase
     {
         private readonly ICustomerCategoryService

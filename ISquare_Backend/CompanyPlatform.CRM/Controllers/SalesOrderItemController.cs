@@ -8,7 +8,7 @@ namespace CompanyPlatform.CRM.Controllers
 {
     [Route("api/sales-order-item")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public class SalesOrderItemController : ControllerBase
     {
         private readonly ISalesOrderItemService _service;

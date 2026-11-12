@@ -8,7 +8,7 @@ namespace CompanyPlatform.CRM.Controllers
 {
     [Route("api/company-profile")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public class CompanyProfileController : ControllerBase
     {
         private readonly ICompanyProfileService _service;
