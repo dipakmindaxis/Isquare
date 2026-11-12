@@ -129,7 +129,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("AddressTypeId");
 
-                    b.ToTable("tbl_AddressType", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.BDEUser", b =>
@@ -161,7 +160,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("DirectorEmployeeId");
 
-                    b.ToTable("bde_user", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Call.Call", b =>
@@ -216,7 +214,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("tbl_Call", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Call.CallAttachment", b =>
@@ -267,7 +264,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("UploadedBy");
 
-                    b.ToTable("tbl_CallAttachment", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Call.CallHistory", b =>
@@ -298,7 +294,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("CallId");
 
-                    b.ToTable("tbl_CallHistory", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Call.CallType", b =>
@@ -321,7 +316,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("ID");
 
-                    b.ToTable("tbl_CallType", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.AccessControl", b =>
@@ -365,7 +359,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("tbl_AccessControls", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.ActivityLog", b =>
@@ -402,7 +395,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("tbl_ActivityLog", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.ActivityType", b =>
@@ -434,7 +426,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("ID");
 
-                    b.ToTable("tbl_ActivityType", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.AssetMaster", b =>
@@ -500,7 +491,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("AssetID");
 
-                    b.ToTable("tbl_AssetMaster", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.AuditLog", b =>
@@ -542,7 +532,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("AuditLogId");
 
-                    b.ToTable("tbl_AuditLog", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.City", b =>
@@ -579,7 +568,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("StateId");
 
-                    b.ToTable("tbl_City", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.ClientType", b =>
@@ -606,7 +594,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("ClientTypeId");
 
-                    b.ToTable("tbl_ClientType", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.Companiess", b =>
@@ -646,7 +633,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("CompanyId");
 
-                    b.ToTable("tbl_Companiess", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.Company", b =>
@@ -841,7 +827,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("UpdatedBy");
 
-                    b.ToTable("tbl_Company", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.CompanyAddress", b =>
@@ -918,7 +903,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("StateId");
 
-                    b.ToTable("tbl_CompanyAddresses", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.CompanyContact", b =>
@@ -971,7 +955,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("DesignationId");
 
-                    b.ToTable("tbl_CompanyContacts", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.CompanyDocument", b =>
@@ -1023,7 +1006,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("UploadedBy");
 
-                    b.ToTable("tbl_CompanyDocument", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.CompanyEmail", b =>
@@ -1055,7 +1037,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("CompanyId");
 
-                    b.ToTable("tbl_CompanyEmail", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.CompanyEmailsLog", b =>
@@ -1100,7 +1081,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("tbl_CompanyEmailsLog", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.CompanyNote", b =>
@@ -1136,7 +1116,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("tbl_CompanyNote", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.CompanyPhone", b =>
@@ -1179,7 +1158,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("CreatedBy");
 
-                    b.ToTable("tbl_CompanyPhones", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.CompanyProfile", b =>
@@ -1284,7 +1262,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("CompanyProfileId");
 
-                    b.ToTable("tbl_CompanyProfile", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.CompanyTimeline", b =>
@@ -1320,7 +1297,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("TimelineId");
 
-                    b.ToTable("tbl_CompanyTimeline", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.CompanyVisit", b =>
@@ -1378,7 +1354,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("VisitTypeId");
 
-                    b.ToTable("tbl_CompanyVisit", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.Contact", b =>
@@ -1447,7 +1422,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("CompanyId");
 
-                    b.ToTable("tbl_Contact", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.Country", b =>
@@ -1487,7 +1461,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("CountryId");
 
-                    b.ToTable("tbl_Country", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.CustomerCategory", b =>
@@ -1514,7 +1487,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("CustomerCategoryId");
 
-                    b.ToTable("tbl_CustomerCategory", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.CustomerStatus", b =>
@@ -1544,7 +1516,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("CustomerStatusId");
 
-                    b.ToTable("tbl_CustomerStatus", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.CustomerTypes", b =>
@@ -1567,7 +1538,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("tbl_CustomerTypes", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.DocumentType", b =>
@@ -1594,7 +1564,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("ID");
 
-                    b.ToTable("tbl_DocumentType", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.EmailTemplate", b =>
@@ -1622,7 +1591,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("ID");
 
-                    b.ToTable("tbl_EmailTemplate", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.Employee", b =>
@@ -1766,7 +1734,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("tbl_FollowUp", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.History", b =>
@@ -1802,7 +1769,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("HistoryId");
 
-                    b.ToTable("tbl_History", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.Industry", b =>
@@ -1829,7 +1795,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("IndustryId");
 
-                    b.ToTable("tbl_Industry", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.Invoice", b =>
@@ -1897,7 +1862,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("UpdatedBy");
 
-                    b.ToTable("tbl_Invoice", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.InvoiceItem", b =>
@@ -1943,7 +1907,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("InvoiceId");
 
-                    b.ToTable("tbl_InvoiceItems", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.InvoicePayment", b =>
@@ -1990,7 +1953,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("InvoiceId");
 
-                    b.ToTable("tbl_InvoicePayments", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.InvoiceType", b =>
@@ -2010,7 +1972,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("ID");
 
-                    b.ToTable("tbl_InvoiceType", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.Meeting", b =>
@@ -2086,7 +2047,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("tbl_Meeting", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.MeetingAttachments", b =>
@@ -2113,7 +2073,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("AttachmentId");
 
-                    b.ToTable("MeetingAttachments", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.MeetingAttendee", b =>
@@ -2137,7 +2096,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("MeetingId");
 
-                    b.ToTable("MeetingAttendees", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.MeetingType", b =>
@@ -2157,7 +2115,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("ID");
 
-                    b.ToTable("tbl_MeetingType", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.NonGSTInvoice", b =>
@@ -2213,7 +2170,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("CompanyId");
 
-                    b.ToTable("tbl_NonGSTInvoice", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.NonGSTInvoiceItem", b =>
@@ -2265,7 +2221,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("NonGSTInvoiceId");
 
-                    b.ToTable("tbl_NonGSTInvoiceItem", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.NonGSTProforma", b =>
@@ -2324,7 +2279,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("CompanyId");
 
-                    b.ToTable("tbl_NonGSTProforma", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.NonGSTProformaItem", b =>
@@ -2382,7 +2336,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("NonGSTProformaId");
 
-                    b.ToTable("tbl_NonGSTProformaItem", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.Priority", b =>
@@ -2406,7 +2359,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("tbl_Priority", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.Product", b =>
@@ -2469,7 +2421,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("ProductId");
 
-                    b.ToTable("tbl_Product", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.ProformaInvoice", b =>
@@ -2546,7 +2497,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("CompanyId");
 
-                    b.ToTable("tbl_ProformaInvoice", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.ProformaInvoiceItem", b =>
@@ -2619,7 +2569,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("ProformaId");
 
-                    b.ToTable("tbl_ProformaInvoiceItem", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.Quotation", b =>
@@ -2718,7 +2667,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("QuotationId");
 
-                    b.ToTable("tbl_Quotation", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.QuotationApproval", b =>
@@ -2773,7 +2721,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("QuotationApprovalId");
 
-                    b.ToTable("tbl_QuotationApproval", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.QuotationCharge", b =>
@@ -2830,7 +2777,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("QuotationChargeId");
 
-                    b.ToTable("tbl_QuotationCharge", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.QuotationDefault", b =>
@@ -2908,7 +2854,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("QuotationDefaultId");
 
-                    b.ToTable("tbl_QuotationDefault", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.QuotationItem", b =>
@@ -2991,7 +2936,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("QuotationItemId");
 
-                    b.ToTable("tbl_QuotationItem", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.QuotationRevision", b =>
@@ -3090,7 +3034,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("QuotationRevisionId");
 
-                    b.ToTable("tbl_QuotationRevision", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.Reminder", b =>
@@ -3152,7 +3095,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("ReminderStatusId");
 
-                    b.ToTable("tbl_Reminder", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.ReminderHistory", b =>
@@ -3192,7 +3134,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("UpdatedBy");
 
-                    b.ToTable("tbl_ReminderHistory", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.ReminderNotification", b =>
@@ -3232,7 +3173,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("SentBy");
 
-                    b.ToTable("tbl_ReminderNotification", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.ReminderStatus", b =>
@@ -3252,7 +3192,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("ID");
 
-                    b.ToTable("tbl_ReminderStatus", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.SalaryComponent", b =>
@@ -3281,7 +3220,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("tbl_SalaryComponent", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.SalaryStructure", b =>
@@ -3318,7 +3256,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("SalaryComponentID");
 
-                    b.ToTable("tbl_SalaryStructure", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.SalesOrder", b =>
@@ -3406,7 +3343,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("SalesOrderId");
 
-                    b.ToTable("tbl_SalesOrder", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.SalesOrderItem", b =>
@@ -3490,7 +3426,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("SalesOrderItemId");
 
-                    b.ToTable("tbl_SalesOrderItem", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.State", b =>
@@ -3531,7 +3466,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("CountryId");
 
-                    b.ToTable("tbl_State", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.TaskAssignment", b =>
@@ -3571,7 +3505,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("TaskId");
 
-                    b.ToTable("tbl_TaskAssignment", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.TaskAssignments", b =>
@@ -3628,7 +3561,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("UpdatedBy");
 
-                    b.ToTable("tbl_TaskAssignments", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.TaskAttachment", b =>
@@ -3679,7 +3611,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("UploadedBy");
 
-                    b.ToTable("tbl_TaskAttachment", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.TaskChecklist", b =>
@@ -3710,7 +3641,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("TaskId");
 
-                    b.ToTable("tbl_TaskChecklist", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.TaskComment", b =>
@@ -3743,7 +3673,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("TaskId");
 
-                    b.ToTable("tbl_TaskComment", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.TaskHistory", b =>
@@ -3782,7 +3711,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("TaskId");
 
-                    b.ToTable("tbl_TaskHistory", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.TaskReminderMapping", b =>
@@ -3833,7 +3761,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("UpdatedBy");
 
-                    b.ToTable("tbl_TaskReminderMapping", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.TaskStatus", b =>
@@ -3853,7 +3780,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("ID");
 
-                    b.ToTable("tbl_TaskStatus", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.Tasks", b =>
@@ -3934,7 +3860,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("UpdatedBy");
 
-                    b.ToTable("tbl_Task", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.VisitAttachment", b =>
@@ -3983,7 +3908,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("VisitId");
 
-                    b.ToTable("tbl_VisitAttachment", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Company.VisitType", b =>
@@ -4006,7 +3930,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("ID");
 
-                    b.ToTable("tbl_VisitType", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.ContactType", b =>
@@ -4035,7 +3958,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("ContactTypeId");
 
-                    b.ToTable("tbl_ContactType", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Currency", b =>
@@ -4080,7 +4002,6 @@ namespace CompanyPlatform.Core.Migrations
                     b.HasIndex("CurrencyCode")
                         .IsUnique();
 
-                    b.ToTable("Currencies", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.CustomerArea.CustomerArea", b =>
@@ -4119,7 +4040,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("CustomerAreaId");
 
-                    b.ToTable("tbl_CustomerArea", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.CustomerSource.CustomerSource", b =>
@@ -4158,7 +4078,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("CustomerSourceId");
 
-                    b.ToTable("tbl_CustomerSource", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Employee.EmployeeAddress", b =>
@@ -4210,7 +4129,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("EmployeeID");
 
-                    b.ToTable("tbl_EmployeeAddress", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Employee.EmployeeBankDetails", b =>
@@ -4256,7 +4174,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("ID");
 
-                    b.ToTable("tbl_EmployeeBankDetails", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Employee.EmployeeDocument", b =>
@@ -4286,7 +4203,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("ID");
 
-                    b.ToTable("tbl_EmployeeDocument", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Employee.EmployeeExperience", b =>
@@ -4324,7 +4240,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("EmployeeID");
 
-                    b.ToTable("tbl_EmployeeExperience", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Employee.EmployeePFDetails", b =>
@@ -4349,7 +4264,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("ID");
 
-                    b.ToTable("tbl_EmployeePFDetails", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Employee.EmployeeQualification", b =>
@@ -4385,7 +4299,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("EmployeeID");
 
-                    b.ToTable("tbl_EmployeeQualification", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Employee.EmployeeStatutoryDetails", b =>
@@ -4426,7 +4339,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("EmployeeID");
 
-                    b.ToTable("tbl_EmployeeStatutoryDetails", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Enquiry", b =>
@@ -4620,7 +4532,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("EnquiryId");
 
-                    b.ToTable("tbl_Enquiries", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.EnquiryPriority", b =>
@@ -4665,7 +4576,6 @@ namespace CompanyPlatform.Core.Migrations
                     b.HasIndex("EnquiryPriorityCode")
                         .IsUnique();
 
-                    b.ToTable("EnquiryPriorities", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.EnquirySource", b =>
@@ -4707,7 +4617,6 @@ namespace CompanyPlatform.Core.Migrations
                     b.HasIndex("EnquirySourceCode")
                         .IsUnique();
 
-                    b.ToTable("EnquirySources", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.EnquiryStage", b =>
@@ -4752,7 +4661,6 @@ namespace CompanyPlatform.Core.Migrations
                     b.HasIndex("EnquiryStageCode")
                         .IsUnique();
 
-                    b.ToTable("EnquiryStages", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.EnquiryStatus", b =>
@@ -4797,7 +4705,6 @@ namespace CompanyPlatform.Core.Migrations
                     b.HasIndex("EnquiryStatusCode")
                         .IsUnique();
 
-                    b.ToTable("EnquiryStatuses", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.EnquiryType", b =>
@@ -4839,7 +4746,6 @@ namespace CompanyPlatform.Core.Migrations
                     b.HasIndex("EnquiryTypeCode")
                         .IsUnique();
 
-                    b.ToTable("EnquiryTypes", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.LostReason", b =>
@@ -4884,7 +4790,6 @@ namespace CompanyPlatform.Core.Migrations
                     b.HasIndex("LostReasonCode")
                         .IsUnique();
 
-                    b.ToTable("LostReasons", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Notification.NotificationLogs", b =>
@@ -4938,7 +4843,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("NotificationLogId");
 
-                    b.ToTable("NotificationLogs", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Notification.NotificationQueue", b =>
@@ -4976,7 +4880,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("QueueId");
 
-                    b.ToTable("NotificationQueues", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.Notification.Notifications", b =>
@@ -5011,7 +4914,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Tbl_Notifications", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.PaymentTerm.PaymentTerm", b =>
@@ -5050,7 +4952,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("PaymentTermId");
 
-                    b.ToTable("tbl_PaymentTerm", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.PlaceOfSupply", b =>
@@ -5095,7 +4996,6 @@ namespace CompanyPlatform.Core.Migrations
                     b.HasIndex("PlaceOfSupplyCode")
                         .IsUnique();
 
-                    b.ToTable("PlaceOfSupplies", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.ProductCategory", b =>
@@ -5146,7 +5046,6 @@ namespace CompanyPlatform.Core.Migrations
                     b.HasIndex("ProductCategoryCode")
                         .IsUnique();
 
-                    b.ToTable("ProductCategories", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.ProductServiceItem", b =>
@@ -5197,7 +5096,6 @@ namespace CompanyPlatform.Core.Migrations
                     b.HasIndex("ProductServiceCode")
                         .IsUnique();
 
-                    b.ToTable("ProductServices", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.SalesAttachment", b =>
@@ -5257,7 +5155,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("SalesAttachmentId");
 
-                    b.ToTable("tbl_SalesAttachment", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.SalesCoordinator.SalesCoordinator", b =>
@@ -5301,7 +5198,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("BDEUserId");
 
-                    b.ToTable("tbl_SalesCoordinator", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.SalesTerritory", b =>
@@ -5346,7 +5242,6 @@ namespace CompanyPlatform.Core.Migrations
                     b.HasIndex("SalesTerritoryCode")
                         .IsUnique();
 
-                    b.ToTable("SalesTerritories", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.SalesUserManager", b =>
@@ -5373,7 +5268,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("ID");
 
-                    b.ToTable("sales_user_manager", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.CRM.UnitOfMeasure", b =>
@@ -5418,7 +5312,6 @@ namespace CompanyPlatform.Core.Migrations
                     b.HasIndex("UnitOfMeasureCode")
                         .IsUnique();
 
-                    b.ToTable("UnitOfMeasures", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.Department", b =>
@@ -5438,7 +5331,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("ID");
 
-                    b.ToTable("tbl_Department", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.Designation", b =>
@@ -5458,7 +5350,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("ID");
 
-                    b.ToTable("tbl_Designation", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.EmployeeDeclarationDetail", b =>
@@ -5494,7 +5385,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("EmployeeTaxDeclarationID");
 
-                    b.ToTable("tbl_EmployeeDeclarationDetail", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.EmployeeDeclarationDocument", b =>
@@ -5531,7 +5421,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("EmployeeDeclarationDetailID");
 
-                    b.ToTable("tbl_EmployeeDeclarationDocument", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.EmployeeSalarySummary", b =>
@@ -5568,7 +5457,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("tbl_EmployeeSalarySummary", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.EmployeeTDSDetails", b =>
@@ -5592,7 +5480,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasIndex("EmployeeID");
 
-                    b.ToTable("tbl_EmployeeTDSDetails", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.EmployeeTaxDeclaration", b =>
@@ -5623,7 +5510,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("ID");
 
-                    b.ToTable("tbl_EmployeeTaxDeclaration", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.HRMS.LevelMaster", b =>
@@ -5648,7 +5534,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("ID");
 
-                    b.ToTable("tbl_LevelMasters", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.Shift", b =>
@@ -5675,7 +5560,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("tbl_Shift", (string)null);
                 });
 
             modelBuilder.Entity("CompanyPlatform.Core.Models.WorkLocation", b =>
@@ -5722,7 +5606,6 @@ namespace CompanyPlatform.Core.Migrations
 
                     b.HasKey("ID");
 
-                    b.ToTable("tbl_WorkLocation", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>

@@ -1,4 +1,6 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Hosting;
+using System.IO.Compression;
 using CompanyPlatform.CRM.DTO.Product;
 using CompanyPlatform.Core.Repository;
 using CompanyPlatform.Core.Data;
@@ -12,15 +14,18 @@ namespace CompanyPlatform.CRM.Services.Product
         private readonly IRepositories<ProductModel> _repository;
         private readonly ILogger<ProductService> _logger;
         private readonly ApplicationDBContext? _context;
+        private readonly IWebHostEnvironment? _env;
 
         public ProductService(
             IRepositories<ProductModel> repository,
             ILogger<ProductService> logger,
-            ApplicationDBContext? context = null)
+            ApplicationDBContext? context = null,
+            IWebHostEnvironment? env = null)
         {
             _repository = repository;
             _logger = logger;
             _context = context;
+            _env = env;
         }
 
         private async Task<string> GenerateNextProductCodeAsync()
@@ -210,12 +215,272 @@ namespace CompanyPlatform.CRM.Services.Product
             return ProductExcelHelper.GenerateTemplate();
         }
 
-        // EXCEL IMPORT FROM STREAM
-        public async Task<ProductImportResultDto> ImportProductsFromExcelAsync(Stream fileStream)
+        // ZIP PRODUCT IMAGE EXTRACTION (SAFE, SANITIZED, PATH TRAVERSAL PROTECTED)
+        private async Task<(int imagesExtracted, Dictionary<string, string> extractedImages, List<string> warnings)> ExtractProductImagesZipAsync(Stream zipStream)
         {
-            _logger.LogInformation("Parsing and importing products from uploaded Excel stream.");
+            var extractedMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var warnings = new List<string>();
+            int extractedCount = 0;
+
+            var webRoot = _env?.WebRootPath;
+            if (string.IsNullOrWhiteSpace(webRoot))
+            {
+                webRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            }
+
+            var targetFolder = Path.Combine(webRoot, "uploads", "products");
+            if (!Directory.Exists(targetFolder))
+            {
+                Directory.CreateDirectory(targetFolder);
+            }
+
+            var fullTargetDir = Path.GetFullPath(targetFolder);
+            if (!fullTargetDir.EndsWith(Path.DirectorySeparatorChar.ToString()))
+            {
+                fullTargetDir += Path.DirectorySeparatorChar;
+            }
+
+            // Security limits against ZipSlip and Zip Bombs
+            const int maxFileCount = 1000;
+            const long maxIndividualFileSize = 25 * 1024 * 1024; // 25 MB
+            const long maxTotalExtractedSize = 200 * 1024 * 1024; // 200 MB
+            long totalExtractedSize = 0;
+            int processedEntries = 0;
+
+            using var archive = new ZipArchive(zipStream, ZipArchiveMode.Read, leaveOpen: true);
+
+            foreach (var entry in archive.Entries)
+            {
+                processedEntries++;
+                if (processedEntries > maxFileCount)
+                {
+                    _logger.LogWarning("ZIP extraction reached limit of {MaxFiles} files.", maxFileCount);
+                    warnings.Add($"ZIP archive exceeded file count limit ({maxFileCount}). Some files may have been skipped.");
+                    break;
+                }
+
+                // Normalize path separator to handle Windows and Unix zip formats, including nested folders
+                var normalizedFullName = entry.FullName.Replace('\\', '/');
+
+                // Skip directory entries and empty paths
+                if (normalizedFullName.EndsWith('/') || entry.Length == 0)
+                    continue;
+
+                // Extract filename only (handles nested subfolders like "iSquare Product/Picture1.png")
+                var safeFileName = Path.GetFileName(normalizedFullName);
+                if (string.IsNullOrWhiteSpace(safeFileName) || safeFileName.Contains(".."))
+                    continue;
+
+                if (entry.Length > maxIndividualFileSize)
+                {
+                    _logger.LogWarning("Skipping '{Name}' because size exceeds limit.", safeFileName);
+                    warnings.Add($"Skipped '{safeFileName}': file size exceeds 25 MB limit.");
+                    continue;
+                }
+
+                totalExtractedSize += entry.Length;
+                if (totalExtractedSize > maxTotalExtractedSize)
+                {
+                    _logger.LogWarning("ZIP extraction stopped: total size limit reached.");
+                    warnings.Add("ZIP extraction halted: maximum total uncompressed size (200 MB) reached.");
+                    break;
+                }
+
+                foreach (var c in Path.GetInvalidFileNameChars())
+                {
+                    safeFileName = safeFileName.Replace(c, '_');
+                }
+
+                var ext = Path.GetExtension(safeFileName).ToLowerInvariant();
+                if (ext != ".jpg" && ext != ".jpeg" && ext != ".png" && ext != ".webp")
+                    continue;
+
+                // Check for duplicate/ambiguous filenames inside ZIP across subfolders
+                if (extractedMap.ContainsKey(safeFileName))
+                {
+                    warnings.Add($"Duplicate image filename '{safeFileName}' found in ZIP archive (at '{entry.FullName}'). The latest occurrence was used.");
+                }
+
+                // Prevent Zip Slip / Path Traversal
+                var destinationPath = Path.GetFullPath(Path.Combine(targetFolder, safeFileName));
+                if (!destinationPath.StartsWith(fullTargetDir, StringComparison.OrdinalIgnoreCase))
+                {
+                    _logger.LogWarning("Blocked potential ZIP path traversal: {EntryFullName}", entry.FullName);
+                    continue;
+                }
+
+                // Extract file safely (overwrite with latest from zip)
+                using (var entryStream = entry.Open())
+                using (var fileDestStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write, FileShare.None))
+                {
+                    await entryStream.CopyToAsync(fileDestStream);
+                }
+
+                var relativePath = $"/uploads/products/{safeFileName}";
+                extractedMap[safeFileName] = relativePath;
+
+                var nameWithoutExt = Path.GetFileNameWithoutExtension(safeFileName);
+                if (!string.IsNullOrWhiteSpace(nameWithoutExt) && !extractedMap.ContainsKey(nameWithoutExt))
+                {
+                    extractedMap[nameWithoutExt] = relativePath;
+                }
+
+                extractedCount++;
+            }
+
+            return (extractedCount, extractedMap, warnings);
+        }
+
+        private static string? GetImageFileName(string? rawVal)
+        {
+            if (string.IsNullOrWhiteSpace(rawVal))
+                return null;
+
+            var trimmed = rawVal.Trim();
+            if (Uri.TryCreate(trimmed, UriKind.Absolute, out var uriResult) &&
+                (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps))
+            {
+                return null;
+            }
+
+            var normalized = trimmed.Replace('\\', '/');
+            var fileName = Path.GetFileName(normalized);
+            return string.IsNullOrWhiteSpace(fileName) ? null : fileName.Trim();
+        }
+
+        private string? ResolveProductImagePath(
+            string? rawImageVal,
+            Dictionary<string, string> extractedMap,
+            string targetFolder,
+            List<string> missingImages,
+            ref int imagesMatched,
+            ref int imagesLinked)
+        {
+            if (string.IsNullOrWhiteSpace(rawImageVal))
+                return null;
+
+            var trimmed = rawImageVal.Trim();
+
+            // Case 1: Full public URL (http / https)
+            if (Uri.TryCreate(trimmed, UriKind.Absolute, out var uriResult) &&
+                (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps))
+            {
+                imagesLinked++;
+                return trimmed;
+            }
+
+            // Clean filename from Windows path (e.g. D:\ICEEM\iSquare Productimage\Picture1.png) or unix path or bare name
+            var normalized = trimmed.Replace('\\', '/');
+            var cleanName = Path.GetFileName(normalized);
+            if (string.IsNullOrWhiteSpace(cleanName))
+                return null;
+
+            // Case 2: Match in extracted images from ZIP
+            if (extractedMap.TryGetValue(cleanName, out var mappedPath))
+            {
+                imagesMatched++;
+                imagesLinked++;
+                return mappedPath;
+            }
+
+            // Case 2b: Match without extension or with spaces/hyphens
+            var nameWithoutExt = Path.GetFileNameWithoutExtension(cleanName);
+            if (!string.IsNullOrWhiteSpace(nameWithoutExt) && extractedMap.TryGetValue(nameWithoutExt, out mappedPath))
+            {
+                imagesMatched++;
+                imagesLinked++;
+                return mappedPath;
+            }
+
+            var alt1 = cleanName.Replace(" ", "-");
+            if (extractedMap.TryGetValue(alt1, out mappedPath))
+            {
+                imagesMatched++;
+                imagesLinked++;
+                return mappedPath;
+            }
+
+            var alt2 = cleanName.Replace("-", " ");
+            if (extractedMap.TryGetValue(alt2, out mappedPath))
+            {
+                imagesMatched++;
+                imagesLinked++;
+                return mappedPath;
+            }
+
+            // Case 3: Check if file already exists on server disk in targetFolder
+            var diskPath = Path.Combine(targetFolder, cleanName);
+            if (File.Exists(diskPath))
+            {
+                imagesMatched++;
+                imagesLinked++;
+                return $"/uploads/products/{cleanName}";
+            }
+
+            // Case 4: Image file is missing from ZIP and disk
+            if (!missingImages.Contains(cleanName, StringComparer.OrdinalIgnoreCase))
+            {
+                missingImages.Add(cleanName);
+            }
+
+            return null;
+        }
+
+        // EXCEL IMPORT FROM STREAM WITH OPTIONAL ZIP IMAGES
+        public async Task<ProductImportResultDto> ImportProductsFromExcelAsync(Stream fileStream, Stream? zipStream = null)
+        {
+            _logger.LogInformation("Parsing and importing products from uploaded Excel stream with optional ZIP.");
+
+            var extractedMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var imageWarnings = new List<string>();
+            int imagesExtracted = 0;
+
+            var webRoot = _env?.WebRootPath;
+            if (string.IsNullOrWhiteSpace(webRoot))
+            {
+                webRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            }
+            var targetFolder = Path.Combine(webRoot, "uploads", "products");
+
+            if (zipStream != null)
+            {
+                try
+                {
+                    var zipResult = await ExtractProductImagesZipAsync(zipStream);
+                    imagesExtracted = zipResult.imagesExtracted;
+                    extractedMap = zipResult.extractedImages;
+                    imageWarnings = zipResult.warnings;
+                    _logger.LogInformation("Successfully extracted {Count} images from ZIP file.", imagesExtracted);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error occurred while extracting ZIP stream.");
+                    imageWarnings.Add($"Failed to process ZIP archive: {ex.Message}");
+                }
+            }
+
             var rows = ProductExcelHelper.ParseExcel(fileStream);
-            return await BulkImportProductsAsync(rows);
+            var missingImages = new List<string>();
+            int imagesMatched = 0;
+            int imagesLinked = 0;
+
+            // Map each row's product image using the extracted lookup
+            foreach (var row in rows)
+            {
+                if (!string.IsNullOrWhiteSpace(row.ProductImage))
+                {
+                    row.ProductImage = ResolveProductImagePath(row.ProductImage, extractedMap, targetFolder, missingImages, ref imagesMatched, ref imagesLinked);
+                }
+            }
+
+            var result = await BulkImportProductsAsync(rows);
+            result.ImagesExtracted = imagesExtracted;
+            result.ImagesMatched = imagesMatched;
+            result.ImagesLinked = imagesLinked;
+            result.MissingImages = missingImages;
+            result.ImageWarnings = imageWarnings;
+
+            return result;
         }
 
         // BULK IMPORT PRODUCTS
@@ -234,12 +499,12 @@ namespace CompanyPlatform.CRM.Services.Product
                 return result;
             }
 
-            // 1. Fetch existing active product item codes to check for duplicates
+            // 1. Fetch existing active product names to check for duplicates (ProductName based duplicate validation)
             var existingProducts = await _repository.GetAll();
-            var existingCodes = new HashSet<string>(
+            var existingNames = new HashSet<string>(
                 existingProducts
-                    .Where(p => !p.IsDeleted && !string.IsNullOrWhiteSpace(p.ItemCode))
-                    .Select(p => p.ItemCode.Trim().ToLower()),
+                    .Where(p => !p.IsDeleted && !string.IsNullOrWhiteSpace(p.ProductName))
+                    .Select(p => p.ProductName.Trim()),
                 StringComparer.OrdinalIgnoreCase
             );
 
@@ -248,10 +513,10 @@ namespace CompanyPlatform.CRM.Services.Product
             foreach (var p in existingProducts)
             {
                 if (string.IsNullOrWhiteSpace(p.ItemCode)) continue;
-                var code = p.ItemCode.Trim();
-                if (code.StartsWith("PRD-", StringComparison.OrdinalIgnoreCase))
+                var codeVal = p.ItemCode.Trim();
+                if (codeVal.StartsWith("PRD-", StringComparison.OrdinalIgnoreCase))
                 {
-                    var numPart = code.Substring("PRD-".Length);
+                    var numPart = codeVal.Substring("PRD-".Length);
                     if (int.TryParse(numPart, out int num) && num > maxNumber)
                     {
                         maxNumber = num;
@@ -259,7 +524,7 @@ namespace CompanyPlatform.CRM.Services.Product
                 }
             }
 
-            var seenInFile = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var seenNamesInFile = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var productsToAdd = new List<ProductModel>();
 
             // 2. Row-by-row validation & duplication checks
@@ -295,47 +560,45 @@ namespace CompanyPlatform.CRM.Services.Product
                     continue;
                 }
 
-                // If Item Code is specified, check duplicates
-                var code = row.ItemCode?.Trim();
-                if (!string.IsNullOrWhiteSpace(code))
+                var prodName = row.ProductName.Trim();
+
+                // Check duplicate ProductName in uploaded Excel file
+                if (seenNamesInFile.Contains(prodName))
                 {
-                    // Check duplicate in file
-                    if (seenInFile.Contains(code))
+                    result.DuplicateCount++;
+                    result.Errors.Add(new ProductImportErrorDto
                     {
-                        result.DuplicateCount++;
-                        result.Errors.Add(new ProductImportErrorDto
-                        {
-                            RowNumber = rowNum,
-                            ItemCode = code,
-                            ProductName = row.ProductName,
-                            ErrorMessage = $"Duplicate Item Code '{code}' found within the uploaded Excel file."
-                        });
-                        continue;
-                    }
-
-                    // Check duplicate in existing database
-                    if (existingCodes.Contains(code))
-                    {
-                        result.DuplicateCount++;
-                        result.Errors.Add(new ProductImportErrorDto
-                        {
-                            RowNumber = rowNum,
-                            ItemCode = code,
-                            ProductName = row.ProductName,
-                            ErrorMessage = $"Item Code '{code}' already exists in the Product Master database."
-                        });
-                        continue;
-                    }
-
-                    seenInFile.Add(code);
+                        RowNumber = rowNum,
+                        ItemCode = row.ItemCode,
+                        ProductName = row.ProductName,
+                        ErrorMessage = $"Duplicate Product Name '{prodName}' found within the uploaded Excel file."
+                    });
+                    continue;
                 }
-                else
+
+                // Check duplicate ProductName in existing database
+                if (existingNames.Contains(prodName))
                 {
-                    // Auto-generate code
+                    result.DuplicateCount++;
+                    result.Errors.Add(new ProductImportErrorDto
+                    {
+                        RowNumber = rowNum,
+                        ItemCode = row.ItemCode,
+                        ProductName = row.ProductName,
+                        ErrorMessage = $"Product Name '{prodName}' already exists in the Product Master database."
+                    });
+                    continue;
+                }
+
+                seenNamesInFile.Add(prodName);
+
+                // If Item Code is specified, preserve it; otherwise auto-generate PRD-XXX
+                var code = row.ItemCode?.Trim();
+                if (string.IsNullOrWhiteSpace(code))
+                {
                     maxNumber++;
                     code = $"PRD-{maxNumber:D3}";
                     row.ItemCode = code;
-                    seenInFile.Add(code);
                 }
 
                 // Numeric validation
@@ -399,7 +662,7 @@ namespace CompanyPlatform.CRM.Services.Product
                 };
 
                 productsToAdd.Add(entity);
-                existingCodes.Add(code);
+                existingNames.Add(prodName);
             }
 
             // 3. Batch insertion with Database Transaction

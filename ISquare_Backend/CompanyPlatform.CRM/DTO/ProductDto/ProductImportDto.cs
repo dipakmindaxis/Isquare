@@ -39,15 +39,30 @@ namespace CompanyPlatform.CRM.DTO.Product
         public string ErrorMessage { get; set; } = string.Empty;
     }
 
+    public class ProductImportRequestDto
+    {
+        public Microsoft.AspNetCore.Http.IFormFile? ExcelFile { get; set; }
+        public Microsoft.AspNetCore.Http.IFormFile? File { get; set; }
+        public Microsoft.AspNetCore.Http.IFormFile? ZipFile { get; set; }
+    }
+
     public class ProductImportResultDto
     {
         public int TotalRecords { get; set; }
         public int SuccessCount { get; set; }
         public int DuplicateCount { get; set; }
         public int FailedCount { get; set; }
+        public int ImagesExtracted { get; set; }
+        public int ImagesMatched { get; set; }
+        public int ImagesLinked { get; set; }
+        public List<string> MissingImages { get; set; } = new();
+        public List<string> ImageWarnings { get; set; } = new();
         public List<ProductImportErrorDto> Errors { get; set; } = new();
         public List<ProductDto> ImportedProducts { get; set; } = new();
         public string Message { get; set; } = string.Empty;
+
+        public bool Success => FailedCount == 0 && (SuccessCount > 0 || TotalRecords == 0);
+        public int ImportedCount => SuccessCount;
     }
 }
 

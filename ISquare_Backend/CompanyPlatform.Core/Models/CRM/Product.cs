@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -48,6 +48,13 @@ namespace CompanyPlatform.Core.Models.CRM.Company
 
         [NotMapped]
         public string? ProductImagePath
+        {
+            get => ProductImage;
+            set => ProductImage = value;
+        }
+
+        [NotMapped]
+        public string? ProductImageUrl
         {
             get => ProductImage;
             set => ProductImage = value;

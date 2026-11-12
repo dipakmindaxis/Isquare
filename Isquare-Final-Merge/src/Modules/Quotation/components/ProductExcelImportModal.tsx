@@ -13,11 +13,15 @@ import {
   Check,
 
   Package,
+  Image as ImageIcon,
+  FolderArchive,
+  FileArchive,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { Product, ProductImportRow, ProductImportResult } from "../models/quotationModels";
 import { productImportService, parseProductWorkbook } from "../services/productImportService";
 import { downloadProductExcelTemplate } from "../utils/productExcelTemplate";
+import { resolveImageUrl } from "../services/quotationService";
 import { formatINR } from "../utils/quotationCalculations";
 
 interface ProductExcelImportModalProps {
@@ -43,11 +47,16 @@ export const ProductExcelImportModal: React.FC<ProductExcelImportModalProps> = (
   const [filterMode, setFilterMode] = useState<"all" | "valid" | "error">("all");
   const [previewSearch, setPreviewSearch] = useState<string>("");
   const [importResult, setImportResult] = useState<ProductImportResult | null>(null);
+  const [availableSheets, setAvailableSheets] = useState<string[]>([]);
+  const [currentSheetName, setCurrentSheetName] = useState<string>("");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [zipFile, setZipFile] = useState<File | null>(null);
+  const [isZipDragOver, setIsZipDragOver] = useState<boolean>(false);
+  const zipInputRef = useRef<HTMLInputElement>(null);
 
   // Set of existing item codes from database for fast duplicate checking
-  const existingCodeSet = useMemo(() => {
+  void useMemo(() => {
     const set = new Set<string>();
     for (const p of existingProducts) {
       if (!p.isDeleted && p.itemCode && p.itemCode.trim()) {
@@ -59,15 +68,53 @@ export const ProductExcelImportModal: React.FC<ProductExcelImportModalProps> = (
 
 
 
+  const handleZipFileSelected = (file: File) => {
+    const ext = file.name.substring(file.name.lastIndexOf(".")).toLowerCase();
+    if (ext !== ".zip") {
+      toast.error("Invalid file format. Please upload a .zip file containing product images.");
+      if (zipInputRef.current) zipInputRef.current.value = "";
+      return;
+    }
+
+    if (file.size > 200 * 1024 * 1024) {
+      toast.error("ZIP file size exceeds 200MB limit. Please upload a smaller ZIP archive.");
+      if (zipInputRef.current) zipInputRef.current.value = "";
+      return;
+    }
+
+    setZipFile(file);
+    toast.success(`Attached product images ZIP: ${file.name}`);
+  };
+
+  const handleZipDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsZipDragOver(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleZipFileSelected(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleZipInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      handleZipFileSelected(e.target.files[0]);
+    }
+  };
+
   const handleReset = () => {
     setStep("upload");
     setSelectedFile(null);
+    setZipFile(null);
     setParsedRows([]);
     setImportResult(null);
     setFilterMode("all");
     setPreviewSearch("");
+    setAvailableSheets([]);
+    setCurrentSheetName("");
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
+    }
+    if (zipInputRef.current) {
+      zipInputRef.current.value = "";
     }
   };
 
@@ -77,7 +124,7 @@ export const ProductExcelImportModal: React.FC<ProductExcelImportModalProps> = (
   };
 
   // Parse Excel file client-side
-  const processExcelFile = async (file: File) => {
+  const processExcelFile = async (file: File, sheetNameToUse?: string) => {
     // Validate extension
     const ext = file.name.substring(file.name.lastIndexOf(".")).toLowerCase();
     if (ext !== ".xlsx" && ext !== ".xls") {
@@ -97,7 +144,9 @@ export const ProductExcelImportModal: React.FC<ProductExcelImportModalProps> = (
     setIsParsing(true);
 
     try {
-      const { rows: extracted, sheetName: matchedSheetName } = await parseProductWorkbook(file, existingCodeSet);
+      const { rows: extracted, sheetName: matchedSheetName, availableSheets: sheets } = await parseProductWorkbook(file, existingProducts, sheetNameToUse);
+      setAvailableSheets(sheets);
+      setCurrentSheetName(matchedSheetName);
       setParsedRows(extracted);
       setStep("preview");
       toast.success(`Parsed ${extracted.length} records from '${matchedSheetName}'`);
@@ -107,6 +156,12 @@ export const ProductExcelImportModal: React.FC<ProductExcelImportModalProps> = (
       if (fileInputRef.current) fileInputRef.current.value = "";
     } finally {
       setIsParsing(false);
+    }
+  };
+
+  const handleSheetChange = (newSheet: string) => {
+    if (selectedFile) {
+      processExcelFile(selectedFile, newSheet);
     }
   };
 
@@ -159,26 +214,31 @@ export const ProductExcelImportModal: React.FC<ProductExcelImportModalProps> = (
       let res: ProductImportResult;
       if (selectedFile) {
         try {
-          // Attempt dedicated backend API import
-          res = await productImportService.importExcel(selectedFile);
+          res = await productImportService.importExcel(selectedFile, zipFile);
         } catch (backendErr) {
-          console.warn("Dedicated Excel import endpoint not reachable, using bulk import fallback:", backendErr);
-          // Fall back to server bulk import endpoint or sequential creation
-          try {
-            res = await productImportService.bulkImport(parsedRows.filter((r) => r.isValid));
-          } catch (bulkErr) {
-            console.warn("Bulk import endpoint not reachable, using standard API creation:", bulkErr);
-            res = await productImportService.fallbackImportSequential(parsedRows);
+          console.warn("Dedicated Excel import failed, falling back to sequential/bulk import:", backendErr);
+          const validRows = parsedRows.filter((r) => r.isValid);
+          const hasExisting = validRows.some((r) => r.isExisting);
+          if (hasExisting) {
+            res = await productImportService.fallbackImportSequential(validRows);
+          } else {
+            try {
+              res = await productImportService.bulkImport(validRows);
+            } catch (bulkErr) {
+              res = await productImportService.fallbackImportSequential(validRows);
+            }
           }
         }
       } else {
-        res = await productImportService.bulkImport(parsedRows.filter((r) => r.isValid));
+        const validRows = parsedRows.filter((r) => r.isValid);
+        res = await productImportService.fallbackImportSequential(validRows);
       }
 
       setImportResult(res);
       setStep("summary");
-      if (res.successCount > 0) {
-        toast.success(`Successfully imported ${res.successCount} products!`);
+      const imported = res.importedCount ?? res.successCount ?? 0;
+      if (imported > 0) {
+        toast.success(`Successfully imported ${imported} products!`);
         onImportSuccess();
       } else {
         toast.error("Import completed with 0 saved products. Please review errors.");
@@ -291,6 +351,102 @@ export const ProductExcelImportModal: React.FC<ProductExcelImportModalProps> = (
                 </p>
               </div>
 
+              
+              {/* Product Images ZIP Upload (Optional) */}
+              <div className="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-200/50">
+                      <FolderArchive size={17} />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-xs font-bold text-[#00234a]">
+                          Product Images ZIP File
+                        </h4>
+                        <span className="text-[10px] font-semibold text-blue-700 bg-blue-100/60 px-2 py-0.5 rounded-full border border-blue-200">
+                          Optional
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-gray-500">
+                        ZIP filenames must match filenames in the Excel <strong className="text-gray-700 font-semibold">Product Image URL</strong> column (e.g. <span className="font-mono text-gray-600">PRD-001.png</span>).
+                      </p>
+                    </div>
+                  </div>
+                  {zipFile && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setZipFile(null);
+                        if (zipInputRef.current) zipInputRef.current.value = "";
+                      }}
+                      className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700 font-bold px-2 py-1 rounded-lg hover:bg-red-50 transition cursor-pointer"
+                    >
+                      <X size={14} />
+                      <span>Remove ZIP</span>
+                    </button>
+                  )}
+                </div>
+
+                <input
+                  ref={zipInputRef}
+                  type="file"
+                  accept=".zip"
+                  onChange={handleZipInputChange}
+                  className="hidden"
+                />
+
+                {zipFile ? (
+                  <div className="flex items-center justify-between bg-white border border-blue-200 rounded-xl p-3 shadow-2xs">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+                        <FileArchive size={20} />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-gray-900">{zipFile.name}</p>
+                        <p className="text-[11px] text-gray-500">
+                          {(zipFile.size / 1024 / 1024).toFixed(2)} MB &bull; Ready to upload and extract
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => zipInputRef.current?.click()}
+                      className="text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline cursor-pointer"
+                    >
+                      Change ZIP
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setIsZipDragOver(true);
+                    }}
+                    onDragLeave={() => setIsZipDragOver(false)}
+                    onDrop={handleZipDrop}
+                    onClick={() => zipInputRef.current?.click()}
+                    className={`border-2 border-dashed rounded-xl p-4 text-center transition-all cursor-pointer flex items-center justify-center gap-3 bg-white ${
+                      isZipDragOver
+                        ? "border-blue-500 bg-blue-50/50"
+                        : "border-gray-300 hover:border-blue-400 hover:bg-blue-50/20"
+                    }`}
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                      <Upload size={16} />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-xs font-bold text-[#00234a]">
+                        Drag & drop your product images <span className="text-blue-600">.zip</span> here, or click to browse
+                      </p>
+                      <p className="text-[10px] text-gray-400">
+                        Supported formats inside ZIP: .png, .jpg, .jpeg, .webp (Max file size: 200MB)
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Supported Columns Guide */}
               <div className="bg-slate-50 rounded-xl p-4 border border-slate-200/70 text-xs text-gray-600 space-y-2">
                 <div className="font-bold text-[#00234a] flex items-center gap-1.5">
@@ -339,9 +495,50 @@ export const ProductExcelImportModal: React.FC<ProductExcelImportModalProps> = (
             </div>
           )}
 
-          {/* STEP 2: PREVIEW & VALIDATION TABLE */}
+                    {/* STEP 2: PREVIEW & VALIDATION TABLE */}
           {step === "preview" && (
             <div className="space-y-4">
+              {/* Product Images ZIP Status Bar */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-3.5 py-2.5 bg-blue-50/70 border border-blue-200/70 rounded-xl text-xs">
+                <div className="flex items-center gap-2">
+                  <FolderArchive size={16} className="text-blue-600 shrink-0" />
+                  <div>
+                    <span className="font-bold text-[#00234a]">Product Images ZIP: </span>
+                    {zipFile ? (
+                      <span className="font-semibold text-blue-800">
+                        {zipFile.name} ({(zipFile.size / 1024 / 1024).toFixed(2)} MB)
+                      </span>
+                    ) : (
+                      <span className="text-gray-500">
+                        No ZIP attached. Excel image filenames will only be mapped if already stored on server.
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {zipFile ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setZipFile(null);
+                        if (zipInputRef.current) zipInputRef.current.value = "";
+                      }}
+                      className="text-[11px] font-bold text-red-600 hover:bg-red-50 px-2 py-1 rounded border border-red-200 transition cursor-pointer"
+                    >
+                      Remove ZIP
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => zipInputRef.current?.click()}
+                      className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-700 bg-white hover:bg-blue-50 px-2.5 py-1 rounded border border-blue-300 shadow-2xs transition cursor-pointer"
+                    >
+                      <Upload size={12} />
+                      <span>+ Attach Images ZIP</span>
+                    </button>
+                  )}
+                </div>
+              </div>
               {/* Header Stats & Filter Controls */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -382,6 +579,25 @@ export const ProductExcelImportModal: React.FC<ProductExcelImportModalProps> = (
                   </button>
                 </div>
 
+                {/* Sheet Switcher */}
+                {availableSheets.length > 1 && (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-emerald-200 rounded-lg shadow-2xs">
+                    <FileSpreadsheet size={15} className="text-emerald-600" />
+                    <span className="text-xs font-bold text-[#00234a]">Sheet:</span>
+                    <select
+                      value={currentSheetName}
+                      onChange={(e) => handleSheetChange(e.target.value)}
+                      className="text-xs font-bold text-emerald-700 bg-transparent focus:outline-none cursor-pointer"
+                    >
+                      {availableSheets.map((s) => (
+                        <option key={s} value={s}>
+                          {s}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
                 {/* Search in preview */}
                 <div className="relative min-w-[220px]">
                   <Search size={14} className="absolute left-3 top-2.5 text-gray-400" />
@@ -402,6 +618,7 @@ export const ProductExcelImportModal: React.FC<ProductExcelImportModalProps> = (
                     <tr>
                       <th className="py-2.5 px-3 whitespace-nowrap">#</th>
                       <th className="py-2.5 px-3 whitespace-nowrap">Status</th>
+                      <th className="py-2.5 px-3 whitespace-nowrap text-center">Image</th>
                       <th className="py-2.5 px-3 whitespace-nowrap">Item Code</th>
                       <th className="py-2.5 px-3 whitespace-nowrap min-w-[180px]">Product Name</th>
                       <th className="py-2.5 px-3 whitespace-nowrap">Brand</th>
@@ -429,9 +646,9 @@ export const ProductExcelImportModal: React.FC<ProductExcelImportModalProps> = (
                           </td>
                           <td className="py-2.5 px-3 whitespace-nowrap">
                             {row.isValid ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800">
+                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${row.isExisting ? "bg-blue-100 text-blue-800" : "bg-emerald-100 text-emerald-800"}`} title={row.isExisting ? "Existing product in database. Image and rates will be updated." : "New product"}>
                                 <Check size={12} />
-                                <span>Valid</span>
+                                <span>{row.isExisting ? "Update" : "Valid"}</span>
                               </span>
                             ) : (
                               <div className="group relative inline-block">
@@ -448,6 +665,45 @@ export const ProductExcelImportModal: React.FC<ProductExcelImportModalProps> = (
                                 </div>
                               </div>
                             )}
+                          </td>
+                          <td className="py-2.5 px-3 whitespace-nowrap text-center">
+                            {(() => {
+                              const resolvedUrl = row.imageDataUrl || resolveImageUrl(row.productImage);
+                              const isLocalPath =
+                                typeof row.productImage === "string" &&
+                                (/^[a-zA-Z]:[\/]/.test(row.productImage) || (!resolvedUrl && row.productImage.trim() !== ""));
+
+                              if (resolvedUrl) {
+                                return (
+                                  <img
+                                    src={resolvedUrl}
+                                    alt={row.productName}
+                                    className="w-8 h-8 object-contain rounded border border-gray-200 mx-auto bg-white p-0.5"
+                                  />
+                                );
+                              }
+
+                              if (isLocalPath) {
+                                const fileName = row.productImage
+                                  ? row.productImage.replace(/\\/g, "/").split("/").pop()
+                                  : "";
+                                return (
+                                  <div
+                                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200 text-[10px] font-medium max-w-[120px] truncate"
+                                    title={`Referenced image: ${row.productImage}`}
+                                  >
+                                    <ImageIcon size={12} className="shrink-0 text-slate-500" />
+                                    <span className="truncate">{fileName || "Image"}</span>
+                                  </div>
+                                );
+                              }
+
+                              return (
+                                <div className="w-8 h-8 rounded border border-dashed border-gray-200 flex items-center justify-center mx-auto text-gray-300">
+                                  <Package size={14} />
+                                </div>
+                              );
+                            })()}
                           </td>
                           <td className="py-2.5 px-3 font-mono font-medium text-gray-700 whitespace-nowrap">
                             {row.itemCode || <span className="text-gray-400 italic">(Auto)</span>}
@@ -500,7 +756,7 @@ export const ProductExcelImportModal: React.FC<ProductExcelImportModalProps> = (
                 <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl text-xs">
                   <AlertTriangle size={16} className="shrink-0 text-amber-600" />
                   <span>
-                    <strong>{errorCount} record(s)</strong> have validation errors or duplicate item codes and will be skipped. Only the <strong>{validCount} valid record(s)</strong> will be imported.
+                    <strong>{errorCount} record(s)</strong> have validation errors or duplicate product names and will be skipped. Only the <strong>{validCount} valid record(s)</strong> will be imported.
                   </span>
                 </div>
               )}
@@ -548,7 +804,37 @@ export const ProductExcelImportModal: React.FC<ProductExcelImportModalProps> = (
                     {importResult.failedCount}
                   </span>
                 </div>
+                {importResult.imagesExtracted !== undefined && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-center">
+                    <span className="text-xs text-blue-700 block font-semibold">Images Extracted</span>
+                    <span className="text-2xl font-bold text-blue-700 mt-1 block">
+                      {importResult.imagesExtracted}
+                    </span>
+                  </div>
+                )}
               </div>
+
+              {/* Missing Images Notice */}
+              {importResult.missingImages && importResult.missingImages.length > 0 && (
+                <div className="border border-amber-200 rounded-xl overflow-hidden bg-amber-50/50">
+                  <div className="bg-amber-100/70 px-4 py-2 border-b border-amber-200 font-bold text-xs text-amber-900 flex items-center gap-2">
+                    <AlertTriangle size={14} className="text-amber-600" />
+                    <span>Missing Images in ZIP ({importResult.missingImages.length})</span>
+                  </div>
+                  <div className="p-3 text-xs text-amber-900 space-y-1.5">
+                    <p className="text-[11px] text-gray-600">
+                      The following image filenames were referenced in Excel but were not found in the uploaded ZIP file. The products were created without images:
+                    </p>
+                    <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto pt-1">
+                      {importResult.missingImages.map((img, idx) => (
+                        <span key={idx} className="font-mono text-[11px] bg-white border border-amber-300 px-2 py-0.5 rounded-md text-amber-800">
+                          {img}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Error Details Table if errors exist */}
               {importResult.errors && importResult.errors.length > 0 && (
