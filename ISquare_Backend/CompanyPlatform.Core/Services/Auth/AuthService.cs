@@ -1,4 +1,4 @@
-﻿using CompanyPlatform.Core.Models.CRM.Company;
+using CompanyPlatform.Core.Models.CRM.Company;
 using CompanyPlatform.Core.Models.CRM.Employee;
 using Employee = CompanyPlatform.Core.Models.CRM.Company.Employee;
 using Microsoft.AspNetCore.Identity;
@@ -250,7 +250,45 @@ namespace CompanyPlatform.Core.Services.Auth
                     return (result, result.Errors.First().Description);
                 }
 
-                await _userManager.AddToRoleAsync(newUser, registerDto.Role ?? "Employee");
+                // Resolve role whether it was passed as Role ID (GUID) or Role Name
+                string roleName = "Employee";
+                if (!string.IsNullOrWhiteSpace(registerDto.Role))
+                {
+                    var roleById = await _roleManager.FindByIdAsync(registerDto.Role);
+                    if (roleById != null && !string.IsNullOrWhiteSpace(roleById.Name))
+                    {
+                        roleName = roleById.Name;
+                    }
+                    else if (await _roleManager.RoleExistsAsync(registerDto.Role))
+                    {
+                        roleName = registerDto.Role;
+                    }
+                    else
+                    {
+                        var allRoles = await _roleManager.Roles.ToListAsync();
+                        var matchedRole = allRoles.FirstOrDefault(r =>
+                            string.Equals(r.Id, registerDto.Role, StringComparison.OrdinalIgnoreCase) ||
+                            string.Equals(r.Name, registerDto.Role, StringComparison.OrdinalIgnoreCase));
+                        if (matchedRole != null && !string.IsNullOrWhiteSpace(matchedRole.Name))
+                        {
+                            roleName = matchedRole.Name;
+                        }
+                    }
+                }
+
+                if (!await _roleManager.RoleExistsAsync(roleName))
+                {
+                    if (await _roleManager.RoleExistsAsync("Employee"))
+                    {
+                        roleName = "Employee";
+                    }
+                }
+
+                var roleResult = await _userManager.AddToRoleAsync(newUser, roleName);
+                if (!roleResult.Succeeded)
+                {
+                    _logger.LogWarning("Failed to assign role {Role} to user {User}: {Error}", roleName, newUser.UserName, roleResult.Errors.FirstOrDefault()?.Description);
+                }
 
                 await _dbContext.SaveChangesAsync();
                 await transaction.CommitAsync();

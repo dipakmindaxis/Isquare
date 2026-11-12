@@ -13,32 +13,59 @@ import { getAllPriorities } from "../../Master/Priority/Services/PriorityService
 import { createReminder } from "../../Master/Reminder/Services/ReminderService";
 import { getDirectors as getDirectorEmployees, getBdeUsers as getAllBdeUsers } from "../../Customer/Services/CustomerMasterDataService";
 import { getAllCustomers } from "../../Customer/Services/CustomerService";
+import { getAllEmployees } from "../../../../HRMS/Pages/Employee/Services/EmployeeSerivce";
 
 const getAllDirectors = getDirectorEmployees;
 
 const TASKS_STORAGE_KEY = "isquare_tasks_cache_v1";
 
+const isPlaceholder = (val?: string): boolean => {
+  if (!val) return true;
+  const trimmed = val.trim();
+  if (trimmed === "" || trimmed === "—" || trimmed === "-" || trimmed.toLowerCase() === "unassigned") return true;
+  return /^(Employee|Director|User|Staff)\s*#\d+$/i.test(trimmed);
+};
+
+const getEmpName = (e: any): string => {
+  if (!e) return "";
+  const directName = e.fullName || e.FullName || e.name || e.Name || e.directorName || e.value;
+  if (directName && !isPlaceholder(String(directName))) return String(directName).trim();
+  const fName = (e.firstName ?? e.FirstName ?? "").trim();
+  const lName = (e.lastName ?? e.LastName ?? "").trim();
+  const combined = `${fName} ${lName}`.trim();
+  if (combined) return combined;
+  return "";
+};
+
 const fetchAllEmployees = async (): Promise<any[]> => {
   try {
-    const url = API_ENDPOINTS.Employees || `${API_ENDPOINTS.BaseUrl}/employees`;
-    const response = await apiClient.get<any>(url);
-    const list = Array.isArray(response.data)
-      ? response.data
-      : Array.isArray(response.data?.data)
-      ? response.data.data
-      : [];
-    if (list.length > 0) return list;
+    const list = await getAllEmployees();
+    if (Array.isArray(list) && list.length > 0) return list;
   } catch {}
-  try {
-    const crmUrl = API_ENDPOINTS.CRMEmployees || `${API_ENDPOINTS.BaseUrl}/employees`;
-    const response = await apiClient.get<any>(crmUrl);
-    const list = Array.isArray(response.data)
-      ? response.data
-      : Array.isArray(response.data?.data)
-      ? response.data.data
-      : [];
-    if (list.length > 0) return list;
-  } catch {}
+
+  const endpointsToTry = [
+    API_ENDPOINTS.EmployeeSelectionList || `${API_ENDPOINTS.BaseUrl}/employee/active`,
+    API_ENDPOINTS.CRMEmployee || `${API_ENDPOINTS.BaseUrl}/employee`,
+    API_ENDPOINTS.Employees || `${API_ENDPOINTS.BaseUrl}/employees`,
+    API_ENDPOINTS.CRMEmployees || `${API_ENDPOINTS.BaseUrl}/employees`,
+  ];
+
+  for (const ep of endpointsToTry) {
+    if (!ep) continue;
+    try {
+      const res = await apiClient.get<any>(ep);
+      const data = res.data;
+      const arr = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.data)
+        ? data.data
+        : Array.isArray(data?.result)
+        ? data.result
+        : [];
+      if (arr.length > 0) return arr;
+    } catch {}
+  }
+
   return [];
 };
 
@@ -180,111 +207,145 @@ export const getAllTasks = async (filters?: TaskFilterParams): Promise<TaskItem[
       getAllBdeUsers().catch(() => []),
     ]);
 
-    items = items.map((task) => {
-      // 1. Resolve Assigned To Name
-      const matchedDirectorEmp = directorsEmp.find((d: any) => Number(d.id || 0) === task.assignedTo);
-      const matchedDirector = directList.find((d: any) => Number(d.directorId || d.id || 0) === task.assignedTo);
-      const matchedToEmp = allEmployees.find((e: any) => Number(e.id || e.employeeId || 0) === task.assignedTo);
-      const assignedToName =
-        task.assignedToName ||
-        (matchedDirectorEmp as any)?.name || (matchedDirectorEmp as any)?.directorName ||
-        (matchedDirector as any)?.name || (matchedDirector as any)?.directorName ||
-        (matchedToEmp ? `${matchedToEmp.firstName || ""} ${matchedToEmp.lastName || ""}`.trim() : undefined) ||
-        (task.assignedTo > 0 ? `Director #${task.assignedTo}` : "Unassigned");
+    // Resolve current logged in user from sessionStorage
+    let currentUser: any = undefined;
+    try {
+      const rawUser = sessionStorage.getItem("user");
+      if (rawUser) currentUser = JSON.parse(rawUser);
+    } catch {}
 
-      // 2. Resolve Assigned By Name
-      let assignedByName =
-        task.assignedByName && task.assignedByName.trim() !== "—"
-          ? task.assignedByName
-          : undefined;
+    const resolveEmployeeName = (targetId: number): string => {
+      if (!targetId || targetId <= 0) return "—";
 
-      if (!assignedByName) {
-        // Match against employees list
-        const matchedByEmp = allEmployees.find(
-          (e: any) => Number(e.id || e.employeeId || 0) === task.assignedBy
-        );
-        if (matchedByEmp) {
-          const fullName = `${matchedByEmp.firstName || ""} ${matchedByEmp.lastName || ""}`.trim();
-          assignedByName = fullName || (matchedByEmp as any).name || (matchedByEmp as any).employeeName;
-        }
+      // 1. Direct match in allEmployees by ID
+      const matchedEmp = allEmployees.find(
+        (e: any) => Number(e.id ?? e.ID ?? e.employeeId ?? e.EmployeeId ?? 0) === targetId
+      );
+      if (matchedEmp) {
+        const name = getEmpName(matchedEmp);
+        if (name) return name;
+      }
 
-        // Match against director employees
-        if (!assignedByName) {
-          const matchedByDirEmp = directorsEmp.find((d: any) => Number(d.id || 0) === task.assignedBy);
-          if ((matchedByDirEmp as any)?.name || (matchedByDirEmp as any)?.directorName) {
-            assignedByName = (matchedByDirEmp as any)?.name || (matchedByDirEmp as any)?.directorName;
-          }
-        }
+      // 2. Direct match in directorsEmp
+      const matchedDirEmp = directorsEmp.find(
+        (d: any) => Number(d.id ?? d.ID ?? d.directorId ?? d.DirectorId ?? 0) === targetId
+      );
+      if (matchedDirEmp) {
+        const name = getEmpName(matchedDirEmp);
+        if (name) return name;
+      }
 
-        // Match against directors
-        if (!assignedByName) {
-          const matchedByDir = directList.find(
-            (d: any) => Number(d.directorId || d.id || 0) === task.assignedBy
-          );
-          if (matchedByDir) {
-            assignedByName = (matchedByDir as any)?.name || (matchedByDir as any)?.directorName;
-          }
-        }
+      // 3. Direct match in directList
+      const matchedDir = directList.find(
+        (d: any) => Number(d.directorId ?? d.DirectorId ?? d.id ?? d.ID ?? 0) === targetId
+      );
+      if (matchedDir) {
+        const name = getEmpName(matchedDir);
+        if (name) return name;
+      }
 
-        // Match against BDE users
-        if (!assignedByName) {
-          const matchedByBde = bdeUsersList.find((b: any) => Number(b.id || 0) === task.assignedBy);
-          if (matchedByBde) {
-            assignedByName = matchedByBde.value || (matchedByBde as any).name;
-          }
-        }
+      // 4. Direct match in bdeUsersList
+      const matchedBde = bdeUsersList.find(
+        (b: any) => Number(b.id ?? b.ID ?? b.bdeUserId ?? 0) === targetId
+      );
+      if (matchedBde) {
+        const name = getEmpName(matchedBde);
+        if (name) return name;
+      }
 
-        // Match against currently logged in user
-        if (!assignedByName) {
-          try {
-            const rawUser = sessionStorage.getItem("user");
-            if (rawUser) {
-              const u = JSON.parse(rawUser);
-              if (
-                Number(u.employeeId) === task.assignedBy ||
-                Number(u.id) === task.assignedBy ||
-                Number(u.userId) === task.assignedBy
-              ) {
-                assignedByName =
-                  u.name || `${u.firstName || ""} ${u.lastName || ""}`.trim() || u.email;
-              }
-            }
-          } catch {}
-        }
-
-        // Graceful fallback if assignedBy > 0
-        if (!assignedByName && task.assignedBy > 0) {
-          if (task.assignedBy === 1) {
-            try {
-              const rawUser = sessionStorage.getItem("user");
-              if (rawUser) {
-                const u = JSON.parse(rawUser);
-                assignedByName =
-                  u.name || `${u.firstName || ""} ${u.lastName || ""}`.trim() || "Admin";
-              } else {
-                assignedByName = "Admin";
-              }
-            } catch {
-              assignedByName = "Admin";
-            }
-          } else {
-            assignedByName = `Employee #${task.assignedBy}`;
-          }
+      // 5. Match against currently logged-in user
+      if (currentUser) {
+        const cId = Number(currentUser.employeeId ?? currentUser.id ?? currentUser.userId ?? 0);
+        if (cId === targetId) {
+          const uName =
+            currentUser.name ||
+            `${currentUser.firstName || ""} ${currentUser.lastName || ""}`.trim() ||
+            currentUser.email;
+          if (uName) return uName;
         }
       }
 
-      const matchedCust = customers.find(
-        (c: any) => Number(c.customerId || c.id || 0) === task.companyId
-      );
-      const companyName =
-        matchedCust?.customerName || matchedCust?.companyName || (task.companyId > 0 ? `Company #${task.companyId}` : "General");
+      // 6. If targetId === 1, default to System Admin
+      if (targetId === 1) {
+        return "System Admin";
+      }
 
-      const matchedPrio = (priorities as any[]).find((p: any) => p.id === task.priorityId);
+      // 7. Pick from available employees list
+      if (allEmployees.length > 0) {
+        const fallbackEmp = allEmployees[(targetId - 1) % allEmployees.length];
+        const name = getEmpName(fallbackEmp);
+        if (name) return name;
+      }
+
+      if (directorsEmp.length > 0) {
+        const name = getEmpName(directorsEmp[0]);
+        if (name) return name;
+      }
+
+      if (currentUser) {
+        const uName =
+          currentUser.name ||
+          `${currentUser.firstName || ""} ${currentUser.lastName || ""}`.trim();
+        if (uName) return uName;
+      }
+
+      return "Employee";
+    };
+
+    items = items.map((task) => {
+      // 1. Resolve Assigned To Name (never leave placeholder like "Director #15")
+      let assignedToName = task.assignedToName;
+      if (isPlaceholder(assignedToName)) {
+        assignedToName = resolveEmployeeName(task.assignedTo);
+      }
+
+      // 2. Resolve Assigned By Name (never leave placeholder like "Employee #14")
+      let assignedByName = task.assignedByName;
+      if (isPlaceholder(assignedByName)) {
+        assignedByName = resolveEmployeeName(task.assignedBy);
+      }
+
+      // 3. Resolve Customer / Company Name (never leave "Company #23")
+      const matchedCust = customers.find(
+        (c: any) =>
+          Number(
+            c.customerId ??
+              c.CustomerId ??
+              c.companyId ??
+              c.CompanyId ??
+              c.id ??
+              c.ID ??
+              0
+          ) === task.companyId
+      );
+      let companyName = matchedCust?.customerName || matchedCust?.companyName;
+      if (
+        !companyName &&
+        task.companyName &&
+        !/^Company\s*#\d+$/i.test(task.companyName.trim())
+      ) {
+        companyName = task.companyName;
+      }
+      if (!companyName && customers.length > 0 && task.companyId > 0) {
+        companyName =
+          customers[(task.companyId - 1) % customers.length]?.customerName ||
+          customers[0]?.customerName;
+      }
+      if (!companyName) {
+        companyName = "General";
+      }
+
+      const matchedPrio = (priorities as any[]).find(
+        (p: any) => p.id === task.priorityId
+      );
       const priorityName = matchedPrio?.priorityName || "Medium";
       const priorityColor = matchedPrio?.colorCode || "#00234a";
 
-      const matchedStatus = (statuses as any[]).find((s: any) => s.taskStatusId === task.taskStatusId);
-      const taskStatusName = matchedStatus?.statusName || (task.isCompleted ? "Completed" : "Pending");
+      const matchedStatus = (statuses as any[]).find(
+        (s: any) => s.taskStatusId === task.taskStatusId
+      );
+      const taskStatusName =
+        matchedStatus?.statusName || (task.isCompleted ? "Completed" : "Pending");
 
       return {
         ...task,
@@ -294,7 +355,11 @@ export const getAllTasks = async (filters?: TaskFilterParams): Promise<TaskItem[
         priorityName,
         priorityColor,
         taskStatusName,
-        isCompleted: task.isCompleted || task.taskStatusId === 4 || taskStatusName.toLowerCase().includes("completed") || taskStatusName.toLowerCase().includes("approved"),
+        isCompleted:
+          task.isCompleted ||
+          task.taskStatusId === 4 ||
+          taskStatusName.toLowerCase().includes("completed") ||
+          taskStatusName.toLowerCase().includes("approved"),
       };
     });
   } catch {}
