@@ -131,19 +131,19 @@ export const ViewTaskModal: React.FC<ViewTaskModalProps> = ({
           {/* Main Grid Info */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <DetailCard
-              label="Assigned Director"
-              value={task.assignedToName || `Director #${task.assignedTo}`}
+              label="Assigned To"
+              value={task.assignedToName || (task.assignedTo ? "Employee" : "Unassigned")}
+              icon={UserCheck}
+            />
+            <DetailCard
+              label="Assigned By"
+              value={task.assignedByName || "System Admin"}
               icon={UserCheck}
             />
             <DetailCard
               label="Customer / Company"
-              value={task.companyName || (task.companyId ? `Company #${task.companyId}` : "General")}
+              value={task.companyName || "General"}
               icon={Building2}
-            />
-            <DetailCard
-              label="Start Date"
-              value={task.startDate}
-              icon={Calendar}
             />
             <DetailCard
               label="Due Date"

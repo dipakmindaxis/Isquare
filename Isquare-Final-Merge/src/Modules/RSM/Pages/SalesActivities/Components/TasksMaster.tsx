@@ -29,6 +29,18 @@ export interface TasksMasterProps {
   onAddClosed?: () => void;
 }
 
+const formatEmployeeDisplayName = (name?: string): string => {
+  if (!name || name.trim() === "" || name === "—") return "—";
+  const trimmed = name.trim();
+  if (/^Employee\s*#\d+$/i.test(trimmed)) {
+    return "Employee";
+  }
+  if (/^Director\s*#\d+$/i.test(trimmed)) {
+    return "Director";
+  }
+  return trimmed;
+};
+
 export const TasksMaster: React.FC<TasksMasterProps> = ({
   initialAddOpen = false,
   onAddClosed,
@@ -336,10 +348,10 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
                               )}
                             </td>
                             <td className="py-3 px-3 text-sm font-medium text-slate-700">
-                              {t.assignedByName || "—"}
+                              {formatEmployeeDisplayName(t.assignedByName)}
                             </td>
                             <td className="py-3 px-3 text-sm font-medium text-slate-700">
-                              {t.assignedToName || "—"}
+                              {formatEmployeeDisplayName(t.assignedToName)}
                             </td>
                             <td className="py-3 px-3 text-sm text-slate-600">
                               {t.dueDate || "—"}
@@ -549,10 +561,10 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
                                 )}
                               </td>
                               <td className="px-4 py-3 text-sm text-slate-700 font-medium">
-                                {task.assignedByName || "—"}
+                                {formatEmployeeDisplayName(task.assignedByName)}
                               </td>
                               <td className="px-4 py-3 text-sm text-slate-700 font-semibold">
-                                {task.assignedToName || "—"}
+                                {formatEmployeeDisplayName(task.assignedToName)}
                               </td>
                               <td className="px-4 py-3 text-sm text-slate-600">
                                 {task.companyName || "—"}

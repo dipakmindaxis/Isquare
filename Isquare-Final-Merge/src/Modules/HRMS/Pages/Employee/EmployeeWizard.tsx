@@ -385,7 +385,10 @@ const EmployeeWizard: React.FC<EmployeeWizardProps> = ({
       }
     };
     appendIfValid("CompanyId", formData.companyId);
-    data.append("Role", String(formData.roleId ?? ""));
+    const selectedRole = roles.find(
+      (r) => String(r.id) === String(formData.roleId) || r.name === formData.roleId
+    );
+    data.append("Role", selectedRole ? selectedRole.name : String(formData.roleId ?? ""));
     appendIfValid("DepartmentID", formData.departmentID);
     appendIfValid("DesignationID", formData.designationID);
     appendIfValid("LevelID", formData.levelID);
