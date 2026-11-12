@@ -130,6 +130,8 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
         uomMatch?.name ||
         "Nos";
       const rawProdImg =
+        (defaultProd as any).productImageUrl ||
+        (defaultProd as any).ProductImageUrl ||
         defaultProd.imageUrl ||
         defaultProd.productImage ||
         defaultProd.productImagePath ||
@@ -267,12 +269,15 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
           // Also keep master product image synchronized if no custom quotation override
           if (!item.customImageUrl) {
             const rawImg =
+              (prod as any).productImageUrl ||
+              (prod as any).ProductImageUrl ||
               prod.imageUrl ||
               prod.productImage ||
               prod.productImagePath ||
               null;
             if (rawImg && item.productImage !== rawImg) {
               updates.productImage = rawImg;
+              (updates as any).productImageUrl = rawImg;
               updates.productImagePath = rawImg;
               updates.imageUrl = resolveImageUrl(rawImg) || rawImg;
               hasChanges = true;

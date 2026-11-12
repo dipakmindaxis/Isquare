@@ -443,6 +443,8 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
         className={`${isHRMS
           ? "bg-white border-b border-[#E2E8F0] shadow-xs px-6 py-2 h-[64px]"
           : "bg-[#dbdcd6] border-b border-[#FF7900]/60 shadow-sm px-5 py-1 h-[60px]"
+            ? "bg-white border-b border-[#E2E8F0] shadow-xs px-6 py-2 h-[64px]"
+            : "bg-white/95 backdrop-blur-md border-b border-gray-200/80 shadow-xs px-5 py-1 h-[60px]"
           } flex justify-between items-center sticky top-0 z-50 shrink-0`}
       >
         {/* Left Section */}

@@ -194,15 +194,18 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
   }, [refreshedProduct, selectedProduct, availableProducts, item.productId, item.itemCode, item.itemName]);
 
   const defaultProductImage = useMemo(() => {
+    const prod = targetProduct || selectedProduct;
     const raw =
-      selectedProduct?.imageUrl ||
-      selectedProduct?.productImage ||
-      selectedProduct?.productImagePath ||
-      (selectedProduct as any)?.image ||
-      (selectedProduct as any)?.imagePath ||
+      (prod as any)?.productImageUrl ||
+      (prod as any)?.ProductImageUrl ||
+      prod?.imageUrl ||
+      prod?.productImage ||
+      prod?.productImagePath ||
+      (prod as any)?.image ||
+      (prod as any)?.imagePath ||
       null;
     return resolveImageUrl(raw) || raw;
-  }, [selectedProduct]);
+  }, [targetProduct, selectedProduct]);
 
   // Quotation-line-specific image override is stored in customImageUrl / hasCustomImage
   const hasCustomOverride = Boolean(
@@ -215,6 +218,8 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
     }
     const raw =
       defaultProductImage ||
+      (item as any)?.productImageUrl ||
+      (item as any)?.ProductImageUrl ||
       item.imageUrl ||
       item.productImage ||
       item.productImagePath ||
@@ -225,6 +230,8 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
     hasCustomOverride,
     item.customImageUrl,
     defaultProductImage,
+    (item as any)?.productImageUrl,
+    (item as any)?.ProductImageUrl,
     item.imageUrl,
     item.productImage,
     item.productImagePath,
@@ -610,7 +617,8 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
         gstRate: currentGst,
         unitOfMeasurementId: prod.unitOfMeasurementId || resolveUomId(productUom),
         unitName: productUom,
-        productImage: prod.productImage || prod.productImagePath || null,
+        productImage: (prod as any).productImageUrl || (prod as any).ProductImageUrl || prod.productImage || prod.productImagePath || null,
+        productImageUrl: (prod as any).productImageUrl || (prod as any).ProductImageUrl || prod.productImage || null,
         productImagePath: prod.productImagePath || prod.productImage || null,
         ...(hasRetainedOverride
           ? {
@@ -622,7 +630,9 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
               customImageUrl: undefined,
               hasCustomImage: false,
               imageUrl: resolveImageUrl(
-                prod.productImage ||
+                (prod as any).productImageUrl ||
+                  (prod as any).ProductImageUrl ||
+                  prod.productImage ||
                   prod.productImagePath ||
                   prod.imageUrl
               ) || undefined,

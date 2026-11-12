@@ -59,6 +59,7 @@ export interface QuotationItem {
   customImageUrl?: string | null;
   hasCustomImage?: boolean;
   productImage?: string | null;
+  productImageUrl?: string | null;
   productImagePath?: string | null;
   hasCustomSpecification?: boolean;
   hsnCode?: string | null;
@@ -287,6 +288,7 @@ export interface Product {
   image?: string | null;
   imagePath?: string | null;
   productImage?: string | null;
+  productImageUrl?: string | null;
   productImagePath?: string | null;
   hsnCode?: string | null;
   purchaseRate?: number | null;
@@ -311,6 +313,9 @@ export interface ProductImportRow {
   profitPercentage?: number | null;
   stock?: number | null;
   productImage?: string;
+  imageDataUrl?: string;
+  isExisting?: boolean;
+  existingProductId?: number;
   isValid: boolean;
   validationErrors: string[];
 }
@@ -330,4 +335,8 @@ export interface ProductImportResult {
   errors: ProductImportError[];
   importedProducts: Product[];
   message?: string;
+  imagesExtracted?: number;
+  missingImages?: string[];
+  success?: boolean;
+  importedCount?: number;
 }

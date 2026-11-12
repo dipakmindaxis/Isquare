@@ -1013,12 +1013,6 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
               <span className="font-medium text-slate-500">Page 1 of 1</span>
             </div>
           </div>
-
-          {/* Bottom right decorative orange corner wedge matching Reference Screenshot */}
-          <div
-            className="absolute -bottom-8 -right-8 w-24 h-16 bg-[#FF7900] pointer-events-none"
-            style={{ clipPath: "polygon(100% 0%, 100% 100%, 0% 100%)" }}
-          />
         </div>
 
         {/* Modal Footer Workflow Actions (hidden on print) */}

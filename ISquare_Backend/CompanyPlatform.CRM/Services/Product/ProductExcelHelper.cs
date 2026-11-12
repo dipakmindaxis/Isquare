@@ -117,7 +117,7 @@ namespace CompanyPlatform.CRM.Services.Product
             int purchaseRateCol = GetCol("Purchase Rate", "PurchaseRate", "Cost Price", "Buying Price", "Cost");
             int profitCol = GetCol("Profit %", "ProfitPercentage", "Profit", "Margin %");
             int stockCol = GetCol("Stock Quantity", "Stock", "Quantity", "Qty", "Inventory");
-            int imgCol = GetCol("Product Image", "ProductImage", "Image URL", "Images", "Image", "Picture");
+            int imgCol = GetCol("Images", "Image", "Product Image URL", "ProductImageUrl", "Image URL", "ImageUrl", "Product Image", "ProductImage", "Image File", "Picture", "Photo");
 
             if (productNameCol <= 0 && specCol > 0)
             {

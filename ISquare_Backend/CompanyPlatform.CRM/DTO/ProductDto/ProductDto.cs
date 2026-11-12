@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace CompanyPlatform.CRM.DTO.Product
 {
@@ -49,6 +49,18 @@ namespace CompanyPlatform.CRM.DTO.Product
         public string? ProductImage { get; set; }
 
         public string? ProductImagePath
+        {
+            get => ProductImage;
+            set => ProductImage = value;
+        }
+
+        public string? ProductImageUrl
+        {
+            get => ProductImage;
+            set => ProductImage = value;
+        }
+
+        public string? ImageUrl
         {
             get => ProductImage;
             set => ProductImage = value;
