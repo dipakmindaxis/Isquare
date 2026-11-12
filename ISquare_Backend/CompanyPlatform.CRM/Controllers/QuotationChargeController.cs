@@ -8,7 +8,7 @@ namespace CompanyPlatform.CRM.Controllers
 {
     [Route("api/quotation-charge")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public class QuotationChargeController : ControllerBase
     {
         private readonly IQuotationChargeService _service;

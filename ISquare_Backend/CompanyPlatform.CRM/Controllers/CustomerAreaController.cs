@@ -8,7 +8,7 @@ namespace CompanyPlatform.CRM.Controllers
 {
     [Route("api/customer-area")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public class CustomerAreaController : ControllerBase
     {
         private readonly ICustomerAreaService _customerAreaService;

@@ -9,7 +9,7 @@ namespace CompanyPlatform.CRM.Controllers
 {
     [Route("api/industry")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public class IndustryController : ControllerBase
     {
         private readonly IIndustryService _industryService;

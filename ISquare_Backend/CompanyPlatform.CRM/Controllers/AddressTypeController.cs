@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using CompanyPlatform.CRM.DTO.AddressType;
@@ -8,7 +8,7 @@ namespace CompanyPlatform.CRM.Controllers
 {
     [Route("api/address-type")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public class AddressTypeController : ControllerBase
     {
         private readonly IAddressTypeService _addressTypeService;

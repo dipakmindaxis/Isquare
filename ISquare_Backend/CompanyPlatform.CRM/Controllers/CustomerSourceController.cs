@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using CompanyPlatform.CRM.DTO.CustomerSource;
@@ -8,7 +8,7 @@ namespace CompanyPlatform.CRM.Controllers
 {
     [Route("api/customer-source")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public class CustomerSourceController : ControllerBase
     {
         private readonly ICustomerSourceService _customerSourceService;

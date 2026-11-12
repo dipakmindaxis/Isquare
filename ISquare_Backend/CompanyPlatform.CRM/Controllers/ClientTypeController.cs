@@ -9,7 +9,7 @@ namespace CompanyPlatform.CRM.Controllers
 {
     [Route("api/client-type")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public class ClientTypeController : ControllerBase
     {
         private readonly IClientTypeService

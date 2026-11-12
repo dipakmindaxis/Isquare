@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -9,7 +9,7 @@ namespace CompanyPlatform.CRM.Controllers
 {
     [Route("api/quotation-revision")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public class QuotationRevisionController : ControllerBase
     {
         private readonly IQuotationRevisionService _service;

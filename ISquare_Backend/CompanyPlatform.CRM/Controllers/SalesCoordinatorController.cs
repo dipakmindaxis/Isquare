@@ -9,7 +9,7 @@ namespace CompanyPlatform.CRM.Controllers
 {
     [Route("api/sales-coordinator")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public class SalesCoordinatorController : ControllerBase
     {
         private readonly ISalesCoordinatorService _service;

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using CompanyPlatform.CRM.DTO.PaymentTerm;
@@ -8,7 +9,7 @@ namespace CompanyPlatform.CRM.Controllers
 {
     [Route("api/payment-term")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public class PaymentTermController : ControllerBase
     {
         private readonly IPaymentTermService _paymentTermService;

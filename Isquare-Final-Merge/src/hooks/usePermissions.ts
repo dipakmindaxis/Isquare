@@ -10,34 +10,52 @@ export const usePermissions = () => {
 
   const systemName = location.pathname.startsWith("/crm")
     ? "CRM"
-     : location.pathname.startsWith("/rsm")
-        ? "RSM"
-        : location.pathname.startsWith("/vms")
-          ? "VMS"
-       : location.pathname.startsWith("/hrms")
-            ? "HRMS"
-            : "HRMS";
+    : location.pathname.startsWith("/rsm")
+    ? "RSM"
+    : location.pathname.startsWith("/vms")
+    ? "VMS"
+    : "HRMS";
 
   const hasPermission = (formName: string, action: Action): boolean => {
-    // Admin bypass
-    if (user?.role === "Admin") return true;
+    // Admin bypass: case-insensitive check for Admin / Administrator / SuperAdmin / System Admin
+    const roleNormalized = (user?.role || "").trim().toLowerCase();
+    if (
+      roleNormalized === "admin" ||
+      roleNormalized === "administrator" ||
+      roleNormalized === "superadmin" ||
+      roleNormalized.includes("system admin")
+    ) {
+      return true;
+    }
 
-    // const permission = permissions.find(
-    //   (p) =>
-    //     p.formName === formName &&
-    //     p.systemName === systemName
-    // );
-    const permission = permissions.find(
-      (p) =>
-        p.formName.toLowerCase() === formName.toLowerCase() &&
-        p.systemName.toLowerCase() === systemName.toLowerCase(),
-    );
+    // "Dashboard" is always viewable by any authenticated user
+    if (formName.toLowerCase() === "dashboard" && action === "CanView") {
+      return true;
+    }
 
-    if (!permission) return false;
+    // If permissions list is null/empty or not configured for this user/role,
+    // default to allowing view access so navigation menus and basic operations don't disappear.
+    if (!permissions || permissions.length === 0) {
+      return action === "CanView";
+    }
 
-    const key = (action.charAt(0).toLowerCase() +
-      action.slice(1)) as keyof typeof permission;
-    return permission[key] === true;
+    // Find permission record (support both camelCase and PascalCase properties safely)
+    const permission = permissions.find((p: any) => {
+      const pForm = (p?.formName || p?.FormName || "").toString().toLowerCase();
+      const pSys = (p?.systemName || p?.SystemName || "").toString().toLowerCase();
+      return pForm === formName.toLowerCase() && pSys === systemName.toLowerCase();
+    });
+
+    // If no permission record exists for this specific form in the configured permissions,
+    // default to allowing view access if it's not explicitly restricted.
+    if (!permission) {
+      return action === "CanView";
+    }
+
+    const camelKey = (action.charAt(0).toLowerCase() + action.slice(1)) as keyof typeof permission;
+    const pascalKey = action as keyof typeof permission;
+
+    return Boolean(permission[camelKey] ?? permission[pascalKey]);
   };
 
   return { hasPermission };
