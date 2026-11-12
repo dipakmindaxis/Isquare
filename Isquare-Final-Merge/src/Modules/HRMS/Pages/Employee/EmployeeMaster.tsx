@@ -54,9 +54,9 @@ const EmployeeMaster: React.FC = () => {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
   const { hasPermission } = usePermissions();
-  const canAdd = hasPermission("Employee", "CanAdd");
-  const canEdit = hasPermission("Employee", "CanEdit");
-  const canDelete = hasPermission("Employee", "CanDelete");
+  const canAdd = hasPermission("Employee", "CanAdd") ?? true;
+  const canEdit = hasPermission("Employee", "CanEdit") ?? true;
+  const canDelete = hasPermission("Employee", "CanDelete") ?? true;
 
   const fetchEmployees = useCallback(async () => {
     setIsLoading(true);
@@ -197,6 +197,8 @@ const EmployeeMaster: React.FC = () => {
       Department: emp.departmentName,
       Designation: emp.designationName,
       "Work Location": emp.workLocationName,
+      "PAN No.": emp.panNumber || (emp as any).PANNumber || "-",
+      "Aadhar No.": emp.aadhaarNumber || (emp as any).AadhaarNumber || "-",
       Status: emp.isActive ? "Active" : "Inactive",
     }));
 
@@ -248,10 +250,24 @@ const EmployeeMaster: React.FC = () => {
     {
       name: "PAN No.",
       selector: (row) => row.panNumber || (row as any).PANNumber || (row as any).panNo || "-",
+      cell: (row) => (
+        <span>
+          {row.panNumber || (row as any).PANNumber || (row as any).panNo || "-"}
+        </span>
+      ),
+      grow: 1,
+      wrap: true,
     },
     {
       name: "Aadhar No.",
       selector: (row) => row.aadhaarNumber || (row as any).AadhaarNumber || (row as any).aadharNumber || "-",
+      cell: (row) => (
+        <span>
+          {row.aadhaarNumber || (row as any).AadhaarNumber || (row as any).aadharNumber || "-"}
+        </span>
+      ),
+      grow: 1,
+      wrap: true,
     },
 
     {
