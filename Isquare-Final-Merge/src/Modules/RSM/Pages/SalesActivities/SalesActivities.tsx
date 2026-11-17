@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { useSearchParams, useLocation } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import {
   Layers,
   CheckSquare,
   RefreshCw,
   CheckCircle2,
-    PieChart,
+  PieChart,
   Flag,
   Paperclip,
 } from "lucide-react";
@@ -34,7 +34,6 @@ import { EditSalesActivityModal } from "./Components/EditSalesActivityModal";
 import { ViewSalesActivityModal } from "./Components/ViewSalesActivityModal";
 import ConfirmationModal from "../../../../Components/Common/ConfirmationModal";
 import { FollowUpsMaster } from "../Sales/FollowUps/FollowUpsMaster";
-import { TasksMaster } from "./Components/TasksMaster";
 import { exportToExcel } from "../../../../Utils/exportToExcel";
 import ActivityTypeMaster from "../Master/ActivityType/ActivityTypeMaster";
 import CustomerStatus from "../Master/CustomerStatus/CustomerStatus";
@@ -44,7 +43,6 @@ import DocumentTypeMaster from "../Master/DocumentType/DocumentTypeMaster";
 export type SalesActivityMasterTab =
   | "all"
   | "followups"
-  | "tasks"
   | "activity-types"
   | "customer-status"
   | "priority"
@@ -55,6 +53,7 @@ export interface SalesActivitiesProps {
 }
 
 export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) => {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const urlTab = searchParams.get("tab") as SalesActivityMasterTab | null;
 
@@ -62,7 +61,6 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
     () => [
       "all",
       "followups",
-      "tasks",
       "activity-types",
       "customer-status",
       "priority",
@@ -83,18 +81,6 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
         lower === "followup"
       )
         return "followups";
-      if (
-        lower === "tasks" ||
-        lower === "approvals" ||
-        lower === "task" ||
-        lower === "task-assignment" ||
-        lower === "taskassignment" ||
-        lower === "task-assignments" ||
-        lower === "tasks-assignment" ||
-        lower === "task_assignment" ||
-        lower === "assignment"
-      )
-        return "tasks";
       if (
         lower === "activity-types" ||
         lower === "activity-type" ||
@@ -123,27 +109,24 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
     []
   );
 
-  const location = useLocation();
-
   const [mainView, setMainView] = useState<SalesActivityMasterTab>(() => {
-    if (urlTab) return resolveTab(urlTab);
-    if (location.pathname.includes("task-assignment")) return "tasks";
-    if (location.pathname.includes("sales-activities")) return "all";
+    if (urlTab && validTabs.includes(urlTab)) return resolveTab(urlTab);
     if (defaultTab && validTabs.includes(defaultTab)) return defaultTab;
     return "all";
   });
 
   useEffect(() => {
     if (urlTab) {
+      const tabParam = String(urlTab).toLowerCase();
+      if (tabParam.includes("task") || tabParam.includes("assignment")) {
+        navigate("/rsm/task-assignment", { replace: true });
+        return;
+      }
       setMainView(resolveTab(urlTab));
-    } else if (location.pathname.includes("task-assignment")) {
-      setMainView("tasks");
-    } else if (location.pathname.includes("sales-activities")) {
-      setMainView("all");
     } else if (defaultTab && validTabs.includes(defaultTab)) {
       setMainView(defaultTab);
     }
-  }, [urlTab, location.pathname, defaultTab, resolveTab, validTabs]);
+  }, [urlTab, defaultTab, resolveTab, validTabs, navigate]);
 
   const handleSwitchMainView = (tab: SalesActivityMasterTab) => {
     setMainView(tab);
@@ -179,7 +162,6 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
 
   // Modal states
   const [isAddOpen, setIsAddOpen] = useState<boolean>(false);
-  const [taskAddRequested, setTaskAddRequested] = useState<boolean>(false);
   const [isEditOpen, setIsEditOpen] = useState<boolean>(false);
   const [isViewOpen, setIsViewOpen] = useState<boolean>(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState<boolean>(false);
@@ -325,11 +307,6 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
       count: stats.total,
     },
     {
-      id: "tasks" as const,
-      label: "Task Assignment",
-      icon: <CheckSquare size={16} />,
-    },
-    {
       id: "activity-types" as const,
       label: "Activity Type",
       icon: <CheckCircle2 size={16} />,
@@ -370,7 +347,7 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
                 </span>
               </div>
               <p className="text-gray-500 mt-1 text-xs md:text-sm">
-                Unified master management for sales activities, follow-ups, tasks, activity types, customer statuses, priorities, and document types.
+                Unified master management for sales activities, follow-ups, activity types, customer statuses, priorities, and document types.
               </p>
             </div>
           </div>
@@ -385,11 +362,10 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
                 key={tab.id}
                 type="button"
                 onClick={() => handleSwitchMainView(tab.id)}
-                className={`flex items-center gap-2 px-4 py-3 text-xs sm:text-sm font-medium border-b-2 whitespace-nowrap transition-all cursor-pointer ${
-                  isActive
+                className={`flex items-center gap-2 px-4 py-3 text-xs sm:text-sm font-medium border-b-2 whitespace-nowrap transition-all cursor-pointer ${isActive
                     ? "border-[#FF7900] text-[#FF7900] font-semibold bg-orange-50/50 rounded-t-lg"
                     : "border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300"
-                }`}
+                  }`}
               >
                 <span className={isActive ? "text-[#FF7900]" : "text-gray-400"}>
                   {tab.icon}
@@ -397,11 +373,10 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
                 <span>{tab.label}</span>
                 {typeof tab.count === "number" && (
                   <span
-                    className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${
-                      isActive
+                    className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${isActive
                         ? "bg-[#FF7900] text-white"
                         : "bg-gray-100 text-gray-600"
-                    }`}
+                      }`}
                   >
                     {tab.count}
                   </span>
@@ -467,14 +442,11 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      handleSwitchMainView("tasks");
-                      setTaskAddRequested(true);
-                    }}
+                    onClick={() => navigate("/rsm/task-assignment")}
                     className="inline-flex items-center gap-2 rounded-xl bg-[#00234a] hover:bg-[#003366] text-white px-4 py-2.5 text-xs sm:text-sm font-semibold shadow-sm transition cursor-pointer"
                   >
-                    <FaPlus size={12} />
-                    <span>Add Task</span>
+                    <CheckSquare size={13} />
+                    <span>Task Assignment</span>
                   </button>
                   <button
                     type="button"
@@ -568,15 +540,9 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
 
       {/* Operations & Master Views matching EnquiryMaster layout */}
       {mainView === "followups" && <FollowUpsMaster isTab={true} />}
-      {mainView === "tasks" && (
-        <TasksMaster
-          initialAddOpen={taskAddRequested}
-          onAddClosed={() => setTaskAddRequested(false)}
-        />
-      )}
       {mainView === "activity-types" && <ActivityTypeMaster isTab={true} />}
       {mainView === "customer-status" && <CustomerStatus isTab={true} />}
-            {mainView === "priority" && <PriorityMaster isTab={true} />}
+      {mainView === "priority" && <PriorityMaster isTab={true} />}
       {mainView === "document-types" && <DocumentTypeMaster isTab={true} />}
     </div>
   );

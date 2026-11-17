@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Loader2, Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../../../../hooks/useAuth";
-import logoImg from "../../../../assets/isquare-logo.png";
+import ISquareLogo from "../../../../Components/Common/ISquareLogo";
 import loginBg from "../../../../assets/login-bg1.png";
 
 // Safety Equipment Icons (exact match to reference)
@@ -149,11 +149,7 @@ const Login: React.FC = () => {
           <div className="w-full max-w-[450px] sm:max-w-[465px] bg-white rounded-[26px] sm:rounded-[30px] shadow-[0_20px_50px_rgba(11,45,85,0.08)] p-6 sm:p-9 lg:p-10 border border-white/90 transition-all duration-300">
             {/* Center Logo */}
             <div className="mb-5 sm:mb-6 flex justify-center w-full">
-              <img
-                src={logoImg}
-                alt="iSQUARE Safety Equipments Pvt. Ltd"
-                className="h-11 sm:h-12 w-auto object-contain max-w-[210px]"
-              />
+              <ISquareLogo size="md" theme="dark" className="max-w-[210px] justify-center" />
             </div>
 
             {/* Heading & Subtitle */}

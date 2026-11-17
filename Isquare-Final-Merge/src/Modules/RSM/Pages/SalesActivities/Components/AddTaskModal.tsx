@@ -214,8 +214,12 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
           }
 
           if (statusList.length > 0) {
-            const foundStatusId = statusList[0].taskStatusId || statusList[0].id || 1;
-            setTaskStatusId(Number(foundStatusId));
+            setTaskStatusId((prev) => {
+              const exists = statusList.some(
+                (s) => Number(s.taskStatusId || s.id) === prev
+              );
+              return exists ? prev : Number(statusList[0].taskStatusId || statusList[0].id || 1);
+            });
           }
         } catch {
           toast.error("Failed to load task masters.");
@@ -298,6 +302,11 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
         ? Number(customers[0].customerId || (customers[0] as any).id || 1)
         : 1;
 
+      const matchedStatusObj = statuses.find(
+        (s) => Number(s.taskStatusId || s.id) === Number(taskStatusId)
+      );
+      const resolvedStatusName = matchedStatusObj?.statusName || "Pending";
+
       const payload: TaskCreatePayload = {
         companyId: resolvedCompanyId,
         taskTitle: taskTitle.trim(),
@@ -308,6 +317,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
         assignedByName: matchedAssignor ? matchedAssignor.name : assignedBy.replace(/\s*\(.*?\)\s*$/, "").trim() || assignedBy,
         priorityId: Number(priorityId),
         taskStatusId: Number(taskStatusId),
+        taskStatusName: resolvedStatusName,
         startDate: new Date().toISOString().split("T")[0],
         dueDate: dueDate,
         remarks: details.trim() || undefined,
