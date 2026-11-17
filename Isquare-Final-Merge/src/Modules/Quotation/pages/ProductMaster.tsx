@@ -104,6 +104,7 @@ export const ProductMaster: React.FC = () => {
       setProducts(data);
       const newIdSet = new Set(data.map((p) => p.productId));
       setSelectedIds((prev) => prev.filter((id) => newIdSet.has(id)));
+
     } catch (e: any) {
       console.error("Failed to fetch products:", e);
       const msg =
@@ -263,8 +264,8 @@ export const ProductMaster: React.FC = () => {
       prod.profitPercentage != null && !isNaN(Number(prod.profitPercentage))
         ? Number(prod.profitPercentage)
         : prod.profit != null && !isNaN(Number(prod.profit))
-        ? Number(prod.profit)
-        : ""
+          ? Number(prod.profit)
+          : ""
     );
     setStock(
       prod.stock != null && !isNaN(Number(prod.stock))
@@ -665,9 +666,8 @@ export const ProductMaster: React.FC = () => {
                   return (
                     <tr
                       key={p.productId}
-                      className={`transition duration-150 min-h-[52px] ${
-                        isSelected ? "bg-orange-50/50 hover:bg-orange-50/80" : "hover:bg-[#f0f7ff]"
-                      }`}
+                      className={`transition duration-150 min-h-[52px] ${isSelected ? "bg-orange-50/50 hover:bg-orange-50/80" : "hover:bg-[#f0f7ff]"
+                        }`}
                     >
                       <td className="p-3.5 text-center w-10">
                         <input
@@ -677,58 +677,58 @@ export const ProductMaster: React.FC = () => {
                           className="w-4 h-4 rounded border-gray-300 text-[#FF7900] focus:ring-[#FF7900] cursor-pointer accent-[#FF7900]"
                         />
                       </td>
-                    <td className="p-3.5 text-center w-14">
-                      <ProductThumbnail
-                        src={p.productImage || p.productImagePath || p.imageUrl}
-                        alt={p.productName}
-                        itemCode={p.itemCode}
-                      />
-                    </td>
-                    <td className="p-3.5 font-semibold text-[#00234a]">
-                      {p.itemCode || `PRD-${p.productId}`}
-                    </td>
-                    <td className="p-3.5 font-bold text-gray-900">{p.productName}</td>
-                    <td className="p-3.5 text-gray-600 font-medium">{p.brand || "ISQUARE"}</td>
-                    <td className="p-3.5 text-center text-gray-700 font-medium">
-                      {p.hsnCode || "—"}
-                    </td>
-                    <td className="p-3.5 text-gray-500 max-w-xs align-top">
-                      <div
-                        className="truncate"
-                        title={p.specification || "No specification"}
-                      >
-                        {p.specification || "—"}
-                      </div>
-                    </td>
-                    <td className="p-3.5 text-right font-semibold text-gray-900">
-                      {formatINR(p.standardRate ?? 0)}
-                    </td>
-                    <td className="p-3.5 text-center font-semibold text-gray-700">
-                      {p.gstRate ?? 0}%
-                    </td>
-                    <td className="p-3.5 text-right space-x-1.5 whitespace-nowrap">
-                      <button
-                        onClick={() => handleOpenEdit(p)}
-                        className="p-1.5 bg-amber-50 hover:bg-amber-600 hover:text-white text-amber-600 rounded-lg transition cursor-pointer shadow-2xs"
-                        title="Edit Product"
-                      >
-                        <Edit size={14} />
-                      </button>
-                      <button
-                        onClick={() => {
-                          setProductToDelete(p);
-                          setDeleteModalOpen(true);
-                        }}
-                        className="p-1.5 bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-600 rounded-lg transition cursor-pointer shadow-2xs"
-                        title="Delete Product"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
+                      <td className="p-3.5 text-center w-14">
+                        <ProductThumbnail
+                          src={p.productImage || p.productImagePath || p.imageUrl}
+                          alt={p.productName}
+                          itemCode={p.itemCode}
+                        />
+                      </td>
+                      <td className="p-3.5 font-semibold text-[#00234a]">
+                        {p.itemCode || `PRD-${p.productId}`}
+                      </td>
+                      <td className="p-3.5 font-bold text-gray-900">{p.productName}</td>
+                      <td className="p-3.5 text-gray-600 font-medium">{p.brand || "ISQUARE"}</td>
+                      <td className="p-3.5 text-center text-gray-700 font-medium">
+                        {p.hsnCode || "—"}
+                      </td>
+                      <td className="p-3.5 text-gray-500 max-w-xs align-top">
+                        <div
+                          className="truncate"
+                          title={p.specification || "No specification"}
+                        >
+                          {p.specification || "—"}
+                        </div>
+                      </td>
+                      <td className="p-3.5 text-right font-semibold text-gray-900">
+                        {formatINR(p.standardRate ?? 0)}
+                      </td>
+                      <td className="p-3.5 text-center font-semibold text-gray-700">
+                        {p.gstRate ?? 0}%
+                      </td>
+                      <td className="p-3.5 text-right space-x-1.5 whitespace-nowrap">
+                        <button
+                          onClick={() => handleOpenEdit(p)}
+                          className="p-1.5 bg-amber-50 hover:bg-amber-600 hover:text-white text-amber-600 rounded-lg transition cursor-pointer shadow-2xs"
+                          title="Edit Product"
+                        >
+                          <Edit size={14} />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setProductToDelete(p);
+                            setDeleteModalOpen(true);
+                          }}
+                          className="p-1.5 bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-600 rounded-lg transition cursor-pointer shadow-2xs"
+                          title="Delete Product"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>

@@ -8,44 +8,43 @@ import {
   ListChecks,
   MessageSquare,
   XCircle,
-  AlertCircle,
   Coins,
   Building2,
   MapPin,
   Truck,
-  Package 
+  Package,
+  UserCheck
 } from "lucide-react";
 
-// Import your newly created sub-master component
-import { EnquirySourceMaster } from "./EnquirySource/EnquirySourceMaster"; // Adjust the import path if necessary
+// Sub-master components
+import { EnquirySourceMaster } from "./EnquirySource/EnquirySourceMaster";
 import { EnquiryTypeMaster } from "./EnquiryType/EnquiryTypeMaster";
 import { EnquiryStatusMaster } from "./EnquiryStatus/EnquiryStatusMaster";
 import { EnquiryStageMaster } from "./EnquiryStage/EnquiryStageMaster";
-import { UnitOfMeasureMaster } from "./UnitOfMeasure/UnitOfMeasureMaster"; // Added UnitOfMeasure Import
+import { UnitOfMeasureMaster } from "./UnitOfMeasure/UnitOfMeasureMaster";
 import { EnquiryPriorityMaster } from "./EnquiryPriority/EnquiryPriorityMaster";
-
-// import { EnquiryDocumentTypeMaster } from "./EnquiryDocumentType/EnquiryDocumentTypeMaster";
 import { LostReasonMaster } from "./LostReason/LostReasonMaster";
 import { CurrencyMaster } from "./Currency/CurrencyMaster";
 import { DepartmentMaster } from "./Department/DepartmentMaster";
 import { SalesTerritoryMaster } from "./SalesTerritory/SalesTerritoryMaster";
 import { PlaceOfSupplyMaster } from "./PlaceOfSupply/PlaceOfSupplyMaster";
 import { ProductCategoryMaster } from "./ProductCategory/ProductCategoryMaster"; 
+import { SalesManagerMaster } from "./SalesManager/SalesManagerMaster";
 
 export type EnquiryTab =
   | "source"
   | "type"
   | "status"
   | "stage"
-  | "priority"
-  | "uom"
   | "product-category"
+  | "uom"
   | "currency"
   | "department"
-  | "territory"
   | "place-of-supply"
-  | "document-type"
-  | "lost-reason";
+  | "sales-manager"
+  | "territory"
+  | "lost-reason"
+  | "priority";
 
 interface EnquiryMasterProps {
   initialTab?: EnquiryTab;
@@ -83,7 +82,7 @@ const TABS: TabConfig[] = [
     shortDesc: "Lifecycle phases and funnel milestones for enquiries",
     icon: <ListChecks className="w-4 h-4" />,
   },
-   {
+  {
     id: "product-category",
     label: "Product Category",
     shortDesc: "Manage master list of product categories",
@@ -92,20 +91,32 @@ const TABS: TabConfig[] = [
   {
     id: "uom",
     label: "Unit of Measure",
-    shortDesc: "Unit of Measure",
+    shortDesc: "Unit of Measure for quotation items and orders",
     icon: <MessageSquare className="w-4 h-4" />,
   },
-   {
+  {
     id: "currency",
     label: "Currency",
     shortDesc: "Accepted currencies for enquiry estimations and quotes",
     icon: <Coins className="w-4 h-4" />,
   },
-   {
+  {
     id: "department",
     label: "Department",
     shortDesc: "Organizational departments assigned to enquiries",
     icon: <Building2 className="w-4 h-4" />,
+  },
+  {
+    id: "place-of-supply",
+    label: "Place of Supply",
+    shortDesc: "Tax jurisdictions and GST billing origins/destinations",
+    icon: <Truck className="w-4 h-4" />,
+  },
+  {
+    id: "sales-manager",
+    label: "Sales Manager",
+    shortDesc: "Assigned sales managers and manager codes for pipeline distribution",
+    icon: <UserCheck className="w-4 h-4" />,
   },
   {
     id: "territory",
@@ -113,52 +124,48 @@ const TABS: TabConfig[] = [
     shortDesc: "Geographic or operational sales jurisdictions",
     icon: <MapPin className="w-4 h-4" />,
   },
-    {
-    id: "place-of-supply",
-    label: "Place of Supply",
-    shortDesc: "Tax jurisdictions and GST billing origins/destinations",
-    icon: <Truck className="w-4 h-4" />,
-  },
   {
     id: "lost-reason",
     label: "Lost Reason",
     shortDesc: "Standardized explanations for dropped or unsuccessful enquiries",
     icon: <XCircle className="w-4 h-4" />,
   },
-  {
-  id: "priority",
-  label: "Enquiry Priority",
-  shortDesc: "Urgency levels and priority ratings for enquiries",
-  icon: <AlertCircle className="w-4 h-4" />,
-},
-
 ];
 
 export const EnquiryMaster: React.FC<EnquiryMasterProps> = ({ initialTab }) => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const rawTab = (
+  const rawTabParam = (
     searchParams.get("tab") ||
     initialTab ||
     "source"
-  ).toLowerCase() as EnquiryTab;
+  ).toLowerCase();
 
   const activeTab: EnquiryTab = useMemo(() => {
+    // Map parameter aliases
+    if (rawTabParam === "sales-territory" || rawTabParam === "salesterritory") return "territory";
+    if (rawTabParam === "salesmanager" || rawTabParam === "sales-user-manager") return "sales-manager";
+    if (rawTabParam === "placeofsupply") return "place-of-supply";
+    if (rawTabParam === "lostreason") return "lost-reason";
+
     const validTabs: EnquiryTab[] = [
       "source",
       "type",
       "status",
       "stage",
-      "priority",
-      "uom",
       "product-category",
+      "uom",
       "currency",
       "department",
-      "territory",
       "place-of-supply",
+      "sales-manager",
+      "territory",
       "lost-reason",
+      "priority",
     ];
-    return validTabs.includes(rawTab) ? rawTab : "source";
-  }, [rawTab]);
+    return validTabs.includes(rawTabParam as EnquiryTab)
+      ? (rawTabParam as EnquiryTab)
+      : "source";
+  }, [rawTabParam]);
 
   useEffect(() => {
     if (initialTab && searchParams.get("tab") !== initialTab) {
@@ -189,14 +196,14 @@ export const EnquiryMaster: React.FC<EnquiryMasterProps> = ({ initialTab }) => {
                 </span>
               </div>
               <p className="text-gray-500 mt-1 text-xs md:text-sm">
-                Unified master management for enquiry sources, types, statuses, stages, channels, document types, and lost reasons.
+                Unified master management for enquiry sources, types, statuses, stages, categories, UOM, currency, departments, place of supply, sales managers, territories, and lost reasons.
               </p>
             </div>
           </div>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex items-center gap-1 overflow-x-auto scrollbar-none pt-2">
+        <div className="flex items-center gap-1 overflow-x-auto scrollbar-thin pb-1 pt-2">
           {TABS.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
@@ -204,7 +211,7 @@ export const EnquiryMaster: React.FC<EnquiryMasterProps> = ({ initialTab }) => {
                 key={tab.id}
                 type="button"
                 onClick={() => handleSelectTab(tab.id)}
-                className={`flex items-center gap-2.5 px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-all cursor-pointer ${
+                className={`flex items-center gap-2 px-3.5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-all cursor-pointer shrink-0 ${
                   isActive
                     ? "border-blue-600 text-blue-600 font-semibold bg-blue-50/50 rounded-t-lg"
                     : "border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300"
@@ -222,37 +229,21 @@ export const EnquiryMaster: React.FC<EnquiryMasterProps> = ({ initialTab }) => {
 
       {/* Active Tab View */}
       <div className="w-full">
-        {activeTab === "source" && (
-           <EnquirySourceMaster isTab={true} />
+        {activeTab === "source" && <EnquirySourceMaster isTab={true} />}
+        {activeTab === "type" && <EnquiryTypeMaster isTab={true} />}
+        {activeTab === "status" && <EnquiryStatusMaster isTab={true} />}
+        {activeTab === "stage" && <EnquiryStageMaster isTab={true} />}
+        {activeTab === "product-category" && <ProductCategoryMaster isTab={true} />}
+        {activeTab === "uom" && <UnitOfMeasureMaster isTab={true} />}
+        {activeTab === "currency" && <CurrencyMaster isTab={true} />}
+        {activeTab === "department" && <DepartmentMaster isTab={true} />}
+        {activeTab === "place-of-supply" && <PlaceOfSupplyMaster isTab={true} />}
+        {activeTab === "sales-manager" && <SalesManagerMaster isTab={true} />}
+        {(activeTab === "territory" || (activeTab as string) === "sales-territory") && (
+          <SalesTerritoryMaster isTab={true} />
         )}
-        
-         {activeTab === "type" && (
-           <EnquiryTypeMaster isTab={true} />
-        )}
-        
-     
-        {activeTab === "status" && (
-           <EnquiryStatusMaster isTab={true} />
-        )}
-
-        
-      
-        {activeTab === "stage" && (
-           <EnquiryStageMaster isTab={true} />
-        )}
-           {activeTab === "priority" && (
-        <EnquiryPriorityMaster isTab={true} />
-      )}
-       {activeTab === "uom" && (
-           <UnitOfMeasureMaster isTab={true} />
-        )}
-      {activeTab === "product-category" && <ProductCategoryMaster isTab={true} />}
-      {activeTab === "currency" && <CurrencyMaster isTab={true} />}
-      {activeTab === "department" && <DepartmentMaster isTab={true} />}
-      {activeTab === "territory" && <SalesTerritoryMaster isTab={true} />}
-      {activeTab === "place-of-supply" && <PlaceOfSupplyMaster isTab={true} />}
-      {activeTab === "lost-reason" && (<LostReasonMaster isTab={true} />)}
-     
+        {activeTab === "lost-reason" && <LostReasonMaster isTab={true} />}
+        {activeTab === "priority" && <EnquiryPriorityMaster isTab={true} />}
       </div>
     </div>
   );

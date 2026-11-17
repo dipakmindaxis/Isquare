@@ -5,12 +5,69 @@ import type { MasterItem } from "../Types/EnquiryTypes";
 import { getAllActivityTypes } from "../../Master/ActivityType/Services/ActivityTypeService";
 
 const fetchMaster = async (url: string, idField: string, nameField: string): Promise<MasterItem[]> => {
+  if (!url) return [];
   try {
-    const res = await axios.get(`${url}/active`); // Fetching active records only
-    return res.data.map((item: any) => ({
-      id: item[idField],
-      name: item[nameField],
-    }));
+    let list: any[] = [];
+    const endpoints = [
+      `${url}/active`,
+      url,
+    ];
+
+    // Try apiClient first (with auth Bearer token)
+    for (const ep of endpoints) {
+      try {
+        const res = await apiClient.get(ep);
+        const data = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.result || []);
+        if (Array.isArray(data) && data.length > 0) {
+          list = data;
+          break;
+        }
+      } catch {
+        // continue to next endpoint
+      }
+    }
+
+    // Fallback to plain axios
+    if (list.length === 0) {
+      for (const ep of endpoints) {
+        try {
+          const res = await axios.get(ep);
+          const data = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.result || []);
+          if (Array.isArray(data) && data.length > 0) {
+            list = data;
+            break;
+          }
+        } catch {
+          // continue to next endpoint
+        }
+      }
+    }
+
+    const idFieldPascal = idField ? idField.charAt(0).toUpperCase() + idField.slice(1) : "";
+    const nameFieldPascal = nameField ? nameField.charAt(0).toUpperCase() + nameField.slice(1) : "";
+
+    return list
+      .filter((item: any) => !item.isDeleted && !item.IsDeleted && item.isActive !== false && item.IsActive !== false)
+      .map((item: any) => {
+        const idVal = item[idField] ?? item[idFieldPascal] ?? item.id ?? item.Id ?? item.ID ?? 0;
+        const nameVal = item[nameField] ?? item[nameFieldPascal] ?? item.name ?? item.Name ?? item.userName ?? item.UserName ?? "";
+        return {
+          id: Number(idVal),
+          name: String(nameVal || "").trim(),
+          code: String(
+            item.code ??
+            item.Code ??
+            item.placeOfSupplyCode ??
+            item.PlaceOfSupplyCode ??
+            item.territoryCode ??
+            item.TerritoryCode ??
+            item.lostReasonCode ??
+            item.LostReasonCode ??
+            ""
+          ).trim(),
+        };
+      })
+      .filter((item: MasterItem) => item.id > 0 && item.name.length > 0);
   } catch (error) {
     console.error(`Error fetching ${url}:`, error);
     return [];
