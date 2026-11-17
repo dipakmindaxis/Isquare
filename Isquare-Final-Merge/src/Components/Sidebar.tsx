@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import {
   Home,
   Users,
-  Settings,
   Database,
   ChevronDown,
   UserCog,
@@ -13,24 +12,24 @@ import {
   UserCheck,
   Share2,
   MapPin,
-  PhoneCall,
-  Clock,
-  Paperclip,
   Layers,
-  Contact,
-  Users2,
   CheckCircle2,
   CheckSquare,
   FileText,
-  Plus,
   RotateCcw,
   Sliders,
   Building2,
   Package,
-  GitBranch,
   Flag,
+  ClipboardList,
+  GitBranch,
+  Clock,
+  Paperclip,
+  Contact,
+  PhoneCall,
+  Users2,
 } from "lucide-react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import ISquareLogo, { ISquareIcon } from "./Common/ISquareLogo";
 import { usePermissions } from "../hooks/usePermissions";
 
@@ -119,11 +118,6 @@ export const rsmMenuConfig: MenuItem[] = [
         to: "/rsm/quotations",
       },
       {
-        icon: <Plus />,
-        label: "CREATE QUOTATION",
-        to: "/rsm/quotations/create",
-      },
-      {
         icon: <RotateCcw />,
         label: "QUOTATION REVISIONS",
         to: "/rsm/quotations/revisions",
@@ -157,24 +151,63 @@ export const rsmMenuConfig: MenuItem[] = [
     icon: <Database />,
     subMenu: [
       {
-        icon: <Users />,
-        label: "Enquiry master",
+        icon: <ClipboardList />,
+        label: "ENQUIRY MASTER",
         to: "/rsm/master/enquiry-master",
+        subMenu: [
+          {
+            icon: <ClipboardList />,
+            label: "Enquiry Master",
+            to: "/rsm/master/enquiry-master",
+          },
+        ],
+      },
+      {
+        icon: <Users />,
+        label: "CUSTOMER MASTER",
+        subMenu: [
+          {
+            icon: <Factory />,
+            label: "INDUSTRY",
+            to: "/rsm/industry",
+          },
+          {
+            icon: <UserCheck />,
+            label: "CUSTOMER STATUS",
+            to: "/rsm/customer-status",
+          },
+          {
+            icon: <Share2 />,
+            label: "CUSTOMER SOURCE",
+            to: "/rsm/customer-source",
+          },
+          {
+            icon: <MapPin />,
+            label: "CUSTOMER AREA",
+            to: "/rsm/customer-area",
+          },
+        ],
       },
       {
         icon: <Sliders />,
-        label: "QUOTATION DEFAULTS",
-        to: "/rsm/quotation-defaults",
-      },
-      {
-        icon: <Building2 />,
-        label: "COMPANY PROFILE",
-        to: "/rsm/company-profile",
-      },
-      {
-        icon: <Package />,
-        label: "PRODUCT MASTER",
-        to: "/rsm/products",
+        label: "QUOTATION MASTER",
+        subMenu: [
+          {
+            icon: <Sliders />,
+            label: "QUOTATION DEFAULTS",
+            to: "/rsm/quotation-defaults",
+          },
+          {
+            icon: <Building2 />,
+            label: "COMPANY PROFILE",
+            to: "/rsm/company-profile",
+          },
+          {
+            icon: <Package />,
+            label: "PRODUCT MASTER",
+            to: "/rsm/products",
+          },
+        ],
       },
       {
         icon: <Users />,
@@ -207,26 +240,6 @@ export const rsmMenuConfig: MenuItem[] = [
         to: "/rsm/payment-term",
       },
       {
-        icon: <Factory />,
-        label: "INDUSTRY",
-        to: "/rsm/industry",
-      },
-      {
-        icon: <UserCheck />,
-        label: "CUSTOMER STATUS",
-        to: "/rsm/customer-status",
-      },
-      {
-        icon: <Share2 />,
-        label: "CUSTOMER SOURCE",
-        to: "/rsm/customer-source",
-      },
-      {
-        icon: <MapPin />,
-        label: "CUSTOMER AREA",
-        to: "/rsm/customer-area",
-      },
-      {
         icon: <Home />,
         label: "ADDRESS TYPE",
         to: "/rsm/address-type",
@@ -250,11 +263,6 @@ export const rsmMenuConfig: MenuItem[] = [
         icon: <Paperclip />,
         label: "SALES ATTACHMENTS",
         to: "/rsm/master/sales-attachments",
-      },
-      {
-        icon: <Clock />,
-        label: "FOLLOW-UP",
-        to: "/rsm/master/follow-up",
       },
       {
         icon: <Flag />,
@@ -322,40 +330,96 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   onToggle,
 }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [internalExpanded, setInternalExpanded] = useState(false);
+
+  const isChildActive = (menuItem: MenuItem): boolean => {
+    if (!menuItem.subMenu) return false;
+    return menuItem.subMenu.some((sub) => {
+      if (sub.to) {
+        return location.pathname === sub.to || location.pathname.startsWith(sub.to + "/");
+      }
+      return isChildActive(sub);
+    });
+  };
+
+  const hasSub = !!item.subMenu && item.subMenu.length > 0;
+
+  useEffect(() => {
+    if (hasSub && isChildActive(item)) {
+      setInternalExpanded(true);
+    }
+  }, [location.pathname]);
 
   const isActive = item.to
     ? item.to === "/" || item.to === "/rsm" || item.to === "/hrms" || item.to === "/vms"
       ? location.pathname === item.to
       : location.pathname === item.to || location.pathname.startsWith(item.to + "/")
     : false;
-  const hasSub = !!item.subMenu && item.subMenu.length > 0;
 
   const showChildren = level === 0 ? isExpanded : internalExpanded;
   const toggleHandler =
     level === 0 ? onToggle : () => setInternalExpanded(!internalExpanded);
 
-  const verticalPadding = level === 0 ? "py-2" : "py-1";
+  const verticalPadding = level === 0 ? "py-2" : level === 1 ? "py-1.5" : "py-1";
+  const indentPadding = level === 0 ? 12 : level === 1 ? 24 : 38;
+  const iconSize = level === 0 ? 20 : level === 1 ? 18 : 16;
 
   return (
     <div className="w-full">
-      {item.to ? (
+      {hasSub ? (
+        <button
+          onClick={() => {
+            toggleHandler?.();
+            if (item.to) {
+              navigate(item.to);
+            }
+          }}
+          title={item.label}
+          className={`w-full flex items-center justify-between gap-3 px-3.5 ${verticalPadding} pr-4 mx-2 rounded-xl transition-all duration-200 group cursor-pointer ${
+            isActive && !hasSub
+              ? "bg-white text-[#FF7900] shadow-sm font-semibold"
+              : "text-gray-200 hover:bg-white/10 hover:text-white"
+          }`}
+          style={{ paddingLeft: `${indentPadding}px`, width: "calc(100% - 16px)" }}
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="flex items-center justify-center shrink-0 w-8 h-8 text-[#FF7900] transition-transform duration-200 group-hover:scale-105">
+              {React.cloneElement(
+                item.icon as React.ReactElement<{ size: number }>,
+                { size: iconSize },
+              )}
+            </span>
+            {isOpen && (
+              <span className="sidebar-menu-item leading-snug truncate text-gray-200 group-hover:text-white">
+                {item.label}
+              </span>
+            )}
+          </div>
+          {isOpen && (
+            <ChevronDown
+              size={18}
+              className={`text-[#FF7900] shrink-0 transition-transform duration-200 ${
+                showChildren ? "rotate-180" : ""
+              }`}
+            />
+          )}
+        </button>
+      ) : (
         <NavLink
-          to={item.to}
+          to={item.to || "#"}
           title={item.label}
           className={`flex items-center gap-3 px-3.5 ${verticalPadding} mx-2 rounded-xl transition-all duration-200 group ${
             isActive
               ? "bg-white text-[#FF7900] shadow-sm font-semibold"
               : "text-gray-200 hover:bg-white/10 hover:text-white"
           }`}
-          style={{ paddingLeft: `${level * 16 + 12}px` }}
+          style={{ paddingLeft: `${indentPadding}px` }}
         >
-          <span
-            className="flex items-center justify-center shrink-0 w-8 h-8 text-[#FF7900] transition-transform duration-200 group-hover:scale-105"
-          >
+          <span className="flex items-center justify-center shrink-0 w-8 h-8 text-[#FF7900] transition-transform duration-200 group-hover:scale-105">
             {React.cloneElement(
               item.icon as React.ReactElement<{ size: number }>,
-              { size: 20 },
+              { size: iconSize },
             )}
           </span>
           {isOpen && (
@@ -370,35 +434,6 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
             </span>
           )}
         </NavLink>
-      ) : (
-        <button
-          onClick={toggleHandler}
-          title={item.label}
-          className={`w-full flex items-center justify-between gap-3 px-3.5 ${verticalPadding} pr-4 mx-2 rounded-xl transition-all duration-200 group text-gray-200 hover:bg-white/10 hover:text-white cursor-pointer`}
-          style={{ paddingLeft: `${level * 16 + 12}px`, width: "calc(100% - 16px)" }}
-        >
-          <div className="flex items-center gap-3 min-w-0">
-            <span className="flex items-center justify-center shrink-0 w-8 h-8 text-[#FF7900] transition-transform duration-200 group-hover:scale-105">
-              {React.cloneElement(
-                item.icon as React.ReactElement<{ size: number }>,
-                { size: 20 },
-              )}
-            </span>
-            {isOpen && (
-              <span className="sidebar-menu-item leading-snug truncate text-gray-200 group-hover:text-white">
-                {item.label}
-              </span>
-            )}
-          </div>
-          {isOpen && hasSub && (
-            <ChevronDown
-              size={18}
-              className={`text-[#FF7900] shrink-0 transition-transform duration-200 ${
-                showChildren ? "rotate-180" : ""
-              }`}
-            />
-          )}
-        </button>
       )}
 
       {showChildren && isOpen && hasSub && (
@@ -470,6 +505,23 @@ export const Sidebar = ({ isOpen }: SidebarProps) => {
       document.body.style.userSelect = "";
     };
   }, [isDragging, sidebarWidth]);
+
+  useEffect(() => {
+    const isItemActiveDeep = (m: MenuItem): boolean => {
+      if (m.to && (location.pathname === m.to || location.pathname.startsWith(m.to + "/"))) {
+        return true;
+      }
+      if (m.subMenu && m.subMenu.length > 0) {
+        return m.subMenu.some(isItemActiveDeep);
+      }
+      return false;
+    };
+
+    const activeTop = rsmMenuConfig.find((m) => isItemActiveDeep(m));
+    if (activeTop && activeTop.subMenu) {
+      setOpenMenuLabel(activeTop.label);
+    }
+  }, [location.pathname]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -685,18 +737,6 @@ export const Sidebar = ({ isOpen }: SidebarProps) => {
           </svg>
         </div>
       )}
-
-      {/* Footer Switcher & Settings */}
-      <div className="p-1 border-t border-[#525252] mt-auto">
-        <SidebarItem
-          item={{ icon: <Home />, label: "Switch Module", to: "/" }}
-          isOpen={isOpen}
-        />
-        <SidebarItem
-          item={{ icon: <Settings />, label: "Settings", to: "/settings" }}
-          isOpen={isOpen}
-        />
-      </div>
     </div>
   );
 };

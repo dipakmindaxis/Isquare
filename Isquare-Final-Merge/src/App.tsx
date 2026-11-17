@@ -224,6 +224,39 @@ const router = createBrowserRouter([
         path: "master/enquiry-master",
         element: <EnquiryMaster />,
       },
+      // Enquiry Master Tabs direct / alias routes
+      {
+        path: "master/place-of-supply",
+        element: <EnquiryMaster initialTab="place-of-supply" />,
+      },
+      {
+        path: "place-of-supply",
+        element: <EnquiryMaster initialTab="place-of-supply" />,
+      },
+      {
+        path: "master/sales-manager",
+        element: <EnquiryMaster initialTab="sales-manager" />,
+      },
+      {
+        path: "sales-manager",
+        element: <EnquiryMaster initialTab="sales-manager" />,
+      },
+      {
+        path: "master/sales-territory",
+        element: <EnquiryMaster initialTab="territory" />,
+      },
+      {
+        path: "sales-territory",
+        element: <EnquiryMaster initialTab="territory" />,
+      },
+      {
+        path: "master/lost-reason",
+        element: <EnquiryMaster initialTab="lost-reason" />,
+      },
+      {
+        path: "lost-reason",
+        element: <EnquiryMaster initialTab="lost-reason" />,
+      },
       // Consolidated Master Routes
       {
         path: "master/customer-classification",

@@ -1,14 +1,12 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   Bell,
-  Folder,
   Key,
   LogOut,
   Menu,
   RefreshCw,
-  User,
+  Settings,
   Search,
-  ChevronDown,
   Home,
   Users,
   ShieldCheck,
@@ -428,25 +426,25 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isLogoutModalOpen]);
 
-  const handlePersonalDriveClick = () => {
+  const handleSwitchModuleClick = () => {
     setIsDropdownOpen(false);
-    navigate("/crm/drive");
+    navigate("/");
   };
 
   const handleRefresh = () => {
     window.dispatchEvent(new CustomEvent("app-refresh"));
   };
 
+  const headerClassName = isHRMS
+    ? "bg-white border-b border-[#E2E8F0] shadow-xs px-6 py-2 h-[64px]"
+    : isCRM
+      ? "bg-[#dbdcd6] border-b border-[#FF7900]/60 shadow-sm px-5 py-1 h-[60px]"
+      : "bg-white/95 backdrop-blur-md border-b border-gray-200/80 shadow-xs px-5 py-1 h-[60px]";
+
   return (
     <>
       <header
-        className={`${isHRMS
-          ? "bg-white border-b border-[#E2E8F0] shadow-xs px-6 py-2 h-[64px]"
-          : "bg-[#dbdcd6] border-b border-[#FF7900]/60 shadow-sm px-5 py-1 h-[60px]"
-          : isCRM
-            ? "bg-white border-b border-[#E2E8F0] shadow-xs px-6 py-2 h-[64px]"
-            : "bg-white/95 backdrop-blur-md border-b border-gray-200/80 shadow-xs px-5 py-1 h-[60px]"
-          } flex justify-between items-center sticky top-0 z-50 shrink-0`}
+        className={`${headerClassName} flex justify-between items-center sticky top-0 z-50 shrink-0`}
       >
         {/* Left Section */}
         <div className="flex items-center space-x-4">
@@ -685,32 +683,27 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
             )}
           </div>
 
-          {/* User Dropdown */}
+          {/* Settings Dropdown */}
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className={
-                isHRMS
-                  ? "flex items-center gap-2 px-3.5 py-1.5 border border-[#E2E8F0] rounded-full text-[#17365D] font-bold text-xs hover:bg-slate-50 transition-all shadow-2xs cursor-pointer"
-                  : "flex items-center gap-2 px-4 py-1.5 border border-blue-500 rounded-full text-blue-900 font-bold text-sm hover:bg-blue-50 transition-all shadow-sm"
-              }
+              className="p-2 text-[#FF7900] hover:text-[#e06b00] hover:bg-orange-50 rounded-full transition-colors cursor-pointer flex items-center justify-center focus:outline-none"
+              title="Settings"
+              aria-label="Settings"
             >
-              <User size={15} className={isHRMS ? "text-[#FF7900]" : "text-blue-700"} />
-              <span>{user?.role || "Admin"}</span>
-              {isHRMS && <ChevronDown size={14} className="text-slate-400" />}
+              <Settings size={isHRMS ? 20 : 22} />
             </button>
 
             {/* Redesigned Dropdown Menu */}
             {isDropdownOpen && (
               <div className="absolute right-0 mt-2 w-56 bg-white border border-blue-600 rounded-2xl shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in duration-150">
                 <div className="py-2">
-                  <div className="px-4 py-2 flex items-center gap-3 text-[#111c44] hover:bg-blue-50 cursor-pointer transition-colors">
-                    <User size={18} className="text-blue-600" />
-                    <span className="text-sm font-medium">
-                      {user
-                        ? `${user.firstName} ${user.lastName}`
-                        : "User Profile"}
-                    </span>
+                  <div
+                    onClick={handleSwitchModuleClick}
+                    className="px-4 py-2 flex items-center gap-3 text-[#111c44] hover:bg-blue-50 cursor-pointer transition-colors"
+                  >
+                    <Home size={18} className="text-blue-600" />
+                    <span className="text-sm font-medium">Switch Module</span>
                   </div>
 
                   <div
@@ -719,14 +712,6 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
                   >
                     <Key size={18} className="text-blue-600" />
                     <span className="text-sm font-medium">Change Password</span>
-                  </div>
-
-                  <div
-                    onClick={handlePersonalDriveClick}
-                    className="px-4 py-2 flex items-center gap-3 text-[#111c44] hover:bg-blue-50 cursor-pointer transition-colors"
-                  >
-                    <Folder size={18} className="text-yellow-500" />
-                    <span className="text-sm font-medium">My Drive</span>
                   </div>
 
                   <hr className="my-1 border-gray-100" />
