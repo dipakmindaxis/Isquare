@@ -19,6 +19,9 @@ import type {
   CustomerAddress,
   IndustryItem,
   CustomerAreaItem,
+  CustomerSourceItem,
+  CustomerStatusItem,
+  PaymentTermItem,
   BdeUserItem,
   EmployeeSelectItem,
   DirectorItem,
@@ -34,6 +37,9 @@ import {
 import {
   getIndustries,
   getCustomerAreas,
+  getCustomerSources,
+  getCustomerStatuses,
+  getPaymentTerms,
   getBdeUsers,
   getEmployees,
   getDirectors,
@@ -85,6 +91,9 @@ const ViewCustomerModal: React.FC<ViewCustomerModalProps> = ({
   const [addresses, setAddresses] = useState<CustomerAddress[]>([]);
   const [industries, setIndustries] = useState<IndustryItem[]>([]);
   const [areas, setAreas] = useState<CustomerAreaItem[]>([]);
+  const [sources, setSources] = useState<CustomerSourceItem[]>([]);
+  const [statuses, setStatuses] = useState<CustomerStatusItem[]>([]);
+  const [paymentTerms, setPaymentTerms] = useState<PaymentTermItem[]>([]);
   const [bdeUsers, setBdeUsers] = useState<BdeUserItem[]>([]);
   const [employees, setEmployees] = useState<EmployeeSelectItem[]>([]);
   const [directors, setDirectors] = useState<DirectorItem[]>([]);
@@ -107,6 +116,9 @@ const ViewCustomerModal: React.FC<ViewCustomerModalProps> = ({
             addrData,
             indData,
             areaData,
+            srcData,
+            statusData,
+            ptData,
             bdeData,
             empData,
             dirData,
@@ -118,6 +130,9 @@ const ViewCustomerModal: React.FC<ViewCustomerModalProps> = ({
             getCustomerAddresses(customerId).catch(() => []),
             getIndustries().catch(() => []),
             getCustomerAreas().catch(() => []),
+            getCustomerSources().catch(() => []),
+            getCustomerStatuses().catch(() => []),
+            getPaymentTerms().catch(() => []),
             getBdeUsers().catch(() => []),
             getEmployees().catch(() => []),
             getDirectors().catch(() => []),
@@ -131,6 +146,9 @@ const ViewCustomerModal: React.FC<ViewCustomerModalProps> = ({
           setCustomer(custData);
           setIndustries(Array.isArray(indData) ? indData : []);
           setAreas(Array.isArray(areaData) ? areaData : []);
+          setSources(Array.isArray(srcData) ? srcData : []);
+          setStatuses(Array.isArray(statusData) ? statusData : []);
+          setPaymentTerms(Array.isArray(ptData) ? ptData : []);
           setBdeUsers(Array.isArray(bdeData) ? bdeData : []);
           setEmployees(Array.isArray(empData) ? empData : []);
           setDirectors(Array.isArray(dirData) ? dirData : []);
@@ -311,6 +329,74 @@ const ViewCustomerModal: React.FC<ViewCustomerModalProps> = ({
   const displayAltEmail = customer?.alternateEmail || primaryContact?.altEmailAddress || (primaryContact as any)?.altEmail;
   const displayAltMobile = customer?.alternateMobile || primaryContact?.altMobileNo || (primaryContact as any)?.altMobile;
 
+  const getStatusLabel = (): string => {
+    if (!customer) return "-";
+    if (customer.customerStatusName && customer.customerStatusName.trim() && customer.customerStatusName !== "-") {
+      return customer.customerStatusName;
+    }
+    const rawId = (customer as any).customerStatusId ?? (customer as any).CustomerStatusId ?? (customer as any).companyStatusId ?? (customer as any).CompanyStatusId;
+    if (!rawId) return "-";
+    const numId = Number(rawId);
+    const found = statuses.find((s: any) =>
+      Number(s.customerStatusId ?? s.statusId ?? s.CustomerStatusId ?? s.id) === numId
+    );
+    if (found) {
+      return String(found.statusName ?? (found as any).StatusName ?? (found as any).name ?? numId);
+    }
+    return String(numId);
+  };
+
+  const getSourceLabel = (): string => {
+    if (!customer) return "-";
+    if (customer.customerSourceName && customer.customerSourceName.trim() && customer.customerSourceName !== "-") {
+      return customer.customerSourceName;
+    }
+    const rawId = (customer as any).customerSourceId ?? (customer as any).CustomerSourceId;
+    if (!rawId) return "-";
+    const numId = Number(rawId);
+    const found = sources.find((s: any) =>
+      Number(s.customerSourceId ?? s.sourceId ?? s.CustomerSourceId ?? s.id) === numId
+    );
+    if (found) {
+      return String(found.sourceName ?? (found as any).SourceName ?? (found as any).name ?? numId);
+    }
+    return String(numId);
+  };
+
+  const getAreaLabel = (): string => {
+    if (!customer) return "-";
+    if (customer.customerAreaName && customer.customerAreaName.trim() && customer.customerAreaName !== "-") {
+      return customer.customerAreaName;
+    }
+    const rawId = (customer as any).customerAreaId ?? (customer as any).CustomerAreaId;
+    if (!rawId) return "-";
+    const numId = Number(rawId);
+    const found = areas.find((a: any) =>
+      Number(a.customerAreaId ?? a.areaId ?? a.CustomerAreaId ?? a.id) === numId
+    );
+    if (found) {
+      return String(found.areaName ?? (found as any).AreaName ?? (found as any).name ?? numId);
+    }
+    return String(numId);
+  };
+
+  const getPaymentTermLabel = (): string => {
+    if (!customer) return "-";
+    if (customer.paymentTermName && customer.paymentTermName.trim() && customer.paymentTermName !== "-") {
+      return customer.paymentTermName;
+    }
+    const rawId = (customer as any).paymentTermsId ?? (customer as any).PaymentTermsId ?? (customer as any).paymentTermId ?? (customer as any).PaymentTermId;
+    if (!rawId) return "-";
+    const numId = Number(rawId);
+    const found = paymentTerms.find((p: any) =>
+      Number(p.paymentTermId ?? p.paymentTermsId ?? p.PaymentTermId ?? p.id) === numId
+    );
+    if (found) {
+      return String(found.paymentTermName ?? (found as any).PaymentTermName ?? (found as any).name ?? (found as any).termName ?? numId);
+    }
+    return String(numId);
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-2 sm:p-4">
       <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-5xl h-[calc(100dvh-16px)] sm:h-auto sm:max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in duration-200 border border-gray-200">
@@ -419,26 +505,15 @@ const ViewCustomerModal: React.FC<ViewCustomerModalProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
                   <DetailItem
                     label="Customer Status"
-                    value={
-                      customer.customerStatusName ||
-                      customer.customerStatusId
-                    }
+                    value={getStatusLabel()}
                   />
                   <DetailItem
                     label="Customer Source"
-                    value={
-                      customer.customerSourceName ||
-                      customer.customerSourceId
-                    }
+                    value={getSourceLabel()}
                   />
                   <DetailItem
                     label="Customer Area"
-                    value={
-                      customer.customerAreaName ||
-                      areas.find((a) => a.customerAreaId === customer.customerAreaId)
-                        ?.areaName ||
-                      customer.customerAreaId
-                    }
+                    value={getAreaLabel()}
                   />
                 </div>
               </div>
@@ -457,11 +532,7 @@ const ViewCustomerModal: React.FC<ViewCustomerModalProps> = ({
                   <DetailItem label="MSME Number" value={customer.msmeNumber} />
                   <DetailItem
                     label="Payment Term"
-                    value={
-                      customer.paymentTermName ||
-                      customer.paymentTermId ||
-                      customer.paymentTermsId
-                    }
+                    value={getPaymentTermLabel()}
                   />
                 </div>
               </div>

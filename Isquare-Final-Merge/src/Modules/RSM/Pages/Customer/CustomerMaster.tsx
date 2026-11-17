@@ -34,11 +34,17 @@ import {
 import {
   getIndustries,
   getCustomerAreas,
+  getCustomerSources,
+  getCustomerStatuses,
+  getPaymentTerms,
 } from "./Services/CustomerMasterDataService";
 import type {
   Customer,
   IndustryItem,
   CustomerAreaItem,
+  CustomerSourceItem,
+  CustomerStatusItem,
+  PaymentTermItem,
 } from "./Types/CustomerTypes";
 import { getAllContacts } from "../Master/Contact/Services/ContactService";
 import AddCustomerModal from "./AddCustomerModal";
@@ -228,6 +234,9 @@ const CustomerMaster: React.FC<CustomerMasterProps> = ({
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [industries, setIndustries] = useState<IndustryItem[]>([]);
   const [areas, setAreas] = useState<CustomerAreaItem[]>([]);
+  const [sources, setSources] = useState<CustomerSourceItem[]>([]);
+  const [statuses, setStatuses] = useState<CustomerStatusItem[]>([]);
+  const [paymentTerms, setPaymentTerms] = useState<PaymentTermItem[]>([]);
   const [contactEmailMap, setContactEmailMap] = useState<Record<number, string>>({});
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [filterText, setFilterText] = useState<string>("");
@@ -253,12 +262,18 @@ const CustomerMaster: React.FC<CustomerMasterProps> = ({
 
   const loadMasterData = useCallback(async () => {
     try {
-      const [indList, areaList] = await Promise.all([
+      const [indList, areaList, srcList, statusList, ptList] = await Promise.all([
         getIndustries().catch(() => []),
         getCustomerAreas().catch(() => []),
+        getCustomerSources().catch(() => []),
+        getCustomerStatuses().catch(() => []),
+        getPaymentTerms().catch(() => []),
       ]);
       setIndustries(Array.isArray(indList) ? indList : []);
       setAreas(Array.isArray(areaList) ? areaList : []);
+      setSources(Array.isArray(srcList) ? srcList : []);
+      setStatuses(Array.isArray(statusList) ? statusList : []);
+      setPaymentTerms(Array.isArray(ptList) ? ptList : []);
     } catch {
       // ignore
     }
@@ -312,6 +327,30 @@ const CustomerMaster: React.FC<CustomerMasterProps> = ({
     }
     return map;
   }, [areas]);
+
+  const sourceMap = useMemo(() => {
+    const map = new Map<number, string>();
+    for (const src of sources) {
+      map.set(Number(src.customerSourceId), src.sourceName);
+    }
+    return map;
+  }, [sources]);
+
+  const statusMap = useMemo(() => {
+    const map = new Map<number, string>();
+    for (const st of statuses) {
+      map.set(Number(st.customerStatusId), st.statusName);
+    }
+    return map;
+  }, [statuses]);
+
+  const paymentTermMap = useMemo(() => {
+    const map = new Map<number, string>();
+    for (const pt of paymentTerms) {
+      map.set(Number(pt.paymentTermId), pt.paymentTermName);
+    }
+    return map;
+  }, [paymentTerms]);
 
   const getIndustryName = useCallback(
     (cust: Customer): string => {
@@ -369,6 +408,58 @@ const CustomerMaster: React.FC<CustomerMasterProps> = ({
     [areaMap]
   );
 
+  const getSourceName = useCallback(
+    (cust: Customer): string => {
+      if (
+        cust.customerSourceName &&
+        cust.customerSourceName.trim() &&
+        cust.customerSourceName !== "-"
+      ) {
+        return cust.customerSourceName;
+      }
+      if (cust.customerSourceId && sourceMap.has(Number(cust.customerSourceId))) {
+        return sourceMap.get(Number(cust.customerSourceId))!;
+      }
+      return "-";
+    },
+    [sourceMap]
+  );
+
+  const getStatusName = useCallback(
+    (cust: Customer): string => {
+      if (
+        cust.customerStatusName &&
+        cust.customerStatusName.trim() &&
+        cust.customerStatusName !== "-"
+      ) {
+        return cust.customerStatusName;
+      }
+      if (cust.customerStatusId && statusMap.has(Number(cust.customerStatusId))) {
+        return statusMap.get(Number(cust.customerStatusId))!;
+      }
+      return "-";
+    },
+    [statusMap]
+  );
+
+  const getPaymentTermName = useCallback(
+    (cust: Customer): string => {
+      if (
+        cust.paymentTermName &&
+        cust.paymentTermName.trim() &&
+        cust.paymentTermName !== "-"
+      ) {
+        return cust.paymentTermName;
+      }
+      const ptId = cust.paymentTermsId ?? cust.paymentTermId;
+      if (ptId && paymentTermMap.has(Number(ptId))) {
+        return paymentTermMap.get(Number(ptId))!;
+      }
+      return "-";
+    },
+    [paymentTermMap]
+  );
+
   const filteredCustomers = useMemo(() => {
     return (Array.isArray(customers) ? customers : []).filter((cust) => {
       const search = filterText.toLowerCase();
@@ -378,6 +469,7 @@ const CustomerMaster: React.FC<CustomerMasterProps> = ({
       const gstin = (cust.gstin || "").toLowerCase();
       const pan = (cust.pan || "").toLowerCase();
       const area = getAreaName(cust).toLowerCase();
+      const source = getSourceName(cust).toLowerCase();
       const industry = getIndustryName(cust).toLowerCase();
 
       const email = (
@@ -396,6 +488,7 @@ const CustomerMaster: React.FC<CustomerMasterProps> = ({
         gstin.includes(search) ||
         pan.includes(search) ||
         area.includes(search) ||
+        source.includes(search) ||
         industry.includes(search);
 
       const matchesStatus =
@@ -405,7 +498,7 @@ const CustomerMaster: React.FC<CustomerMasterProps> = ({
 
       return matchesSearch && matchesStatus;
     });
-  }, [customers, filterText, selectedStatus, getIndustryName, getAreaName, contactEmailMap]);
+  }, [customers, filterText, selectedStatus, getIndustryName, getAreaName, getSourceName, contactEmailMap]);
 
   // Statistics
   const stats = useMemo(() => {
@@ -490,10 +583,10 @@ const CustomerMaster: React.FC<CustomerMasterProps> = ({
       "Company Group": c.companyGroup || "-",
       "Plant Code": c.plantCode || "-",
       Industry: getIndustryName(c),
-      "Customer Status": c.customerStatusName || "-",
-      "Customer Source": c.customerSourceName || "-",
+      "Customer Status": getStatusName(c),
+      "Customer Source": getSourceName(c),
       "Customer Area": getAreaName(c),
-      "Payment Terms": c.paymentTermName || "-",
+      "Payment Terms": getPaymentTermName(c),
       PAN: c.pan || "-",
       TAN: c.tan || "-",
       GSTIN: c.gstin || "-",
