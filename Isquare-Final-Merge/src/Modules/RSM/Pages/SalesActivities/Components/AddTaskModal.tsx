@@ -203,6 +203,10 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
             setAssignedTo(`${assigneeArr[0].name} (${assigneeArr[0].designation})`);
           }
 
+          if (custList.length > 0) {
+            setCompanyId((prev) => prev || initialCustomerId || custList[0].customerId || (custList[0] as any).id || 1);
+          }
+
           if (prioList.length > 0) {
             const highOrMed =
               prioList.find((p) => p.name.toLowerCase() === "high") || prioList[0];
@@ -288,8 +292,14 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
     }
 
     try {
+      const resolvedCompanyId = companyId
+        ? Number(companyId)
+        : customers.length > 0
+        ? Number(customers[0].customerId || (customers[0] as any).id || 1)
+        : 1;
+
       const payload: TaskCreatePayload = {
-        companyId: companyId ? Number(companyId) : 0,
+        companyId: resolvedCompanyId,
         taskTitle: taskTitle.trim(),
         description: details.trim(),
         assignedTo: resolvedAssignedToId,

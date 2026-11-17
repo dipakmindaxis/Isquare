@@ -61,6 +61,17 @@ const normalizeCustomer = (customer: CustomerApiRecord): Customer => {
   const mobile = customer.mobile || raw.Mobile || raw.phone || raw.Phone;
   const alternateMobile = customer.alternateMobile || raw.AlternateMobile;
 
+  const customerSourceId = customer.customerSourceId ?? raw.CustomerSourceId;
+  const customerSourceName = customer.customerSourceName ?? raw.CustomerSourceName;
+  const customerAreaId = customer.customerAreaId ?? raw.CustomerAreaId;
+  const customerAreaName = customer.customerAreaName ?? raw.CustomerAreaName;
+  const customerStatusId = customer.customerStatusId ?? raw.CustomerStatusId ?? raw.companyStatusId ?? raw.CompanyStatusId;
+  const customerStatusName = customer.customerStatusName ?? raw.CustomerStatusName;
+  const paymentTermsId = customer.paymentTermsId ?? raw.PaymentTermsId ?? customer.paymentTermId ?? raw.PaymentTermId;
+  const paymentTermName = customer.paymentTermName ?? raw.PaymentTermName;
+  const industryId = customer.industryId ?? raw.IndustryId;
+  const industryName = customer.industryName ?? raw.IndustryName;
+
   return {
     ...customer,
     customerId: custId,
@@ -68,6 +79,16 @@ const normalizeCustomer = (customer: CustomerApiRecord): Customer => {
     customerCode,
     customerName,
     companyName,
+    ...(customerSourceId !== undefined && customerSourceId !== null ? { customerSourceId: Number(customerSourceId) } : {}),
+    ...(customerSourceName ? { customerSourceName: String(customerSourceName) } : {}),
+    ...(customerAreaId !== undefined && customerAreaId !== null ? { customerAreaId: Number(customerAreaId) } : {}),
+    ...(customerAreaName ? { customerAreaName: String(customerAreaName) } : {}),
+    ...(customerStatusId !== undefined && customerStatusId !== null ? { customerStatusId: Number(customerStatusId) } : {}),
+    ...(customerStatusName ? { customerStatusName: String(customerStatusName) } : {}),
+    ...(paymentTermsId !== undefined && paymentTermsId !== null ? { paymentTermsId: Number(paymentTermsId), paymentTermId: Number(paymentTermsId) } : {}),
+    ...(paymentTermName ? { paymentTermName: String(paymentTermName) } : {}),
+    ...(industryId !== undefined && industryId !== null ? { industryId: Number(industryId) } : {}),
+    ...(industryName ? { industryName: String(industryName) } : {}),
     ...(directorId ? { directorId: Number(directorId) } : {}),
     ...(directorName ? { directorName: String(directorName) } : {}),
     ...(bdeUserId ? { bdeUserId: Number(bdeUserId) } : {}),
