@@ -181,4 +181,6 @@ export const API_ENDPOINTS: ApiEndpoints = {
   PlaceOfSupplies: `${BASE_URL}/PlaceOfSupply`,
   Enquiry: `${BASE_URL}/Enquiry`,
   Enquiries: `${BASE_URL}/Enquiry`,
+  HelpDeskTickets: `${BASE_URL}/helpdesk/tickets`,
+  HelpDeskCategories: `${BASE_URL}/helpdesk/categories`,
 };

@@ -14,6 +14,7 @@ import { createReminder } from "../../Master/Reminder/Services/ReminderService";
 import { getDirectors as getDirectorEmployees, getBdeUsers as getAllBdeUsers } from "../../Customer/Services/CustomerMasterDataService";
 import { getAllCustomers } from "../../Customer/Services/CustomerService";
 import { getAllEmployees } from "../../../../HRMS/Pages/Employee/Services/EmployeeSerivce";
+import { getAllCustomerStatuses } from "../../Master/CustomerStatus/Services/CustomerStatusService";
 
 const getAllDirectors = getDirectorEmployees;
 
@@ -85,9 +86,38 @@ const safeSetTasks = (tasks: TaskItem[]): void => {
 };
 
 // ==========================================
-// Task Statuses
+// Task Statuses (Dynamic from Customer Status Master API)
 // ==========================================
 export const getAllTaskStatuses = async (): Promise<TaskStatusItem[]> => {
+  const dynamicStatuses: TaskStatusItem[] = [];
+  const seenNames = new Set<string>();
+
+  // 1. Fetch from Customer Status Master API (Primary master configured by user)
+  try {
+    const custStatuses = await getAllCustomerStatuses();
+    if (Array.isArray(custStatuses) && custStatuses.length > 0) {
+      custStatuses
+        .filter((s) => s.isActive !== false && !s.isDeleted)
+        .forEach((s) => {
+          const id = Number(s.customerStatusId ?? (s as any).id ?? 0);
+          const name = String(s.statusName || "").trim();
+          if (name && !seenNames.has(name.toLowerCase())) {
+            seenNames.add(name.toLowerCase());
+            dynamicStatuses.push({
+              taskStatusId: id > 0 ? id : dynamicStatuses.length + 1,
+              id: id > 0 ? id : dynamicStatuses.length + 1,
+              statusName: name,
+              statusCode: String(s.statusCode || "").trim(),
+              isActive: true,
+            });
+          }
+        });
+    }
+  } catch (err) {
+    console.warn("getAllTaskStatuses customer status master error:", err);
+  }
+
+  // 2. Also query TaskStatus API endpoint if available and append unique items
   try {
     const url = API_ENDPOINTS.TaskStatus || `${API_ENDPOINTS.BaseUrl}/TaskStatus`;
     const response = await apiClient.get<any>(url);
@@ -99,24 +129,36 @@ export const getAllTaskStatuses = async (): Promise<TaskStatusItem[]> => {
       : Array.isArray(data?.result)
       ? data.result
       : [];
-    if (list.length > 0) {
-      return list.map((s: any) => ({
-        taskStatusId: Number(s.taskStatusId ?? s.id ?? 0),
-        id: Number(s.taskStatusId ?? s.id ?? 0),
-        statusName: String(s.statusName ?? s.name ?? "Pending"),
-        statusCode: String(s.statusCode ?? s.code ?? ""),
-        isActive: s.isActive !== false,
-      }));
-    }
+
+    list.forEach((s: any) => {
+      const name = String(s.statusName ?? s.name ?? "").trim();
+      const id = Number(s.taskStatusId ?? s.id ?? 0);
+      if (name && !seenNames.has(name.toLowerCase()) && s.isActive !== false) {
+        seenNames.add(name.toLowerCase());
+        dynamicStatuses.push({
+          taskStatusId: id > 0 ? id : dynamicStatuses.length + 1,
+          id: id > 0 ? id : dynamicStatuses.length + 1,
+          statusName: name,
+          statusCode: String(s.statusCode ?? s.code ?? "").trim(),
+          isActive: true,
+        });
+      }
+    });
   } catch (err) {
-    console.warn("getAllTaskStatuses fallback to standard statuses:", err);
+    console.warn("getAllTaskStatuses TaskStatus API error:", err);
   }
 
+  // Return dynamic statuses if available
+  if (dynamicStatuses.length > 0) {
+    return dynamicStatuses;
+  }
+
+  // Fallback only if APIs return no records so the UI never crashes
   return [
-    { taskStatusId: 1, id: 1, statusName: "Pending / Approval Requested", statusCode: "PENDING", isActive: true },
+    { taskStatusId: 1, id: 1, statusName: "Pending", statusCode: "PENDING", isActive: true },
     { taskStatusId: 2, id: 2, statusName: "In Progress", statusCode: "IN_PROGRESS", isActive: true },
     { taskStatusId: 3, id: 3, statusName: "Under Review", statusCode: "REVIEW", isActive: true },
-    { taskStatusId: 4, id: 4, statusName: "Approved / Completed", statusCode: "COMPLETED", isActive: true },
+    { taskStatusId: 4, id: 4, statusName: "Completed", statusCode: "COMPLETED", isActive: true },
     { taskStatusId: 5, id: 5, statusName: "Rejected", statusCode: "REJECTED", isActive: true },
   ];
 };
@@ -438,10 +480,14 @@ export const getAllTasks = async (filters?: TaskFilterParams): Promise<TaskItem[
       const priorityColor = matchedPrio?.colorCode || "#00234a";
 
       const matchedStatus = (statuses as any[]).find(
-        (s: any) => s.taskStatusId === task.taskStatusId
+        (s: any) =>
+          Number(s.taskStatusId ?? s.id ?? 0) === Number(task.taskStatusId) ||
+          (task.taskStatusName && String(s.statusName || "").toLowerCase().trim() === String(task.taskStatusName).toLowerCase().trim())
       );
       const taskStatusName =
-        matchedStatus?.statusName || (task.isCompleted ? "Completed" : "Pending");
+        task.taskStatusName ||
+        matchedStatus?.statusName ||
+        (task.isCompleted ? "Completed" : "Pending");
 
       return {
         ...task,
@@ -629,6 +675,7 @@ export const createTask = async (payload: TaskCreatePayload): Promise<TaskItem> 
         companyName: payload.companyName,
         priorityId: Number(data.priorityId ?? payload.priorityId),
         taskStatusId: Number(data.taskStatusId ?? payload.taskStatusId),
+        taskStatusName: data.taskStatusName || payload.taskStatusName || undefined,
         startDate: payload.startDate,
         dueDate: payload.dueDate,
         reminderId: linkedReminderId,
@@ -665,6 +712,7 @@ export const createTask = async (payload: TaskCreatePayload): Promise<TaskItem> 
           companyName: payload.companyName,
           priorityId: Number(payload.priorityId || 1),
           taskStatusId: Number(payload.taskStatusId || 1),
+          taskStatusName: payload.taskStatusName || undefined,
           startDate: payload.startDate,
           dueDate: payload.dueDate,
           remarks: payload.remarks,
@@ -691,6 +739,7 @@ export const createTask = async (payload: TaskCreatePayload): Promise<TaskItem> 
       companyName: payload.companyName,
       priorityId: payload.priorityId,
       taskStatusId: payload.taskStatusId,
+      taskStatusName: payload.taskStatusName,
       startDate: payload.startDate,
       dueDate: payload.dueDate,
       reminderId: linkedReminderId,

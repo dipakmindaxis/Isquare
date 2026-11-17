@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import logoImg from "../../assets/isquare-logo.png";
 import logoWhiteImg from "../../assets/isquare-logo-white.png";
 import iconImg from "../../assets/isquare-icon-square.png";
@@ -6,7 +6,7 @@ import iconImg from "../../assets/isquare-icon-square.png";
 interface ISquareLogoProps {
   className?: string;
   imgClassName?: string;
-  size?: "sm" | "md" | "lg" | "xl" | "2xl" | "custom";
+  size?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "custom";
   showText?: boolean;
   theme?: "light" | "dark" | "blue" | "white";
   iconOnly?: boolean;
@@ -17,16 +17,42 @@ interface ISquareLogoProps {
 export const ISquareIcon: React.FC<{ className?: string; size?: number }> = ({
   className = "",
   size = 38,
-}) => (
-  <img
-    src={iconImg}
-    alt="iSquare Shield Icon"
-    width={size}
-    height={size}
-    style={{ width: `${size}px`, height: `${size}px` }}
-    className={`shrink-0 object-contain ${className}`}
-  />
-);
+}) => {
+  const [errorIdx, setErrorIdx] = useState(0);
+
+  const iconSources = [
+    iconImg,
+    "/frontend/isquare-icon-square.png",
+    "/isquare-icon-square.png",
+    "/frontend/assets/isquare-icon-square.png",
+    "/assets/isquare-icon-square.png",
+    "/frontend/favicon.png",
+    "/favicon.png",
+  ];
+
+  const currentSrc = iconSources[errorIdx] || iconImg;
+
+  return (
+    <img
+      src={currentSrc}
+      alt="iSquare Shield Icon"
+      width={size}
+      height={size}
+      style={{
+        width: `${size}px`,
+        height: `${size}px`,
+        minWidth: `${size}px`,
+        minHeight: `${size}px`,
+      }}
+      onError={() => {
+        if (errorIdx < iconSources.length - 1) {
+          setErrorIdx((prev) => prev + 1);
+        }
+      }}
+      className={`shrink-0 object-contain block ${className}`}
+    />
+  );
+};
 
 export const ISquareLogo: React.FC<ISquareLogoProps> = ({
   className = "",
@@ -38,6 +64,18 @@ export const ISquareLogo: React.FC<ISquareLogoProps> = ({
   customWidth,
   customHeight,
 }) => {
+  const [errorIdx, setErrorIdx] = useState(0);
+
+  const pixelHeightMap: Record<string, number> = {
+    sm: 32,
+    md: 44,
+    lg: 64,
+    xl: 80,
+    "2xl": 96,
+    "3xl": 112,
+    custom: customHeight || 44,
+  };
+
   const heightMap: Record<string, string> = {
     sm: "h-8",
     md: "h-11",
@@ -62,20 +100,45 @@ export const ISquareLogo: React.FC<ISquareLogoProps> = ({
     return <ISquareIcon size={iconSizes[size]} className={className} />;
   }
 
-  const selectedSrc =
-    theme === "light" || theme === "white" ? logoWhiteImg : logoImg;
-  const customStyle: React.CSSProperties = {};
-  if (customHeight) customStyle.height = `${customHeight}px`;
-  if (customWidth) customStyle.width = `${customWidth}px`;
+  const isWhite = theme === "light" || theme === "white";
+  const primaryImg = isWhite ? logoWhiteImg : logoImg;
+  const secondaryImg = isWhite ? logoImg : logoWhiteImg;
+
+  const candidateSources = [
+    primaryImg,
+    isWhite ? "/frontend/isquare-logo-white.png" : "/frontend/isquare-logo.png",
+    isWhite ? "/isquare-logo-white.png" : "/isquare-logo.png",
+    isWhite ? "/frontend/assets/isquare-logo-white.png" : "/frontend/assets/isquare-logo.png",
+    isWhite ? "/assets/isquare-logo-white.png" : "/assets/isquare-logo.png",
+    secondaryImg,
+    isWhite ? "/frontend/isquare-logo.png" : "/frontend/isquare-logo-white.png",
+    isWhite ? "/isquare-logo.png" : "/isquare-logo-white.png",
+    "/frontend/favicon.png",
+    "/favicon.png",
+  ];
+
+  const currentSrc = candidateSources[errorIdx] || primaryImg;
+  const targetHeight = customHeight || pixelHeightMap[size] || 44;
+
+  const customStyle: React.CSSProperties = {
+    height: `${targetHeight}px`,
+    width: customWidth ? `${customWidth}px` : "auto",
+    maxHeight: `${targetHeight}px`,
+  };
 
   return (
     <div className={`inline-flex items-center select-none ${className}`}>
       <img
-        src={selectedSrc}
+        src={currentSrc}
         alt="iSquare Safety Equipments Pvt. Ltd"
         style={customStyle}
-        className={`object-contain max-w-full ${
-          size !== "custom" ? heightMap[size] || "h-10" : ""
+        onError={() => {
+          if (errorIdx < candidateSources.length - 1) {
+            setErrorIdx((prev) => prev + 1);
+          }
+        }}
+        className={`object-contain max-w-full block ${
+          size !== "custom" ? heightMap[size] || "h-11" : ""
         } ${imgClassName}`}
       />
     </div>

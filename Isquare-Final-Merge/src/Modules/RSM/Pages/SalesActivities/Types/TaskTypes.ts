@@ -41,6 +41,7 @@ export interface TaskCreatePayload {
   assignedByName?: string;
   priorityId: number;
   taskStatusId: number;
+  taskStatusName?: string;
   startDate: string;
   dueDate: string;
   completionDate?: string;

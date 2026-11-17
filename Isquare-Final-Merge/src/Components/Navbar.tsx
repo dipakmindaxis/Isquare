@@ -16,8 +16,12 @@ import {
   Flag,
   X,
   ArrowRight,
+  Headphones,
+  Ticket,
+  Plus,
 } from "lucide-react";
 import ChangePasswordModal from "./ChangePasswordModal";
+import { CreateSupportTicketModal } from "../Modules/HelpDesk/Components/CreateSupportTicketModal";
 import { useAuth } from "../hooks/useAuth";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "../store";
@@ -109,6 +113,9 @@ const toTitleCase = (str: string) => {
 const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isHelpDeskOpen, setIsHelpDeskOpen] = useState(false);
+  const [isHelpDeskMenuOpen, setIsHelpDeskMenuOpen] = useState(false);
+  const helpDeskRef = useRef<HTMLDivElement>(null);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
@@ -342,6 +349,12 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
         setIsNotificationOpen(false);
       }
       if (
+        helpDeskRef.current &&
+        !helpDeskRef.current.contains(event.target as Node)
+      ) {
+        setIsHelpDeskMenuOpen(false);
+      }
+      if (
         searchRef.current &&
         !searchRef.current.contains(event.target as Node)
       ) {
@@ -361,6 +374,12 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
         !notificationRef.current.contains(event.target as Node)
       ) {
         setIsNotificationOpen(false);
+      }
+      if (
+        helpDeskRef.current &&
+        !helpDeskRef.current.contains(event.target as Node)
+      ) {
+        setIsHelpDeskMenuOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -596,6 +615,70 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
             <RefreshCw size={isHRMS ? 18 : 20} />
           </button>
 
+          {/* Help Desk Support Button & Dropdown */}
+          <div className="relative" ref={helpDeskRef}>
+            <button
+              type="button"
+              onClick={() => setIsHelpDeskMenuOpen((prev) => !prev)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all cursor-pointer font-medium text-xs sm:text-sm ${
+                isHRMS
+                  ? "text-slate-700 hover:text-[#FF7900] hover:bg-slate-100 border border-slate-200"
+                  : "text-blue-800 hover:text-blue-900 bg-white/80 hover:bg-white border border-blue-400/80 shadow-2xs hover:shadow-xs"
+              }`}
+              title="Help Desk & Support"
+              aria-label="Help Desk"
+            >
+              <Headphones size={isHRMS ? 16 : 17} className="text-blue-600 shrink-0" />
+              <span className="font-semibold tracking-tight">Help Desk</span>
+              <ChevronDown size={13} className={`text-blue-500 transition-transform ${isHelpDeskMenuOpen ? "rotate-180" : ""}`} />
+            </button>
+
+            {isHelpDeskMenuOpen && (
+              <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+                <div className="px-3.5 py-1.5 border-b border-slate-100 flex items-center justify-between">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    Help Desk & Support
+                  </p>
+                </div>
+                <div className="p-1 space-y-0.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsHelpDeskMenuOpen(false);
+                      setIsHelpDeskOpen(true);
+                    }}
+                    className="w-full flex items-center gap-3 px-3 py-2 text-xs font-semibold text-slate-700 hover:text-[#00234a] hover:bg-slate-50 rounded-xl transition cursor-pointer text-left"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-orange-50 text-[#FF7900] flex items-center justify-center shrink-0">
+                      <Plus size={15} />
+                    </div>
+                    <div>
+                      <p className="font-bold text-slate-800">Create Support Ticket</p>
+                      <p className="text-[10px] text-slate-400">Log a new support request</p>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsHelpDeskMenuOpen(false);
+                      navigate("/rsm/support-tickets");
+                    }}
+                    className="w-full flex items-center gap-3 px-3 py-2 text-xs font-semibold text-slate-700 hover:text-[#00234a] hover:bg-slate-50 rounded-xl transition cursor-pointer text-left"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                      <Ticket size={15} />
+                    </div>
+                    <div>
+                      <p className="font-bold text-slate-800">My Support Tickets</p>
+                      <p className="text-[10px] text-slate-400">View ticket status & replies</p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="relative" ref={notificationRef}>
             <button
               onClick={() => setIsNotificationOpen(!isNotificationOpen)}
@@ -744,6 +827,10 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
       <ChangePasswordModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+      />
+      <CreateSupportTicketModal
+        isOpen={isHelpDeskOpen}
+        onClose={() => setIsHelpDeskOpen(false)}
       />
 
       {/* Logout Confirmation Modal */}

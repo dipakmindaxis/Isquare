@@ -24,6 +24,8 @@ import CustomerArea from "./Modules/RSM/Pages/Master/CustomerArea/CustomerArea";
 import AddressType from "./Modules/RSM/Pages/Master/AddressType/AddressType";
 import CustomerMaster from "./Modules/RSM/Pages/Customer/CustomerMaster";
 import SalesActivities from "./Modules/RSM/Pages/SalesActivities/SalesActivities";
+import TaskAssignmentPage from "./Modules/RSM/Pages/TaskAssignment/TaskAssignmentPage";
+import MySupportTicketsPage from "./Modules/HelpDesk/Pages/MySupportTicketsPage";
 import { CallsMaster } from "./Modules/RSM/Pages/Sales/Calls/CallsMaster";
 import { MeetingsMaster } from "./Modules/RSM/Pages/Sales/Meetings/MeetingsMaster";
 import SalesAttachmentsMaster from "./Modules/RSM/Pages/Master/SalesAttachments/SalesAttachmentsMaster";
@@ -170,7 +172,7 @@ const router = createBrowserRouter([
       },
       {
         path: "task-assignment",
-        element: <SalesActivities defaultTab="tasks" />,
+        element: <TaskAssignmentPage />,
       },
       {
         path: "sales/activities",
@@ -190,7 +192,15 @@ const router = createBrowserRouter([
       },
       {
         path: "sales/tasks",
-        element: <SalesActivities defaultTab="tasks" />,
+        element: <TaskAssignmentPage />,
+      },
+      {
+        path: "support-tickets",
+        element: <MySupportTicketsPage />,
+      },
+      {
+        path: "help-desk",
+        element: <MySupportTicketsPage />,
       },
       {
         path: "sales/attachments",
@@ -624,7 +634,9 @@ const router = createBrowserRouter([
       { path: "/master/sales-coordinators", element: <RoleMaster /> },
       { path: "/customers", element: <CustomerMaster /> },
       { path: "/sales-activities", element: <SalesActivities defaultTab="all" key="all-sales-activities-root" /> },
-      { path: "/task-assignment", element: <SalesActivities defaultTab="tasks" key="task-assignment-root" /> },
+      { path: "/task-assignment", element: <TaskAssignmentPage key="task-assignment-root" /> },
+      { path: "/support-tickets", element: <MySupportTicketsPage key="support-tickets-root" /> },
+      { path: "/help-desk", element: <MySupportTicketsPage key="help-desk-root" /> },
       { path: "/all-sales-activities", element: <SalesActivities defaultTab="all" key="all-sales-activities-alt" /> },
       { path: "/customer", element: <CustomerMaster /> },
       { path: "/rsm/customers", element: <CustomerMaster /> },

@@ -10,12 +10,13 @@ import {
   Clock,
 } from "lucide-react";
 import { toast } from "sonner";
-import type { TaskItem, TaskSummaryStats, TaskActivityFeedItem } from "../Types/TaskTypes";
+import type { TaskItem, TaskSummaryStats, TaskActivityFeedItem, TaskStatusItem } from "../Types/TaskTypes";
 import {
   getAllTasks,
   getTaskSummaryStats,
   completeTask,
   getTaskActivities,
+  getAllTaskStatuses,
 } from "../Services/TaskService";
 import {
   getPrioritiesWithFallback,
@@ -67,6 +68,7 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
 
   // Dropdowns
   const [priorities, setPriorities] = useState<PriorityOptionItem[]>([]);
+  const [statuses, setStatuses] = useState<TaskStatusItem[]>([]);
 
   // Modals / Form State
   const [isAddOpen, setIsAddOpen] = useState<boolean>(initialAddOpen);
@@ -87,18 +89,20 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
   const loadTasks = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [data, prioList] = await Promise.all([
+      const [data, prioList, statusList] = await Promise.all([
         getAllTasks({
           search,
           status: statusFilter,
           priorityId: selectedPriorityId === "All" ? "All" : Number(selectedPriorityId),
         }),
         getPrioritiesWithFallback(),
+        getAllTaskStatuses(),
       ]);
 
       setTasks(data);
       setStats(getTaskSummaryStats(data));
       setPriorities(prioList);
+      setStatuses(statusList);
       setActivities(getTaskActivities());
     } catch {
       toast.error("Failed to load tasks.");
@@ -128,25 +132,36 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
       (task.taskStatusName || "").toLowerCase().includes("completed") ||
       (task.taskStatusName || "").toLowerCase().includes("approved");
 
+    const statusName = task.taskStatusName || (isDone ? "Completed" : "Pending");
+
     if (isDone) {
       return (
         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">
-          <CheckCircle size={11} /> Completed
+          <CheckCircle size={11} /> {statusName}
         </span>
       );
     }
 
-    if ((task.taskStatusName || "").toLowerCase().includes("progress")) {
+    const sLower = statusName.toLowerCase();
+    if (sLower.includes("progress") || sLower.includes("active") || sLower.includes("review")) {
       return (
         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800">
-          <Clock size={11} /> In Progress
+          <Clock size={11} /> {statusName}
+        </span>
+      );
+    }
+
+    if (sLower.includes("reject") || sLower.includes("cancel") || sLower.includes("lost") || sLower.includes("cold")) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800">
+          <Clock size={11} /> {statusName}
         </span>
       );
     }
 
     return (
       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800">
-        <Clock size={11} /> Pending
+        <Clock size={11} /> {statusName}
       </span>
     );
   };
@@ -161,18 +176,20 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
 
   // Filter tasks based on statusFilter
   const filteredTasks = tasks.filter((t) => {
-    const isDone =
-      t.isCompleted ||
-      t.taskStatusId === 4 ||
-      (t.taskStatusName || "").toLowerCase().includes("completed") ||
-      (t.taskStatusName || "").toLowerCase().includes("approved");
+    if (statusFilter && statusFilter !== "All") {
+      const taskStatus = (t.taskStatusName || "").toLowerCase().trim();
+      const filter = statusFilter.toLowerCase().trim();
+      const isDone =
+        t.isCompleted ||
+        t.taskStatusId === 4 ||
+        taskStatus.includes("completed") ||
+        taskStatus.includes("approved");
 
-    const isInProgress = !isDone && (t.taskStatusName || "").toLowerCase().includes("progress");
-    const isPending = !isDone && !isInProgress;
-
-    if (statusFilter === "Pending") return isPending;
-    if (statusFilter === "In Progress") return isInProgress;
-    if (statusFilter === "Completed") return isDone;
+      if (filter === "completed") return isDone;
+      if (filter === "pending") return !isDone && !taskStatus.includes("progress");
+      if (filter === "in progress") return !isDone && taskStatus.includes("progress");
+      return taskStatus === filter;
+    }
     return true;
   });
 
@@ -431,9 +448,10 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
                       onChange={(val) => setStatusFilter(String(val || "All"))}
                       options={[
                         { value: "All", label: "All statuses" },
-                        { value: "Pending", label: "Pending" },
-                        { value: "In Progress", label: "In Progress" },
-                        { value: "Completed", label: "Completed" },
+                        ...statuses.map((s) => ({
+                          value: s.statusName,
+                          label: s.statusName,
+                        })),
                       ]}
                       placeholder="All statuses"
                       isClearable={false}
