@@ -15,7 +15,7 @@ namespace CompanyPlatform.CRM.DTO.CompanyNote
         public int UserId { get; set; }
 
         [Required(ErrorMessage = "Notes are required.")]
-        public string Notes { get; set; }
+        public string Notes { get; set; } = string.Empty;
 
         public DateTime CreatedDate { get; set; }
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_EmployeeOnboardingChecklist")]
     public class EmployeeOnboardingChecklist
@@ -30,9 +30,9 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public bool IsDeleted { get; set; }
 
         [ForeignKey(nameof(OnboardingID))]
-        public virtual Onboarding Onboarding { get; set; }
+        public virtual Onboarding Onboarding { get; set; } = null!;
 
         [ForeignKey(nameof(ChecklistMasterID))]
-        public virtual OnboardingChecklistMaster ChecklistMaster { get; set; }
+        public virtual OnboardingChecklistMaster ChecklistMaster { get; set; } = null!;
     }
 }

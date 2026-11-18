@@ -1,6 +1,6 @@
 using CompanyPlatform.Core.DTO.Meeting;
 using CompanyPlatform.Core.Models;
-using CompanyPlatform.Core.Models.CRM.Company;
+using CompanyPlatform.Core.Models.CRM;
 using CompanyPlatform.Core.Repository;
 using Microsoft.Extensions.Logging;
 
@@ -28,7 +28,7 @@ namespace CompanyPlatform.Core.Services.Meeting
                 .Select(r => new ReminderStatusDto { ID = r.ID, StatusName = r.StatusName, IsActive = r.IsActive });
         }
 
-        public async Task<ReminderStatusDto> GetReminderStatusByIdAsync(int id)
+        public async Task<ReminderStatusDto?> GetReminderStatusByIdAsync(int id)
         {
             _logger.LogInformation("Fetching reminder status by ID: {ReminderStatusId}", id);
             var item = await _repository.GetByIdAsync(id);

@@ -6,7 +6,7 @@ namespace CompanyPlatform.CRM.Services.LocationMasters
     {
         Task<IEnumerable<StateDto>> GetAllStatesAsync();
 
-        Task<StateDto> GetStateByIdAsync(int id);
+        Task<StateDto?> GetStateByIdAsync(int id);
 
         Task<StateDto> CreateStateAsync(StateDto dto);
 

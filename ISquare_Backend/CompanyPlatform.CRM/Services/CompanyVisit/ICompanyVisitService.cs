@@ -6,7 +6,7 @@ namespace CompanyPlatform.CRM.Services.CompanyVisit
     {
         Task<IEnumerable<CompanyVisitDto>> GetAllCompanyVisitsAsync();
 
-        Task<CompanyVisitDto> GetCompanyVisitByIdAsync(int id);
+        Task<CompanyVisitDto?> GetCompanyVisitByIdAsync(int id);
 
         Task<CompanyVisitDto> CreateCompanyVisitAsync(CompanyVisitDto dto);
 

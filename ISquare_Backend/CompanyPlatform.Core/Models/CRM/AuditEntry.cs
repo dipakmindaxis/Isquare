@@ -12,8 +12,8 @@ namespace CompanyPlatform.Core.Models.CRM
         public EntityEntry Entry { get; }
         public int UserId { get; set; }
         public int CompanyId { get; set; }
-        public string TableName { get; set; }
-        public string Action { get; set; }
+        public string TableName { get; set; } = string.Empty;
+        public string Action { get; set; } = string.Empty;
         public Dictionary<string, object> KeyProperties { get; } = new Dictionary<string, object>();
         public Dictionary<string, object> OldValues { get; } = new Dictionary<string, object>();
         public Dictionary<string, object> NewValues { get; } = new Dictionary<string, object>();

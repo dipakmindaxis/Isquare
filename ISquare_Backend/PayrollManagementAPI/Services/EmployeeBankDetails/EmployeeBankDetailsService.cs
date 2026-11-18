@@ -1,11 +1,11 @@
-﻿using CompanyPlatform.Core.Models.CRM.Company;
+using CompanyPlatform.Core.Models.CRM;
+using Employee = CompanyPlatform.Core.Models.CRM.Employee.Employee;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using CompanyPlatform.Core.Data;
 using CompanyPlatform.Core.DTO.EmployeeBankDetails;
 using CompanyPlatform.Core.Models;
 using System.Threading.Tasks;
-using CompanyPlatform.Core.DTO.EmployeeBankDetails;
 
 namespace PayrollManagementAPI.Services.EmployeeBankDetails
 {
@@ -20,7 +20,7 @@ namespace PayrollManagementAPI.Services.EmployeeBankDetails
             _logger = logger;
         }
 
-        public async Task<EmployeeBankFullResponseDto> GetEmployeeAndBankByIdAsync(int employeeId)
+        public async Task<EmployeeBankFullResponseDto?> GetEmployeeAndBankByIdAsync(int employeeId)
         {
             _logger.LogInformation("Fetching employee and bank details for EmployeeId: {EmployeeId}", employeeId);
             var employee = await _context.Tbl_Employee
@@ -53,7 +53,7 @@ namespace PayrollManagementAPI.Services.EmployeeBankDetails
                 BankDetails = bank == null ? null : new EmployeeBankDetailsDto
                 {
                     ID = bank.ID,
-                    AccountHolderName = bank.AccountHolderName,
+                    AccountHolderName = bank.AccountHolderName ?? string.Empty,
                     BankName = bank.BankName,
                     AccountNumber = bank.AccountNumber,
                     IFSCCode = bank.IFSCCode,
@@ -90,7 +90,7 @@ namespace PayrollManagementAPI.Services.EmployeeBankDetails
             };
         }
 
-        public async Task<EmployeeBankDetailsDto> UpdateAsync(int id, UpdateEmployeeBankDetailsDto dto)
+        public async Task<EmployeeBankDetailsDto?> UpdateAsync(int id, UpdateEmployeeBankDetailsDto dto)
         {
             _logger.LogInformation("Attempting to update bank details for ID: {BankDetailsId}", id);
             var entity = await _context.EmployeeBankDetails.FirstOrDefaultAsync(e => e.ID == id && e.IsDeleted==false);

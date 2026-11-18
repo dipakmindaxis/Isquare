@@ -17,7 +17,7 @@ namespace CompanyPlatform.CRM.DTO.CompanyDocument
         public int DocumentTypeId { get; set; }
 
         [Required]
-        public string DocumentName { get; set; }
+        public string DocumentName { get; set; } = string.Empty;
 
         // File selected during Create/Update
         public IFormFile? File { get; set; }

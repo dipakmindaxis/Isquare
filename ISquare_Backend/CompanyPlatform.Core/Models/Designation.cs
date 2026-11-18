@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -11,7 +11,7 @@ namespace CompanyPlatform.Core.Models
         public int ID { get; set; }
 
         [Required]
-        public string DesignationName { get; set; }
+        public string DesignationName { get; set; } = string.Empty;
         [DefaultValue(false)]
         public bool IsDeleted { get; set; }
 

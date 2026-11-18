@@ -5,8 +5,8 @@ using CompanyPlatform.CRM.VisitAttachment;
 using System.Security.Claims;
 using CompanyPlatform.CRM.DTO.Meeting;
 using CompanyPlatform.Core.Repository;
-using CompanyPlatform.Core.Models.CRM.Company;
-using VisitAttachmentEntity = CompanyPlatform.Core.Models.CRM.Company.VisitAttachment;
+using CompanyPlatform.Core.Models.CRM;
+using VisitAttachmentEntity = CompanyPlatform.Core.Models.CRM.VisitAttachment;
 
 namespace CompanyPlatform.CRM.Services.VisitAttachment
 {
@@ -60,7 +60,7 @@ namespace CompanyPlatform.CRM.Services.VisitAttachment
             var attachment = new VisitAttachmentEntity
             {
                 VisitId = dto.VisitId,
-                DocumentName = dto.DocumentName,
+                DocumentName = dto.DocumentName ?? string.Empty,
                 FileName = fileName,
                 FilePath = Path.Combine("Uploads", "VisitAttachments", fileName),
                 FileExtension = fileExtension,
@@ -131,7 +131,7 @@ namespace CompanyPlatform.CRM.Services.VisitAttachment
                 return false;
 
             attachment.VisitId = dto.VisitId;
-            attachment.DocumentName = dto.DocumentName;
+            attachment.DocumentName = dto.DocumentName ?? string.Empty;
 
             if (dto.File != null)
             {

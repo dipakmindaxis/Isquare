@@ -7,7 +7,7 @@ namespace CompanyPlatform.CRM.DTO.CustomerType
         public int Id { get; set; }
 
         [Required]
-        public string CustomerTypeName { get; set; }
+        public string CustomerTypeName { get; set; } = string.Empty;
 
         public string? Description { get; set; }
 

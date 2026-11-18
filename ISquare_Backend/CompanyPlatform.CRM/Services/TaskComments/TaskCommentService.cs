@@ -1,4 +1,5 @@
-﻿using CompanyPlatform.Core.Models.CRM.Company;
+using CompanyPlatform.Core.Models.CRM;
+using Employee = CompanyPlatform.Core.Models.CRM.Employee.Employee;
 //using Microsoft.Extensions.Logging;
 //using CompanyPlatform.CRM.DTO.TaskComments;
 //using CompanyPlatform.CRM.Repository;
@@ -121,10 +122,10 @@ using CompanyPlatform.CRM.DTO.TaskComments;
 using CompanyPlatform.Core.Repository;
 
 using TaskCommentEntity =
-    CompanyPlatform.Core.Models.CRM.Company.TaskComment;
+    CompanyPlatform.Core.Models.CRM.TaskComment;
 
 using TasksEntity =
-    CompanyPlatform.Core.Models.CRM.Company.Tasks;
+    CompanyPlatform.Core.Models.CRM.Tasks;
 
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
@@ -135,14 +136,14 @@ namespace CompanyPlatform.CRM.Services.TaskComments
     {
         private readonly IRepositories<TaskCommentEntity> _repository;
         private readonly IRepositories<TasksEntity> _taskRepository;
-        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.Employee> _employeeRepository;
+        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Employee.Employee> _employeeRepository;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<TaskCommentService> _logger;
 
         public TaskCommentService(
             IRepositories<TaskCommentEntity> repository,
             IRepositories<TasksEntity> taskRepository,
-            IRepositories<CompanyPlatform.Core.Models.CRM.Company.Employee> employeeRepository,
+            IRepositories<CompanyPlatform.Core.Models.CRM.Employee.Employee> employeeRepository,
             IHttpContextAccessor httpContextAccessor,
             ILogger<TaskCommentService> logger)
         {

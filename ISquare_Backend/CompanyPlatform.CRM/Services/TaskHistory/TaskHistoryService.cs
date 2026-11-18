@@ -1,26 +1,27 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using CompanyPlatform.CRM.DTO.TaskHistory;
 //using CompanyPlatform.CRM.Repository;
 using System.Security.Claims;
 using CompanyPlatform.Core.Repository;
-using CompanyPlatform.Core.Models.CRM.Company;
+using CompanyPlatform.Core.Models.CRM;
+using Employee = CompanyPlatform.Core.Models.CRM.Employee.Employee;
 
 
 namespace CompanyPlatform.CRM.Services.TaskHistory
 {
     public class TaskHistoryService : ITaskHistoryService
     {
-        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.TaskHistory> _repository;
-        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.Tasks> _taskRepository;
-        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.Employee> _employeeRepository;
+        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.TaskHistory> _repository;
+        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Tasks> _taskRepository;
+        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Employee.Employee> _employeeRepository;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<TaskHistoryService> _logger;
 
         public TaskHistoryService(
-            IRepositories<CompanyPlatform.Core.Models.CRM.Company.TaskHistory> repository,
-            IRepositories<CompanyPlatform.Core.Models.CRM.Company.Tasks> taskRepository,
-            IRepositories<CompanyPlatform.Core.Models.CRM.Company.Employee> employeeRepository,
+            IRepositories<CompanyPlatform.Core.Models.CRM.TaskHistory> repository,
+            IRepositories<CompanyPlatform.Core.Models.CRM.Tasks> taskRepository,
+            IRepositories<CompanyPlatform.Core.Models.CRM.Employee.Employee> employeeRepository,
             IHttpContextAccessor httpContextAccessor,
             ILogger<TaskHistoryService> logger)
         {
@@ -97,7 +98,7 @@ namespace CompanyPlatform.CRM.Services.TaskHistory
                 else throw new KeyNotFoundException($"Employee with ID {performedBy} (PerformedBy) not found.");
             }
 
-            var history = new CompanyPlatform.Core.Models.CRM.Company.TaskHistory
+            var history = new CompanyPlatform.Core.Models.CRM.TaskHistory
             {
                 TaskId = dto.TaskId,
                 Activity = dto.Activity,
@@ -188,7 +189,7 @@ namespace CompanyPlatform.CRM.Services.TaskHistory
 //using CompanyPlatform.Core.Repository;
 
 //using TaskHistoryEntity =
-//    CompanyPlatform.Core.Models.CRM.Company.TaskHistory;
+//    CompanyPlatform.Core.Models.CRM.TaskHistory;
 
 //using System.Security.Claims;
 

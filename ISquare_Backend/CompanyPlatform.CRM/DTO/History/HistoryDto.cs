@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace CompanyPlatform.CRM.DTO.History
@@ -14,13 +14,13 @@ namespace CompanyPlatform.CRM.DTO.History
         public int UserId { get; set; }
 
         [Required(ErrorMessage = "Reference Type is required.")]
-        public string RefType { get; set; }
+        public string RefType { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Reference Id is required.")]
         public int RefId { get; set; }
 
         [Required(ErrorMessage = "Description is required.")]
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
 
         public DateTime ActivityDate { get; set; }
     }

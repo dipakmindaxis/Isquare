@@ -1,8 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using CompanyPlatform.CRM.DTO.CompanyProfile;
 using CompanyPlatform.Core.Repository;
 using CompanyProfileModel =
-    CompanyPlatform.Core.Models.CRM.Company.CompanyProfile;
+    CompanyPlatform.Core.Models.CRM.CompanyProfile;
 
 namespace CompanyPlatform.CRM.Services.CompanyProfile
 {

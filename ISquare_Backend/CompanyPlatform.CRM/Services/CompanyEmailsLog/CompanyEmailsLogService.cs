@@ -13,13 +13,13 @@ namespace CompanyPlatform.CRM.Services.CompanyEmailsLog
 {
     public class CompanyEmailsLogService : ICompanyEmailsLogService
     {
-        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.CompanyEmailsLog> _repository;
+        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.CompanyEmailsLog> _repository;
         private readonly ApplicationDBContext _context;
         private readonly IEmailService _emailService;
         private readonly ILogger<CompanyEmailsLogService> _logger;
 
         public CompanyEmailsLogService(
-            IRepositories<CompanyPlatform.Core.Models.CRM.Company.CompanyEmailsLog> repository,
+            IRepositories<CompanyPlatform.Core.Models.CRM.CompanyEmailsLog> repository,
             ApplicationDBContext context,
             IEmailService emailService,
             ILogger<CompanyEmailsLogService> logger)
@@ -55,7 +55,7 @@ namespace CompanyPlatform.CRM.Services.CompanyEmailsLog
                 .ToListAsync();
         }
 
-        public async Task<CompanyEmailsLogDto> GetCompanyEmailsLogByIdAsync(int id)
+        public async Task<CompanyEmailsLogDto?> GetCompanyEmailsLogByIdAsync(int id)
         {
             _logger.LogInformation("Fetching company email log by ID: {EmailLogId}", id);
             var item = await _repository.GetByIdAsync(id);
@@ -103,11 +103,11 @@ namespace CompanyPlatform.CRM.Services.CompanyEmailsLog
                 }
             }
 
-            var newItem = new CompanyPlatform.Core.Models.CRM.Company.CompanyEmailsLog {
+            var newItem = new CompanyPlatform.Core.Models.CRM.CompanyEmailsLog {
                 CompanyId = dto.CompanyId,
                 UserId = dto.UserId,
                 Subject = dto.Subject,
-                Body = dto.Body,
+                Body = dto.Body ?? string.Empty,
                 SentTo = dto.SentTo,
                 SentDate = dto.SentDate,
                 Status = dto.Status,

@@ -1,4 +1,4 @@
-﻿namespace CompanyPlatform.CRM.DTO.TaxCalculation
+namespace CompanyPlatform.CRM.DTO.TaxCalculation
 {
     public class TaxCalculationResultDto
     {
@@ -13,9 +13,9 @@
 
     public class TaxSlabDetailDto
     {
-        public string SlabDescription { get; set; }
+        public string SlabDescription { get; set; } = string.Empty;
         public decimal ChargeableAmount { get; set; }
-        public string TaxRate { get; set; }
+        public string TaxRate { get; set; } = string.Empty;
         public decimal TaxAmount { get; set; }
     }
 }

@@ -1,4 +1,3 @@
-﻿using CompanyPlatform.Core.Models.CRM.Company;
 using CompanyPlatform.Core.Models.CRM.Employee;
 using System;
 using System.Collections.Generic;
@@ -10,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_CompanyDocument")]
     public class CompanyDocument
@@ -28,14 +27,14 @@ namespace CompanyPlatform.Core.Models.CRM.Company
 
         // Document Details
         [Required]
-        public string DocumentName { get; set; }
+        public string DocumentName { get; set; } = string.Empty;
 
         [Required]
-        public string FileName { get; set; }
+        public string FileName { get; set; } = string.Empty;
 
         [Required]
        
-        public string FilePath { get; set; }
+        public string FilePath { get; set; } = string.Empty;
 
       
         public string? FileExtension { get; set; }
@@ -56,6 +55,6 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public virtual DocumentType? DocumentType { get; set; }
 
         [ForeignKey(nameof(UploadedBy))]
-        public virtual Employee? UploadedByEmployee { get; set; }
+        public virtual Employee.Employee? UploadedByEmployee { get; set; }
     }
 }

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace CompanyPlatform.CRM.DTO.Advance
 {
@@ -6,7 +6,7 @@ namespace CompanyPlatform.CRM.DTO.Advance
     {
         [Required]
         [MaxLength(50)]
-        public string Status { get; set; } 
+        public string Status { get; set; } = string.Empty; 
 
         [Required]
         public int ProcessedByEmployeeId { get; set; }

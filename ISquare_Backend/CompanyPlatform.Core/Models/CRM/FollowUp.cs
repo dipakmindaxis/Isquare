@@ -1,4 +1,3 @@
-﻿using CompanyPlatform.Core.Models.CRM.Company;
 using CompanyPlatform.Core.Models.CRM.Employee;
 using System;
 using System.Collections.Generic;
@@ -10,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_FollowUp")]
     public class FollowUp
@@ -47,7 +46,7 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public virtual Company? Company { get; set; }
 
         [ForeignKey("UserId")]
-        public virtual Employee? User { get; set; }
+        public virtual Employee.Employee? User { get; set; }
 
         [ForeignKey("StatusId")]
         public virtual TaskStatus? Status { get; set; }

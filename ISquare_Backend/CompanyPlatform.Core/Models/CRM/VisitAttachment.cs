@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_VisitAttachment")]
     public class VisitAttachment
@@ -20,16 +20,16 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public int VisitId { get; set; }
 
         [Required]
-        public string DocumentName { get; set; }
+        public string DocumentName { get; set; } = string.Empty;
 
         [Required]
-        public string FileName { get; set; }
+        public string FileName { get; set; } = string.Empty;
 
         [Required]
-        public string FilePath { get; set; }
+        public string FilePath { get; set; } = string.Empty;
 
         [Required]
-        public string FileExtension { get; set; }
+        public string FileExtension { get; set; } = string.Empty;
 
         public long FileSize { get; set; }
 

@@ -5,8 +5,8 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using CompanyPlatform.Core.Repository;
 using CompanyPlatform.CRM.DTO.NonGSTProforma;
-using NonGSTProformaEntity = CompanyPlatform.Core.Models.CRM.Company.NonGSTProforma;
-using NonGSTProformaItemEntity = CompanyPlatform.Core.Models.CRM.Company.NonGSTProformaItem;
+using NonGSTProformaEntity = CompanyPlatform.Core.Models.CRM.NonGSTProforma;
+using NonGSTProformaItemEntity = CompanyPlatform.Core.Models.CRM.NonGSTProformaItem;
 
 namespace CompanyPlatform.CRM.Services.NonGSTProforma
 {

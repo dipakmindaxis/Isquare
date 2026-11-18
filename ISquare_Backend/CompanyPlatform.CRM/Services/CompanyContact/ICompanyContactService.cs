@@ -6,7 +6,7 @@ namespace CompanyPlatform.CRM.Services.CompanyContact
     {
         Task<IEnumerable<CompanyContactDto>> GetAllCompanyContactsAsync();
 
-        Task<CompanyContactDto> GetCompanyContactByIdAsync(int id);
+        Task<CompanyContactDto?> GetCompanyContactByIdAsync(int id);
 
         Task<CompanyContactDto> CreateCompanyContactAsync(CompanyContactDto dto);
 

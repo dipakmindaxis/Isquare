@@ -6,7 +6,7 @@ namespace CompanyPlatform.CRM.Services.CustomerType
     {
         Task<IEnumerable<CustomerTypeDto>> GetAllCustomerTypesAsync();
 
-        Task<CustomerTypeDto> GetCustomerTypeByIdAsync(int id);
+        Task<CustomerTypeDto?> GetCustomerTypeByIdAsync(int id);
 
         Task<CustomerTypeDto> CreateCustomerTypeAsync(CustomerTypeDto dto);
 

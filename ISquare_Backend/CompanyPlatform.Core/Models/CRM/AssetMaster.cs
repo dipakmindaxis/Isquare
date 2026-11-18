@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_AssetMaster")]
     public class AssetMaster
@@ -18,15 +18,15 @@ namespace CompanyPlatform.Core.Models.CRM.Company
 
         [Required]
         [MaxLength(50)]
-        public string AssetCode { get; set; }
+        public string AssetCode { get; set; } = string.Empty;
 
         [Required]
         [MaxLength(200)]
-        public string AssetName { get; set; }
+        public string AssetName { get; set; } = string.Empty;
 
         [Required]
         [MaxLength(100)]
-        public string Category { get; set; }
+        public string Category { get; set; } = string.Empty;
       
         [MaxLength(100)]
         public string? Brand { get; set; }

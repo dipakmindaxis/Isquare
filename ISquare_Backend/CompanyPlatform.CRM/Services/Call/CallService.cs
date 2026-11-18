@@ -44,7 +44,7 @@ namespace CompanyPlatform.CRM.Services.Call
                 });
         }
 
-        public async Task<CallDto> GetCallByIdAsync(int id)
+        public async Task<CallDto?> GetCallByIdAsync(int id)
         {
             _logger.LogInformation("Fetching Call by ID: {CallId}", id);
 

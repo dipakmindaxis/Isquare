@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -85,7 +85,7 @@ namespace CompanyPlatform.CRM.Services.PaymentTerm
                 });
         }
 
-        public async Task<PaymentTermDto> GetPaymentTermByIdAsync(int id)
+        public async Task<PaymentTermDto?> GetPaymentTermByIdAsync(int id)
         {
             _logger.LogInformation(
                 "Fetching Payment Term by ID: {PaymentTermId}",

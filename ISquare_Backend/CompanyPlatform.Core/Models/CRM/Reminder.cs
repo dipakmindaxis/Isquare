@@ -1,4 +1,3 @@
-﻿using CompanyPlatform.Core.Models.CRM.Company;
 using CompanyPlatform.Core.Models.CRM.Employee;
 using System;
 using System.Collections.Generic;
@@ -10,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_Reminder")]
     public class Reminder
@@ -29,7 +28,7 @@ namespace CompanyPlatform.Core.Models.CRM.Company
 
         [Required]
         [StringLength(200)]
-        public string Title { get; set; }
+        public string Title { get; set; } = string.Empty;
 
         [Required]
         public DateTime ReminderDate { get; set; }
@@ -58,10 +57,10 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public virtual Company? Company { get; set; }
 
         [ForeignKey("AssignedTo")]
-        public virtual Employee? AssignedEmployee { get; set; }
+        public virtual Employee.Employee? AssignedEmployee { get; set; }
 
         [ForeignKey("CreatedBy")]
-        public virtual Employee? CreatedByEmployee { get; set; }
+        public virtual Employee.Employee? CreatedByEmployee { get; set; }
 
         [ForeignKey("PriorityId")]
         public virtual Priority? Priority { get; set; }

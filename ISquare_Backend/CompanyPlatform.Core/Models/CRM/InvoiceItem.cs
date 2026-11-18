@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_InvoiceItems")]
     public class InvoiceItem
@@ -20,7 +20,7 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public int InvoiceId { get; set; }
 
         [Required]
-        public string ItemName { get; set; }
+        public string ItemName { get; set; } = string.Empty;
 
         public string? Description { get; set; }
 

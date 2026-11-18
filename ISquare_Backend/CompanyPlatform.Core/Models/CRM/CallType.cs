@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -17,7 +17,7 @@ namespace CompanyPlatform.Core.Models.CRM.Call
         public int ID { get; set; }
 
         [Required]
-        public string CallTypeName { get; set; }
+        public string CallTypeName { get; set; } = string.Empty;
 
         [DefaultValue(true)]
         public bool IsActive { get; set; }

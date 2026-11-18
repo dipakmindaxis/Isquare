@@ -1,9 +1,8 @@
-﻿using CompanyPlatform.Core.Models.CRM.Company;
+using CompanyPlatform.Core.Models.CRM;
 using Microsoft.EntityFrameworkCore;
 using CompanyPlatform.Core.Data;
 using CompanyPlatform.Core.DTO.EmployeeDocuments;
 using PayrollManagementAPI.Services.EmployeeDocuments;
-using CompanyPlatform.Core.DTO.EmployeeDocuments;
 
 namespace PayrollManagementAPI.Services.EmployeeDocument
 {

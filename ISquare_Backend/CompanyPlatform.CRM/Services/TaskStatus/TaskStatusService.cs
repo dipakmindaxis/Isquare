@@ -1,4 +1,4 @@
-﻿//using Microsoft.Extensions.Logging;
+//using Microsoft.Extensions.Logging;
 //using CompanyPlatform.CRM.DTO.TaskStatus;
 //using CompanyPlatform.CRM.Repository;
 //using System.Collections.Generic;
@@ -154,7 +154,7 @@ using CompanyPlatform.CRM.DTO.TaskStatus;
 using CompanyPlatform.Core.Repository;
 
 using TaskStatusEntity =
-    CompanyPlatform.Core.Models.CRM.Company.TaskStatus;
+    CompanyPlatform.Core.Models.CRM.TaskStatus;
 
 namespace CompanyPlatform.CRM.Services.TaskStatus
 {

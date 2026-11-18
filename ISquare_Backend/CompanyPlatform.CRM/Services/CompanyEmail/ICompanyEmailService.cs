@@ -7,7 +7,7 @@ namespace CompanyPlatform.CRM.Services.CompanyEmail
     {
         Task<IEnumerable<CompanyEmailDto>> GetAllCompanyEmailsAsync();
 
-        Task<CompanyEmailDto> GetCompanyEmailByIdAsync(int id);
+        Task<CompanyEmailDto?> GetCompanyEmailByIdAsync(int id);
 
         Task<CompanyEmailDto> CreateCompanyEmailAsync(CompanyEmailDto dto);
 

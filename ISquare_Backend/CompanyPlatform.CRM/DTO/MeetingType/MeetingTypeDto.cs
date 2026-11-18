@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace CompanyPlatform.Core.DTO.MeetingType
@@ -8,7 +8,7 @@ namespace CompanyPlatform.Core.DTO.MeetingType
         public int ID { get; set; }
 
         [Required(ErrorMessage = "Meeting type name is required.")]
-        public string MeetingTypeName { get; set; }
+        public string MeetingTypeName { get; set; } = string.Empty;
 
         [DefaultValue(true)]
         public bool IsActive { get; set; }

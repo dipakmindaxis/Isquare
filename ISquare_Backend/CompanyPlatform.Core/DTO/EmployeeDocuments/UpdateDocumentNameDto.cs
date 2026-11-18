@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace CompanyPlatform.Core.DTO.EmployeeDocuments
 {
@@ -6,6 +6,6 @@ namespace CompanyPlatform.Core.DTO.EmployeeDocuments
     {
         [Required]
         [StringLength(100, MinimumLength = 1)]
-        public string NewDocumentName { get; set; }
+        public string NewDocumentName { get; set; } = string.Empty;
     }
 }

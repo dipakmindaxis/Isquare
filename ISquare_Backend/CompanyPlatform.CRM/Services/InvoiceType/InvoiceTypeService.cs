@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
-using CompanyPlatform.Core.Models.CRM.Company;
-using InvoiceTypeEntity = CompanyPlatform.Core.Models.CRM.Company.InvoiceType;
+using CompanyPlatform.Core.Models.CRM;
+using InvoiceTypeEntity = CompanyPlatform.Core.Models.CRM.InvoiceType;
 using CompanyPlatform.Core.Repository;
 using CompanyPlatform.CRM.DTO.Invoice;
 using System.Collections.Generic;

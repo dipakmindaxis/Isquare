@@ -8,7 +8,7 @@ namespace CompanyPlatform.CRM.Services.DocumentType
     {
         Task<IEnumerable<DocumentTypeDto>> GetAllDocumentTypesAsync();
 
-        Task<DocumentTypeDto> GetDocumentTypeByIdAsync(int id);
+        Task<DocumentTypeDto?> GetDocumentTypeByIdAsync(int id);
 
         Task<DocumentTypeDto> CreateDocumentTypeAsync(DocumentTypeDto dto);
 

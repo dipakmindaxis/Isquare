@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -11,13 +11,13 @@ namespace CompanyPlatform.Core.Models.CRM.Employee
         public int ID { get; set; }
 
         [Required]
-        public string BankName { get; set; }
+        public string BankName { get; set; } = string.Empty;
 
         [Required]
-        public string AccountNumber { get; set; }
+        public string AccountNumber { get; set; } = string.Empty;
 
         [Required]
-        public string IFSCCode { get; set; }
+        public string IFSCCode { get; set; } = string.Empty;
 
         public int EmployeeID { get; set; }
 

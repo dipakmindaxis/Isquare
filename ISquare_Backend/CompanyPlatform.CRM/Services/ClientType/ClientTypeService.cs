@@ -3,7 +3,7 @@ using CompanyPlatform.CRM.DTO.ClientType;
 using Microsoft.Extensions.Logging;
 
 using ClientTypeModel =
-    CompanyPlatform.Core.Models.CRM.Company.ClientType;
+    CompanyPlatform.Core.Models.CRM.ClientType;
 
 namespace CompanyPlatform.CRM.Services.ClientType
 {
@@ -264,10 +264,10 @@ namespace CompanyPlatform.CRM.Services.ClientType
 //{
 //    public class ClientTypeService : IClientTypeService
 //    {
-//        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.ClientType> _repository;
+//        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.ClientType> _repository;
 //        private readonly ILogger<ClientTypeService> _logger;
 
-//        public ClientTypeService(IRepositories<CompanyPlatform.Core.Models.CRM.Company.ClientType> repository, ILogger<ClientTypeService> logger)
+//        public ClientTypeService(IRepositories<CompanyPlatform.Core.Models.CRM.ClientType> repository, ILogger<ClientTypeService> logger)
 //        {
 //            _repository = repository;
 //            _logger = logger;
@@ -312,7 +312,7 @@ namespace CompanyPlatform.CRM.Services.ClientType
 //        {
 //            _logger.LogInformation("Creating a new client type with name: {ClientTypeName}", dto.ClientTypeName);
 
-//            var newItem = new CompanyPlatform.Core.Models.CRM.Company.ClientType {
+//            var newItem = new CompanyPlatform.Core.Models.CRM.ClientType {
 //                ClientTypeName = dto.ClientTypeName,
 //                IsActive = dto.IsActive,
 //                IsDeleted = false

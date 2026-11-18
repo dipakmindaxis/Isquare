@@ -1,11 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace PayrollManagementAPI.DTO.Role
 {
     public class UpdateRoleDto
     {
         [Required]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
     }
 }
 

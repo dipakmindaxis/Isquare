@@ -1,4 +1,5 @@
-﻿using CompanyPlatform.Core.Models.CRM.Company;
+using CompanyPlatform.Core.Models.CRM;
+using Employee = CompanyPlatform.Core.Models.CRM.Employee.Employee;
 //using Microsoft.AspNetCore.Hosting;
 //using Microsoft.AspNetCore.Http;
 //using Microsoft.Extensions.Logging;
@@ -455,16 +456,16 @@ using CompanyPlatform.Core.Repository;
 using System.Security.Claims;
 
 using TaskAssignmentsEntity =
-    CompanyPlatform.Core.Models.CRM.Company.TaskAssignments;
+    CompanyPlatform.Core.Models.CRM.TaskAssignments;
 
 using TasksEntity =
-    CompanyPlatform.Core.Models.CRM.Company.Tasks;
+    CompanyPlatform.Core.Models.CRM.Tasks;
 
 using TaskHistoryEntity =
-    CompanyPlatform.Core.Models.CRM.Company.TaskHistory;
+    CompanyPlatform.Core.Models.CRM.TaskHistory;
 
 using TaskAttachmentEntity =
-    CompanyPlatform.Core.Models.CRM.Company.TaskAttachment;
+    CompanyPlatform.Core.Models.CRM.TaskAttachment;
 
 namespace CompanyPlatform.CRM.Services.TaskAssignments
 {
@@ -496,12 +497,12 @@ namespace CompanyPlatform.CRM.Services.TaskAssignments
 
         private const long MaxFileSizeBytes = 10 * 1024 * 1024; // 10 MB
 
-        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.Employee> _employeeRepository;
+        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Employee.Employee> _employeeRepository;
 
         public TaskAssignmentsService(
             IRepositories<TaskAssignmentsEntity> repository,
             IRepositories<TasksEntity> taskRepository,
-            IRepositories<CompanyPlatform.Core.Models.CRM.Company.Employee> employeeRepository,
+            IRepositories<CompanyPlatform.Core.Models.CRM.Employee.Employee> employeeRepository,
             IRepositories<TaskHistoryEntity> historyRepository,
             IRepositories<TaskAttachmentEntity> attachmentRepository,
             IWebHostEnvironment environment,

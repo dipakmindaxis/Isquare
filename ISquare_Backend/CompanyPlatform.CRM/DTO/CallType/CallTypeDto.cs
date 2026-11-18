@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace CompanyPlatform.CRM.DTO.CallType
 {
@@ -7,7 +7,7 @@ namespace CompanyPlatform.CRM.DTO.CallType
         public int ID { get; set; }
 
         [Required]
-        public string CallTypeName { get; set; }
+        public string CallTypeName { get; set; } = string.Empty;
 
         public bool IsActive { get; set; }
     }

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
@@ -6,10 +6,10 @@ namespace CompanyPlatform.Core.DTO.Employee
 {
     public class UpdateEmployeeDto
     {
-        [Required] public string EmployeeCode { get; set; }
-        [Required] public string FirstName { get; set; }
+        [Required] public string EmployeeCode { get; set; } = string.Empty;
+        [Required] public string FirstName { get; set; } = string.Empty;
         public string? MiddleName { get; set; }
-        [Required] public string LastName { get; set; }
+        [Required] public string LastName { get; set; } = string.Empty;
         public DateTime? DateOfBirth { get; set; }
         public string? Gender { get; set; }
         public string? MobileNumber { get; set; }
@@ -25,7 +25,7 @@ namespace CompanyPlatform.Core.DTO.Employee
         public int? CompanyId { get; set; }
         public IFormFile? Photo { get; set; }
         public bool IsActive { get; set; }
-        public string Role { get; set; }
+        public string Role { get; set; } = string.Empty;
 
         // --- NEW ADDRESS FIELDS ---
         public string? CurFlatNo { get; set; }

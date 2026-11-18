@@ -5,8 +5,8 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using CompanyPlatform.Core.Repository;
 using CompanyPlatform.CRM.DTO.ProformaInvoice;
-using ProformaInvoiceEntity = CompanyPlatform.Core.Models.CRM.Company.ProformaInvoice;
-using ProformaInvoiceItemEntity = CompanyPlatform.Core.Models.CRM.Company.ProformaInvoiceItem;
+using ProformaInvoiceEntity = CompanyPlatform.Core.Models.CRM.ProformaInvoice;
+using ProformaInvoiceItemEntity = CompanyPlatform.Core.Models.CRM.ProformaInvoiceItem;
 
 namespace CompanyPlatform.CRM.Services.ProformaInvoice
 {

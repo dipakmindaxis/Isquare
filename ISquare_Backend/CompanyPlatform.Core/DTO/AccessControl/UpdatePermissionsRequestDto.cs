@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -10,9 +10,9 @@ namespace CompanyPlatform.Core.DTO.AccessControl
     public class UpdatePermissionsRequestDto
     {
         [Required]
-        public string SystemName { get; set; }
+        public string SystemName { get; set; } = string.Empty;
 
         [Required]
-        public List<AccessControlDto> Permissions { get; set; }
+        public List<AccessControlDto> Permissions { get; set; } = new();
     }
 }

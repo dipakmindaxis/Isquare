@@ -1,4 +1,4 @@
-﻿//using CompanyPlatform.Core.Models.CRM.Employee;
+//using CompanyPlatform.Core.Models.CRM.Employee;
 //using System;
 //using System.Collections.Generic;
 //using System.ComponentModel;
@@ -45,7 +45,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_SalaryStructure")]
     public class SalaryStructure
@@ -57,13 +57,13 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public int EmployeeID { get; set; }
 
         [ForeignKey(nameof(EmployeeID))]
-        public virtual Employee Employee { get; set; }
+        public virtual Employee.Employee Employee { get; set; } = null!;
 
         [Required]
         public int SalaryComponentID { get; set; }
 
         [ForeignKey(nameof(SalaryComponentID))]
-        public virtual SalaryComponent SalaryComponent { get; set; }
+        public virtual SalaryComponent SalaryComponent { get; set; } = null!;
 
         [Required]
         [Column(TypeName = "decimal(18, 2)")]
@@ -73,7 +73,7 @@ namespace CompanyPlatform.Core.Models.CRM.Company
 
         [Required]
         [StringLength(50)]
-        public string Status { get; set; }
+        public string Status { get; set; } = string.Empty;
 
         [DefaultValue(false)]
         public bool IsDeleted { get; set; }

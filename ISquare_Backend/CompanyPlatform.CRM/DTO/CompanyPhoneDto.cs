@@ -12,11 +12,11 @@ namespace CompanyPlatform.CRM.DTO
 
         [Required]
         [StringLength(30)]
-        public string PhoneType { get; set; }
+        public string PhoneType { get; set; } = string.Empty;
 
         [Required]
         [StringLength(20)]
-        public string PhoneNumber { get; set; }
+        public string PhoneNumber { get; set; } = string.Empty;
 
         public bool IsPrimary { get; set; }
 

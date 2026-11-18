@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_NonGSTInvoice")]
     public class NonGSTInvoice
@@ -17,7 +17,7 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public int NonGSTInvoiceId { get; set; }
 
         [Required]
-        public string InvoiceNo { get; set; }
+        public string InvoiceNo { get; set; } = string.Empty;
 
         [Required]
         public DateTime InvoiceDate { get; set; }

@@ -1,4 +1,3 @@
-﻿using CompanyPlatform.Core.Models.CRM.Company;
 using CompanyPlatform.Core.Models.CRM.Employee;
 using System;
 using System.Collections.Generic;
@@ -10,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_ReminderHistory")]
     public class ReminderHistory
@@ -33,12 +32,12 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public bool IsDeleted { get; set; }
 
         [ForeignKey(nameof(ReminderId))]
-        public Reminder Reminder { get; set; }
+        public Reminder Reminder { get; set; } = null!;
 
         [ForeignKey(nameof(ReminderStatusId))]
-        public ReminderStatus ReminderStatus { get; set; }
+        public ReminderStatus ReminderStatus { get; set; } = null!;
 
         [ForeignKey(nameof(UpdatedBy))]
-        public Employee UpdatedByEmployee { get; set; }
+        public Employee.Employee UpdatedByEmployee { get; set; } = null!;
     }
 }

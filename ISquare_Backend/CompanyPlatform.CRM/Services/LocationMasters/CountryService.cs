@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Logging;
 using CompanyPlatform.CRM.DTO.LocationMasters;
 using CompanyPlatform.Core.Models.CRM;
-using CompanyPlatform.Core.Models.CRM.Company;
 using CompanyPlatform.Core.Repository;
 
 
@@ -42,7 +41,7 @@ namespace CompanyPlatform.CRM.Services.LocationMasters
                 });
         }
 
-        public async Task<CountryDto> GetCountryByIdAsync(int id)
+        public async Task<CountryDto?> GetCountryByIdAsync(int id)
         {
             _logger.LogInformation("Fetching Country by ID: {CountryId}", id);
 
@@ -51,6 +50,7 @@ namespace CompanyPlatform.CRM.Services.LocationMasters
             if (item == null || item.IsActive == false)
             {
                 _logger.LogWarning("Country with ID: {CountryId} not found or is inactive.", id);
+                return null;
             }
 
             return new CountryDto

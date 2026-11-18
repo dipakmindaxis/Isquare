@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using CompanyPlatform.Core.Data;
 using CompanyPlatform.Core.Services.EmployeeStatutoryDetails;
 using CompanyPlatform.Core.DTO.EmployeeStatutoryDetails;
@@ -16,7 +16,26 @@ namespace PayrollManagementAPI.Services.EmployeeStatutoryDetails
             _logger = logger;
         }
 
-        public async Task<StatutoryDetailsDto> GetByEmployeeIdAsync(int employeeId)
+        public async Task<IEnumerable<StatutoryDetailsDto>> GetAllAsync()
+        {
+            _logger.LogInformation("Fetching all active statutory details.");
+            return await _context.Tb_EmployeeStatutoryDetails
+                .Where(s => !s.IsDeleted)
+                .Select(entity => new StatutoryDetailsDto
+                {
+                    ID = entity.ID,
+                    AadhaarNumber = entity.AadhaarNumber,
+                    PANNumber = entity.PANNumber,
+                    UANNo = entity.UANNo,
+                    PFNo = entity.PFNo,
+                    ESINo = entity.ESINo,
+                    EmployeeID = entity.EmployeeID,
+                    IsDeleted = entity.IsDeleted
+                })
+                .ToListAsync();
+        }
+
+        public async Task<StatutoryDetailsDto?> GetByEmployeeIdAsync(int employeeId)
         {
             _logger.LogInformation("Fetching statutory details for EmployeeID: {EmployeeId}", employeeId);
             var entity = await _context.Tb_EmployeeStatutoryDetails
@@ -41,7 +60,7 @@ namespace PayrollManagementAPI.Services.EmployeeStatutoryDetails
             };
         }
 
-        public async Task<StatutoryDetailsDto> CreateAsync(CreateStatutoryDetailsDto dto)
+        public async Task<StatutoryDetailsDto?> CreateAsync(CreateStatutoryDetailsDto dto)
         {
             _logger.LogInformation("Attempting to create statutory details for EmployeeID: {EmployeeId}", dto.EmployeeID);
 
@@ -82,7 +101,7 @@ namespace PayrollManagementAPI.Services.EmployeeStatutoryDetails
             };
         }
 
-        public async Task<StatutoryDetailsDto> UpdateByEmployeeIdAsync(int employeeId, UpdateStatutoryDetailsDto dto)
+        public async Task<StatutoryDetailsDto?> UpdateByEmployeeIdAsync(int employeeId, UpdateStatutoryDetailsDto dto)
         {
             _logger.LogInformation("Attempting to update statutory details for EmployeeID: {EmployeeId}", employeeId);
             var entity = await _context.Tb_EmployeeStatutoryDetails

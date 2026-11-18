@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -13,10 +13,10 @@ namespace CompanyPlatform.Core.Models.CRM.PaymentTerm
         public int PaymentTermId { get; set; }
 
         [Required]
-        public string PaymentTermName { get; set; }
+        public string PaymentTermName { get; set; } = string.Empty;
 
         [Required]
-        public string PaymentTermCode { get; set; }
+        public string PaymentTermCode { get; set; } = string.Empty;
 
         [DefaultValue(true)]
         public bool IsActive { get; set; }

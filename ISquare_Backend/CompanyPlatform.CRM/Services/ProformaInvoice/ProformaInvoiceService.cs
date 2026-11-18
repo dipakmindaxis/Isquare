@@ -9,8 +9,8 @@ using CompanyPlatform.Core.Repository;
 using CompanyPlatform.Core.Services.Email;
 using CompanyPlatform.CRM.DTO.ProformaInvoice;
 using PayrollManagementAPI.Services.Email;
-using ProformaInvoiceEntity = CompanyPlatform.Core.Models.CRM.Company.ProformaInvoice;
-using ProformaInvoiceItemEntity = CompanyPlatform.Core.Models.CRM.Company.ProformaInvoiceItem;
+using ProformaInvoiceEntity = CompanyPlatform.Core.Models.CRM.ProformaInvoice;
+using ProformaInvoiceItemEntity = CompanyPlatform.Core.Models.CRM.ProformaInvoiceItem;
 
 namespace CompanyPlatform.CRM.Services.ProformaInvoice
 {
@@ -18,7 +18,7 @@ namespace CompanyPlatform.CRM.Services.ProformaInvoice
     {
         private readonly IRepositories<ProformaInvoiceEntity> _proformaRepository;
         private readonly IRepositories<ProformaInvoiceItemEntity> _itemRepository;
-        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.Company> _companyRepository;
+        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company> _companyRepository;
         private readonly IEmailService _emailService;
         private readonly IOptions<SmtpSettings> _smtpSettings;
         private readonly ILogger<ProformaInvoiceService> _logger;
@@ -27,7 +27,7 @@ namespace CompanyPlatform.CRM.Services.ProformaInvoice
         public ProformaInvoiceService(
             IRepositories<ProformaInvoiceEntity> proformaRepository,
             IRepositories<ProformaInvoiceItemEntity> itemRepository,
-            IRepositories<CompanyPlatform.Core.Models.CRM.Company.Company> companyRepository,
+            IRepositories<CompanyPlatform.Core.Models.CRM.Company> companyRepository,
             IEmailService emailService,
             IOptions<SmtpSettings> smtpSettings,
             ILogger<ProformaInvoiceService> logger)

@@ -1,8 +1,8 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_ActivityType")]
     public class ActivityType
@@ -11,7 +11,7 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public int ID { get; set; }
 
         [Required]
-        public string ActivityName { get; set; }
+        public string ActivityName { get; set; } = string.Empty;
 
         public string? ActivitySubType { get; set; }
 

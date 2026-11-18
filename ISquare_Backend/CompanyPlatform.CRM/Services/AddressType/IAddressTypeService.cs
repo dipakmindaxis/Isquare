@@ -1,4 +1,4 @@
-﻿using CompanyPlatform.CRM.DTO.AddressType;
+using CompanyPlatform.CRM.DTO.AddressType;
 
 namespace CompanyPlatform.CRM.Services.AddressType
 {
@@ -6,7 +6,7 @@ namespace CompanyPlatform.CRM.Services.AddressType
     {
         Task<IEnumerable<AddressTypeDto>> GetAllAddressTypesAsync();
 
-        Task<AddressTypeDto> GetAddressTypeByIdAsync(int id);
+        Task<AddressTypeDto?> GetAddressTypeByIdAsync(int id);
 
         Task<AddressTypeDto> CreateAddressTypeAsync(AddressTypeDto addressTypeDto);
 

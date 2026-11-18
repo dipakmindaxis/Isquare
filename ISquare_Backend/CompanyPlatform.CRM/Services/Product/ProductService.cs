@@ -5,7 +5,7 @@ using CompanyPlatform.CRM.DTO.Product;
 using CompanyPlatform.Core.Repository;
 using CompanyPlatform.Core.Data;
 using Microsoft.EntityFrameworkCore;
-using ProductModel = CompanyPlatform.Core.Models.CRM.Company.Product;
+using ProductModel = CompanyPlatform.Core.Models.CRM.Product;
 
 namespace CompanyPlatform.CRM.Services.Product
 {

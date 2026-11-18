@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -52,7 +52,7 @@ public class AccessControlController : ControllerBase
         var role = await _roleManager.FindByIdAsync(roleId);
         if (role == null) return NotFound("Role not found.");
 
-        if (role.Name.Equals("Admin", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(role.Name, "Admin", StringComparison.OrdinalIgnoreCase))
         {
             return BadRequest("Cannot modify permissions for the Admin role.");
         }

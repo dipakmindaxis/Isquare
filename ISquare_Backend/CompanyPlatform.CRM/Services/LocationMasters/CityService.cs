@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Logging;
 using CompanyPlatform.CRM.DTO.LocationMasters;
 using CompanyPlatform.Core.Models.CRM;
-using CompanyPlatform.Core.Models.CRM.Company;
 using CompanyPlatform.Core.Repository;
 
 

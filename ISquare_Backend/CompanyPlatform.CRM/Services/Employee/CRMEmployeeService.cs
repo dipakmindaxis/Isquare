@@ -4,10 +4,12 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using CompanyPlatform.Core.Data;
-using EmployeeEntity = CompanyPlatform.Core.Models.CRM.Company.Employee;
+using CompanyPlatform.Core.Models;
+using EmployeeEntity = CompanyPlatform.Core.Models.CRM.Employee.Employee;
 using CompanyPlatform.CRM.DTO.Employee;
 
 namespace CompanyPlatform.CRM.Services.Employee
@@ -15,14 +17,17 @@ namespace CompanyPlatform.CRM.Services.Employee
     public class CRMEmployeeService : ICRMEmployeeService
     {
         private readonly ApplicationDBContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<CRMEmployeeService> _logger;
         private static readonly SemaphoreSlim _codeLock = new SemaphoreSlim(1, 1);
 
         public CRMEmployeeService(
             ApplicationDBContext context,
+            UserManager<ApplicationUser> userManager,
             ILogger<CRMEmployeeService> logger)
         {
             _context = context;
+            _userManager = userManager;
             _logger = logger;
         }
 
@@ -262,6 +267,46 @@ namespace CompanyPlatform.CRM.Services.Employee
             if (entity == null)
                 return false;
 
+            var hasPasswordInput = !string.IsNullOrWhiteSpace(dto.Password) || !string.IsNullOrWhiteSpace(dto.ConfirmPassword);
+            ApplicationUser? identityUser = null;
+            if (hasPasswordInput)
+            {
+                if (string.IsNullOrWhiteSpace(dto.Password))
+                {
+                    throw new ArgumentException("Password is required.");
+                }
+
+                if (string.IsNullOrWhiteSpace(dto.ConfirmPassword))
+                {
+                    throw new ArgumentException("Confirm Password is required.");
+                }
+
+                if (!string.Equals(dto.Password, dto.ConfirmPassword, StringComparison.Ordinal))
+                {
+                    throw new ArgumentException("Password and Confirm Password do not match.");
+                }
+
+                identityUser = await _context.Users.FirstOrDefaultAsync(u => u.EmployeeId == entity.ID)
+                    ?? (!string.IsNullOrWhiteSpace(entity.UserId) ? await _userManager.FindByIdAsync(entity.UserId) : null)
+                    ?? await _userManager.FindByEmailAsync(entity.EmailAddress);
+
+                var validationUser = identityUser ?? new ApplicationUser
+                {
+                    UserName = dto.EmailAddress.Trim(),
+                    Email = dto.EmailAddress.Trim(),
+                    EmployeeId = entity.ID
+                };
+
+                foreach (var validator in _userManager.PasswordValidators)
+                {
+                    var pwdValidation = await validator.ValidateAsync(_userManager, validationUser, dto.Password);
+                    if (!pwdValidation.Succeeded)
+                    {
+                        throw new ArgumentException(pwdValidation.Errors.First().Description);
+                    }
+                }
+            }
+
             // Check email uniqueness if email has changed
             if (!string.Equals(entity.EmailAddress, dto.EmailAddress.Trim(), StringComparison.OrdinalIgnoreCase))
             {
@@ -345,6 +390,33 @@ namespace CompanyPlatform.CRM.Services.Employee
 
             _context.Tbl_Employee.Update(entity);
             await _context.SaveChangesAsync();
+
+            if (hasPasswordInput && !string.IsNullOrWhiteSpace(dto.Password))
+            {
+                if (identityUser != null)
+                {
+                    var resetToken = await _userManager.GeneratePasswordResetTokenAsync(identityUser);
+                    var resetResult = await _userManager.ResetPasswordAsync(identityUser, resetToken, dto.Password);
+                    if (!resetResult.Succeeded)
+                    {
+                        throw new ArgumentException(resetResult.Errors.FirstOrDefault()?.Description ?? "Failed to update password.");
+                    }
+                }
+                else
+                {
+                    var newUser = new ApplicationUser
+                    {
+                        UserName = entity.EmailAddress,
+                        Email = entity.EmailAddress,
+                        EmployeeId = entity.ID
+                    };
+                    var createResult = await _userManager.CreateAsync(newUser, dto.Password);
+                    if (!createResult.Succeeded)
+                    {
+                        throw new ArgumentException(createResult.Errors.FirstOrDefault()?.Description ?? "Failed to set password.");
+                    }
+                }
+            }
 
             return true;
         }

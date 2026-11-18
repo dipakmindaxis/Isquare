@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
@@ -9,7 +9,7 @@ namespace CompanyPlatform.Core.DTO.Meeting
         public int ID { get; set; }
 
         [Required(ErrorMessage = "Status name is required.")]
-        public string StatusName { get; set; }
+        public string StatusName { get; set; } = string.Empty;
 
         [DefaultValue(true)]
         public bool IsActive { get; set; }

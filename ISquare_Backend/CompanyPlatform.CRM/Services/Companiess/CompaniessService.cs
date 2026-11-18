@@ -1,8 +1,8 @@
-﻿using CompanyPlatform.Core.DTO.Companies;
-using CompanyPlatform.Core.Models.CRM.Company;
+using CompanyPlatform.Core.DTO.Companies;
+using CompanyPlatform.Core.Models.CRM;
 using CompanyPlatform.Core.Repository;
 
-using CompaniesEntity = CompanyPlatform.Core.Models.CRM.Company.Companiess;
+using CompaniesEntity = CompanyPlatform.Core.Models.CRM.Companiess;
 
 namespace CompanyPlatform.Core.Services.Companies
 {

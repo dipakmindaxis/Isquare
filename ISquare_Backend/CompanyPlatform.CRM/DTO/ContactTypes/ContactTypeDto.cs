@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace CompanyPlatform.CRM.DTO.ContactTypes
@@ -8,10 +8,10 @@ namespace CompanyPlatform.CRM.DTO.ContactTypes
         public int ContactTypeId { get; set; }
 
         [Required(ErrorMessage = "Value is required.")]
-        public string Value { get; set; }
+        public string Value { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Code is required.")]
-        public string Code { get; set; }
+        public string Code { get; set; } = string.Empty;
 
         [DefaultValue(true)]
         public bool IsActive { get; set; }

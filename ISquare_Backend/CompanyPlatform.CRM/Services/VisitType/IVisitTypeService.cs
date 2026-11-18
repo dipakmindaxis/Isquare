@@ -1,4 +1,4 @@
-﻿using CompanyPlatform.CRM.DTO.Meeting;
+using CompanyPlatform.CRM.DTO.Meeting;
 
 namespace CompanyPlatform.CRM.VisitType
 {
@@ -6,7 +6,7 @@ namespace CompanyPlatform.CRM.VisitType
     {
         Task<IEnumerable<VisitTypeDto>> GetAllVisitTypesAsync();
 
-        Task<VisitTypeDto> GetVisitTypeByIdAsync(int id);
+        Task<VisitTypeDto?> GetVisitTypeByIdAsync(int id);
 
         Task<VisitTypeDto> CreateVisitTypeAsync(VisitTypeDto dto);
 

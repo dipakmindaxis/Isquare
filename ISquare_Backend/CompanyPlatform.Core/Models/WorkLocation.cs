@@ -1,4 +1,5 @@
-using CompanyPlatform.Core.Models.CRM.Company;
+using CompanyPlatform.Core.Models.CRM;
+using Employee = CompanyPlatform.Core.Models.CRM.Employee.Employee;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -13,25 +14,25 @@ namespace CompanyPlatform.Core.Models
 
         [Required]
         [StringLength(100)]
-        public string LocationName { get; set; } 
+        public string LocationName { get; set; } = string.Empty; 
 
         [StringLength(50)]
         public string? LocationCode { get; set; } 
 
         [Required]
-        public string Address { get; set; } 
+        public string Address { get; set; } = string.Empty; 
 
         [Required]
         [StringLength(100)]
-        public string City { get; set; } 
+        public string City { get; set; } = string.Empty; 
 
         [Required]
         [StringLength(100)]
-        public string State { get; set; } 
+        public string State { get; set; } = string.Empty; 
 
         [Required]
         [StringLength(10)]
-        public string Pincode { get; set; } 
+        public string Pincode { get; set; } = string.Empty; 
 
         [DefaultValue(true)]
         public bool IsActive { get; set; } 

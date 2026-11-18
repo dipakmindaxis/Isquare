@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using CompanyPlatform.Core.DTO.Department;
 using CompanyPlatform.Core.Repository;
 using System.Collections.Generic;
@@ -30,7 +30,7 @@ namespace PayrollManagementAPI.Services.Department
                 .Select(d => new DepartmentDto { ID = d.ID, DepartmentName = d.DepartmentName, IsDeleted = d.IsDeleted });
         }
 
-        public async Task<DepartmentDto> GetDepartmentByIdAsync(int id)
+        public async Task<DepartmentDto?> GetDepartmentByIdAsync(int id)
         {
             _logger.LogInformation("Fetching department by ID: {DepartmentId}", id);
             var item = await _repository.GetByIdAsync(id);

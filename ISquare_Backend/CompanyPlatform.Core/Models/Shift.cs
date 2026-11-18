@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -12,7 +12,7 @@ namespace CompanyPlatform.Core.Models
 
         [Required]
         [StringLength(100)]
-        public string ShiftName { get; set; }
+        public string ShiftName { get; set; } = string.Empty;
 
         [Required]
         public TimeSpan StartTime { get; set; }

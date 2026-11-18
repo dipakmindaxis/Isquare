@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -84,7 +84,7 @@ namespace CompanyPlatform.CRM.Services.CustomerArea
                 });
         }
 
-        public async Task<CustomerAreaDto> GetCustomerAreaByIdAsync(int id)
+        public async Task<CustomerAreaDto?> GetCustomerAreaByIdAsync(int id)
         {
             _logger.LogInformation(
                 "Fetching Customer Area by ID: {CustomerAreaId}",

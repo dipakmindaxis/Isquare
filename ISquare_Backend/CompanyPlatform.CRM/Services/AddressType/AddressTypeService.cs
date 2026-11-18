@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -83,7 +83,7 @@ namespace CompanyPlatform.CRM.Services.AddressType
                 });
         }
 
-        public async Task<AddressTypeDto> GetAddressTypeByIdAsync(int id)
+        public async Task<AddressTypeDto?> GetAddressTypeByIdAsync(int id)
         {
             _logger.LogInformation(
                 "Fetching Address Type with ID: {AddressTypeId}",

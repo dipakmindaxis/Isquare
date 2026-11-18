@@ -1,13 +1,13 @@
-﻿namespace PayrollManagementAPI.Services.Email
+namespace PayrollManagementAPI.Services.Email
 {
     public class SmtpSettings
     {
-        public string Server { get; set; }
+        public string Server { get; set; } = string.Empty;
         public int Port { get; set; }
-        public string SenderEmail { get; set; }
-        public string SenderPassword { get; set; }
+        public string SenderEmail { get; set; } = string.Empty;
+        public string SenderPassword { get; set; } = string.Empty;
         public bool EnableSsl { get; set; }
-        public string FromName { get; set; }
-        public string ReplyToEmail { get; set; }
+        public string FromName { get; set; } = string.Empty;
+        public string ReplyToEmail { get; set; } = string.Empty;
     }
 }

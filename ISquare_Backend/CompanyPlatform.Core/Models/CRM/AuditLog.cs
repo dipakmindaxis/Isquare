@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_AuditLog")]
     public class AuditLog
@@ -17,7 +17,7 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public int AuditLogId { get; set; }
 
         [Required]
-        public string TableName { get; set; }
+        public string TableName { get; set; } = string.Empty;
 
         [Required]
         public int CompanyId { get; set; }
@@ -26,7 +26,7 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public int RecordId { get; set; }
 
         [Required]
-        public string Action { get; set; }
+        public string Action { get; set; } = string.Empty;
 
         public string? OldValue { get; set; }
 

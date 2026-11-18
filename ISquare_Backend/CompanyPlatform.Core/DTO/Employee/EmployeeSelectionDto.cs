@@ -1,21 +1,21 @@
-﻿namespace CompanyPlatform.Core.DTO.Employee
+namespace CompanyPlatform.Core.DTO.Employee
 {
     public class EmployeeSelectionDto
     {
         public int Id { get; set; }
-        public string FullName { get; set; }
+        public string FullName { get; set; } = string.Empty;
 
-        public string FirstName { get; set; }
+        public string FirstName { get; set; } = string.Empty;
 
-        public string LastName { get; set; }
+        public string LastName { get; set; } = string.Empty;
 
-        public string EmployeeCode { get; set; } 
-        public string Designation { get; set; }
-        public string Gender { get; set; }
+        public string EmployeeCode { get; set; } = string.Empty; 
+        public string Designation { get; set; } = string.Empty;
+        public string Gender { get; set; } = string.Empty;
 
         public decimal PFDeductionPercentage { get; set; }
 
-        public string State { get; set; }
+        public string State { get; set; } = string.Empty;
 
         public bool IsCappedAt15k { get; set; }
 

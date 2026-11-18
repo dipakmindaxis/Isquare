@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_LeadStatus")]
     public class LeadStatus
@@ -17,9 +17,9 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public int ID { get; set; }
 
         [Required]
-        public string StatusName { get; set; }
+        public string StatusName { get; set; } = string.Empty;
 
-        public string ColorCode { get; set; }
+        public string ColorCode { get; set; } = string.Empty;
 
         public int SortOrder { get; set; }
 

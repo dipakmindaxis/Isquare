@@ -1,4 +1,3 @@
-﻿using CompanyPlatform.Core.Models.CRM.Company;
 using CompanyPlatform.Core.Models.CRM.Employee;
 using System;
 using System.Collections.Generic;
@@ -10,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_CompanyContacts")]
     public class CompanyContact
@@ -22,17 +21,17 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public int CompanyId { get; set; }
 
         [Required]
-        public string ContactPerson { get; set; }
+        public string ContactPerson { get; set; } = string.Empty;
 
         [Required]
         public int DesignationId { get; set; }
 
         [Required]
         [EmailAddress]
-        public string Email { get; set; }
+        public string Email { get; set; } = string.Empty;
 
         [Required]
-        public string Mobile { get; set; }
+        public string Mobile { get; set; } = string.Empty;
 
         public string? AlternateMobile { get; set; }
 
@@ -61,6 +60,6 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public virtual Designation? Designation { get; set; }
 
         [ForeignKey("CreatedBy")]
-        public virtual Employee? CreatedByEmployee { get; set; }
+        public virtual Employee.Employee? CreatedByEmployee { get; set; }
     }
 }

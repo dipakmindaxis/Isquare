@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_CompanyTimeline")]
     public class CompanyTimeline
@@ -25,10 +25,10 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public int? ReferenceId { get; set; }
 
         [Required]
-        public string UserId { get; set; }
+        public string UserId { get; set; } = string.Empty;
 
         [Required]
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
 
         public DateTime CreatedDate { get; set; }
 

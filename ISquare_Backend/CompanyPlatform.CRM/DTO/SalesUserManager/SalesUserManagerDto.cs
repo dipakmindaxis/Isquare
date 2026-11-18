@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace CompanyPlatform.CRM.DTO.SalesUserManager
@@ -8,10 +8,10 @@ namespace CompanyPlatform.CRM.DTO.SalesUserManager
         public int ID { get; set; }
 
         [Required(ErrorMessage = "User Name is required.")]
-        public string UserName { get; set; }
+        public string UserName { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Code is required.")]
-        public string Code { get; set; }
+        public string Code { get; set; } = string.Empty;
 
         [DefaultValue(true)]
         public bool IsActive { get; set; }

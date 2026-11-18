@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace CompanyPlatform.Core.DTO.EmployeeStatutoryDetails
@@ -7,11 +7,11 @@ namespace CompanyPlatform.Core.DTO.EmployeeStatutoryDetails
     {
         [Required]
         //[RegularExpression(@"^\d{12}$", ErrorMessage = "Aadhaar number must be 12 digits.")]
-        public string AadhaarNumber { get; set; }
+        public string AadhaarNumber { get; set; } = string.Empty;
 
         [Required]
         //[RegularExpression(@"^[A-Z]{5}[0-9]{4}[A-Z]{1}$", ErrorMessage = "Invalid PAN number format.")]
-        public string PANNumber { get; set; }
+        public string PANNumber { get; set; } = string.Empty;
 
         public string? UANNo { get; set; }
         public string? PFNo { get; set; }

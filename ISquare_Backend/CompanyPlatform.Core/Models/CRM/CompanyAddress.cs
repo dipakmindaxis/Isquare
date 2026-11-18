@@ -1,4 +1,3 @@
-﻿using CompanyPlatform.Core.Models.CRM.Company;
 using CompanyPlatform.Core.Models.CRM.Employee;
 using System;
 using System.Collections.Generic;
@@ -10,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_CompanyAddresses")]
     public class CompanyAddress
@@ -23,11 +22,11 @@ namespace CompanyPlatform.Core.Models.CRM.Company
 
         [Required]
         [StringLength(30)]
-        public string AddressType { get; set; }
+        public string AddressType { get; set; } = string.Empty;
 
         [Required]
         [StringLength(500)]
-        public string Address { get; set; }
+        public string Address { get; set; } = string.Empty;
 
         [StringLength(150)]
         public string? LocationName { get; set; }
@@ -55,7 +54,7 @@ namespace CompanyPlatform.Core.Models.CRM.Company
 
         [Required]
         [StringLength(10)]
-        public string Pincode { get; set; }
+        public string Pincode { get; set; } = string.Empty;
 
         [DefaultValue(false)]
         public bool IsPrimary { get; set; }
@@ -86,6 +85,6 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public virtual City? City { get; set; }
 
         [ForeignKey("CreatedBy")]
-        public virtual Employee? CreatedByEmployee { get; set; }
+        public virtual Employee.Employee? CreatedByEmployee { get; set; }
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_Setting")]
     public class Setting
@@ -17,10 +17,10 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public int ID { get; set; }
 
         [Required]
-        public string SettingKey { get; set; }
+        public string SettingKey { get; set; } = string.Empty;
 
         [Required]
-        public string SettingValue { get; set; }
+        public string SettingValue { get; set; } = string.Empty;
 
         public string? Description { get; set; }
 

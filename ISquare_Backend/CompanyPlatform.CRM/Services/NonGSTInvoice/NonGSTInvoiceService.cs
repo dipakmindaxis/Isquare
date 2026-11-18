@@ -9,8 +9,8 @@ using CompanyPlatform.Core.Repository;
 using CompanyPlatform.Core.Services.Email;
 using CompanyPlatform.CRM.DTO.NonGSTInvoice;
 using PayrollManagementAPI.Services.Email;
-using NonGSTInvoiceEntity = CompanyPlatform.Core.Models.CRM.Company.NonGSTInvoice;
-using NonGSTInvoiceItemEntity = CompanyPlatform.Core.Models.CRM.Company.NonGSTInvoiceItem;
+using NonGSTInvoiceEntity = CompanyPlatform.Core.Models.CRM.NonGSTInvoice;
+using NonGSTInvoiceItemEntity = CompanyPlatform.Core.Models.CRM.NonGSTInvoiceItem;
 
 namespace CompanyPlatform.CRM.Services.NonGSTInvoice
 {
@@ -18,7 +18,7 @@ namespace CompanyPlatform.CRM.Services.NonGSTInvoice
     {
         private readonly IRepositories<NonGSTInvoiceEntity> _invoiceRepository;
         private readonly IRepositories<NonGSTInvoiceItemEntity> _itemRepository;
-        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.Company> _companyRepository;
+        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company> _companyRepository;
         private readonly IEmailService _emailService;
         private readonly IOptions<SmtpSettings> _smtpSettings;
         private readonly ILogger<NonGSTInvoiceService> _logger;
@@ -26,7 +26,7 @@ namespace CompanyPlatform.CRM.Services.NonGSTInvoice
         public NonGSTInvoiceService(
             IRepositories<NonGSTInvoiceEntity> invoiceRepository,
             IRepositories<NonGSTInvoiceItemEntity> itemRepository,
-            IRepositories<CompanyPlatform.Core.Models.CRM.Company.Company> companyRepository,
+            IRepositories<CompanyPlatform.Core.Models.CRM.Company> companyRepository,
             IEmailService emailService,
             IOptions<SmtpSettings> smtpSettings,
             ILogger<NonGSTInvoiceService> logger)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -13,10 +13,10 @@ namespace CompanyPlatform.Core.Models.CRM.CustomerArea
         public int CustomerAreaId { get; set; }
 
         [Required]
-        public string AreaName { get; set; }
+        public string AreaName { get; set; } = string.Empty;
 
         [Required]
-        public string AreaCode { get; set; }
+        public string AreaCode { get; set; } = string.Empty;
 
         [DefaultValue(true)]
         public bool IsActive { get; set; }

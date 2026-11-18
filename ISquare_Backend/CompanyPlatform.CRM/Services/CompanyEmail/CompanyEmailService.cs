@@ -10,11 +10,11 @@ namespace CompanyPlatform.CRM.Services.CompanyEmail
 {
     public class CompanyEmailService : ICompanyEmailService
     {
-        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.CompanyEmail> _repository;
+        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.CompanyEmail> _repository;
         private readonly ILogger<CompanyEmailService> _logger;
 
         public CompanyEmailService(
-            IRepositories<CompanyPlatform.Core.Models.CRM.Company.CompanyEmail> repository,
+            IRepositories<CompanyPlatform.Core.Models.CRM.CompanyEmail> repository,
             ILogger<CompanyEmailService> logger)
         {
             _repository = repository;
@@ -40,7 +40,7 @@ namespace CompanyPlatform.CRM.Services.CompanyEmail
                 });
         }
 
-        public async Task<CompanyEmailDto> GetCompanyEmailByIdAsync(int id)
+        public async Task<CompanyEmailDto?> GetCompanyEmailByIdAsync(int id)
         {
             _logger.LogInformation("Fetching company email by ID: {EmailId}", id);
 
@@ -67,7 +67,7 @@ namespace CompanyPlatform.CRM.Services.CompanyEmail
         {
             _logger.LogInformation("Creating company email: {Email}", dto.Email);
 
-            var newItem = new CompanyPlatform.Core.Models.CRM.Company.CompanyEmail {
+            var newItem = new CompanyPlatform.Core.Models.CRM.CompanyEmail {
                 CompanyId = dto.CompanyId,
                 Email = dto.Email,
                 IsPrimary = dto.IsPrimary,

@@ -1,10 +1,10 @@
 using CompanyPlatform.CRM.DTO.CustomerStatus;
-using CompanyPlatform.Core.Models.CRM.Company;
+using CompanyPlatform.Core.Models.CRM;
 using CompanyPlatform.Core.Repository;
 using Microsoft.Extensions.Logging;
 
 using CustomerStatusModel =
-    CompanyPlatform.Core.Models.CRM.Company.CustomerStatus;
+    CompanyPlatform.Core.Models.CRM.CustomerStatus;
 using CompanyPlatform.CRM.Services.CustomerStatus;
 
     public class CustomerStatusService : ICustomerStatusService
@@ -105,7 +105,7 @@ using CompanyPlatform.CRM.Services.CustomerStatus;
         // ==========================================
         // GET BY ID
         // ==========================================
-        public async Task<CustomerStatusDto>
+        public async Task<CustomerStatusDto?>
             GetCustomerStatusByIdAsync(int id)
         {
             _logger.LogInformation(

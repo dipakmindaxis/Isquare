@@ -6,8 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using CompanyPlatform.Core.Models.CRM;
-using CompanyPlatform.Core.Models.CRM.Company;
-using InvoiceItemEntity = CompanyPlatform.Core.Models.CRM.Company.InvoiceItem;
+using InvoiceItemEntity = CompanyPlatform.Core.Models.CRM.InvoiceItem;
 using CompanyPlatform.Core.Repository;
 using CompanyPlatform.Core.Services.Email;
 using CompanyPlatform.CRM.DTO.Invoice;
@@ -19,7 +18,7 @@ namespace CompanyPlatform.CRM.Services.InvoiceService
     {
         private readonly IRepositories<Invoice> _repository;
         private readonly IRepositories<InvoiceItemEntity> _itemRepository;
-        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.Company> _companyRepository;
+        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company> _companyRepository;
         private readonly IEmailService _emailService;
         private readonly IOptions<SmtpSettings> _smtpSettings;
         private readonly ILogger<InvoiceService> _logger;
@@ -28,7 +27,7 @@ namespace CompanyPlatform.CRM.Services.InvoiceService
         public InvoiceService(
             IRepositories<Invoice> repository,
             IRepositories<InvoiceItemEntity> itemRepository,
-            IRepositories<CompanyPlatform.Core.Models.CRM.Company.Company> companyRepository,
+            IRepositories<CompanyPlatform.Core.Models.CRM.Company> companyRepository,
             IEmailService emailService,
             IOptions<SmtpSettings> smtpSettings,
             ILogger<InvoiceService> logger)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace CompanyPlatform.Core.DTO.Meeting
@@ -9,11 +9,11 @@ namespace CompanyPlatform.Core.DTO.Meeting
 
         public int ReminderId { get; set; }
 
-        public string NotificationType { get; set; }
+        public string NotificationType { get; set; } = string.Empty;
 
         public DateTime NotificationDate { get; set; }
 
-        public string NotificationStatus { get; set; }
+        public string NotificationStatus { get; set; } = string.Empty;
 
         public int SentBy { get; set; }
 

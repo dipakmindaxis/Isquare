@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -81,7 +81,7 @@ namespace CompanyPlatform.CRM.Services.CustomerSource
                 });
         }
 
-        public async Task<CustomerSourceDto> GetCustomerSourceByIdAsync(int id)
+        public async Task<CustomerSourceDto?> GetCustomerSourceByIdAsync(int id)
         {
             _logger.LogInformation("Fetching Customer Source by ID: {CustomerSourceId}",id);
 

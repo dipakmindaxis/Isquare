@@ -1,4 +1,3 @@
-﻿using CompanyPlatform.Core.Models.CRM.Company;
 using CompanyPlatform.Core.Models.CRM.Employee;
 using System;
 using System.Collections.Generic;
@@ -10,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_Invoice")]
     public class Invoice
@@ -22,7 +21,7 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public int CompanyId { get; set; }
 
         [Required]
-        public string InvoiceNumber { get; set; }
+        public string InvoiceNumber { get; set; } = string.Empty;
 
         [Required]
         public DateTime InvoiceDate { get; set; }
@@ -42,7 +41,7 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public decimal TotalAmount { get; set; }
 
         [Required]
-        public string InvoiceStatus { get; set; }
+        public string InvoiceStatus { get; set; } = string.Empty;
 
         [Required]
         public int CreatedBy { get; set; }
@@ -68,9 +67,9 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public virtual ClientType? ClientType { get; set; }
 
         [ForeignKey(nameof(CreatedBy))]
-        public virtual Employee? CreatedByEmployee { get; set; }
+        public virtual Employee.Employee? CreatedByEmployee { get; set; }
 
         [ForeignKey(nameof(UpdatedBy))]
-        public virtual Employee? UpdatedByEmployee { get; set; }
+        public virtual Employee.Employee? UpdatedByEmployee { get; set; }
     }
 }

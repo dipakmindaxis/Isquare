@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PayrollManagementAPI.DTO.Role;
@@ -26,13 +26,13 @@ namespace PayrollManagementAPI.Services.Role
                 .Select(r => new RoleResponseDto
                 {
                     Id = r.Id,
-                    Name = r.Name
+                    Name = r.Name ?? string.Empty
                 })
                 .ToListAsync();
             return roles;
         }
 
-        public async Task<(IdentityResult, RoleResponseDto)> CreateRoleAsync(CreateRoleDto createRoleDto)
+        public async Task<(IdentityResult, RoleResponseDto?)> CreateRoleAsync(CreateRoleDto createRoleDto)
         {
             _logger.LogInformation("Attempting to create a new role with name: {RoleName}", createRoleDto.Name);
 
@@ -54,7 +54,7 @@ namespace PayrollManagementAPI.Services.Role
             }
 
             _logger.LogInformation("Successfully created role '{RoleName}' with ID: {RoleId}", newRole.Name, newRole.Id);
-            var roleDto = new RoleResponseDto { Id = newRole.Id, Name = newRole.Name };
+            var roleDto = new RoleResponseDto { Id = newRole.Id, Name = newRole.Name ?? string.Empty };
             return (result, roleDto);
         }
 

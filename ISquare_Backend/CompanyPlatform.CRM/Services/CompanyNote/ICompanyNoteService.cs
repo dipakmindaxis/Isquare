@@ -6,7 +6,7 @@ namespace CompanyPlatform.CRM.Services.CompanyNote
     {
         Task<IEnumerable<CompanyNoteDto>> GetAllCompanyNotesAsync();
 
-        Task<CompanyNoteDto> GetCompanyNoteByIdAsync(int id);
+        Task<CompanyNoteDto?> GetCompanyNoteByIdAsync(int id);
 
         Task<CompanyNoteDto> CreateCompanyNoteAsync(CompanyNoteDto companyNoteDto);
 

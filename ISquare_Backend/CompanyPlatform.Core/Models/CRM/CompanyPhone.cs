@@ -1,4 +1,3 @@
-﻿using CompanyPlatform.Core.Models.CRM.Company;
 using CompanyPlatform.Core.Models.CRM.Employee;
 using System;
 using System.Collections.Generic;
@@ -10,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_CompanyPhones")]
     public class CompanyPhone
@@ -23,11 +22,11 @@ namespace CompanyPlatform.Core.Models.CRM.Company
 
         [Required]
         [StringLength(30)]
-        public string PhoneType { get; set; }
+        public string PhoneType { get; set; } = string.Empty;
 
         [Required]
         [StringLength(20)]
-        public string PhoneNumber { get; set; }
+        public string PhoneNumber { get; set; } = string.Empty;
 
         [DefaultValue(false)]
         public bool IsPrimary { get; set; }
@@ -49,6 +48,6 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         //public virtual Company? Company { get; set; }
 
         [ForeignKey("CreatedBy")]
-        public virtual Employee? CreatedByEmployee { get; set; }
+        public virtual Employee.Employee? CreatedByEmployee { get; set; }
     }
 }

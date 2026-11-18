@@ -1,5 +1,4 @@
 using CompanyPlatform.Core.Models.CRM;
-using CompanyPlatform.Core.Models.CRM.Company;
 using CompanyPlatform.Core.Repository;
 using CompanyPlatform.CRM.DTO.CompanyStatus;
 using Microsoft.Extensions.Logging;
@@ -8,10 +7,10 @@ namespace CompanyPlatform.CRM.Services.CompanyStatus
 {
     public class CompanyStatusService : ICompanyStatusService
     {
-        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.CompanyStatus> _repository;
+        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.CompanyStatus> _repository;
         private readonly ILogger<CompanyStatusService> _logger;
 
-        public CompanyStatusService(IRepositories<CompanyPlatform.Core.Models.CRM.Company.CompanyStatus> repository, ILogger<CompanyStatusService> logger)
+        public CompanyStatusService(IRepositories<CompanyPlatform.Core.Models.CRM.CompanyStatus> repository, ILogger<CompanyStatusService> logger)
         {
             _repository = repository;
             _logger = logger;
@@ -57,7 +56,7 @@ namespace CompanyPlatform.CRM.Services.CompanyStatus
         {
             _logger.LogInformation("Creating Company Status: {CompanyStatusName}", companyStatusDto.CompanyStatusName);
 
-            var companyStatus = new CompanyPlatform.Core.Models.CRM.Company.CompanyStatus
+            var companyStatus = new CompanyPlatform.Core.Models.CRM.CompanyStatus
             {
                 CompanyStatusName = companyStatusDto.CompanyStatusName,
                 IsActive = companyStatusDto.IsActive,

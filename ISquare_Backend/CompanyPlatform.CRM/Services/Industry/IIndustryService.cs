@@ -6,7 +6,7 @@ namespace CompanyPlatform.CRM.Services.Industry
     {
         Task<IEnumerable<IndustryDto>> GetAllIndustriesAsync();
 
-        Task<IndustryDto> GetIndustryByIdAsync(int id);
+        Task<IndustryDto?> GetIndustryByIdAsync(int id);
 
         Task<IndustryDto> CreateIndustryAsync(IndustryDto industryDto);
 
@@ -20,7 +20,7 @@ namespace CompanyPlatform.CRM.Services.Industry
 //    public interface IIndustryService
 //    {
 //        Task<IEnumerable<IndustryDto>> GetAllIndustriesAsync();
-//        Task<IndustryDto> GetIndustryByIdAsync(int id);
+//        Task<IndustryDto?> GetIndustryByIdAsync(int id);
 //        Task<IndustryDto> CreateIndustryAsync(IndustryDto industryDto);
 //        Task<bool> UpdateIndustryAsync(int id, IndustryDto industryDto);
 //        Task<bool> DeleteIndustryAsync(int id);

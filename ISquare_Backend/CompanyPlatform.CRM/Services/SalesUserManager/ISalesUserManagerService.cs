@@ -1,4 +1,4 @@
-﻿using CompanyPlatform.CRM.DTO.SalesUserManager;
+using CompanyPlatform.CRM.DTO.SalesUserManager;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -8,7 +8,7 @@ namespace CompanyPlatform.CRM.Services.SalesUserManager
     {
         Task<IEnumerable<SalesUserManagerDto>> GetAllSalesUserManagersAsync();
 
-        Task<SalesUserManagerDto> GetSalesUserManagerByIdAsync(int id);
+        Task<SalesUserManagerDto?> GetSalesUserManagerByIdAsync(int id);
 
         Task<SalesUserManagerDto> CreateSalesUserManagerAsync(
             SalesUserManagerDto dto);

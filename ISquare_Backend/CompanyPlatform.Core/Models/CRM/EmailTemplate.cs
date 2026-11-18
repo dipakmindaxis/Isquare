@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_EmailTemplate")]
     public class EmailTemplate
@@ -17,13 +17,13 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public int ID { get; set; }
 
         [Required]
-        public string TemplateName { get; set; }
+        public string TemplateName { get; set; } = string.Empty;
 
         [Required]
-        public string Subject { get; set; }
+        public string Subject { get; set; } = string.Empty;
 
         [Required]
-        public string Body { get; set; }
+        public string Body { get; set; } = string.Empty;
 
         [DefaultValue(false)]
         public bool IsDeleted { get; set; }

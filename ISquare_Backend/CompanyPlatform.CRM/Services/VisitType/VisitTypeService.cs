@@ -3,8 +3,8 @@ using CompanyPlatform.CRM.DTO.Meeting;
 using CompanyPlatform.CRM.VisitType;
 using DocumentFormat.OpenXml.EMMA;
 using CompanyPlatform.Core.Repository;
-using CompanyPlatform.Core.Models.CRM.Company;
-using VisitTypeEntity = CompanyPlatform.Core.Models.CRM.Company.VisitType;
+using CompanyPlatform.Core.Models.CRM;
+using VisitTypeEntity = CompanyPlatform.Core.Models.CRM.VisitType;
 
 namespace CompanyPlatform.CRM.Services.VisitType
 {
@@ -35,7 +35,7 @@ namespace CompanyPlatform.CRM.Services.VisitType
             });
         }
 
-        public async Task<VisitTypeDto> GetVisitTypeByIdAsync(int id)
+        public async Task<VisitTypeDto?> GetVisitTypeByIdAsync(int id)
         {
             _logger.LogInformation("Fetching Visit Type by ID: {ID}", id);
 

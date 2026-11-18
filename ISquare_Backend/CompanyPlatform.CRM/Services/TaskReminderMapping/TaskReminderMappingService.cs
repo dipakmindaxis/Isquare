@@ -1,13 +1,14 @@
-﻿using CompanyPlatform.Core.Models.CRM.Company;
+using CompanyPlatform.Core.Models.CRM;
+using Employee = CompanyPlatform.Core.Models.CRM.Employee.Employee;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using CompanyPlatform.CRM.DTO.TaskReminderMapping;
 using CompanyPlatform.Core.Repository;
 using System.Security.Claims;
-using TaskReminderMappingEntity = CompanyPlatform.Core.Models.CRM.Company.TaskReminderMapping;
-using TasksEntity = CompanyPlatform.Core.Models.CRM.Company.Tasks;
-using ReminderEntity = CompanyPlatform.Core.Models.CRM.Company.Reminder;
-using EmployeesEntity = CompanyPlatform.Core.Models.CRM.Company.Employee;
+using TaskReminderMappingEntity = CompanyPlatform.Core.Models.CRM.TaskReminderMapping;
+using TasksEntity = CompanyPlatform.Core.Models.CRM.Tasks;
+using ReminderEntity = CompanyPlatform.Core.Models.CRM.Reminder;
+using EmployeesEntity = CompanyPlatform.Core.Models.CRM.Employee.Employee;
 
 namespace CompanyPlatform.CRM.Services.TaskReminderMapping
 {

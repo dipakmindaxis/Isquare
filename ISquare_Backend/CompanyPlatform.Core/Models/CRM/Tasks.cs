@@ -1,4 +1,3 @@
-﻿using CompanyPlatform.Core.Models.CRM.Company;
 using CompanyPlatform.Core.Models.CRM.Employee;
 using System;
 using System.Collections.Generic;
@@ -10,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_Task")]
     public class Tasks
@@ -21,7 +20,7 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         [Required]
         public int CompanyId { get; set; }
         [ForeignKey("CompanyId")]
-        public virtual Company Company { get; set; }
+        public virtual Company Company { get; set; } = null!;
 
         [Required]
         public string TaskTitle { get; set; } = string.Empty;
@@ -31,22 +30,22 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         [Required]
         public int AssignedTo { get; set; }
         [ForeignKey("AssignedTo")]
-        public virtual Employee AssignedToEmployee { get; set; }
+        public virtual Employee.Employee AssignedToEmployee { get; set; } = null!;
 
         [Required]
         public int AssignedBy { get; set; }
         [ForeignKey("AssignedBy")]
-        public virtual Employee AssignedByEmployee { get; set; }
+        public virtual Employee.Employee AssignedByEmployee { get; set; } = null!;
 
         [Required]
         public int PriorityId { get; set; }
         [ForeignKey("PriorityId")]
-        public virtual Priority Priority { get; set; }
+        public virtual Priority Priority { get; set; } = null!;
 
         [Required]
         public int TaskStatusId { get; set; }
         [ForeignKey("TaskStatusId")]
-        public virtual TaskStatus TaskStatus { get; set; }
+        public virtual TaskStatus TaskStatus { get; set; } = null!;
 
         [Required]
         public DateTime StartDate { get; set; }
@@ -65,14 +64,14 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         [Required]
         public int CreatedBy { get; set; }
         [ForeignKey("CreatedBy")]
-        public virtual Employee CreatedByEmployee { get; set; }
+        public virtual Employee.Employee CreatedByEmployee { get; set; } = null!;
 
         [Required]
         public DateTime CreatedDate { get; set; }
 
         public int? UpdatedBy { get; set; }
         [ForeignKey("UpdatedBy")]
-        public virtual Employee? UpdatedByEmployee { get; set; }
+        public virtual Employee.Employee? UpdatedByEmployee { get; set; }
 
         public DateTime? UpdatedDate { get; set; }
 

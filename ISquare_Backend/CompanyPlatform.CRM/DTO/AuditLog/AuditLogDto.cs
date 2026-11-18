@@ -10,13 +10,13 @@ namespace CompanyPlatform.CRM.DTO.AuditLog
         public int CompanyId { get; set; }
 
         [Required(ErrorMessage = "Table Name is required.")]
-        public string TableName { get; set; }
+        public string TableName { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Record Id is required.")]
         public int RecordId { get; set; }
 
         [Required(ErrorMessage = "Action is required.")]
-        public string Action { get; set; }
+        public string Action { get; set; } = string.Empty;
 
         public string? OldValue { get; set; }
 

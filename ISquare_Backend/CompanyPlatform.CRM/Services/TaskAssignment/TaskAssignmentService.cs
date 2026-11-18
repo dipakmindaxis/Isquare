@@ -1,4 +1,4 @@
-﻿//using CompanyPlatform.Core.Models.CRM.Company;
+//using CompanyPlatform.Core.Models.CRM.Company;
 //using CompanyPlatform.Core.Repository;
 //using CompanyPlatform.CRM.DTO.TaskAssignment;
 //using CompanyPlatform.CRM.Services.TaskAssignment;
@@ -177,7 +177,8 @@
 
 
 
-using CompanyPlatform.Core.Models.CRM.Company;
+using CompanyPlatform.Core.Models.CRM;
+using Employee = CompanyPlatform.Core.Models.CRM.Employee.Employee;
 using CompanyPlatform.Core.Models.CRM.Employee;
 using CompanyPlatform.Core.Repository;
 using CompanyPlatform.CRM.DTO.TaskAssignment;
@@ -185,7 +186,7 @@ using CompanyPlatform.CRM.Services.TaskAssignment;
 using Microsoft.Extensions.Logging;
 
 using TaskAssignmentEntity =
-    CompanyPlatform.Core.Models.CRM.Company.TaskAssignment;
+    CompanyPlatform.Core.Models.CRM.TaskAssignment;
 
 namespace CompanyPlatform.Services.TaskAssignment
 {

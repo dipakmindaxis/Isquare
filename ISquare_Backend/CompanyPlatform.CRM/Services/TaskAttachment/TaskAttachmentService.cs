@@ -1,4 +1,4 @@
-﻿using CompanyPlatform.Core.Models.CRM.Company;
+using CompanyPlatform.Core.Models.CRM;
 //using Microsoft.AspNetCore.Hosting;
 //using Microsoft.AspNetCore.Http;
 //using Microsoft.Extensions.Logging;
@@ -236,7 +236,7 @@
 //using System.Security.Claims;
 
 //using TaskAttachmentEntity =
-//    CompanyPlatform.Core.Models.CRM.Company.TaskAttachment;
+//    CompanyPlatform.Core.Models.CRM.TaskAttachment;
 
 //namespace CompanyPlatform.CRM.Services.TaskAttachment
 //{
@@ -568,7 +568,7 @@ using CompanyPlatform.CRM.DTO.TaskAttachment;
 using CompanyPlatform.Core.Repository;
 
 using TaskAttachmentEntity =
-    CompanyPlatform.Core.Models.CRM.Company.TaskAttachment;
+    CompanyPlatform.Core.Models.CRM.TaskAttachment;
 
 using System.Security.Claims;
 
@@ -577,16 +577,16 @@ namespace CompanyPlatform.CRM.Services.TaskAttachment
     public class TaskAttachmentService : ITaskAttachmentService
     {
         private readonly IRepositories<TaskAttachmentEntity> _repository;
-        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.Tasks> _taskRepository;
-        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.Employee> _employeeRepository;
+        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Tasks> _taskRepository;
+        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Employee.Employee> _employeeRepository;
         private readonly IWebHostEnvironment _environment;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<TaskAttachmentService> _logger;
 
         public TaskAttachmentService(
             IRepositories<TaskAttachmentEntity> repository,
-            IRepositories<CompanyPlatform.Core.Models.CRM.Company.Tasks> taskRepository,
-            IRepositories<CompanyPlatform.Core.Models.CRM.Company.Employee> employeeRepository,
+            IRepositories<CompanyPlatform.Core.Models.CRM.Tasks> taskRepository,
+            IRepositories<CompanyPlatform.Core.Models.CRM.Employee.Employee> employeeRepository,
             IWebHostEnvironment environment,
             IHttpContextAccessor httpContextAccessor,
             ILogger<TaskAttachmentService> logger)
@@ -664,7 +664,7 @@ namespace CompanyPlatform.CRM.Services.TaskAttachment
             var attachment = new TaskAttachmentEntity
             {
                 TaskId = dto.TaskId,
-                DocumentName = dto.DocumentName,
+                DocumentName = dto.DocumentName ?? string.Empty,
                 FileName = fileName,
                 FilePath = Path.Combine(
                     "Uploads",

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -13,10 +13,10 @@ namespace CompanyPlatform.Core.Models.CRM.CustomerSource
         public int CustomerSourceId { get; set; }
 
         [Required]
-        public string SourceName { get; set; }
+        public string SourceName { get; set; } = string.Empty;
 
         [Required]
-        public string SourceCode { get; set; }
+        public string SourceCode { get; set; } = string.Empty;
 
         [DefaultValue(true)]
         public bool IsActive { get; set; }

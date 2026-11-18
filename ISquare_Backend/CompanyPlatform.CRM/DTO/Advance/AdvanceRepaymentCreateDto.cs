@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace CompanyPlatform.CRM.DTO.Advance
 {
@@ -11,7 +11,7 @@ namespace CompanyPlatform.CRM.DTO.Advance
         [Required]
         public DateTime RepaymentDate { get; set; }
 
-        public string Notes { get; set; }
+        public string Notes { get; set; } = string.Empty;
 
         [Required]
         public int CreatedByEmployeeId { get; set; }

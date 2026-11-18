@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 
 namespace CompanyPlatform.Core.Models
@@ -13,10 +13,10 @@ namespace CompanyPlatform.Core.Models
         public int EmployeeTaxDeclarationID { get; set; }
 
         [ForeignKey("EmployeeTaxDeclarationID")] 
-        public virtual EmployeeTaxDeclaration EmployeeTaxDeclaration { get; set; }
+        public virtual EmployeeTaxDeclaration EmployeeTaxDeclaration { get; set; } = null!;
 
         [Required] 
-        public string Section { get; set; } // e.g., "80C", "80D", "HRA", "24(b)" for Home Loan Interest
+        public string Section { get; set; } = string.Empty; // e.g., "80C", "80D", "HRA", "24(b)" for Home Loan Interest
                                                        
         [Required] 
 
@@ -26,9 +26,9 @@ namespace CompanyPlatform.Core.Models
         [Column(TypeName = "decimal(18, 2)")]
         public decimal? ApprovedAmount { get; set; } // Nullable, as it's filled in later
 
-        public string ApprovalStatus { get; set; } // e.g., "Pending", "Approved", "Rejected"
+        public string ApprovalStatus { get; set; } = string.Empty; // e.g., "Pending", "Approved", "Rejected"
 
-        public string Remarks { get; set; } // Optional remarks from the approver
+        public string Remarks { get; set; } = string.Empty; // Optional remarks from the approver
 
         public virtual ICollection<EmployeeDeclarationDocument> Documents { get; set; } = new List<EmployeeDeclarationDocument>();
     }

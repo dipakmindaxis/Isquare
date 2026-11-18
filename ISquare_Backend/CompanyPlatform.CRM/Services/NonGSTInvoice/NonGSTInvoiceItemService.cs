@@ -5,8 +5,8 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using CompanyPlatform.Core.Repository;
 using CompanyPlatform.CRM.DTO.NonGSTInvoice;
-using NonGSTInvoiceEntity = CompanyPlatform.Core.Models.CRM.Company.NonGSTInvoice;
-using NonGSTInvoiceItemEntity = CompanyPlatform.Core.Models.CRM.Company.NonGSTInvoiceItem;
+using NonGSTInvoiceEntity = CompanyPlatform.Core.Models.CRM.NonGSTInvoice;
+using NonGSTInvoiceItemEntity = CompanyPlatform.Core.Models.CRM.NonGSTInvoiceItem;
 
 namespace CompanyPlatform.CRM.Services.NonGSTInvoice
 {

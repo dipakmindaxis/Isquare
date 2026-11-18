@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace CompanyPlatform.Core.DTO.Department
@@ -8,7 +8,7 @@ namespace CompanyPlatform.Core.DTO.Department
         public int ID { get; set; }
 
         [Required(ErrorMessage = "Department name is required.")]
-        public string DepartmentName { get; set; }
+        public string DepartmentName { get; set; } = string.Empty;
         [DefaultValue(false)]
         public bool IsDeleted { get; set; }
 

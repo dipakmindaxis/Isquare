@@ -6,7 +6,7 @@ namespace CompanyPlatform.CRM.Services.CustomerStatus
     {
         Task<IEnumerable<CustomerStatusDto>> GetAllCustomerStatusesAsync();
 
-        Task<CustomerStatusDto> GetCustomerStatusByIdAsync(int id);
+        Task<CustomerStatusDto?> GetCustomerStatusByIdAsync(int id);
 
         Task<CustomerStatusDto> CreateCustomerStatusAsync(
             CustomerStatusDto dto);

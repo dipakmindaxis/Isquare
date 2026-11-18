@@ -1,7 +1,7 @@
 using CompanyPlatform.Core.Repository;
 using CompanyPlatform.CRM.DTO.History;
 using Microsoft.Extensions.Logging;
-using HistoryModel = CompanyPlatform.Core.Models.CRM.Company.History;
+using HistoryModel = CompanyPlatform.Core.Models.CRM.History;
 
 namespace CompanyPlatform.CRM.Services.History
 {
@@ -38,7 +38,7 @@ namespace CompanyPlatform.CRM.Services.History
                 });
         }
 
-        public async Task<HistoryDto> GetHistoryByIdAsync(int id)
+        public async Task<HistoryDto?> GetHistoryByIdAsync(int id)
         {
             _logger.LogInformation("Fetching history by ID : {HistoryId}", id);
 

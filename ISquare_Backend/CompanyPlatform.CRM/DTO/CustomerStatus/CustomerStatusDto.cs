@@ -7,7 +7,7 @@ namespace CompanyPlatform.CRM.DTO.CustomerStatus
         public int CustomerStatusId { get; set; }
 
         [Required]
-        public string StatusName { get; set; }
+        public string StatusName { get; set; } = string.Empty;
 
         public string? Description { get; set; }
 

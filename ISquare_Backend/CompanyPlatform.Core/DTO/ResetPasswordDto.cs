@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace CompanyPlatform.Core.DTO
 {
@@ -6,13 +6,13 @@ namespace CompanyPlatform.Core.DTO
     {
         [Required]
         [EmailAddress]
-        public string Email { get; set; }
+        public string Email { get; set; } = string.Empty;
 
         [Required]
-        public string Token { get; set; }
+        public string Token { get; set; } = string.Empty;
 
         [Required]
         [DataType(DataType.Password)]
-        public string NewPassword { get; set; }
+        public string NewPassword { get; set; } = string.Empty;
     }
 }

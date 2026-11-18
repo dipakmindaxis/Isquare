@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
@@ -9,7 +9,7 @@ namespace CompanyPlatform.CRM.DTO.Meeting
         public int ID { get; set; }
 
         [Required]
-        public string VisitTypeName { get; set; }
+        public string VisitTypeName { get; set; } = string.Empty;
 
         public bool IsActive { get; set; }
     }

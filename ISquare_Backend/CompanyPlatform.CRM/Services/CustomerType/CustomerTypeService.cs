@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 using CompanyPlatform.CRM.DTO.CustomerType;
-using CompanyPlatform.Core.Models.CRM.Company;
+using CompanyPlatform.Core.Models.CRM;
 using CompanyPlatform.Core.Repository;
 
 namespace CompanyPlatform.CRM.Services.CustomerType
@@ -46,7 +46,7 @@ namespace CompanyPlatform.CRM.Services.CustomerType
         // ==========================================
         // GET CUSTOMER TYPE BY ID
         // ==========================================
-        public async Task<CustomerTypeDto>
+        public async Task<CustomerTypeDto?>
             GetCustomerTypeByIdAsync(int id)
         {
             _logger.LogInformation(

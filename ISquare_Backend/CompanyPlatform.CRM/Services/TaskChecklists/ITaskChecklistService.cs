@@ -1,4 +1,4 @@
-﻿using CompanyPlatform.CRM.DTO.TaskChecklists;
+using CompanyPlatform.CRM.DTO.TaskChecklists;
 
 namespace CompanyPlatform.CRM.Services.TaskChecklists
 {
@@ -6,7 +6,7 @@ namespace CompanyPlatform.CRM.Services.TaskChecklists
     {
         Task<IEnumerable<TaskChecklistDto>> GetAllTaskChecklistsAsync();
 
-        Task<TaskChecklistDto> GetTaskChecklistByIdAsync(int id);
+        Task<TaskChecklistDto?> GetTaskChecklistByIdAsync(int id);
 
         Task<TaskChecklistDto> CreateTaskChecklistAsync(TaskChecklistDto dto);
 

@@ -1,4 +1,3 @@
-﻿using CompanyPlatform.Core.Models.CRM.Company;
 using CompanyPlatform.Core.Models.CRM.Employee;
 using System;
 using System.Collections.Generic;
@@ -10,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_Meeting")]
     public class Meeting
@@ -68,12 +67,12 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public virtual MeetingType? MeetingType { get; set; }
 
         [ForeignKey(nameof(UserId))]
-        public virtual Employee? User { get; set; }
+        public virtual Employee.Employee? User { get; set; }
 
         [ForeignKey(nameof(CreatedBy))]
-        public virtual Employee? CreatedByEmployee { get; set; }
+        public virtual Employee.Employee? CreatedByEmployee { get; set; }
 
         [ForeignKey(nameof(UpdatedBy))]
-        public virtual Employee? UpdatedByEmployee { get; set; }
+        public virtual Employee.Employee? UpdatedByEmployee { get; set; }
     }
 }
