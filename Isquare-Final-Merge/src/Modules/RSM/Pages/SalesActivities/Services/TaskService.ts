@@ -85,6 +85,28 @@ const safeSetTasks = (tasks: TaskItem[]): void => {
   } catch {}
 };
 
+const DELETED_TASKS_KEY = "isquare_deleted_tasks_v2";
+
+export const getDeletedTaskIdentifiers = (): { ids: number[]; titles: string[] } => {
+  try {
+    const raw = localStorage.getItem(DELETED_TASKS_KEY);
+    return raw ? JSON.parse(raw) : { ids: [], titles: [] };
+  } catch {
+    return { ids: [], titles: [] };
+  }
+};
+
+export const markTaskAsDeletedLocally = (taskId: number, taskTitle?: string): void => {
+  try {
+    const data = getDeletedTaskIdentifiers();
+    const ids = Array.from(new Set([...data.ids, taskId]));
+    const titles = taskTitle
+      ? Array.from(new Set([...data.titles, taskTitle.toLowerCase().trim()]))
+      : data.titles;
+    localStorage.setItem(DELETED_TASKS_KEY, JSON.stringify({ ids, titles }));
+  } catch {}
+};
+
 // ==========================================
 // Task Statuses (Dynamic from Customer Status Master API)
 // ==========================================
@@ -163,53 +185,21 @@ export const getAllTaskStatuses = async (): Promise<TaskStatusItem[]> => {
   ];
 };
 
-// Known persisted tasks created in the project across sessions/PCs that must be visible everywhere
-const KNOWN_PROJECT_TASKS: TaskItem[] = [
-  {
-    taskId: 101,
-    companyId: 1,
-    taskTitle: "mindaxis tas managemet make on time",
-    description: "mindaxis tas managemet make on time",
-    assignedTo: 1,
-    assignedToName: "Pallavi Tattapure",
-    assignedBy: 1,
-    assignedByName: "Admin",
-    priorityId: 2,
-    priorityName: "Medium",
-    taskStatusId: 1,
-    taskStatusName: "Pending",
-    startDate: "2026-11-16",
-    dueDate: "2026-11-18",
-    createdBy: 1,
-    isCompleted: false,
-    isDeleted: false,
-  },
-  {
-    taskId: 102,
-    companyId: 1,
-    taskTitle: "Verify Pending Customer Records",
-    description: "Verify Pending Customer Records",
-    assignedTo: 1,
-    assignedToName: "Pallavi Tattapure",
-    assignedBy: 1,
-    assignedByName: "Admin",
-    priorityId: 2,
-    priorityName: "Medium",
-    taskStatusId: 1,
-    taskStatusName: "Pending",
-    startDate: "2026-11-16",
-    dueDate: "2026-11-21",
-    createdBy: 1,
-    isCompleted: false,
-    isDeleted: false,
-  },
-];
-
 // ==========================================
 // Task CRUD operations
 // ==========================================
 export const getAllTasks = async (filters?: TaskFilterParams): Promise<TaskItem[]> => {
   let backendTasks: TaskItem[] = [];
+
+  const deletedData = getDeletedTaskIdentifiers();
+  const deletedIdSet = new Set(deletedData.ids);
+  const deletedTitleSet = new Set(deletedData.titles.map((t) => t.toLowerCase().trim()));
+
+  const isTaskDeleted = (id: number, title?: string): boolean => {
+    if (deletedIdSet.has(id)) return true;
+    if (title && deletedTitleSet.has(title.toLowerCase().trim())) return true;
+    return false;
+  };
 
   try {
     const url = API_ENDPOINTS.Task || `${API_ENDPOINTS.BaseUrl}/Task`;
@@ -224,60 +214,52 @@ export const getAllTasks = async (filters?: TaskFilterParams): Promise<TaskItem[
       : [];
 
     if (rawList.length > 0) {
-      backendTasks = rawList.map((t: any) => {
-        const id = Number(t.taskId ?? t.id ?? 0);
-        return {
-          taskId: id,
-          companyId: Number(t.companyId ?? 0),
-          taskTitle: String(t.taskTitle ?? t.title ?? `Task #${id}`),
-          description: t.description || "",
-          assignedTo: Number(t.assignedTo ?? 0),
-          assignedToName: t.assignedToName || t.assignedToEmployeeName || undefined,
-          assignedBy: Number(t.assignedBy ?? 0),
-          assignedByName: t.assignedByName || t.assignedByEmployeeName || t.assignerName || undefined,
-          priorityId: Number(t.priorityId ?? 1),
-          taskStatusId: Number(t.taskStatusId ?? 1),
-          startDate: t.startDate ? String(t.startDate).split("T")[0] : new Date().toISOString().split("T")[0],
-          dueDate: t.dueDate ? String(t.dueDate).split("T")[0] : new Date().toISOString().split("T")[0],
-          completionDate: t.completionDate ? String(t.completionDate).split("T")[0] : undefined,
-          reminderId: t.reminderId ? Number(t.reminderId) : undefined,
-          remarks: t.remarks || "",
-          createdBy: Number(t.createdBy ?? 0),
-          createdDate: t.createdDate ? String(t.createdDate).split("T")[0] : undefined,
-          isCompleted: Boolean(t.isCompleted || t.taskStatusId === 4),
-          isDeleted: Boolean(t.isDeleted),
-        };
-      });
+      backendTasks = rawList
+        .map((t: any) => {
+          const id = Number(t.taskId ?? t.id ?? 0);
+          return {
+            taskId: id,
+            companyId: Number(t.companyId ?? 0),
+            taskTitle: String(t.taskTitle ?? t.title ?? `Task #${id}`),
+            description: t.description || "",
+            assignedTo: Number(t.assignedTo ?? 0),
+            assignedToName: t.assignedToName || t.assignedToEmployeeName || undefined,
+            assignedBy: Number(t.assignedBy ?? 0),
+            assignedByName: t.assignedByName || t.assignedByEmployeeName || t.assignerName || undefined,
+            priorityId: Number(t.priorityId ?? 1),
+            taskStatusId: Number(t.taskStatusId ?? 1),
+            startDate: t.startDate ? String(t.startDate).split("T")[0] : new Date().toISOString().split("T")[0],
+            dueDate: t.dueDate ? String(t.dueDate).split("T")[0] : new Date().toISOString().split("T")[0],
+            completionDate: t.completionDate ? String(t.completionDate).split("T")[0] : undefined,
+            reminderId: t.reminderId ? Number(t.reminderId) : undefined,
+            remarks: t.remarks || "",
+            createdBy: Number(t.createdBy ?? 0),
+            createdDate: t.createdDate ? String(t.createdDate).split("T")[0] : undefined,
+            isCompleted: Boolean(t.isCompleted || t.taskStatusId === 4),
+            isDeleted: Boolean(t.isDeleted),
+          };
+        })
+        .filter((t) => !t.isDeleted && !isTaskDeleted(t.taskId, t.taskTitle));
     }
   } catch (error) {
     console.warn("getAllTasks: Backend fetch error, checking local store:", error);
   }
 
-  // Merge with locally stored tasks and known project tasks so all PCs and logins see all saved tasks
+  // Merge with locally stored tasks (excluding any that were deleted)
   const localTasks = safeGetTasks();
   const taskMap = new Map<string, TaskItem>();
 
   // 1. Add backend tasks first
   for (const t of backendTasks) {
-    if (!t.isDeleted) {
+    if (!t.isDeleted && !isTaskDeleted(t.taskId, t.taskTitle)) {
       const key = (t.taskTitle || "").toLowerCase().trim() || String(t.taskId);
       taskMap.set(key, t);
     }
   }
 
-  // 2. Add known project tasks (both records from user logins)
-  for (const t of KNOWN_PROJECT_TASKS) {
-    if (!t.isDeleted) {
-      const key = (t.taskTitle || "").toLowerCase().trim();
-      if (!taskMap.has(key)) {
-        taskMap.set(key, t);
-      }
-    }
-  }
-
-  // 3. Add local tasks
+  // 2. Add local tasks
   for (const t of localTasks) {
-    if (!t.isDeleted) {
+    if (!t.isDeleted && !isTaskDeleted(t.taskId, t.taskTitle)) {
       const key = (t.taskTitle || "").toLowerCase().trim() || String(t.taskId);
       if (!taskMap.has(key)) {
         taskMap.set(key, t);
@@ -296,42 +278,6 @@ export const getAllTasks = async (filters?: TaskFilterParams): Promise<TaskItem[
   }
 
   let items = Array.from(taskMap.values());
-
-  // Background sync unpersisted tasks to backend database so they stay saved in SQL Server permanently
-  try {
-    const unpersisted = items.filter(
-      (item) =>
-        (item.taskId > 1000000000 || item.taskId <= 1000) &&
-        !backendTasks.some(
-          (b) => (b.taskTitle || "").toLowerCase().trim() === (item.taskTitle || "").toLowerCase().trim()
-        )
-    );
-    if (unpersisted.length > 0) {
-      const url = API_ENDPOINTS.Task || `${API_ENDPOINTS.BaseUrl}/Task`;
-      Promise.allSettled(
-        unpersisted.map(async (taskToSync) => {
-          try {
-            await apiClient.post(url, {
-              taskId: 0,
-              companyId: Number(taskToSync.companyId) > 0 ? Number(taskToSync.companyId) : 1,
-              taskTitle: taskToSync.taskTitle.trim(),
-              description: taskToSync.description || taskToSync.taskTitle,
-              assignedTo: Number(taskToSync.assignedTo) > 0 ? Number(taskToSync.assignedTo) : 1,
-              assignedBy: Number(taskToSync.assignedBy) > 0 ? Number(taskToSync.assignedBy) : 1,
-              priorityId: Number(taskToSync.priorityId) > 0 ? Number(taskToSync.priorityId) : 1,
-              taskStatusId: Number(taskToSync.taskStatusId) > 0 ? Number(taskToSync.taskStatusId) : 1,
-              startDate: new Date(taskToSync.startDate || new Date()).toISOString(),
-              dueDate: new Date(taskToSync.dueDate || new Date()).toISOString(),
-              reminderId: null,
-              remarks: taskToSync.remarks || "",
-              createdBy: 1,
-              isDeleted: false,
-            });
-          } catch {}
-        })
-      ).catch(() => {});
-    }
-  } catch {}
 
   // Enrich with names
   try {
@@ -758,6 +704,75 @@ export const createTask = async (payload: TaskCreatePayload): Promise<TaskItem> 
   return savedTask;
 };
 
+export const updateTask = async (
+  taskId: number,
+  payload: Partial<TaskCreatePayload>
+): Promise<TaskItem | null> => {
+  let updatedTask: TaskItem | null = null;
+  const local = safeGetTasks();
+  const existingTask = local.find((t) => t.taskId === taskId);
+
+  try {
+    const url = `${API_ENDPOINTS.Task || `${API_ENDPOINTS.BaseUrl}/Task`}/${taskId}`;
+    const body = {
+      taskId: taskId,
+      companyId: payload.companyId ?? existingTask?.companyId ?? 1,
+      taskTitle: payload.taskTitle ?? existingTask?.taskTitle,
+      description: payload.description ?? existingTask?.description ?? "",
+      assignedTo: payload.assignedTo ?? existingTask?.assignedTo ?? 1,
+      assignedBy: payload.assignedBy ?? existingTask?.assignedBy ?? 1,
+      priorityId: payload.priorityId ?? existingTask?.priorityId ?? 1,
+      taskStatusId: payload.taskStatusId ?? existingTask?.taskStatusId ?? 1,
+      startDate: payload.startDate ?? existingTask?.startDate ?? new Date().toISOString(),
+      dueDate: payload.dueDate ?? existingTask?.dueDate ?? new Date().toISOString(),
+      remarks: payload.remarks ?? existingTask?.remarks ?? "",
+      createdBy: existingTask?.createdBy ?? 1,
+      updatedBy: 1,
+    };
+    await apiClient.put(url, body);
+  } catch (err) {
+    console.warn("updateTask: API error fallback handled:", err);
+  }
+
+  const updatedList = local.map((t) => {
+    if (t.taskId === taskId) {
+      updatedTask = {
+        ...t,
+        taskTitle: payload.taskTitle ?? t.taskTitle,
+        description: payload.description !== undefined ? payload.description : t.description,
+        assignedTo: payload.assignedTo ?? t.assignedTo,
+        assignedToName: payload.assignedToName ?? t.assignedToName,
+        assignedBy: payload.assignedBy ?? t.assignedBy,
+        assignedByName: payload.assignedByName ?? t.assignedByName,
+        companyId: payload.companyId ?? t.companyId,
+        companyName: payload.companyName ?? t.companyName,
+        priorityId: payload.priorityId ?? t.priorityId,
+        priorityName: payload.priorityName ?? t.priorityName,
+        taskStatusId: payload.taskStatusId ?? t.taskStatusId,
+        taskStatusName: payload.taskStatusName ?? t.taskStatusName,
+        dueDate: payload.dueDate ?? t.dueDate,
+        reminderDate: payload.reminderDate !== undefined ? payload.reminderDate : t.reminderDate,
+        reminderTime: payload.reminderTime !== undefined ? payload.reminderTime : t.reminderTime,
+        remarks: payload.remarks !== undefined ? payload.remarks : t.remarks,
+      };
+      return updatedTask;
+    }
+    return t;
+  });
+
+  safeSetTasks(updatedList);
+
+  if (updatedTask) {
+    addTaskActivity({
+      by: (updatedTask as TaskItem).assignedByName || "Admin",
+      text: `Updated task: ${(updatedTask as TaskItem).taskTitle}`,
+      customer: (updatedTask as TaskItem).companyName,
+    });
+  }
+
+  return updatedTask;
+};
+
 export const completeTask = async (taskId: number): Promise<boolean> => {
   try {
     const url = `${API_ENDPOINTS.Task || `${API_ENDPOINTS.BaseUrl}/Task`}/Complete/${taskId}`;
@@ -798,16 +813,36 @@ export const assignTask = async (taskId: number, payload: TaskAssignPayload): Pr
   return true;
 };
 
-export const deleteTask = async (taskId: number): Promise<boolean> => {
+export const deleteTask = async (taskId: number, taskTitle?: string): Promise<boolean> => {
+  const local = safeGetTasks();
+  const deletedTask = local.find((t) => t.taskId === taskId);
+  const resolvedTitle = taskTitle || deletedTask?.taskTitle;
+
+  // Mark task ID and Title permanently as deleted so it is NEVER restored
+  markTaskAsDeletedLocally(taskId, resolvedTitle);
+  safeSetTasks(local.filter((t) => t.taskId !== taskId));
+
   try {
     const url = `${API_ENDPOINTS.Task || `${API_ENDPOINTS.BaseUrl}/Task`}/${taskId}`;
     await apiClient.delete(url);
   } catch (err) {
     console.warn("deleteTask: API error fallback handled:", err);
+    try {
+      const fallbackUrl = `${API_ENDPOINTS.TaskAssignment || `${API_ENDPOINTS.BaseUrl}/TaskAssignment`}/${taskId}`;
+      await apiClient.delete(fallbackUrl);
+    } catch (e) {
+      console.warn("deleteTask: fallback delete error handled:", e);
+    }
   }
 
-  const local = safeGetTasks();
-  safeSetTasks(local.filter((t) => t.taskId !== taskId));
+  if (deletedTask || resolvedTitle) {
+    addTaskActivity({
+      by: "Admin",
+      text: `Deleted task: ${resolvedTitle || `Task #${taskId}`}`,
+      customer: deletedTask?.companyName,
+    });
+  }
+
   return true;
 };
 
@@ -832,10 +867,78 @@ export const getTaskSummaryStats = (tasks?: TaskItem[]): TaskSummaryStats => {
 
 const ACTIVITIES_STORAGE_KEY = "isquare_task_activities_v1";
 
+export const formatActivityTime = (
+  createdAt?: string,
+  id?: string | number,
+  fallbackTime?: string
+): string => {
+  let date: Date | null = null;
+
+  if (createdAt) {
+    const d = new Date(createdAt);
+    if (!isNaN(d.getTime())) {
+      date = d;
+    }
+  }
+
+  if (!date && id) {
+    const str = String(id);
+    const match = str.match(/\d{12,14}/);
+    if (match) {
+      const ts = Number(match[0]);
+      if (!isNaN(ts) && ts > 1600000000000) {
+        date = new Date(ts);
+      }
+    }
+  }
+
+  if (!date) {
+    return fallbackTime || "Just now";
+  }
+
+  const now = Date.now();
+  const diffMs = now - date.getTime();
+
+  if (diffMs < 60 * 1000 && diffMs >= 0) {
+    return "Just now";
+  }
+
+  const diffMinutes = Math.floor(Math.abs(diffMs) / (60 * 1000));
+  if (diffMinutes < 60) {
+    return `${Math.max(1, diffMinutes)} min${diffMinutes > 1 ? "s" : ""} ago`;
+  }
+
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) {
+    return `${diffHours} hr${diffHours > 1 ? "s" : ""} ago`;
+  }
+
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays === 1) {
+    const timeStr = date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    return `Yesterday at ${timeStr}`;
+  }
+
+  if (diffDays < 7) {
+    return `${diffDays} days ago`;
+  }
+
+  return date.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+};
+
 export const getTaskActivities = (): TaskActivityFeedItem[] => {
   try {
     const raw = localStorage.getItem(ACTIVITIES_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
+    if (!raw) return [];
+    const list: TaskActivityFeedItem[] = JSON.parse(raw);
+    return list.map((item) => ({
+      ...item,
+      time: formatActivityTime(item.createdAt, item.id, item.time),
+    }));
   } catch {
     return [];
   }
@@ -844,9 +947,11 @@ export const getTaskActivities = (): TaskActivityFeedItem[] => {
 export const addTaskActivity = (item: Omit<TaskActivityFeedItem, "id" | "time">): void => {
   try {
     const existing = getTaskActivities();
+    const nowIso = new Date().toISOString();
     const newEntry: TaskActivityFeedItem = {
       id: `act-${Date.now()}`,
       time: "Just now",
+      createdAt: nowIso,
       ...item,
     };
     const updated = [newEntry, ...existing];

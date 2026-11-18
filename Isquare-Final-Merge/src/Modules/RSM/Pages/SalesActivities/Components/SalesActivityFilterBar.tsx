@@ -50,20 +50,20 @@ export const SalesActivityFilterBar: React.FC<SalesActivityFilterBarProps> = ({
   ];
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 sm:gap-4">
-      {/* Search Input matching CustomerMaster */}
-      <div className="relative w-full md:w-96">
-        <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none" />
+    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.04)] p-4 md:p-5 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 sm:gap-4">
+      {/* Search Input matching EmployeeMaster */}
+      <div className="relative w-full md:w-80">
+        <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none" />
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Search by subject, customer, code, employee, notes..."
-          className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 focus:border-[#FF7900]"
+          className="w-full pl-9 pr-4 py-2 border border-slate-200 bg-slate-50 rounded-xl text-sm text-slate-700 shadow-sm outline-none transition focus:border-[#153E63] focus:bg-white"
         />
       </div>
 
-      {/* Filter Controls matching CustomerMaster */}
+      {/* Filter Controls matching EmployeeMaster */}
       <div className="flex flex-wrap items-center justify-between sm:justify-start gap-2.5 w-full md:w-auto">
         {/* Activity Type Dropdown */}
         <div className="min-w-[160px]">
@@ -79,18 +79,6 @@ export const SalesActivityFilterBar: React.FC<SalesActivityFilterBarProps> = ({
             minHeight="34px"
           />
         </div>
-        <select
-          value={selectedType}
-          onChange={(e) => onTypeChange(e.target.value as ActivityType | "All")}
-          className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 focus:border-[#FF7900]"
-        >
-          <option value="All">All Activity Types</option>
-          {activityTypes.map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
-          ))}
-        </select>
 
         {/* Customer Dropdown */}
         <div className="min-w-[170px] max-w-[220px]">
@@ -106,18 +94,6 @@ export const SalesActivityFilterBar: React.FC<SalesActivityFilterBarProps> = ({
             minHeight="34px"
           />
         </div>
-        <select
-          value={selectedCustomerId}
-          onChange={(e) => onCustomerChange(e.target.value)}
-          className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 focus:border-[#FF7900] max-w-[170px] truncate"
-        >
-          <option value="All">All Customers</option>
-          {customers.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
 
         {/* Status Pills matching CustomerMaster exactly */}
         <div className="flex items-center gap-1.5">
@@ -139,8 +115,8 @@ export const SalesActivityFilterBar: React.FC<SalesActivityFilterBarProps> = ({
                 onClick={() => onTabChange(st.id)}
                 className={`px-3 py-1 text-xs font-medium rounded-md transition-all text-center cursor-pointer ${
                   activeTab === st.id
-                    ? "bg-white text-[#FF7900] shadow-sm font-semibold"
-                    : "text-gray-500 hover:text-gray-900"
+                    ? "bg-white text-[#153E63] shadow-sm font-semibold"
+                    : "text-slate-600 hover:text-slate-900"
                 }`}
               >
                 {st.label}

@@ -6,6 +6,7 @@ import { useAuth } from "../../../../../hooks/useAuth";
 import { getAllCustomers } from "../../Customer/Services/CustomerService";
 import {
   createTask,
+  updateTask,
   getAllTaskStatuses,
   addTaskActivity,
 } from "../Services/TaskService";
@@ -19,7 +20,7 @@ import {
   type Employee,
 } from "../../../../HRMS/Pages/Employee/Services/EmployeeSerivce";
 import { getDirectors as getDirectorEmployees, getBdeUsers as getAllBdeUsers } from "../../Customer/Services/CustomerMasterDataService";
-import type { TaskCreatePayload, TaskStatusItem } from "../Types/TaskTypes";
+import type { TaskCreatePayload, TaskStatusItem, TaskItem } from "../Types/TaskTypes";
 
 interface AddTaskModalProps {
   isOpen: boolean;
@@ -28,6 +29,7 @@ interface AddTaskModalProps {
   initialCustomerId?: string;
   initialCustomerName?: string;
   isModal?: boolean;
+  taskToEdit?: TaskItem | null;
 }
 
 export interface EmployeeAssignee {
@@ -43,6 +45,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
   initialCustomerId,
   initialCustomerName: _initialCustomerName,
   isModal = false,
+  taskToEdit,
 }) => {
   const { user } = useAuth();
 
@@ -221,6 +224,45 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
               return exists ? prev : Number(statusList[0].taskStatusId || statusList[0].id || 1);
             });
           }
+
+          // Pre-populate if editing an existing task
+          if (taskToEdit) {
+            setTaskTitle(taskToEdit.taskTitle || "");
+            if (taskToEdit.assignedByName) {
+              const foundBy = assignorArr.find((a) => a.name.toLowerCase() === (taskToEdit.assignedByName || "").toLowerCase());
+              if (foundBy) {
+                setAssignedBy(`${foundBy.name} (${foundBy.designation})`);
+              } else {
+                setAssignedBy(taskToEdit.assignedByName);
+              }
+            }
+            if (taskToEdit.assignedToName) {
+              const foundTo = assigneeArr.find((a) => a.name.toLowerCase() === (taskToEdit.assignedToName || "").toLowerCase());
+              if (foundTo) {
+                setAssignedTo(`${foundTo.name} (${foundTo.designation})`);
+              } else {
+                setAssignedTo(taskToEdit.assignedToName);
+              }
+            }
+            if (taskToEdit.companyId) {
+              setCompanyId(taskToEdit.companyId);
+            }
+            if (taskToEdit.priorityId) {
+              setPriorityId(Number(taskToEdit.priorityId));
+            }
+            if (taskToEdit.taskStatusId) {
+              setTaskStatusId(Number(taskToEdit.taskStatusId));
+            }
+            if (taskToEdit.dueDate) {
+              setDueDate(taskToEdit.dueDate);
+            }
+            setDetails(taskToEdit.description || taskToEdit.remarks || "");
+            if (taskToEdit.reminderDate) {
+              setReminderDateTime(`${taskToEdit.reminderDate}T${taskToEdit.reminderTime || "10:00"}`);
+            } else {
+              setReminderDateTime("");
+            }
+          }
         } catch {
           toast.error("Failed to load task masters.");
         }
@@ -228,7 +270,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
 
       loadDropdowns();
     }
-  }, [isOpen, initialCustomerId, user]);
+  }, [isOpen, initialCustomerId, user, taskToEdit]);
 
   if (!isOpen) return null;
 
@@ -327,19 +369,22 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
         reminderRemarks: details.trim() || taskTitle.trim(),
       };
 
-      await createTask(payload);
-
-      addTaskActivity({
-        by: assignedBy,
-        text: `Created task: ${taskTitle.trim()}`,
-        customer: customerDisplayName || "General",
-      });
-
-      toast.success("Task assigned successfully!");
+      if (taskToEdit) {
+        await updateTask(taskToEdit.taskId, payload);
+        toast.success("Task updated successfully!");
+      } else {
+        await createTask(payload);
+        addTaskActivity({
+          by: assignedBy,
+          text: `Created task: ${taskTitle.trim()}`,
+          customer: customerDisplayName || "General",
+        });
+        toast.success("Task assigned successfully!");
+      }
       onSuccess();
       onClose();
     } catch {
-      toast.error("Failed to assign task. Please try again.");
+      toast.error(taskToEdit ? "Failed to update task. Please try again." : "Failed to assign task. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -358,7 +403,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
         <div className="flex items-center gap-2.5">
           <CheckSquare size={20} className="text-white" />
           <h2 className="text-base sm:text-lg font-bold tracking-tight text-white leading-tight">
-            Add New Task
+            {taskToEdit ? "Update Task" : "Add New Task"}
           </h2>
         </div>
         <button
@@ -366,7 +411,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
           onClick={onClose}
           disabled={isLoading}
           className="text-white/80 hover:text-white p-1.5 hover:bg-white/10 rounded-lg transition shrink-0 cursor-pointer"
-          title="Back to Tasks"
+          title={taskToEdit ? "Close" : "Back to Tasks"}
         >
           <X size={20} />
         </button>
@@ -534,14 +579,14 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
             ) : (
               <CheckSquare size={16} />
             )}
-            <span>Save Task</span>
+            <span>{taskToEdit ? "Update Task" : "Save Task"}</span>
           </button>
         </div>
       </form>
     </div>
   );
 
-  if (isModal) {
+  if (isModal || !!taskToEdit) {
     return (
       <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4 overflow-y-auto">
         <div className="w-full max-w-4xl my-auto animate-in fade-in zoom-in-95 duration-200">

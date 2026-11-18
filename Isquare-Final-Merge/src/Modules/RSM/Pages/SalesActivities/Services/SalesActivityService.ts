@@ -226,10 +226,20 @@ export const getStoredActivities = (): SalesActivity[] => {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {
         const cleaned = parsed.filter((p: any) => !isMockOrStaticItem(p));
-        if (cleaned.length !== parsed.length) {
-          saveActivities(cleaned);
+        // Strictly deduplicate by id or activityCode
+        const seen = new Set<string>();
+        const deduplicated: SalesActivity[] = [];
+        for (const item of cleaned) {
+          const key = String(item.activityCode || item.id || "").trim();
+          if (key && !seen.has(key.toLowerCase())) {
+            seen.add(key.toLowerCase());
+            deduplicated.push(item);
+          }
         }
-        return cleaned;
+        if (deduplicated.length !== parsed.length) {
+          saveActivities(deduplicated);
+        }
+        return deduplicated;
       }
     } catch {}
   }
@@ -344,6 +354,15 @@ export const getSalesActivities = async (
       }
     }
   } catch {}
+
+  // Strictly deduplicate by unique activityCode or id
+  const seenActKeys = new Set<string>();
+  items = items.filter((a) => {
+    const key = String(a.activityCode || a.id || "").trim().toLowerCase();
+    if (!key || seenActKeys.has(key)) return false;
+    seenActKeys.add(key);
+    return true;
+  });
 
   if (!filters) return items;
 
