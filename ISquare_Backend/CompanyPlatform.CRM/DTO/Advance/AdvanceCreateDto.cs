@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace CompanyPlatform.CRM.DTO.Advance
 {
@@ -15,6 +15,6 @@ namespace CompanyPlatform.CRM.DTO.Advance
         public DateTime RequestDate { get; set; }
 
         [MaxLength(500)]
-        public string Reason { get; set; }
+        public string Reason { get; set; } = string.Empty;
     }
 }

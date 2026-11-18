@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_TaskChecklist")]
     public class TaskChecklist
@@ -19,7 +19,7 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         [Required]
         public int TaskId { get; set; }
         [ForeignKey("TaskId")]
-        public virtual Tasks Task { get; set; }
+        public virtual Tasks Task { get; set; } = null!;
 
         [Required]
         public string ChecklistItem { get; set; } = string.Empty;

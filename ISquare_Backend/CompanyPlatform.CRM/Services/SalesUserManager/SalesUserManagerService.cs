@@ -1,4 +1,4 @@
-﻿using CompanyPlatform.Core.Repository;
+using CompanyPlatform.Core.Repository;
 using CompanyPlatform.CRM.DTO.SalesUserManager;
 using Microsoft.Extensions.Logging;
 
@@ -35,7 +35,7 @@ namespace CompanyPlatform.CRM.Services.SalesUserManager
                 });
         }
 
-        public async Task<SalesUserManagerDto> GetSalesUserManagerByIdAsync(int id)
+        public async Task<SalesUserManagerDto?> GetSalesUserManagerByIdAsync(int id)
         {
             _logger.LogInformation(
                 "Fetching Sales User Manager by ID: {Id}", id);

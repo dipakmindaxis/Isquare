@@ -1,4 +1,3 @@
-﻿using CompanyPlatform.Core.Models.CRM.Company;
 using CompanyPlatform.Core.Models.CRM.Employee;
 using System;
 using System.Collections.Generic;
@@ -10,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_EmployeeAsset")]
     public class EmployeeAsset
@@ -22,13 +21,13 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public int EmployeeID { get; set; }
 
         [ForeignKey(nameof(EmployeeID))]
-        public virtual Employee Employee { get; set; }
+        public virtual Employee.Employee Employee { get; set; } = null!;
 
         [Required]
         public int AssetID { get; set; }
 
         [ForeignKey(nameof(AssetID))]
-        public virtual AssetMaster Asset { get; set; }
+        public virtual AssetMaster Asset { get; set; } = null!;
 
         // Date when asset is assigned
         [Required]

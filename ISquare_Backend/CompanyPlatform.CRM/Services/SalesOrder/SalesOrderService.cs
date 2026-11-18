@@ -6,13 +6,13 @@ using CompanyPlatform.Core.Repository;
 using CompanyPlatform.CRM.DTO.Quotation;
 
 using SalesOrderModel =
-    CompanyPlatform.Core.Models.CRM.Company.SalesOrder;
+    CompanyPlatform.Core.Models.CRM.SalesOrder;
 using SalesOrderItemModel =
-    CompanyPlatform.Core.Models.CRM.Company.SalesOrderItem;
+    CompanyPlatform.Core.Models.CRM.SalesOrderItem;
 using QuotationModel =
-    CompanyPlatform.Core.Models.CRM.Company.Quotation;
+    CompanyPlatform.Core.Models.CRM.Quotation;
 using QuotationItemModel =
-    CompanyPlatform.Core.Models.CRM.Company.QuotationItem;
+    CompanyPlatform.Core.Models.CRM.QuotationItem;
 
 namespace CompanyPlatform.CRM.Services.SalesOrder
 {

@@ -12,12 +12,12 @@ namespace CompanyPlatform.CRM.Services.CompanyDocument
 {
     public class CompanyDocumentService : ICompanyDocumentService
     {
-        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.CompanyDocument> _repository;
+        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.CompanyDocument> _repository;
         private readonly IWebHostEnvironment _environment;
         private readonly ILogger<CompanyDocumentService> _logger;
 
         public CompanyDocumentService(
-            IRepositories<CompanyPlatform.Core.Models.CRM.Company.CompanyDocument> repository,
+            IRepositories<CompanyPlatform.Core.Models.CRM.CompanyDocument> repository,
             IWebHostEnvironment environment,
             ILogger<CompanyDocumentService> logger)
         {
@@ -50,7 +50,7 @@ namespace CompanyPlatform.CRM.Services.CompanyDocument
                 });
         }
 
-        public async Task<CompanyDocumentDto> GetCompanyDocumentByIdAsync(int id)
+        public async Task<CompanyDocumentDto?> GetCompanyDocumentByIdAsync(int id)
         {
             _logger.LogInformation("Fetching Company Document with ID : {DocumentId}", id);
 
@@ -102,7 +102,7 @@ namespace CompanyPlatform.CRM.Services.CompanyDocument
                 await dto.File.CopyToAsync(stream);
             }
 
-            var document = new CompanyPlatform.Core.Models.CRM.Company.CompanyDocument {
+            var document = new CompanyPlatform.Core.Models.CRM.CompanyDocument {
                 CompanyId = dto.CompanyId,
                 DocumentTypeId = dto.DocumentTypeId,
                 DocumentName = dto.DocumentName,

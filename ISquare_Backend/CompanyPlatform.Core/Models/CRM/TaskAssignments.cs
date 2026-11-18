@@ -1,4 +1,3 @@
-﻿using CompanyPlatform.Core.Models.CRM.Company;
 using CompanyPlatform.Core.Models.CRM.Employee;
 using System;
 using System.Collections.Generic;
@@ -10,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_TaskAssignments")]
     public class TaskAssignments
@@ -57,16 +56,16 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public virtual Tasks? Task { get; set; }
 
         [ForeignKey(nameof(AssignedTo))]
-        public virtual Employee? AssignedToEmployee { get; set; }
+        public virtual Employee.Employee? AssignedToEmployee { get; set; }
 
         [ForeignKey(nameof(AssignedBy))]
-        public virtual Employee? AssignedByEmployee { get; set; }
+        public virtual Employee.Employee? AssignedByEmployee { get; set; }
 
         [ForeignKey(nameof(CreatedBy))]
-        public virtual Employee? CreatedByEmployee { get; set; }
+        public virtual Employee.Employee? CreatedByEmployee { get; set; }
 
         [ForeignKey(nameof(UpdatedBy))]
-        public virtual Employee? UpdatedByEmployee { get; set; }
+        public virtual Employee.Employee? UpdatedByEmployee { get; set; }
     }
 }
 

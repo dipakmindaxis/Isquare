@@ -1,8 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using CompanyPlatform.CRM.DTO.Quotation;
 using CompanyPlatform.Core.Repository;
 using QuotationDefaultModel =
-    CompanyPlatform.Core.Models.CRM.Company.QuotationDefault;
+    CompanyPlatform.Core.Models.CRM.QuotationDefault;
 
 namespace CompanyPlatform.CRM.Services.Quotation
 {

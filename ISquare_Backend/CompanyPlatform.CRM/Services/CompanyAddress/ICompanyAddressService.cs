@@ -6,7 +6,7 @@ namespace CompanyPlatform.CRM.Services.CompanyAddress
     {
         Task<IEnumerable<CompanyAddressDto>> GetAllCompanyAddressesAsync();
 
-        Task<CompanyAddressDto> GetCompanyAddressByIdAsync(int id);
+        Task<CompanyAddressDto?> GetCompanyAddressByIdAsync(int id);
 
         Task<CompanyAddressDto> CreateCompanyAddressAsync(CompanyAddressDto dto);
 

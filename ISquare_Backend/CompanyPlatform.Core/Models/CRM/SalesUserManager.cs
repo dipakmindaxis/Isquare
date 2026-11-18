@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -11,10 +11,10 @@ namespace CompanyPlatform.Core.Models.CRM
         public int ID { get; set; }
 
         [Required]
-        public string UserName { get; set; }
+        public string UserName { get; set; } = string.Empty;
 
         [Required]
-        public string Code { get; set; }
+        public string Code { get; set; } = string.Empty;
 
         [DefaultValue(true)]
         public bool IsActive { get; set; }

@@ -1,6 +1,6 @@
-﻿using CompanyPlatform.Core.Data;
+using CompanyPlatform.Core.Data;
 using CompanyPlatform.Core.DTO.Meeting;
-using CompanyPlatform.Core.Models.CRM.Company;
+using CompanyPlatform.Core.Models.CRM;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 

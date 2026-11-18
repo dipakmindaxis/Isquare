@@ -1,4 +1,5 @@
-﻿using CompanyPlatform.Core.Models.CRM.Company;
+using CompanyPlatform.Core.Models.CRM;
+using Employee = CompanyPlatform.Core.Models.CRM.Employee.Employee;
 using CompanyPlatform.Core.Models.CRM.Employee;
 using Microsoft.AspNetCore.Identity; // <<< IMPORTANT: This using statement is required
 using System.ComponentModel.DataAnnotations.Schema;
@@ -15,7 +16,7 @@ namespace CompanyPlatform.Core.Models
 
         // This is the Navigation Property to establish the one-to-one relationship.
         // public virtual Employees Employee { get; set; }
-        public virtual Employee Employee { get; set; }
+        public virtual Employee Employee { get; set; } = null!;
 
         //public Employees Employee { get; set; }
     }

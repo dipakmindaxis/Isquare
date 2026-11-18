@@ -1,4 +1,4 @@
-﻿using CompanyPlatform.Core.Repository;
+using CompanyPlatform.Core.Repository;
 using CompanyPlatform.CRM.DTO.ContactTypes;
 using Microsoft.Extensions.Logging;
 
@@ -35,7 +35,7 @@ namespace CompanyPlatform.CRM.Services.ContactType
                 });
         }
 
-        public async Task<ContactTypeDto> GetContactTypeByIdAsync(int id)
+        public async Task<ContactTypeDto?> GetContactTypeByIdAsync(int id)
         {
             _logger.LogInformation(
                 "Fetching Contact Type by ID: {ContactTypeId}", id);

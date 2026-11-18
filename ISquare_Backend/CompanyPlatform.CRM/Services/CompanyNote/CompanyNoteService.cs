@@ -9,11 +9,11 @@ namespace CompanyPlatform.CRM.Services.CompanyNote
 {
     public class CompanyNoteService : ICompanyNoteService
     {
-        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.CompanyNote> _repository;
+        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.CompanyNote> _repository;
         private readonly ILogger<CompanyNoteService> _logger;
 
         public CompanyNoteService(
-            IRepositories<CompanyPlatform.Core.Models.CRM.Company.CompanyNote> repository,
+            IRepositories<CompanyPlatform.Core.Models.CRM.CompanyNote> repository,
             ILogger<CompanyNoteService> logger)
         {
             _repository = repository;
@@ -40,7 +40,7 @@ namespace CompanyPlatform.CRM.Services.CompanyNote
                 });
         }
 
-        public async Task<CompanyNoteDto> GetCompanyNoteByIdAsync(int id)
+        public async Task<CompanyNoteDto?> GetCompanyNoteByIdAsync(int id)
         {
             _logger.LogInformation("Fetching company note by ID: {NoteId}", id);
 
@@ -68,7 +68,7 @@ namespace CompanyPlatform.CRM.Services.CompanyNote
         {
             _logger.LogInformation("Creating a new company note.");
 
-            var newItem = new CompanyPlatform.Core.Models.CRM.Company.CompanyNote {
+            var newItem = new CompanyPlatform.Core.Models.CRM.CompanyNote {
                 CompanyId = dto.CompanyId,
                 UserId = dto.UserId,
                 Notes = dto.Notes,

@@ -1,4 +1,3 @@
-﻿using CompanyPlatform.Core.Models.CRM.Company;
 using CompanyPlatform.Core.Models.CRM.Employee;
 using System;
 using System.Collections.Generic;
@@ -10,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_CompanyNote")]
     public class CompanyNote
@@ -25,7 +24,7 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public int UserId { get; set; }
 
         [Required]
-        public string Notes { get; set; }
+        public string Notes { get; set; } = string.Empty;
 
         public DateTime CreatedDate { get; set; }
 
@@ -35,9 +34,9 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public bool IsDeleted { get; set; }
 
         [ForeignKey("CompanyId")]
-        public virtual Company Company { get; set; }
+        public virtual Company Company { get; set; } = null!;
 
         [ForeignKey("UserId")]
-        public virtual Employee User { get; set; }
+        public virtual Employee.Employee User { get; set; } = null!;
     }
 }

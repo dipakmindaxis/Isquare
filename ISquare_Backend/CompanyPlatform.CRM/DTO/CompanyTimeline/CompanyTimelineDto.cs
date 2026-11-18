@@ -16,10 +16,10 @@ namespace CompanyPlatform.CRM.DTO.CompanyTimeline
         public int? ReferenceId { get; set; }
 
         [Required(ErrorMessage = "User Id is required.")]
-        public string UserId { get; set; }
+        public string UserId { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Description is required.")]
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
 
         public DateTime CreatedDate { get; set; }
 

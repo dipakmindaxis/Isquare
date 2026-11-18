@@ -19,10 +19,10 @@ namespace CompanyPlatform.Core.Models.CRM.Call
         [Required]
         public int CallId { get; set; }
         [ForeignKey("CallId")]
-        public virtual Call Call { get; set; }
+        public virtual Call Call { get; set; } = null!;
 
         [Required]
-        public string Status { get; set; }
+        public string Status { get; set; } = string.Empty;
 
         public string? Remarks { get; set; }
 

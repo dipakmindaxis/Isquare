@@ -1,4 +1,4 @@
-﻿using CompanyPlatform.CRM.DTO.BDEUser;
+using CompanyPlatform.CRM.DTO.BDEUser;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -8,7 +8,7 @@ namespace CompanyPlatform.CRM.Services.BDEUser
     {
         Task<IEnumerable<BDEUserDto>> GetAllBDEUsersAsync();
 
-        Task<BDEUserDto> GetBDEUserByIdAsync(int id);
+        Task<BDEUserDto?> GetBDEUserByIdAsync(int id);
 
         Task<BDEUserDto> CreateBDEUserAsync(BDEUserDto dto);
 

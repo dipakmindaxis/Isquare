@@ -105,5 +105,12 @@ namespace CompanyPlatform.CRM.DTO.Employee
         public string? UserId { get; set; }
         public DateTime? DateOfLeaving { get; set; }
         public bool IsActive { get; set; } = true;
+
+        [DataType(DataType.Password)]
+        public string? Password { get; set; }
+
+        [DataType(DataType.Password)]
+        [Compare("Password", ErrorMessage = "Password and Confirm Password do not match.")]
+        public string? ConfirmPassword { get; set; }
     }
 }

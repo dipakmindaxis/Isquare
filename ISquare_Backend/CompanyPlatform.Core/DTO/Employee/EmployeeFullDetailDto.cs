@@ -1,4 +1,4 @@
-﻿using CompanyPlatform.Core.DTO.EmployeePFDetails;
+using CompanyPlatform.Core.DTO.EmployeePFDetails;
 using CompanyPlatform.Core.DTO.EmployeeTDSDetails;
 
 namespace CompanyPlatform.Core.DTO.Employee
@@ -6,21 +6,21 @@ namespace CompanyPlatform.Core.DTO.Employee
     // A simple DTO for the nested statutory details
     public class ViewStatutoryDetailsDto
     {
-        public string AadhaarNumber { get; set; }
-        public string PANNumber { get; set; }
+        public string AadhaarNumber { get; set; } = string.Empty;
+        public string PANNumber { get; set; } = string.Empty;
         public string? PassportNumber { get; set; }
-        public string UANNo { get; set; }
-        public string PFNo { get; set; }
-        public string ESINo { get; set; }
+        public string UANNo { get; set; } = string.Empty;
+        public string PFNo { get; set; } = string.Empty;
+        public string ESINo { get; set; } = string.Empty;
     }
 
     // A simple DTO for the nested bank details
     public class ViewBankDetailsDto
     {
-        public string AccountHolderName { get; set; }
-        public string BankName { get; set; }
-        public string AccountNumber { get; set; }
-        public string IFSCCode { get; set; }
+        public string AccountHolderName { get; set; } = string.Empty;
+        public string BankName { get; set; } = string.Empty;
+        public string AccountNumber { get; set; } = string.Empty;
+        public string IFSCCode { get; set; } = string.Empty;
         public string? SwiftCode { get; set; }
         public string? IBANNo { get; set; }
         public string? BankAddress { get; set; }
@@ -31,8 +31,8 @@ namespace CompanyPlatform.Core.DTO.Employee
     public class ViewDocumentDto
     {
         public int Id { get; set; }
-        public string DocumentName { get; set; }
-        public string FilePath { get; set; }
+        public string DocumentName { get; set; } = string.Empty;
+        public string FilePath { get; set; } = string.Empty;
         public DateTime UploadedDate { get; set; }
     }
 
@@ -40,25 +40,25 @@ namespace CompanyPlatform.Core.DTO.Employee
     public class EmployeeFullDetailDto
     {
         public int ID { get; set; }
-        public string EmployeeCode { get; set; }
-        public string FirstName { get; set; }
+        public string EmployeeCode { get; set; } = string.Empty;
+        public string FirstName { get; set; } = string.Empty;
         public string? MiddleName { get; set; }
-        public string LastName { get; set; }
-        public string EmailAddress { get; set; }
+        public string LastName { get; set; } = string.Empty;
+        public string EmailAddress { get; set; } = string.Empty;
 
         public string? GoogleCalendarId { get; set; }
-        public string MobileNumber { get; set; }
+        public string MobileNumber { get; set; } = string.Empty;
         public DateTime? DateOfBirth { get; set; }
         public DateTime? DateOfJoining { get; set; }
 
-        public string Role { get; set; }
-        public string Gender { get; set; }
-        public string WorkLocationName { get; set; }
-        public string DepartmentName { get; set; }
-        public string DesignationName { get; set; }
+        public string Role { get; set; } = string.Empty;
+        public string Gender { get; set; } = string.Empty;
+        public string WorkLocationName { get; set; } = string.Empty;
+        public string DepartmentName { get; set; } = string.Empty;
+        public string DesignationName { get; set; } = string.Empty;
 
         public int? LevelID { get; set; }
-        public string LevelName { get; set; }
+        public string LevelName { get; set; } = string.Empty;
         public string? ReportingToName { get; set; }
 
         public string? CurFlatNo { get; set; }
@@ -92,8 +92,8 @@ namespace CompanyPlatform.Core.DTO.Employee
         public string? CompanyName { get; set; }
         public string? PhotoPath { get; set; }
 
-        public ViewStatutoryDetailsDto StatutoryDetails { get; set; }
-        public ViewBankDetailsDto BankDetails { get; set; }
+        public ViewStatutoryDetailsDto? StatutoryDetails { get; set; }
+        public ViewBankDetailsDto? BankDetails { get; set; }
         public List<ViewDocumentDto> Documents { get; set; } = new();
         public ViewPFDetailsDto? PFDetails { get; set; }
         public ViewTDSDetailsDto? TDSDetails { get; set; }
@@ -104,16 +104,16 @@ namespace CompanyPlatform.Core.DTO.Employee
 
     public class QualificationResponseDto
     {
-        public string Degree { get; set; }
-        public string University { get; set; }
-        public string PassingYear { get; set; }
+        public string Degree { get; set; } = string.Empty;
+        public string University { get; set; } = string.Empty;
+        public string PassingYear { get; set; } = string.Empty;
         public decimal Percentage { get; set; }
     }
 
     public class ExperienceResponseDto
     {
-        public string CompanyName { get; set; }
-        public string Designation { get; set; }
+        public string CompanyName { get; set; } = string.Empty;
+        public string Designation { get; set; } = string.Empty;
         public DateTime? FromDate { get; set; }
         public DateTime? ToDate { get; set; }
         public string? Location { get; set; }

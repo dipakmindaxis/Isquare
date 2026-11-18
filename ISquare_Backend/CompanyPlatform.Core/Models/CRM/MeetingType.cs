@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_MeetingType")]
     public class MeetingType
@@ -17,7 +17,7 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public int ID { get; set; }
 
         [Required]
-        public string MeetingTypeName { get; set; }
+        public string MeetingTypeName { get; set; } = string.Empty;
 
         [DefaultValue(true)]
         public bool IsActive { get; set; }

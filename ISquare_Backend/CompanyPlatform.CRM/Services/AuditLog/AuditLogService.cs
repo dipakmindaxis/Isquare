@@ -1,4 +1,5 @@
-﻿using CompanyPlatform.Core.Models.CRM.Company;
+using CompanyPlatform.Core.Models.CRM;
+using Employee = CompanyPlatform.Core.Models.CRM.Employee.Employee;
 using CompanyPlatform.Core.Data;
 using CompanyPlatform.CRM.DTO;
 using CompanyPlatform.CRM.DTO.AuditLog;

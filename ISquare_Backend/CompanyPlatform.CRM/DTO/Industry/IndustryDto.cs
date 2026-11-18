@@ -9,9 +9,9 @@ namespace CompanyPlatform.CRM.DTO.Industry
         public int IndustryId { get; set; }
 
         [Required]
-        public string IndustryName { get; set; }
+        public string IndustryName { get; set; } = string.Empty;
 
-        public string IndustryCode { get; set; }
+        public string IndustryCode { get; set; } = string.Empty;
 
         public bool IsActive { get; set; }
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_OnboardingChecklistMaster")]
     public class OnboardingChecklistMaster
@@ -18,7 +18,7 @@ namespace CompanyPlatform.Core.Models.CRM.Company
 
         [Required]
         [MaxLength(150)]
-        public string ChecklistName { get; set; }
+        public string ChecklistName { get; set; } = string.Empty;
 
         [MaxLength(500)]
         public string? Description { get; set; }

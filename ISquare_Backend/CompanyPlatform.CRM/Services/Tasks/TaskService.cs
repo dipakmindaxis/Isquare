@@ -1,4 +1,5 @@
-﻿using CompanyPlatform.Core.Models.CRM.Company;
+using CompanyPlatform.Core.Models.CRM;
+using Employee = CompanyPlatform.Core.Models.CRM.Employee.Employee;
 //using Microsoft.Extensions.Logging;
 //using CompanyPlatform.CRM.DTO.Tasks;
 //using CompanyPlatform.CRM.Repository;
@@ -299,35 +300,35 @@ using CompanyPlatform.CRM.DTO.Tasks;
 using CompanyPlatform.Core.Repository;
 
 using TasksEntity =
-    CompanyPlatform.Core.Models.CRM.Company.Tasks;
+    CompanyPlatform.Core.Models.CRM.Tasks;
 
 using TaskCommentEntity =
-    CompanyPlatform.Core.Models.CRM.Company.TaskComment;
+    CompanyPlatform.Core.Models.CRM.TaskComment;
 
 using TaskChecklistEntity =
-    CompanyPlatform.Core.Models.CRM.Company.TaskChecklist;
+    CompanyPlatform.Core.Models.CRM.TaskChecklist;
 
 namespace CompanyPlatform.CRM.Services.Tasks
 {
     public class TaskService : ITaskService
     {
         private readonly IRepositories<TasksEntity> _repository;
-        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.Company> _companyRepository;
-        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.Employee> _employeeRepository;
-        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.Priority> _priorityRepository;
-        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.TaskStatus> _taskStatusRepository;
-        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.Reminder> _reminderRepository;
+        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company> _companyRepository;
+        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Employee.Employee> _employeeRepository;
+        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Priority> _priorityRepository;
+        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.TaskStatus> _taskStatusRepository;
+        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Reminder> _reminderRepository;
         private readonly IRepositories<TaskCommentEntity> _taskCommentRepository;
         private readonly IRepositories<TaskChecklistEntity> _taskChecklistRepository;
         private readonly ILogger<TaskService> _logger;
 
         public TaskService(
             IRepositories<TasksEntity> repository,
-            IRepositories<CompanyPlatform.Core.Models.CRM.Company.Company> companyRepository,
-            IRepositories<CompanyPlatform.Core.Models.CRM.Company.Employee> employeeRepository,
-            IRepositories<CompanyPlatform.Core.Models.CRM.Company.Priority> priorityRepository,
-            IRepositories<CompanyPlatform.Core.Models.CRM.Company.TaskStatus> taskStatusRepository,
-            IRepositories<CompanyPlatform.Core.Models.CRM.Company.Reminder> reminderRepository,
+            IRepositories<CompanyPlatform.Core.Models.CRM.Company> companyRepository,
+            IRepositories<CompanyPlatform.Core.Models.CRM.Employee.Employee> employeeRepository,
+            IRepositories<CompanyPlatform.Core.Models.CRM.Priority> priorityRepository,
+            IRepositories<CompanyPlatform.Core.Models.CRM.TaskStatus> taskStatusRepository,
+            IRepositories<CompanyPlatform.Core.Models.CRM.Reminder> reminderRepository,
             IRepositories<TaskCommentEntity> taskCommentRepository,
             IRepositories<TaskChecklistEntity> taskChecklistRepository,
             ILogger<TaskService> logger)

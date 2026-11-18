@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using EmailTemplateEntity = CompanyPlatform.Core.Models.CRM.Company.EmailTemplate;
+using EmailTemplateEntity = CompanyPlatform.Core.Models.CRM.EmailTemplate;
 
 
 namespace CompanyPlatform.CRM.Services.EmailTemplate
@@ -37,7 +37,7 @@ namespace CompanyPlatform.CRM.Services.EmailTemplate
                 });
         }
 
-        public async Task<EmailTemplateDto> GetEmailTemplateByIdAsync(int id)
+        public async Task<EmailTemplateDto?> GetEmailTemplateByIdAsync(int id)
         {
             _logger.LogInformation("Fetching email template by ID: {EmailTemplateId}", id);
             var item = await _repository.GetByIdAsync(id);

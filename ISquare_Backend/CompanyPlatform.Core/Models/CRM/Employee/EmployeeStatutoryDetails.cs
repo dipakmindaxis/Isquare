@@ -1,4 +1,4 @@
-﻿using CompanyPlatform.Core.Models.CRM.Company;
+using CompanyPlatform.Core.Models.CRM;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -12,10 +12,10 @@ namespace CompanyPlatform.Core.Models.CRM.Employee
         public int ID { get; set; }
 
         [Required]
-        public string AadhaarNumber { get; set; }
+        public string AadhaarNumber { get; set; } = string.Empty;
 
         [Required]
-        public string PANNumber { get; set; }
+        public string PANNumber { get; set; } = string.Empty;
 
         public string? PassportNumber { get; set; }
 
@@ -34,7 +34,7 @@ namespace CompanyPlatform.Core.Models.CRM.Employee
 
         // Navigation Property
         [ForeignKey("EmployeeID")]
-        public virtual CompanyPlatform.Core.Models.CRM.Company.Employee Employee { get; set; }
+        public virtual CompanyPlatform.Core.Models.CRM.Employee.Employee Employee { get; set; } = null!;
 
 
         [DefaultValue(false)]

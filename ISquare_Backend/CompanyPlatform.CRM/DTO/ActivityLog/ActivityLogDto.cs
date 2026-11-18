@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace CompanyPlatform.CRM.DTO.ActivityLog
@@ -14,10 +14,10 @@ namespace CompanyPlatform.CRM.DTO.ActivityLog
         public int UserId { get; set; }
 
         [Required(ErrorMessage = "Activity Type is required.")]
-        public string ActivityType { get; set; }
+        public string ActivityType { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Description is required.")]
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
 
         public DateTime ActivityDate { get; set; }
 

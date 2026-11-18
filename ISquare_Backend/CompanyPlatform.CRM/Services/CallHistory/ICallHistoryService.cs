@@ -8,7 +8,7 @@ namespace CompanyPlatform.CRM.Services.CallHistory
     {
         Task<IEnumerable<CallHistoryDto>> GetAllCallHistoryAsync();
 
-        Task<CallHistoryDto> GetCallHistoryByIdAsync(int id);
+        Task<CallHistoryDto?> GetCallHistoryByIdAsync(int id);
 
         Task<CallHistoryDto> CreateCallHistoryAsync(CallHistoryDto dto);
 

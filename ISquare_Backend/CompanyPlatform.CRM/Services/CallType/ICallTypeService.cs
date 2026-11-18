@@ -6,7 +6,7 @@ namespace CompanyPlatform.CRM.Services.CallType
     {
         Task<IEnumerable<CallTypeDto>> GetAllCallTypesAsync();
 
-        Task<CallTypeDto> GetCallTypeByIdAsync(int id);
+        Task<CallTypeDto?> GetCallTypeByIdAsync(int id);
 
         Task<CallTypeDto> CreateCallTypeAsync(CallTypeDto dto);
 

@@ -1,9 +1,9 @@
-﻿namespace CompanyPlatform.CRM.DTO.TaxAndCompliance
+namespace CompanyPlatform.CRM.DTO.TaxAndCompliance
 {
     public class StatutoryRecordDto
     {
-        public string EmployeeName { get; set; }
-        public string EmployeeId { get; set; }
+        public string EmployeeName { get; set; } = string.Empty;
+        public string EmployeeId { get; set; } = string.Empty;
         public decimal PfWages { get; set; }
         public decimal PfContribution { get; set; }
         public decimal EsicWages { get; set; }
@@ -32,7 +32,7 @@
 
     public class ComplianceItemDetailsDto
     {
-        public string ComplianceType { get; set; }
+        public string ComplianceType { get; set; } = string.Empty;
         public DateTime? FiledDate { get; set; }
         public string? TransactionId { get; set; }
         public string? Notes { get; set; }

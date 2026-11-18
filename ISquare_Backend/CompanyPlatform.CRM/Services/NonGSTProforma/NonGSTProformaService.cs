@@ -9,8 +9,8 @@ using CompanyPlatform.Core.Repository;
 using CompanyPlatform.Core.Services.Email;
 using CompanyPlatform.CRM.DTO.NonGSTProforma;
 using PayrollManagementAPI.Services.Email;
-using NonGSTProformaEntity = CompanyPlatform.Core.Models.CRM.Company.NonGSTProforma;
-using NonGSTProformaItemEntity = CompanyPlatform.Core.Models.CRM.Company.NonGSTProformaItem;
+using NonGSTProformaEntity = CompanyPlatform.Core.Models.CRM.NonGSTProforma;
+using NonGSTProformaItemEntity = CompanyPlatform.Core.Models.CRM.NonGSTProformaItem;
 
 namespace CompanyPlatform.CRM.Services.NonGSTProforma
 {
@@ -18,7 +18,7 @@ namespace CompanyPlatform.CRM.Services.NonGSTProforma
     {
         private readonly IRepositories<NonGSTProformaEntity> _proformaRepository;
         private readonly IRepositories<NonGSTProformaItemEntity> _itemRepository;
-        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.Company> _companyRepository;
+        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company> _companyRepository;
         private readonly IEmailService _emailService;
         private readonly IOptions<SmtpSettings> _smtpSettings;
         private readonly ILogger<NonGSTProformaService> _logger;
@@ -26,7 +26,7 @@ namespace CompanyPlatform.CRM.Services.NonGSTProforma
         public NonGSTProformaService(
             IRepositories<NonGSTProformaEntity> proformaRepository,
             IRepositories<NonGSTProformaItemEntity> itemRepository,
-            IRepositories<CompanyPlatform.Core.Models.CRM.Company.Company> companyRepository,
+            IRepositories<CompanyPlatform.Core.Models.CRM.Company> companyRepository,
             IEmailService emailService,
             IOptions<SmtpSettings> smtpSettings,
             ILogger<NonGSTProformaService> logger)
@@ -166,7 +166,7 @@ namespace CompanyPlatform.CRM.Services.NonGSTProforma
                 throw new ArgumentException($"Company with ID {dto.CompanyId} does not exist or is inactive.");
             }
 
-            proforma.ProformaNo = dto.ProformaNo;
+            proforma.ProformaNo = dto.ProformaNo ?? proforma.ProformaNo;
             proforma.ProformaDate = dto.ProformaDate;
             proforma.CompanyId = dto.CompanyId;
             proforma.TotalAmount = dto.TotalAmount;

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 
 namespace CompanyPlatform.Core.Models
@@ -13,19 +13,19 @@ namespace CompanyPlatform.Core.Models
         public int EmployeeDeclarationDetailID { get; set; }
 
         [ForeignKey("EmployeeDeclarationDetailID")]
-        public virtual EmployeeDeclarationDetail EmployeeDeclarationDetail { get; set; }
+        public virtual EmployeeDeclarationDetail EmployeeDeclarationDetail { get; set; } = null!;
 
         [Required]
-        public string FileName { get; set; } 
+        public string FileName { get; set; } = string.Empty; 
 
         [Required]
-        public string StoredFileName { get; set; } 
+        public string StoredFileName { get; set; } = string.Empty; 
 
         [Required]
-        public string FilePath { get; set; } 
+        public string FilePath { get; set; } = string.Empty; 
 
         [Required]
-        public string ContentType { get; set; } 
+        public string ContentType { get; set; } = string.Empty; 
 
         public DateTime UploadedAt { get; set; } = DateTime.UtcNow;
     }

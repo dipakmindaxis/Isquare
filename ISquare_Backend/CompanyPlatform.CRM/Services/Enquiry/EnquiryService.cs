@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -10,8 +10,8 @@ using CompanyPlatform.Core.Repository;
 using CompanyPlatform.CRM.DTO.Enquiry;
 using CompanyPlatform.CRM.Services.Enquiry;
 
-using CompanyModel = CompanyPlatform.Core.Models.CRM.Company.Company;
-using EmployeeModel = CompanyPlatform.Core.Models.CRM.Company.Employee;
+using CompanyModel = CompanyPlatform.Core.Models.CRM.Company;
+using EmployeeModel = CompanyPlatform.Core.Models.CRM.Employee.Employee;
 using BDEUserModel = CompanyPlatform.Core.Models.CRM.BDEUser;
 using PaymentTermModel = CompanyPlatform.Core.Models.CRM.PaymentTerm.PaymentTerm;
 using CompanyPlatform.Core.Models;

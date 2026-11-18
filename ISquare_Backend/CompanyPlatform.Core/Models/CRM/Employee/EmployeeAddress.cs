@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
@@ -14,7 +14,7 @@ namespace CompanyPlatform.Core.Models.CRM.Employee
         [Key]
         public int ID { get; set; }
         public int EmployeeID { get; set; }
-        public string AddressType { get; set; } // "Current" or "Permanent"
+        public string AddressType { get; set; } = string.Empty; // "Current" or "Permanent"
 
         public string? FlatNo { get; set; }
         public string? PremisesName { get; set; }

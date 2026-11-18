@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
@@ -17,10 +17,10 @@ namespace CompanyPlatform.Core.Models.CRM.Employee
         public int EmployeeID { get; set; }
 
         [Required]
-        public string CompanyName { get; set; }
+        public string CompanyName { get; set; } = string.Empty;
 
         [Required]
-        public string Designation { get; set; }
+        public string Designation { get; set; } = string.Empty;
 
         public DateTime? FromDate { get; set; }
         public DateTime? ToDate { get; set; }

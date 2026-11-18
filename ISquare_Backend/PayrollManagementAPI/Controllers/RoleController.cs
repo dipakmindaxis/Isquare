@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using PayrollManagementAPI.DTO.Role;
@@ -41,7 +41,7 @@ namespace PayrollManagementAPI.Controllers
 
             var (result, roleDto) = await _roleService.CreateRoleAsync(createRoleDto);
 
-            if (result.Succeeded)
+            if (result.Succeeded && roleDto != null)
             {
                 return Ok(new { message = $"Role '{roleDto.Name}' created successfully.", role = roleDto });
             }

@@ -1,4 +1,3 @@
-﻿using CompanyPlatform.Core.Models.CRM.Company;
 using CompanyPlatform.Core.Models.CRM.Employee;
 using System;
 using System.Collections.Generic;
@@ -10,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_TaskReminderMapping")]
     public class TaskReminderMapping
@@ -21,12 +20,12 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         [Required]
         public int TaskId { get; set; }
         [ForeignKey("TaskId")]
-        public virtual Tasks Task { get; set; }
+        public virtual Tasks Task { get; set; } = null!;
 
         [Required]
         public int ReminderId { get; set; }
         [ForeignKey("ReminderId")]
-        public virtual Reminder Reminder { get; set; }
+        public virtual Reminder Reminder { get; set; } = null!;
 
         [Required]
         public DateTime ReminderDate { get; set; }
@@ -36,13 +35,13 @@ namespace CompanyPlatform.Core.Models.CRM.Company
 
         public int CreatedBy { get; set; }
         [ForeignKey("CreatedBy")]
-        public virtual Employee CreatedByEmployee { get; set; }
+        public virtual Employee.Employee CreatedByEmployee { get; set; } = null!;
 
         public DateTime CreatedDate { get; set; }
 
         public int? UpdatedBy { get; set; }
         [ForeignKey("UpdatedBy")]
-        public virtual Employee? UpdatedByEmployee { get; set; }
+        public virtual Employee.Employee? UpdatedByEmployee { get; set; }
 
         public DateTime? UpdatedDate { get; set; }
 

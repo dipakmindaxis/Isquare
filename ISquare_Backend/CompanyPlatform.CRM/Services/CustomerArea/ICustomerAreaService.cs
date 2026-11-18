@@ -1,4 +1,4 @@
-﻿using CompanyPlatform.CRM.DTO.CustomerArea;
+using CompanyPlatform.CRM.DTO.CustomerArea;
 
 namespace CompanyPlatform.CRM.Services.CustomerArea
 {
@@ -6,7 +6,7 @@ namespace CompanyPlatform.CRM.Services.CustomerArea
     {
         Task<IEnumerable<CustomerAreaDto>> GetAllCustomerAreasAsync();
 
-        Task<CustomerAreaDto> GetCustomerAreaByIdAsync(int id);
+        Task<CustomerAreaDto?> GetCustomerAreaByIdAsync(int id);
 
         Task<CustomerAreaDto> CreateCustomerAreaAsync(CustomerAreaDto customerAreaDto);
 

@@ -1,9 +1,9 @@
-﻿using CompanyPlatform.Core.Repository;
+using CompanyPlatform.Core.Repository;
 using CompanyPlatform.CRM.DTO.ActivityType;
 using Microsoft.Extensions.Logging;
 
 using ActivityTypeEntity =
-    CompanyPlatform.Core.Models.CRM.Company.ActivityType;
+    CompanyPlatform.Core.Models.CRM.ActivityType;
 
 namespace CompanyPlatform.CRM.Services.ActivityType
 {

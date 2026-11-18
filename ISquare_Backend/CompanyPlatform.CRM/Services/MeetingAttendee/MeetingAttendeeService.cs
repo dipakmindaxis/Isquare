@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using CompanyPlatform.Core.Data;using CompanyPlatform.Core.Controllers;
-using MeetingAttendeeModel = CompanyPlatform.Core.Models.CRM.Company.MeetingAttendee;
+using MeetingAttendeeModel = CompanyPlatform.Core.Models.CRM.MeetingAttendee;
 
 namespace CompanyPlatform.Core.Services
 {

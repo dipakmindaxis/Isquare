@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
 using CompanyPlatform.CRM.DTO.Industry;
 using CompanyPlatform.Core.Repository;
-using IndustryModel = CompanyPlatform.Core.Models.CRM.Company.Industry;
+using IndustryModel = CompanyPlatform.Core.Models.CRM.Industry;
 
 using System;
 using System.Collections.Generic;
@@ -84,7 +84,7 @@ namespace CompanyPlatform.CRM.Services.Industry
 
 
         // GET BY ID
-        public async Task<IndustryDto>
+        public async Task<IndustryDto?>
             GetIndustryByIdAsync(int id)
         {
             _logger.LogInformation(

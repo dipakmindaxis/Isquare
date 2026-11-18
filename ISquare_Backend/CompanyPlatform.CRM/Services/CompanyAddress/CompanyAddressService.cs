@@ -6,11 +6,11 @@ namespace CompanyPlatform.CRM.Services.CompanyAddress
 {
     public class CompanyAddressService : ICompanyAddressService
     {
-        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.CompanyAddress> _repository;
+        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.CompanyAddress> _repository;
         private readonly ILogger<CompanyAddressService> _logger;
 
         public CompanyAddressService(
-            IRepositories<CompanyPlatform.Core.Models.CRM.Company.CompanyAddress> repository,
+            IRepositories<CompanyPlatform.Core.Models.CRM.CompanyAddress> repository,
             ILogger<CompanyAddressService> logger)
         {
             _repository = repository;
@@ -44,7 +44,7 @@ namespace CompanyPlatform.CRM.Services.CompanyAddress
             });
         }
 
-        public async Task<CompanyAddressDto> GetCompanyAddressByIdAsync(int id)
+        public async Task<CompanyAddressDto?> GetCompanyAddressByIdAsync(int id)
         {
             _logger.LogInformation("Fetching company address by ID: {AddressId}", id);
 
@@ -81,7 +81,7 @@ namespace CompanyPlatform.CRM.Services.CompanyAddress
         {
             _logger.LogInformation("Creating company address.");
 
-            var entity = new CompanyPlatform.Core.Models.CRM.Company.CompanyAddress {
+            var entity = new CompanyPlatform.Core.Models.CRM.CompanyAddress {
                 CompanyId = dto.CompanyId,
                 AddressType = dto.AddressType,
                 Address = dto.Address,
@@ -92,7 +92,7 @@ namespace CompanyPlatform.CRM.Services.CompanyAddress
                 CountryId = dto.CountryId,
                 StateId = dto.StateId,
                 CityId = dto.CityId,
-                Pincode = dto.Pincode,
+                Pincode = dto.Pincode ?? string.Empty,
                 IsPrimary = dto.IsPrimary,
                 IsActive = dto.IsActive,
                 IsDeleted = false,
@@ -127,7 +127,7 @@ namespace CompanyPlatform.CRM.Services.CompanyAddress
             entity.CountryId = dto.CountryId;
             entity.StateId = dto.StateId;
             entity.CityId = dto.CityId;
-            entity.Pincode = dto.Pincode;
+            entity.Pincode = dto.Pincode ?? string.Empty;
             entity.IsPrimary = dto.IsPrimary;
             entity.IsActive = dto.IsActive;
 

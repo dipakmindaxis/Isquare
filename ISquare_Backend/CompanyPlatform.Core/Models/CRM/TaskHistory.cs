@@ -1,4 +1,3 @@
-﻿using CompanyPlatform.Core.Models.CRM.Company;
 using CompanyPlatform.Core.Models.CRM.Employee;
 using System;
 using System.Collections.Generic;
@@ -10,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_TaskHistory")]
     public class TaskHistory
@@ -21,7 +20,7 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         [Required]
         public int TaskId { get; set; }
         [ForeignKey("TaskId")]
-        public virtual Tasks Task { get; set; }
+        public virtual Tasks Task { get; set; } = null!;
 
         [Required]
         public string Activity { get; set; } = string.Empty;
@@ -30,7 +29,7 @@ namespace CompanyPlatform.Core.Models.CRM.Company
 
         public int PerformedBy { get; set; }
         [ForeignKey("PerformedBy")]
-        public virtual Employee PerformedByEmployee { get; set; }
+        public virtual Employee.Employee PerformedByEmployee { get; set; } = null!;
 
         public DateTime PerformedDate { get; set; }
 

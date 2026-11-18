@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_InvoicePayments")]
     public class InvoicePayment
@@ -23,7 +23,7 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public DateTime PaymentDate { get; set; }
 
         [Required]
-        public string PaymentMode { get; set; }
+        public string PaymentMode { get; set; } = string.Empty;
 
         public string? TransactionId { get; set; }
 
@@ -34,7 +34,7 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public decimal BalanceAmount { get; set; }
 
         [Required]
-        public string PaymentStatus { get; set; }
+        public string PaymentStatus { get; set; } = string.Empty;
 
         public string? Remarks { get; set; }
 

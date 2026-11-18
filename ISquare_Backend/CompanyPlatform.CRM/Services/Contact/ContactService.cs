@@ -1,8 +1,8 @@
-﻿using CompanyPlatform.Core.DTO.Contact;
+using CompanyPlatform.Core.DTO.Contact;
 using CompanyPlatform.Core.Repository;
 using CompanyPlatform.Core.Services;
 
-using ContactEntity =CompanyPlatform.Core.Models.CRM.Company.Contact;
+using ContactEntity =CompanyPlatform.Core.Models.CRM.Contact;
 
 namespace CompanyPlatform.Core.Services.Contact
 {

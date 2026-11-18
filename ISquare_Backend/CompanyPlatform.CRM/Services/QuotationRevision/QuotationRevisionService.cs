@@ -1,12 +1,12 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using CompanyPlatform.CRM.DTO.Quotation;
 using CompanyPlatform.Core.Repository;
 
 using QuotationRevisionModel =
-    CompanyPlatform.Core.Models.CRM.Company.QuotationRevision;
+    CompanyPlatform.Core.Models.CRM.QuotationRevision;
 
 using QuotationModel =
-    CompanyPlatform.Core.Models.CRM.Company.Quotation;
+    CompanyPlatform.Core.Models.CRM.Quotation;
 
 namespace CompanyPlatform.CRM.Services.Quotation
 {

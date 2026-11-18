@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 using CompanyPlatform.Core.DTO;
 using CompanyPlatform.Core.DTO.MeetingAttachment;
 using DocumentFormat.OpenXml.EMMA;
-using CompanyPlatform.Core.Models.CRM.Company;
+using CompanyPlatform.Core.Models.CRM;
 
 namespace CompanyPlatform.Core.Services.MeetingAttachment
 {

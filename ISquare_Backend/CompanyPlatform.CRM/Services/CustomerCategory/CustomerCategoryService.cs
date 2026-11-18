@@ -3,7 +3,7 @@ using CompanyPlatform.CRM.DTO.CompanyCategory;
 using Microsoft.Extensions.Logging;
 
 using CustomerCategoryModel =
-    CompanyPlatform.Core.Models.CRM.Company.CustomerCategory;
+    CompanyPlatform.Core.Models.CRM.CustomerCategory;
 
 namespace CompanyPlatform.CRM.Services.CustomerCategory
 {

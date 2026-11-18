@@ -1,6 +1,6 @@
 using CompanyPlatform.Core.DTO.Meeting;
-using CompanyPlatform.Core.Models.CRM.Company;
-using MeetingEntity = CompanyPlatform.Core.Models.CRM.Company.Meeting;
+using CompanyPlatform.Core.Models.CRM;
+using MeetingEntity = CompanyPlatform.Core.Models.CRM.Meeting;
 using CompanyPlatform.Core.Repository;
 
 

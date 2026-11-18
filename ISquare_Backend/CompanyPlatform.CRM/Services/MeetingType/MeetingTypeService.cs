@@ -6,8 +6,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using CompanyPlatform.Core.DTO.MeetingType;
 using DocumentFormat.OpenXml.EMMA;
-using CompanyPlatform.Core.Models.CRM.Company;
-using MeetingTypeEntity = CompanyPlatform.Core.Models.CRM.Company.MeetingType;
+using CompanyPlatform.Core.Models.CRM;
+using MeetingTypeEntity = CompanyPlatform.Core.Models.CRM.MeetingType;
 
 namespace CompanyPlatform.Core.Services.MeetingType
 {
@@ -40,7 +40,7 @@ namespace CompanyPlatform.Core.Services.MeetingType
                 });
         }
 
-        public async Task<MeetingTypeDto> GetMeetingTypeByIdAsync(int id)
+        public async Task<MeetingTypeDto?> GetMeetingTypeByIdAsync(int id)
         {
             _logger.LogInformation("Fetching meeting type by ID: {MeetingTypeId}", id);
 

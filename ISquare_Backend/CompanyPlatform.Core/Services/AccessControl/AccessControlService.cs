@@ -1,10 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using CompanyPlatform.Core.Data;
 using CompanyPlatform.Core.DTO.AccessControl;
 
 using AccessControlEntity =
- CompanyPlatform.Core.Models.CRM.Company.AccessControl;
+ CompanyPlatform.Core.Models.CRM.AccessControl;
 
 namespace CompanyPlatform.Core.Services.AccessControl
 {

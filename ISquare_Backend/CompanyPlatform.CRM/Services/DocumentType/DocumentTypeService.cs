@@ -6,11 +6,11 @@ namespace CompanyPlatform.CRM.Services.DocumentType
 {
     public class DocumentTypeService : IDocumentTypeService
     {
-        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.DocumentType> _repository;
+        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.DocumentType> _repository;
         private readonly ILogger<DocumentTypeService> _logger;
 
         public DocumentTypeService(
-            IRepositories<CompanyPlatform.Core.Models.CRM.Company.DocumentType> repository,
+            IRepositories<CompanyPlatform.Core.Models.CRM.DocumentType> repository,
             ILogger<DocumentTypeService> logger)
         {
             _repository = repository;
@@ -35,7 +35,7 @@ namespace CompanyPlatform.CRM.Services.DocumentType
                 });
         }
 
-        public async Task<DocumentTypeDto> GetDocumentTypeByIdAsync(int id)
+        public async Task<DocumentTypeDto?> GetDocumentTypeByIdAsync(int id)
         {
             _logger.LogInformation(
                 "Fetching Document Type by ID: {DocumentTypeId}", id);
@@ -67,7 +67,7 @@ namespace CompanyPlatform.CRM.Services.DocumentType
             _logger.LogInformation("Creating a new Document Type.");
 
             var newItem =
-                new CompanyPlatform.Core.Models.CRM.Company.DocumentType
+                new CompanyPlatform.Core.Models.CRM.DocumentType
                 {
                     DocumentName = dto.DocumentName,
                     Code = dto.Code,

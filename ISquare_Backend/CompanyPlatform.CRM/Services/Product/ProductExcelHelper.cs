@@ -14,7 +14,7 @@ namespace CompanyPlatform.CRM.Services.Product
             using var package = new ExcelPackage(stream);
 
             // Automatically scan all worksheets to find the one with product columns/data
-            ExcelWorksheet worksheet = null;
+            ExcelWorksheet? worksheet = null;
             int headerRow = 1;
             int maxScore = -1;
 

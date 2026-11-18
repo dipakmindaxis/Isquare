@@ -14,17 +14,17 @@ namespace CompanyPlatform.CRM.DTO.CompanyEmailsLog
         public int UserId { get; set; }
 
         [Required(ErrorMessage = "Subject is required.")]
-        public string Subject { get; set; }
+        public string Subject { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Body is required.")]
-        public string Body { get; set; }
+        public string Body { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "SentTo is required.")]
-        public string SentTo { get; set; }
+        public string SentTo { get; set; } = string.Empty;
 
         public DateTime SentDate { get; set; }
 
-        public string Status { get; set; }
+        public string Status { get; set; } = string.Empty;
 
         [DefaultValue(false)]
         public bool IsDeleted { get; set; }

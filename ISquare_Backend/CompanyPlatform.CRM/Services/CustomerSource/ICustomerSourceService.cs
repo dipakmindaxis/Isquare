@@ -1,4 +1,4 @@
-﻿using CompanyPlatform.CRM.DTO.CustomerSource;
+using CompanyPlatform.CRM.DTO.CustomerSource;
 
 namespace CompanyPlatform.CRM.Services.CustomerSource
 {
@@ -6,7 +6,7 @@ namespace CompanyPlatform.CRM.Services.CustomerSource
     {
         Task<IEnumerable<CustomerSourceDto>> GetAllCustomerSourcesAsync();
 
-        Task<CustomerSourceDto> GetCustomerSourceByIdAsync(int id);
+        Task<CustomerSourceDto?> GetCustomerSourceByIdAsync(int id);
 
         Task<CustomerSourceDto> CreateCustomerSourceAsync(CustomerSourceDto customerSourceDto);
 

@@ -1,17 +1,17 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 
 namespace CompanyPlatform.Core.DTO.Employee
 {
     public class EmployeeResponseDto
     {
         public int ID { get; set; }
-        public string EmployeeCode { get; set; }
-        public string FirstName { get; set; }
+        public string EmployeeCode { get; set; } = string.Empty;
+        public string FirstName { get; set; } = string.Empty;
         public string? MiddleName { get; set; }
-        public string LastName { get; set; }
-        public string EmailAddress { get; set; }
+        public string LastName { get; set; } = string.Empty;
+        public string EmailAddress { get; set; } = string.Empty;
         public string? Gender { get; set; }
-        public string MobileNumber { get; set; }
+        public string MobileNumber { get; set; } = string.Empty;
         public DateTime? DateOfJoining { get; set; }
         public DateTime? DateOfLeaving { get; set; }
         

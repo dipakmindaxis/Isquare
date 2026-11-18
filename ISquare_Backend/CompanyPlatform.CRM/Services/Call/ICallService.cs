@@ -1,4 +1,4 @@
-﻿using CompanyPlatform.CRM.DTO.Call;
+using CompanyPlatform.CRM.DTO.Call;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -8,7 +8,7 @@ namespace CompanyPlatform.CRM.Services.Call
     {
         Task<IEnumerable<CallDto>> GetAllCallsAsync();
 
-        Task<CallDto> GetCallByIdAsync(int id);
+        Task<CallDto?> GetCallByIdAsync(int id);
 
         Task<CallDto> CreateCallAsync(CallDto dto);
 

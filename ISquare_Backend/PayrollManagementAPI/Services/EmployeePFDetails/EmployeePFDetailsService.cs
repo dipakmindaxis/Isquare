@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using CompanyPlatform.Core.Data;
 using CompanyPlatform.Core.DTO.EmployeePFDetails;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
@@ -16,7 +16,7 @@ namespace CompanyPlatform.Core.Services.EmployeePFDetails
             _logger = logger;
         }
 
-        public async Task<ViewPFDetailsDto> GetByEmployeeIdAsync(int employeeId)
+        public async Task<ViewPFDetailsDto?> GetByEmployeeIdAsync(int employeeId)
         {
             var pfDetails = await _context.EmployeePFDetails
                 .FirstOrDefaultAsync(p => p.EmployeeID == employeeId && !p.IsDeleted);
@@ -34,13 +34,11 @@ namespace CompanyPlatform.Core.Services.EmployeePFDetails
 
         public async Task<ViewPFDetailsDto> UpsertAsync(UpsertPFDetailsDto dto)
         {
-            var isUpdate = false;
             var existingDetails = await _context.EmployeePFDetails
                 .FirstOrDefaultAsync(p => p.EmployeeID == dto.EmployeeID && !p.IsDeleted);
 
             if (existingDetails != null)
             {
-                isUpdate = true;
                 existingDetails.PFDeductionPercentage = dto.PFDeductionPercentage;
                 existingDetails.IsCappedAt15k = dto.IsCappedAt15k;
             }
@@ -61,7 +59,7 @@ namespace CompanyPlatform.Core.Services.EmployeePFDetails
 
        
 
-            return await GetByEmployeeIdAsync(dto.EmployeeID);
+            return (await GetByEmployeeIdAsync(dto.EmployeeID))!;
         }
     }
 }

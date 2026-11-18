@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
-using CompanyPlatform.Core.Models.CRM.Company;
-using InvoicePaymentEntity = CompanyPlatform.Core.Models.CRM.Company.InvoicePayment;
+using CompanyPlatform.Core.Models.CRM;
+using InvoicePaymentEntity = CompanyPlatform.Core.Models.CRM.InvoicePayment;
 using CompanyPlatform.Core.Repository;
 using CompanyPlatform.CRM.DTO.Invoice;
 
@@ -79,11 +79,11 @@ namespace CompanyPlatform.CRM.Services.InvoicePayment
             {
                 InvoiceId = dto.InvoiceId,
                 PaymentDate = dto.PaymentDate,
-                PaymentMode = dto.PaymentMode,
+                PaymentMode = dto.PaymentMode ?? string.Empty,
                 TransactionId = dto.TransactionId,
                 PaidAmount = dto.PaidAmount,
                 BalanceAmount = dto.BalanceAmount,
-                PaymentStatus = dto.PaymentStatus,
+                PaymentStatus = dto.PaymentStatus ?? string.Empty,
                 Remarks = dto.Remarks,
                 IsActive = true,
                 IsDeleted = false
@@ -114,11 +114,11 @@ namespace CompanyPlatform.CRM.Services.InvoicePayment
 
             payment.InvoiceId = dto.InvoiceId;
             payment.PaymentDate = dto.PaymentDate;
-            payment.PaymentMode = dto.PaymentMode;
+            payment.PaymentMode = dto.PaymentMode ?? string.Empty;
             payment.TransactionId = dto.TransactionId;
             payment.PaidAmount = dto.PaidAmount;
             payment.BalanceAmount = dto.BalanceAmount;
-            payment.PaymentStatus = dto.PaymentStatus;
+            payment.PaymentStatus = dto.PaymentStatus ?? string.Empty;
             payment.Remarks = dto.Remarks;
             payment.IsActive = dto.IsActive;
 

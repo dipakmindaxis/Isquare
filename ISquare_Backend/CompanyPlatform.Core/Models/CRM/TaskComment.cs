@@ -1,4 +1,3 @@
-﻿using CompanyPlatform.Core.Models.CRM.Company;
 using CompanyPlatform.Core.Models.CRM.Employee;
 using System;
 using System.Collections.Generic;
@@ -10,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_TaskComment")]
     public class TaskComment
@@ -21,7 +20,7 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         [Required]
         public int TaskId { get; set; }
         [ForeignKey("TaskId")]
-        public virtual Tasks Task { get; set; }
+        public virtual Tasks Task { get; set; } = null!;
 
         [Required]
         public string Comment { get; set; } = string.Empty;
@@ -29,7 +28,7 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         [Required]
         public int CommentedBy { get; set; }
         [ForeignKey("CommentedBy")]
-        public virtual Employee CommentedByEmployee { get; set; }
+        public virtual Employee.Employee CommentedByEmployee { get; set; } = null!;
 
         [Required]
         public DateTime CommentDate { get; set; }

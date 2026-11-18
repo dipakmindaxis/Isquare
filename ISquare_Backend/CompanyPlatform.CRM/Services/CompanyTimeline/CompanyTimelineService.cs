@@ -9,10 +9,10 @@ namespace CompanyPlatform.CRM.Services.CompanyTimeline
 {
     public class CompanyTimelineService : ICompanyTimelineService
     {
-        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.CompanyTimeline> _repository;
+        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.CompanyTimeline> _repository;
         private readonly ILogger<CompanyTimelineService> _logger;
 
-        public CompanyTimelineService(IRepositories<CompanyPlatform.Core.Models.CRM.Company.CompanyTimeline> repository, ILogger<CompanyTimelineService> logger)
+        public CompanyTimelineService(IRepositories<CompanyPlatform.Core.Models.CRM.CompanyTimeline> repository, ILogger<CompanyTimelineService> logger)
         {
             _repository = repository;
             _logger = logger;
@@ -38,7 +38,7 @@ namespace CompanyPlatform.CRM.Services.CompanyTimeline
                 });
         }
 
-        public async Task<CompanyTimelineDto> GetCompanyTimelineByIdAsync(int id)
+        public async Task<CompanyTimelineDto?> GetCompanyTimelineByIdAsync(int id)
         {
             _logger.LogInformation("Fetching company timeline by ID: {TimelineId}", id);
             var item = await _repository.GetByIdAsync(id);
@@ -65,7 +65,7 @@ namespace CompanyPlatform.CRM.Services.CompanyTimeline
         public async Task<CompanyTimelineDto> CreateCompanyTimelineAsync(CreateCompanyTimelineDto dto)
         {
             _logger.LogInformation("Creating a new company timeline with description: {Description}", dto.Description);
-            var newItem = new CompanyPlatform.Core.Models.CRM.Company.CompanyTimeline {
+            var newItem = new CompanyPlatform.Core.Models.CRM.CompanyTimeline {
                 CompanyId = dto.CompanyId,
                 ActivityTypeId = dto.ActivityTypeId,
                 ReferenceId = dto.ReferenceId,

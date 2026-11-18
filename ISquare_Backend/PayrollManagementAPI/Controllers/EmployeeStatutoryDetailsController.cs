@@ -1,8 +1,7 @@
-﻿using CompanyPlatform.Core.DTO.EmployeeStatutoryDetails;
+using CompanyPlatform.Core.DTO.EmployeeStatutoryDetails;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using CompanyPlatform.Core.DTO.EmployeeStatutoryDetails;
 using PayrollManagementAPI.Services.EmployeeStatutoryDetails;
 using System.Threading.Tasks;
 using CompanyPlatform.Core.Services.EmployeeStatutoryDetails;
@@ -21,6 +20,15 @@ namespace PayrollManagementAPI.Controllers
         {
             _service = service;
             _logger = logger;
+        }
+
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> GetAll()
+        {
+            _logger.LogInformation("API endpoint called: GetAll statutory details");
+            var result = await _service.GetAllAsync();
+            return Ok(result);
         }
 
         [HttpGet("by-employee/{employeeId}")]

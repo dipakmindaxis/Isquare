@@ -1,18 +1,17 @@
 using Microsoft.Extensions.Logging;
 using CompanyPlatform.CRM.DTO;
 using CompanyPlatform.Core.Models.CRM;
-using CompanyPlatform.Core.Models.CRM.Company;
 using CompanyPlatform.Core.Repository;
 
 namespace CompanyPlatform.CRM.Services.CompanyPhone
 {
     public class CompanyPhoneService : ICompanyPhoneService
     {
-        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.CompanyPhone> _repository;
+        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.CompanyPhone> _repository;
         private readonly ILogger<CompanyPhoneService> _logger;
 
         public CompanyPhoneService(
-            IRepositories<CompanyPlatform.Core.Models.CRM.Company.CompanyPhone> repository,
+            IRepositories<CompanyPlatform.Core.Models.CRM.CompanyPhone> repository,
             ILogger<CompanyPhoneService> logger)
         {
             _repository = repository;
@@ -38,7 +37,7 @@ namespace CompanyPlatform.CRM.Services.CompanyPhone
             });
         }
 
-        public async Task<CompanyPhoneDto> GetCompanyPhoneByIdAsync(int id)
+        public async Task<CompanyPhoneDto?> GetCompanyPhoneByIdAsync(int id)
         {
             _logger.LogInformation("Fetching company phone by ID: {PhoneId}", id);
 
@@ -67,7 +66,7 @@ namespace CompanyPlatform.CRM.Services.CompanyPhone
         {
             _logger.LogInformation("Creating company phone.");
 
-            var entity = new CompanyPlatform.Core.Models.CRM.Company.CompanyPhone {
+            var entity = new CompanyPlatform.Core.Models.CRM.CompanyPhone {
                 CompanyId = dto.CompanyId,
                 PhoneType = dto.PhoneType,
                 PhoneNumber = dto.PhoneNumber,

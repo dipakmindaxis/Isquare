@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_SalaryComponent")]
     public class SalaryComponent
@@ -18,11 +18,11 @@ namespace CompanyPlatform.Core.Models.CRM.Company
 
         [Required]
         [StringLength(100)]
-        public string ComponentName { get; set; }
+        public string ComponentName { get; set; } = string.Empty;
 
         [Required]
         [StringLength(50)]
-        public string ComponentType {  get; set; }  
+        public string ComponentType {  get; set; } = string.Empty;  
 
         public bool IsTaxable { get; set; }
 

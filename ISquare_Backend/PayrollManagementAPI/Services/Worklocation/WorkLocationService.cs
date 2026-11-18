@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using PayrollManagementAPI.DTO.WorkLocation;
 using CompanyPlatform.Core.Repository;
 using PayrollManagementAPI.Services.Worklocation;
@@ -40,7 +40,7 @@ namespace PayrollManagementAPI.Services.WorkLocation
                 });
         }
 
-        public async Task<WorkLocationDto> GetLocationByIdAsync(int id)
+        public async Task<WorkLocationDto?> GetLocationByIdAsync(int id)
         {
             _logger.LogInformation("Fetching work location by ID: {LocationId}", id);
             var location = await _repository.GetByIdAsync(id);

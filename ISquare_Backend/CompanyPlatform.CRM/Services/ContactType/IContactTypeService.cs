@@ -8,7 +8,7 @@ namespace CompanyPlatform.CRM.Services.ContactType
     {
         Task<IEnumerable<ContactTypeDto>> GetAllContactTypesAsync();
 
-        Task<ContactTypeDto> GetContactTypeByIdAsync(int id);
+        Task<ContactTypeDto?> GetContactTypeByIdAsync(int id);
 
         Task<ContactTypeDto> CreateContactTypeAsync(ContactTypeDto dto);
 

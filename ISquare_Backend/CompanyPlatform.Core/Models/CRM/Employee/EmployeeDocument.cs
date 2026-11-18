@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -15,10 +15,10 @@ namespace CompanyPlatform.Core.Models.CRM.Employee
         public int EmployeeID { get; set; }
 
         [Required]
-        public string DocumentName { get; set; }
+        public string DocumentName { get; set; } = string.Empty;
 
         [Required]
-        public string FilePath { get; set; }
+        public string FilePath { get; set; } = string.Empty;
 
         [Required]
         public DateTime UploadedDate { get; set; }

@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using CompanyPlatform.Core.Models.CRM.Employee;
+using CompanyPlatform.Core.Models.CRM;
 using CompanyPlatform.Core.Models.HRMS;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM.Employee
 {
     [Table("tbl_Employee")]
     public class Employee
@@ -15,22 +15,22 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public int ID { get; set; }
 
         [Required]
-        public string EmployeeCode { get; set; }
+        public string EmployeeCode { get; set; } = string.Empty;
 
-        public string FirstName { get; set; }
+        public string FirstName { get; set; } = string.Empty;
 
         public string? MiddleName { get; set; }
 
-        public string LastName { get; set; }
+        public string LastName { get; set; } = string.Empty;
 
         public DateTime? DateOfBirth { get; set; }
 
         public string? Gender { get; set; }
 
-        public string MobileNumber { get; set; }
+        public string MobileNumber { get; set; } = string.Empty;
 
         [Required]
-        public string EmailAddress { get; set; }
+        public string EmailAddress { get; set; } = string.Empty;
 
         public string? PresentAddress { get; set; }
 
@@ -52,12 +52,12 @@ namespace CompanyPlatform.Core.Models.CRM.Company
 
         public string? UserId { get; set; }
 
-        public virtual WorkLocation WorkLocation { get; set; }
-        public virtual Department Department { get; set; }
-        public virtual Designation Designation { get; set; }
+        public virtual WorkLocation WorkLocation { get; set; } = null!;
+        public virtual Department Department { get; set; } = null!;
+        public virtual Designation Designation { get; set; } = null!;
 
         [ForeignKey("ReportingTo")]
-        public virtual Employee ReportingToManager { get; set; }
+        public virtual Employee ReportingToManager { get; set; } = null!;
 
         [ForeignKey("LevelID")]
         public virtual LevelMaster? Level { get; set; }

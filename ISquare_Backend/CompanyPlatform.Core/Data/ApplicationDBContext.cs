@@ -1,8 +1,7 @@
-﻿using CompanyPlatform.Core.Models;
+using CompanyPlatform.Core.Models;
 using CompanyPlatform.Core.Models.CRM;
 using CompanyPlatform.Core.Models.CRM.AddressType;
 using CompanyPlatform.Core.Models.CRM.Call;
-using CompanyPlatform.Core.Models.CRM.Company;
 using CompanyPlatform.Core.Models.CRM.CustomerArea;
 using CompanyPlatform.Core.Models.CRM.CustomerSource;
 using CompanyPlatform.Core.Models.CRM.Employee;
@@ -66,8 +65,8 @@ namespace CompanyPlatform.Core.Data
 
         //Deepak
 
-        public DbSet<CompanyPlatform.Core.Models.CRM.Company.Company> Companies { get; set; }
-        public DbSet<CompanyPlatform.Core.Models.CRM.Company.Company> Customers => Companies;
+        public DbSet<CompanyPlatform.Core.Models.CRM.Company> Companies { get; set; }
+        public DbSet<CompanyPlatform.Core.Models.CRM.Company> Customers => Companies;
         public DbSet<CustomerCategory> CustomerCategories { get; set; }
         public DbSet<CustomerTypes> Tbl_customerTypes { get; set; }
         public DbSet<ClientType> ClientTypes { get; set; }
@@ -104,7 +103,7 @@ namespace CompanyPlatform.Core.Data
         public DbSet<CallAttachment> CallAttachments { get; set; }
         // Employee
 
-        public DbSet<CompanyPlatform.Core.Models.CRM.Company.Employee> Tbl_Employee { get; set; }
+        public DbSet<CompanyPlatform.Core.Models.CRM.Employee.Employee> Tbl_Employee { get; set; }
 
 
         public DbSet<WorkLocation> WorkLocations { get; set; }
@@ -204,10 +203,10 @@ namespace CompanyPlatform.Core.Data
         { get; set; }
 
         // Task Module and Related Entities
-        //public DbSet<CompanyPlatform.Core.Models.CRM.Company.Company> Companies { get; set; }
+        //public DbSet<CompanyPlatform.Core.Models.CRM.Company> Companies { get; set; }
         public DbSet<Priority> Priorities { get; set; }
         //public DbSet<Reminder> Reminders { get; set; }
-        public DbSet<CompanyPlatform.Core.Models.CRM.Company.TaskStatus> TaskStatuses { get; set; }
+        public DbSet<CompanyPlatform.Core.Models.CRM.TaskStatus> TaskStatuses { get; set; }
         public DbSet<Tasks> Tasks { get; set; }
         public DbSet<TaskAssignment> TaskAssignment { get; set; }
         public DbSet<TaskAssignments> TaskAssignments { get; set; }
@@ -260,7 +259,7 @@ namespace CompanyPlatform.Core.Data
         {
             base.OnModelCreating(builder);
 
-            builder.Entity<CompanyPlatform.Core.Models.CRM.Company.Employee>()
+            builder.Entity<CompanyPlatform.Core.Models.CRM.Employee.Employee>()
                 .ToTable("tbl_Employee", tb => tb.HasTrigger("trg_tbl_Employee"));
 
 
@@ -467,30 +466,30 @@ namespace CompanyPlatform.Core.Data
                 .HasForeignKey(a => a.CreatedBy)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.Entity<CompanyPlatform.Core.Models.CRM.Company.Company>()
+            builder.Entity<CompanyPlatform.Core.Models.CRM.Company>()
                 .HasOne(c => c.Director)
                 .WithMany()
                 .HasForeignKey(c => c.DirectorId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            builder.Entity<CompanyPlatform.Core.Models.CRM.Company.Company>()
+            builder.Entity<CompanyPlatform.Core.Models.CRM.Company>()
                 .HasOne(c => c.SalesCoordinator)
                 .WithMany()
                 .HasForeignKey(c => c.SalesCoordinatorId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            builder.Entity<CompanyPlatform.Core.Models.CRM.Company.Company>()
+            builder.Entity<CompanyPlatform.Core.Models.CRM.Company>()
                 .HasOne(c => c.CustomerOwner)
                 .WithMany()
                 .HasForeignKey(c => c.CustomerOwnerId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            builder.Entity<CompanyPlatform.Core.Models.CRM.Company.Company>()
+            builder.Entity<CompanyPlatform.Core.Models.CRM.Company>()
                 .Property(c => c.CompanyCode)
                 .HasMaxLength(50)
                 .IsRequired();
 
-            builder.Entity<CompanyPlatform.Core.Models.CRM.Company.Company>()
+            builder.Entity<CompanyPlatform.Core.Models.CRM.Company>()
                 .HasIndex(c => c.CompanyCode)
                 .IsUnique()
                 .HasFilter("[IsDeleted] = 0");

@@ -1,4 +1,4 @@
-﻿using CompanyPlatform.Core.Repository;
+using CompanyPlatform.Core.Repository;
 using CompanyPlatform.CRM.DTO.BDEUser;
 using Microsoft.Extensions.Logging;
 
@@ -34,7 +34,7 @@ namespace CompanyPlatform.CRM.Services.BDEUser
                 });
         }
 
-        public async Task<BDEUserDto> GetBDEUserByIdAsync(int id)
+        public async Task<BDEUserDto?> GetBDEUserByIdAsync(int id)
         {
             var item = await _repository.GetByIdAsync(id);
 

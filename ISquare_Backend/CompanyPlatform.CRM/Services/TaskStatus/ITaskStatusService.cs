@@ -1,4 +1,4 @@
-﻿using CompanyPlatform.CRM.DTO.TaskStatus;
+using CompanyPlatform.CRM.DTO.TaskStatus;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -8,7 +8,7 @@ namespace CompanyPlatform.CRM.Services.TaskStatus
     {
         Task<IEnumerable<TaskStatusDto>> GetAllTaskStatusesAsync();
 
-        Task<TaskStatusDto> GetTaskStatusByIdAsync(int id);
+        Task<TaskStatusDto?> GetTaskStatusByIdAsync(int id);
 
         Task<TaskStatusDto> CreateTaskStatusAsync(TaskStatusDto dto);
 

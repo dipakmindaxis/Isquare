@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
@@ -12,7 +12,7 @@ namespace CompanyPlatform.CRM.DTO.CallHistory
         public int CallId { get; set; }
 
         [Required(ErrorMessage = "Status is required.")]
-        public string Status { get; set; }
+        public string Status { get; set; } = string.Empty;
 
         public string? Remarks { get; set; }
 

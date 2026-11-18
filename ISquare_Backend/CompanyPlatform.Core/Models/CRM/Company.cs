@@ -11,7 +11,7 @@ using CompanyPlatform.Core.Models.CRM.CustomerArea;
 using CompanyPlatform.Core.Models.CRM.CustomerSource;
 using CompanyPlatform.Core.Models.CRM.PaymentTerm;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_Company")]
     public class Company
@@ -23,10 +23,10 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public int? CompanyTypeId { get; set; }
         [Required]
         [MaxLength(50)]
-        public string CompanyCode { get; set; }
+        public string CompanyCode { get; set; } = string.Empty;
 
         [Required]
-        public string CompanyName { get; set; }
+        public string CompanyName { get; set; } = string.Empty;
 
         // Customer Basic Details
         public string? CustomerName { get; set; }
@@ -151,25 +151,25 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public virtual City? City { get; set; }
 
         [ForeignKey(nameof(DirectorId))]
-        public virtual Employee? Director { get; set; }
+        public virtual Employee.Employee? Director { get; set; }
 
         [ForeignKey(nameof(SalesCoordinatorId))]
-        public virtual Employee? SalesCoordinator { get; set; }
+        public virtual Employee.Employee? SalesCoordinator { get; set; }
 
         [ForeignKey(nameof(CustomerOwnerId))]
-        public virtual Employee? CustomerOwner { get; set; }
+        public virtual Employee.Employee? CustomerOwner { get; set; }
 
         [ForeignKey(nameof(SalesManagerId))]
-        public virtual Employee? SalesManager { get; set; }
+        public virtual Employee.Employee? SalesManager { get; set; }
 
         [ForeignKey(nameof(BDEUserId))]
-        public virtual Employee? BDEUser { get; set; }
+        public virtual Employee.Employee? BDEUser { get; set; }
 
         [ForeignKey(nameof(CreatedBy))]
-        public virtual Employee? CreatedByEmployee { get; set; }
+        public virtual Employee.Employee? CreatedByEmployee { get; set; }
 
         [ForeignKey(nameof(UpdatedBy))]
-        public virtual Employee? UpdatedByEmployee { get; set; }
+        public virtual Employee.Employee? UpdatedByEmployee { get; set; }
 
         public bool IsDeleted { get; set; } = false;
 

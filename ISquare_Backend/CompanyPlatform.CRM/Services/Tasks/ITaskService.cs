@@ -1,4 +1,4 @@
-﻿using CompanyPlatform.CRM.DTO.Tasks;
+using CompanyPlatform.CRM.DTO.Tasks;
 
 namespace CompanyPlatform.CRM.Services.Tasks
 {
@@ -6,7 +6,7 @@ namespace CompanyPlatform.CRM.Services.Tasks
     {
         Task<IEnumerable<TaskDto>> GetAllTasksAsync();
 
-        Task<TaskDto> GetTaskByIdAsync(int id);
+        Task<TaskDto?> GetTaskByIdAsync(int id);
 
         Task<TaskDto> CreateTaskAsync(TaskDto taskDto);
 

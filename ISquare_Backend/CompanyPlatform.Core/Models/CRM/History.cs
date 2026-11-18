@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_History")]
     public class History
@@ -23,13 +23,13 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public int UserId { get; set; }
 
         [Required]
-        public string RefType { get; set; }
+        public string RefType { get; set; } = string.Empty;
 
         [Required]
         public int RefId { get; set; }
 
         [Required]
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
 
         [Required]
         public DateTime ActivityDate { get; set; }

@@ -48,7 +48,7 @@ namespace CompanyPlatform.CRM.Services.CallAttachment
 
             var attachment = new CompanyPlatform.Core.Models.CRM.Call.CallAttachment {
                 CallId = dto.CallId,
-                DocumentName = dto.DocumentName,
+                DocumentName = dto.DocumentName ?? string.Empty,
                 FileName = fileName,
                 FilePath = Path.Combine("Uploads", "CallAttachments", fileName),
                 FileExtension = fileExtension,
@@ -132,7 +132,7 @@ namespace CompanyPlatform.CRM.Services.CallAttachment
                 return false;
 
             attachment.CallId = dto.CallId;
-            attachment.DocumentName = dto.DocumentName;
+            attachment.DocumentName = dto.DocumentName ?? string.Empty;
             attachment.UploadedBy = dto.UploadedBy;
 
             if (dto.File != null)

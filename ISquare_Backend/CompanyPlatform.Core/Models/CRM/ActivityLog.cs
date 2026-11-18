@@ -1,4 +1,3 @@
-﻿using CompanyPlatform.Core.Models.CRM.Company;
 using CompanyPlatform.Core.Models.CRM.Employee;
 using System;
 using System.Collections.Generic;
@@ -10,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_ActivityLog")]
     public class ActivityLog
@@ -25,10 +24,10 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public int UserId { get; set; }
 
         [Required]
-        public string ActivityType { get; set; }
+        public string ActivityType { get; set; } = string.Empty;
 
         [Required]
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
 
         [Required]
         public DateTime ActivityDate { get; set; }
@@ -37,9 +36,9 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public bool IsDeleted { get; set; }
 
         [ForeignKey("CompanyId")]
-        public virtual Company Company { get; set; }
+        public virtual Company Company { get; set; } = null!;
 
         [ForeignKey("UserId")]
-        public virtual Employee User { get; set; }
+        public virtual Employee.Employee User { get; set; } = null!;
     }
 }

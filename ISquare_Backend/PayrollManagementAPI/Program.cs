@@ -1,7 +1,7 @@
-﻿using CompanyPlatform.Core.Data;
+using CompanyPlatform.Core.Data;
 using CompanyPlatform.Core.Models;
 using CompanyPlatform.Core.Models.CRM;
-using CompanyPlatform.Core.Models.CRM.Company;
+using Employee = CompanyPlatform.Core.Models.CRM.Employee.Employee;
 using CompanyPlatform.Core.Models.CRM.Employee;
 using CompanyPlatform.Core.PriorityService;
 using CompanyPlatform.Core.Repository;
@@ -32,7 +32,6 @@ using CompanyPlatform.CRM.Services.CallAttachment;
 using CompanyPlatform.CRM.Services.CallHistory;
 using CompanyPlatform.CRM.Services.CallType;
 using CompanyPlatform.CRM.Services.ClientType;
-using CompanyPlatform.CRM.Services.Company;
 using CompanyPlatform.CRM.Services.CompanyAddress;
 using CompanyPlatform.CRM.Services.CompanyContact;
 using CompanyPlatform.CRM.Services.CompanyDocument;
@@ -112,7 +111,7 @@ using PayrollManagementAPI.Services.WorkLocation;
 using Swashbuckle.AspNetCore.Filters;
 using System.Text;
 using CompanyEmployee =
-    CompanyPlatform.Core.Models.CRM.Company.Employee;
+    CompanyPlatform.Core.Models.CRM.Employee.Employee;
 using CompanyPlatform.CRM.Services.Enquiry;
 var builder = WebApplication.CreateBuilder(args);
 ExcelPackage.License.SetNonCommercialOrganization("Gaxce Sensors");
@@ -180,7 +179,8 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
         ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
+            builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key is not configured.")))
     };
 
     options.Events = new JwtBearerEvents
@@ -275,7 +275,6 @@ builder.Services.AddScoped<INotificationLogsService, NotificationLogsService>();
 
 //Deepak 
 builder.Services.AddScoped<ICustomerService, CustomerService>();
-builder.Services.AddScoped<ICompanyService, CustomerService>();
 builder.Services.AddScoped<ICustomerStatusService, CustomerStatusService>();
 builder.Services.AddScoped<IIndustryService, IndustryService>();
 builder.Services.AddScoped<IClientTypeService, ClientTypeService>();

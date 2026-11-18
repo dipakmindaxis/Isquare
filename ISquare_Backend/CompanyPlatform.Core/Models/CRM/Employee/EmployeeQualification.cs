@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
@@ -6,7 +6,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using CompanyPlatform.Core.Models.CRM.Company;
+using CompanyPlatform.Core.Models.CRM;
 
 namespace CompanyPlatform.Core.Models.CRM.Employee
 {
@@ -18,13 +18,13 @@ namespace CompanyPlatform.Core.Models.CRM.Employee
         public int EmployeeID { get; set; }
 
         [Required]
-        public string Degree { get; set; } 
+        public string Degree { get; set; } = string.Empty; 
 
         [Required]
-        public string University { get; set; }
+        public string University { get; set; } = string.Empty;
 
         [Required]
-        public string PassingYear { get; set; }
+        public string PassingYear { get; set; } = string.Empty;
 
         [Column(TypeName = "decimal(5, 2)")]
 
@@ -35,7 +35,7 @@ namespace CompanyPlatform.Core.Models.CRM.Employee
 
         // [ForeignKey("EmployeeID")]
         [ForeignKey(nameof(EmployeeID))]
-        public virtual CompanyPlatform.Core.Models.CRM.Company.Employee Employee { get; set; }
+        public virtual CompanyPlatform.Core.Models.CRM.Employee.Employee Employee { get; set; } = null!;
     }
 }
 

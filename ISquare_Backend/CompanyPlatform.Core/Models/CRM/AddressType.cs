@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -13,10 +13,10 @@ namespace CompanyPlatform.Core.Models.CRM.AddressType
         public int AddressTypeId { get; set; }
 
         [Required]
-        public string AddressTypeName { get; set; }
+        public string AddressTypeName { get; set; } = string.Empty;
 
         [Required]
-        public string AddressTypeCode { get; set; }
+        public string AddressTypeCode { get; set; } = string.Empty;
 
         [DefaultValue(true)]
         public bool IsActive { get; set; }

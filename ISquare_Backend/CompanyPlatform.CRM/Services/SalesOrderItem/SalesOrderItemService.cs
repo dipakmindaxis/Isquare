@@ -1,12 +1,12 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using CompanyPlatform.CRM.DTO.Quotation;
 using CompanyPlatform.Core.Repository;
 
 using SalesOrderItemModel =
-    CompanyPlatform.Core.Models.CRM.Company.SalesOrderItem;
+    CompanyPlatform.Core.Models.CRM.SalesOrderItem;
 
 using SalesOrderModel =
-    CompanyPlatform.Core.Models.CRM.Company.SalesOrder;
+    CompanyPlatform.Core.Models.CRM.SalesOrder;
 
 namespace CompanyPlatform.CRM.Services.Quotation
 {

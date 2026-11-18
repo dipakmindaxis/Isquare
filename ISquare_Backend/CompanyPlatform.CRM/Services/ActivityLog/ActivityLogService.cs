@@ -1,9 +1,9 @@
-﻿using CompanyPlatform.Core.Repository;
+using CompanyPlatform.Core.Repository;
 using CompanyPlatform.CRM.DTO.ActivityLog;
 using Microsoft.Extensions.Logging;
 
 using ActivityLogEntity =
-    CompanyPlatform.Core.Models.CRM.Company.ActivityLog;
+    CompanyPlatform.Core.Models.CRM.ActivityLog;
 
 namespace CompanyPlatform.CRM.Services.ActivityLog
 {

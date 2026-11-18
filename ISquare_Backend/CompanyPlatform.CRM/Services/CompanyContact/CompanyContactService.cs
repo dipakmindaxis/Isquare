@@ -6,11 +6,11 @@ namespace CompanyPlatform.CRM.Services.CompanyContact
 {
     public class CompanyContactService : ICompanyContactService
     {
-        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.CompanyContact> _repository;
+        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.CompanyContact> _repository;
         private readonly ILogger<CompanyContactService> _logger;
 
         public CompanyContactService(
-            IRepositories<CompanyPlatform.Core.Models.CRM.Company.CompanyContact> repository,
+            IRepositories<CompanyPlatform.Core.Models.CRM.CompanyContact> repository,
             ILogger<CompanyContactService> logger)
         {
             _repository = repository;
@@ -39,7 +39,7 @@ namespace CompanyPlatform.CRM.Services.CompanyContact
             });
         }
 
-        public async Task<CompanyContactDto> GetCompanyContactByIdAsync(int id)
+        public async Task<CompanyContactDto?> GetCompanyContactByIdAsync(int id)
         {
             _logger.LogInformation("Fetching company contact by ID: {ContactId}", id);
 
@@ -72,7 +72,7 @@ namespace CompanyPlatform.CRM.Services.CompanyContact
         {
             _logger.LogInformation("Creating company contact: {ContactPerson}", dto.ContactPerson);
 
-            var entity = new CompanyPlatform.Core.Models.CRM.Company.CompanyContact {
+            var entity = new CompanyPlatform.Core.Models.CRM.CompanyContact {
                 CompanyId = dto.CompanyId,
                 ContactPerson = dto.ContactPerson,
                 DesignationId = dto.DesignationId,

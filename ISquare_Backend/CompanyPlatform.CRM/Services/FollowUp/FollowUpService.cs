@@ -1,8 +1,8 @@
 using Microsoft.Extensions.Logging;
 using CompanyPlatform.CRM.DTO.FollowUp;
 using CompanyPlatform.Core.Repository;
-using CompanyPlatform.Core.Models.CRM.Company;
-using FollowUpEntity = CompanyPlatform.Core.Models.CRM.Company.FollowUp;
+using CompanyPlatform.Core.Models.CRM;
+using FollowUpEntity = CompanyPlatform.Core.Models.CRM.FollowUp;
 namespace CompanyPlatform.CRM.Services.FollowUp
 {
     public class FollowUpService : IFollowUpService

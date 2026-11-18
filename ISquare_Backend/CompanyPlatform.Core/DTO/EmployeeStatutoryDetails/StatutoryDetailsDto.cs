@@ -1,12 +1,12 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 
 namespace CompanyPlatform.Core.DTO.EmployeeStatutoryDetails
 {
     public class StatutoryDetailsDto
     {
         public int ID { get; set; }
-        public string AadhaarNumber { get; set; }
-        public string PANNumber { get; set; }
+        public string AadhaarNumber { get; set; } = string.Empty;
+        public string PANNumber { get; set; } = string.Empty;
         public string? UANNo { get; set; }
         public string? PFNo { get; set; }
         public string? ESINo { get; set; }

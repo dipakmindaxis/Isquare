@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace PayrollManagementAPI.DTO.Role
 {
@@ -6,7 +6,7 @@ namespace PayrollManagementAPI.DTO.Role
         public class CreateRoleDto
         {
             [Required(ErrorMessage = "Role Name is required")]
-            public string Name { get; set; }
+            public string Name { get; set; } = string.Empty;
 
     }
 

@@ -1,7 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_CustomerStatus")]
     public class CustomerStatus
@@ -10,12 +10,12 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public int CustomerStatusId { get; set; }
 
         [Required]
-        public string StatusName { get; set; }
+        public string StatusName { get; set; } = string.Empty;
 
         public string? Description { get; set; }
 
         [Required]
-        public string StatusCode { get; set; }
+        public string StatusCode { get; set; } = string.Empty;
 
         public bool IsActive { get; set; } = true;
 

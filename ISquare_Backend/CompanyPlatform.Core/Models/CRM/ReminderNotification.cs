@@ -1,4 +1,3 @@
-﻿using CompanyPlatform.Core.Models.CRM.Company;
 using CompanyPlatform.Core.Models.CRM.Employee;
 using System;
 using System.Collections.Generic;
@@ -10,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_ReminderNotification")]
     public class ReminderNotification
@@ -23,12 +22,12 @@ namespace CompanyPlatform.Core.Models.CRM.Company
 
         // Email / SMS / WhatsApp
         [Required]
-        public string NotificationType { get; set; }
+        public string NotificationType { get; set; } = string.Empty;
 
         public DateTime NotificationDate { get; set; }
 
         [Required]
-        public string NotificationStatus { get; set; }
+        public string NotificationStatus { get; set; } = string.Empty;
 
         // Employee/User who sent notification
         public int SentBy { get; set; }
@@ -44,6 +43,6 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public virtual Reminder? Reminder { get; set; }
 
         [ForeignKey(nameof(SentBy))]
-        public virtual Employee? Employee { get; set; }
+        public virtual Employee.Employee? Employee { get; set; }
     }
 }

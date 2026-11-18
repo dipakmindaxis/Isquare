@@ -39,7 +39,7 @@ namespace CompanyPlatform.CRM.Services.CallHistory
                 });
         }
 
-        public async Task<CallHistoryDto> GetCallHistoryByIdAsync(int id)
+        public async Task<CallHistoryDto?> GetCallHistoryByIdAsync(int id)
         {
             _logger.LogInformation("Fetching Call History by ID: {HistoryId}", id);
 

@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_NonGSTProforma")]
     public class NonGSTProforma
@@ -17,7 +17,7 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public int NonGSTProformaId { get; set; }
 
         [Required]
-        public string ProformaNo { get; set; }
+        public string ProformaNo { get; set; } = string.Empty;
 
         [Required]
         public DateTime ProformaDate { get; set; }

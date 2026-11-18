@@ -1,4 +1,3 @@
-﻿using CompanyPlatform.Core.Models.CRM.Company;
 using CompanyPlatform.Core.Models.CRM.Employee;
 using System;
 using System.Collections.Generic;
@@ -10,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_TaskAttachment")]
     public class TaskAttachment
@@ -21,25 +20,25 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         [Required]
         public int TaskId { get; set; }
         [ForeignKey("TaskId")]
-        public virtual Tasks Task { get; set; }
+        public virtual Tasks Task { get; set; } = null!;
 
         [Required]
-        public string DocumentName { get; set; }
+        public string DocumentName { get; set; } = string.Empty;
 
         [Required]
-        public string FileName { get; set; }
+        public string FileName { get; set; } = string.Empty;
 
         [Required]
-        public string FilePath { get; set; }
+        public string FilePath { get; set; } = string.Empty;
 
         [Required]
-        public string FileExtension { get; set; }
+        public string FileExtension { get; set; } = string.Empty;
 
         public long FileSize { get; set; }
 
         public int UploadedBy { get; set; }
         [ForeignKey("UploadedBy")]
-        public virtual Employee UploadedByEmployee { get; set; }
+        public virtual Employee.Employee UploadedByEmployee { get; set; } = null!;
 
         public DateTime UploadedDate { get; set; }
 

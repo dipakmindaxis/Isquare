@@ -12,11 +12,11 @@ namespace CompanyPlatform.CRM.DTO
 
         [Required]
         [StringLength(30)]
-        public string AddressType { get; set; }
+        public string AddressType { get; set; } = string.Empty;
 
         [Required]
         [StringLength(500)]
-        public string Address { get; set; }
+        public string Address { get; set; } = string.Empty;
 
         [StringLength(150)]
         public string? LocationName { get; set; }

@@ -1,16 +1,16 @@
-﻿namespace CompanyPlatform.CRM.DTO.Attendance
+namespace CompanyPlatform.CRM.DTO.Attendance
 {
     public class AttendanceRecordDto
     {
-        public string EmployeeName { get; set; }
-        public string EmployeeId { get; set; }
-        public string Department { get; set; }
-        public string Plant { get; set; }
-        public InTimeDetails InTime { get; set; }
+        public string EmployeeName { get; set; } = string.Empty;
+        public string EmployeeId { get; set; } = string.Empty;
+        public string Department { get; set; } = string.Empty;
+        public string Plant { get; set; } = string.Empty;
+        public InTimeDetails InTime { get; set; } = new();
         public string? OutTime { get; set; }
         public string? TotalHours { get; set; }
-        public string Overtime { get; set; }
-        public string Status { get; set; }
+        public string Overtime { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
     }
 
     public class InTimeDetails

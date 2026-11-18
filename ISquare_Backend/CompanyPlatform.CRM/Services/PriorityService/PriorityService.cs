@@ -1,5 +1,5 @@
-﻿using CompanyPlatform.Core.DTO.PriorityMaster;
-using CompanyPlatform.Core.Models.CRM.Company;
+using CompanyPlatform.Core.DTO.PriorityMaster;
+using CompanyPlatform.Core.Models.CRM;
 using CompanyPlatform.Core.Repository;
 using CompanyPlatform.Core.Services;
 using Microsoft.Extensions.Logging;
@@ -32,7 +32,7 @@ namespace CompanyPlatform.Core.PriorityService
                     IsActive = p.IsActive
                 });
         }
-        public async Task<PriorityDto> GetPriorityByIdAsync(int id)
+        public async Task<PriorityDto?> GetPriorityByIdAsync(int id)
         {
             _logger.LogInformation("Fetching priority by ID: {PriorityId}", id);
 
@@ -41,6 +41,7 @@ namespace CompanyPlatform.Core.PriorityService
             if (item == null || item.IsActive == false)
             {
                 _logger.LogWarning("Priority with ID: {PriorityId} not found or is inactive.", id);
+                return null;
             }
 
             return new PriorityDto

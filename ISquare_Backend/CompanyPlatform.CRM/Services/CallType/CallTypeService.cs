@@ -31,7 +31,7 @@ namespace CompanyPlatform.CRM.Services.CallType
             });
         }
 
-        public async Task<CallTypeDto> GetCallTypeByIdAsync(int id)
+        public async Task<CallTypeDto?> GetCallTypeByIdAsync(int id)
         {
             _logger.LogInformation("Fetching call type by ID: {ID}", id);
 

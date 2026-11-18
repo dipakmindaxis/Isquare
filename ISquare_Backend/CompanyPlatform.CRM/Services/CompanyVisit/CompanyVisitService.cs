@@ -6,11 +6,11 @@ namespace CompanyPlatform.CRM.Services.CompanyVisit
 {
     public class CompanyVisitService : ICompanyVisitService
     {
-        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.Company.CompanyVisit> _repository;
+        private readonly IRepositories<CompanyPlatform.Core.Models.CRM.CompanyVisit> _repository;
         private readonly ILogger<CompanyVisitService> _logger;
 
         public CompanyVisitService(
-            IRepositories<CompanyPlatform.Core.Models.CRM.Company.CompanyVisit> repository,
+            IRepositories<CompanyPlatform.Core.Models.CRM.CompanyVisit> repository,
             ILogger<CompanyVisitService> logger)
         {
             _repository = repository;
@@ -44,7 +44,7 @@ namespace CompanyPlatform.CRM.Services.CompanyVisit
                 });
         }
 
-        public async Task<CompanyVisitDto> GetCompanyVisitByIdAsync(int id)
+        public async Task<CompanyVisitDto?> GetCompanyVisitByIdAsync(int id)
         {
             _logger.LogInformation("Fetching company visit by ID: {VisitId}", id);
 
@@ -79,7 +79,7 @@ namespace CompanyPlatform.CRM.Services.CompanyVisit
         {
             _logger.LogInformation("Creating company visit.");
 
-            var visit = new CompanyPlatform.Core.Models.CRM.Company.CompanyVisit {
+            var visit = new CompanyPlatform.Core.Models.CRM.CompanyVisit {
                 CompanyId = dto.CompanyId,
                 VisitTypeId = dto.VisitTypeId,
                 UserId = dto.UserId,

@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_CompanyEmail")]
     public class CompanyEmail
@@ -21,7 +21,7 @@ namespace CompanyPlatform.Core.Models.CRM.Company
 
         [Required]
         [MaxLength(150)]
-        public string Email { get; set; }
+        public string Email { get; set; } = string.Empty;
 
         [DefaultValue(false)]
         public bool IsPrimary { get; set; }
@@ -32,6 +32,6 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public bool IsDeleted { get; set; }
 
         [ForeignKey("CompanyId")]
-        public virtual Company Company { get; set; }
+        public virtual Company Company { get; set; } = null!;
     }
 }

@@ -1,4 +1,4 @@
-﻿using CompanyPlatform.Core.DTO.Meeting;
+using CompanyPlatform.Core.DTO.Meeting;
 using CompanyPlatform.Core.DTO.PriorityMaster;
 
 namespace CompanyPlatform.Core.Services
@@ -7,7 +7,7 @@ namespace CompanyPlatform.Core.Services
     {
         Task<IEnumerable<PriorityDto>> GetAllPrioritiesAsync();
 
-        Task<PriorityDto> GetPriorityByIdAsync(int id);
+        Task<PriorityDto?> GetPriorityByIdAsync(int id);
 
         Task<PriorityDto> CreatePriorityAsync(PriorityDto dto);
 

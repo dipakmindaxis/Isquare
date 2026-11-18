@@ -12,18 +12,18 @@ using CompanyPlatform.Core.Repository;
 using CompanyPlatform.Core.Models;
 using CompanyPlatform.Core.Models.CRM;
 
-using CompanyModel = CompanyPlatform.Core.Models.CRM.Company.Company;
-using CompanyAddressModel = CompanyPlatform.Core.Models.CRM.Company.CompanyAddress;
-using EmployeeModel = CompanyPlatform.Core.Models.CRM.Company.Employee;
+using CompanyModel = CompanyPlatform.Core.Models.CRM.Company;
+using CompanyAddressModel = CompanyPlatform.Core.Models.CRM.CompanyAddress;
+using EmployeeModel = CompanyPlatform.Core.Models.CRM.Employee.Employee;
 using BDEUserModel = CompanyPlatform.Core.Models.CRM.BDEUser;
-using IndustryModel = CompanyPlatform.Core.Models.CRM.Company.Industry;
-using CustomerStatusModel = CompanyPlatform.Core.Models.CRM.Company.CustomerStatus;
+using IndustryModel = CompanyPlatform.Core.Models.CRM.Industry;
+using CustomerStatusModel = CompanyPlatform.Core.Models.CRM.CustomerStatus;
 using CustomerSourceModel = CompanyPlatform.Core.Models.CRM.CustomerSource.CustomerSource;
 using CustomerAreaModel = CompanyPlatform.Core.Models.CRM.CustomerArea.CustomerArea;
 using PaymentTermModel = CompanyPlatform.Core.Models.CRM.PaymentTerm.PaymentTerm;
-using StateModel = CompanyPlatform.Core.Models.CRM.Company.State;
-using CountryModel = CompanyPlatform.Core.Models.CRM.Company.Country;
-using CityModel = CompanyPlatform.Core.Models.CRM.Company.City;
+using StateModel = CompanyPlatform.Core.Models.CRM.State;
+using CountryModel = CompanyPlatform.Core.Models.CRM.Country;
+using CityModel = CompanyPlatform.Core.Models.CRM.City;
 
 namespace CompanyPlatform.CRM.Services.Customer
 {

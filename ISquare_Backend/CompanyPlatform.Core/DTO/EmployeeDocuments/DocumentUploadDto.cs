@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using System.ComponentModel.DataAnnotations;
 
 namespace CompanyPlatform.Core.DTO.EmployeeDocuments
@@ -9,8 +9,8 @@ namespace CompanyPlatform.Core.DTO.EmployeeDocuments
         public int EmployeeID { get; set; }
 
         [Required]
-        public IFormFile File { get; set; }
+        public IFormFile File { get; set; } = null!;
 
-        public string DocumentName { get; set; }
+        public string DocumentName { get; set; } = string.Empty;
     }
 }

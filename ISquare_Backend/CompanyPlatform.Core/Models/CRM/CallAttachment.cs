@@ -1,4 +1,4 @@
-﻿using CompanyPlatform.Core.Models.CRM.Company;
+using CompanyPlatform.Core.Models.CRM;
 using CompanyPlatform.Core.Models.CRM.Employee;
 using System;
 using System.Collections.Generic;
@@ -21,25 +21,25 @@ namespace CompanyPlatform.Core.Models.CRM.Call
         [Required]
         public int CallId { get; set; }
         [ForeignKey("CallId")]
-        public virtual Call Call { get; set; }
+        public virtual Call Call { get; set; } = null!;
 
         [Required]
-        public string DocumentName { get; set; }
+        public string DocumentName { get; set; } = string.Empty;
 
         [Required]
-        public string FileName { get; set; }
+        public string FileName { get; set; } = string.Empty;
 
         [Required]
-        public string FilePath { get; set; }
+        public string FilePath { get; set; } = string.Empty;
 
         [Required]
-        public string FileExtension { get; set; }
+        public string FileExtension { get; set; } = string.Empty;
 
         public long FileSize { get; set; }
 
         public int UploadedBy { get; set; }
         [ForeignKey("UploadedBy")]
-        public virtual CompanyPlatform.Core.Models.CRM.Company.Employee UploadedByEmployee { get; set; }
+        public virtual CompanyPlatform.Core.Models.CRM.Employee.Employee UploadedByEmployee { get; set; } = null!;
 
         public DateTime UploadedDate { get; set; }
 

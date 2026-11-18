@@ -120,10 +120,10 @@ using CompanyPlatform.CRM.DTO.TaskChecklists;
 using CompanyPlatform.Core.Repository;
 
 using TaskChecklistEntity =
-    CompanyPlatform.Core.Models.CRM.Company.TaskChecklist;
+    CompanyPlatform.Core.Models.CRM.TaskChecklist;
 
 using TasksEntity =
-    CompanyPlatform.Core.Models.CRM.Company.Tasks;
+    CompanyPlatform.Core.Models.CRM.Tasks;
 
 namespace CompanyPlatform.CRM.Services.TaskChecklists
 {

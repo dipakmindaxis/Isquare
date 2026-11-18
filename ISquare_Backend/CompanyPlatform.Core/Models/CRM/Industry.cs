@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CompanyPlatform.Core.Models.CRM.Company
+namespace CompanyPlatform.Core.Models.CRM
 {
     [Table("tbl_Industry")]
     public class Industry
@@ -17,10 +17,10 @@ namespace CompanyPlatform.Core.Models.CRM.Company
         public int IndustryId { get; set; }
 
         [Required]
-        public string IndustryName { get; set; }
+        public string IndustryName { get; set; } = string.Empty;
 
         [Required]
-        public string IndustryCode { get; set; }
+        public string IndustryCode { get; set; } = string.Empty;
 
         [DefaultValue(true)]
         public bool IsActive { get; set; } = true;
