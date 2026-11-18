@@ -22,7 +22,7 @@ export interface ApiEndpoints {
   Roles: string;
   AccessControl: string;
   Dashboard: string;
-  EmployeeStatutoryDetails: string;w
+  EmployeeStatutoryDetails: string;
   EmployeeDocuments: string;
   EmployeeBankDetails: string;
   EmployeePFDetails: string;
