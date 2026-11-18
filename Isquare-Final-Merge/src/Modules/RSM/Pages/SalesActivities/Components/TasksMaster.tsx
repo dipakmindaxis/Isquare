@@ -1,22 +1,27 @@
-import { SearchableSelect } from "../../../../../Components/Common/SearchableSelect";
-import React, { useState, useEffect, useCallback } from "react";
-import {
-  CheckSquare,
-  Plus,
-  Search,
-  Eye,
-  RefreshCw,
-  CheckCircle,
-  Clock,
-} from "lucide-react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import DataTable, { type TableColumn } from "react-data-table-component";
 import { toast } from "sonner";
-import type { TaskItem, TaskSummaryStats, TaskActivityFeedItem, TaskStatusItem } from "../Types/TaskTypes";
+import { FaEye, FaEdit, FaTrash } from "react-icons/fa";
+import {
+  RefreshCw,
+  Upload,
+  ChevronDown,
+  AlertTriangle,
+  CheckSquare,
+} from "lucide-react";
+import type {
+  TaskItem,
+  TaskStatusItem,
+  TaskSummaryStats,
+  TaskActivityFeedItem,
+} from "../Types/TaskTypes";
 import {
   getAllTasks,
-  getTaskSummaryStats,
   completeTask,
-  getTaskActivities,
+  deleteTask,
   getAllTaskStatuses,
+  getTaskSummaryStats,
+  getTaskActivities,
 } from "../Services/TaskService";
 import {
   getPrioritiesWithFallback,
@@ -24,6 +29,10 @@ import {
 } from "../Services/SalesActivityService";
 import { AddTaskModal } from "./AddTaskModal";
 import { ViewTaskModal } from "./ViewTaskModal";
+import { listingTableStyles } from "../../../../../Components/Common/listingTableStyles";
+import { actionButtonStyles } from "../../../../../Components/Common/buttonStyles";
+import LogoLoader from "../../../../../Components/Common/LogoLoader";
+import { exportToExcel } from "../../../../../Utils/exportToExcel";
 
 export interface TasksMasterProps {
   initialAddOpen?: boolean;
@@ -47,7 +56,12 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
   onAddClosed,
 }) => {
   const [tasks, setTasks] = useState<TaskItem[]>([]);
-  const [activities, setActivities] = useState<TaskActivityFeedItem[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // View state: "overview" | "tasks" | "activities"
+  const [currentView, setCurrentView] = useState<"overview" | "tasks" | "activities">("overview");
+
+  // Summary Stats
   const [stats, setStats] = useState<TaskSummaryStats>({
     total: 0,
     pending: 0,
@@ -56,12 +70,11 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
     overdue: 0,
     completed: 0,
   });
-  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // View state: "overview" | "tasks" | "activities"
-  const [currentView, setCurrentView] = useState<"overview" | "tasks" | "activities">("overview");
+  // Activities Feed
+  const [activities, setActivities] = useState<TaskActivityFeedItem[]>([]);
 
-  // Filters for All Tasks
+  // Filters
   const [search, setSearch] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("All");
   const [selectedPriorityId, setSelectedPriorityId] = useState<string>("All");
@@ -74,6 +87,9 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
   const [isAddOpen, setIsAddOpen] = useState<boolean>(initialAddOpen);
   const [selectedTask, setSelectedTask] = useState<TaskItem | null>(null);
   const [isViewOpen, setIsViewOpen] = useState<boolean>(false);
+  const [taskToEdit, setTaskToEdit] = useState<TaskItem | null>(null);
+  const [taskToDelete, setTaskToDelete] = useState<TaskItem | null>(null);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
   useEffect(() => {
     if (initialAddOpen !== undefined) {
@@ -90,11 +106,7 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
     setIsLoading(true);
     try {
       const [data, prioList, statusList] = await Promise.all([
-        getAllTasks({
-          search,
-          status: statusFilter,
-          priorityId: selectedPriorityId === "All" ? "All" : Number(selectedPriorityId),
-        }),
+        getAllTasks(),
         getPrioritiesWithFallback(),
         getAllTaskStatuses(),
       ]);
@@ -109,61 +121,50 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [search, statusFilter, selectedPriorityId]);
+  }, []);
 
   useEffect(() => {
     loadTasks();
   }, [loadTasks]);
 
-  const handleMarkComplete = async (taskId: number) => {
+  const handleStatusToggle = async (row: TaskItem) => {
     try {
-      await completeTask(taskId);
-      toast.success("Task marked as Completed!");
+      const isCurrentlyDone =
+        row.isCompleted ||
+        row.taskStatusId === 4 ||
+        (row.taskStatusName || "").toLowerCase().includes("completed") ||
+        (row.taskStatusName || "").toLowerCase().includes("approved");
+
+      if (isCurrentlyDone) {
+        toast.info("Task is already completed.");
+        return;
+      }
+
+      await completeTask(row.taskId);
+      toast.success(`Task "${row.taskTitle}" marked as Completed!`);
       loadTasks();
     } catch {
-      toast.error("Failed to complete task.");
+      toast.error("Failed to update status.");
     }
   };
 
-  const getStatusBadge = (task: TaskItem) => {
-    const isDone =
-      task.isCompleted ||
-      task.taskStatusId === 4 ||
-      (task.taskStatusName || "").toLowerCase().includes("completed") ||
-      (task.taskStatusName || "").toLowerCase().includes("approved");
-
-    const statusName = task.taskStatusName || (isDone ? "Completed" : "Pending");
-
-    if (isDone) {
-      return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">
-          <CheckCircle size={11} /> {statusName}
-        </span>
-      );
+  const handleConfirmDelete = async () => {
+    if (!taskToDelete) return;
+    setIsDeleting(true);
+    try {
+      await deleteTask(taskToDelete.taskId, taskToDelete.taskTitle);
+      toast.success(`Task "${taskToDelete.taskTitle}" deleted successfully!`);
+      setTaskToDelete(null);
+      if (selectedTask?.taskId === taskToDelete.taskId) {
+        setSelectedTask(null);
+        setIsViewOpen(false);
+      }
+      loadTasks();
+    } catch {
+      toast.error("Failed to delete task.");
+    } finally {
+      setIsDeleting(false);
     }
-
-    const sLower = statusName.toLowerCase();
-    if (sLower.includes("progress") || sLower.includes("active") || sLower.includes("review")) {
-      return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800">
-          <Clock size={11} /> {statusName}
-        </span>
-      );
-    }
-
-    if (sLower.includes("reject") || sLower.includes("cancel") || sLower.includes("lost") || sLower.includes("cold")) {
-      return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800">
-          <Clock size={11} /> {statusName}
-        </span>
-      );
-    }
-
-    return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800">
-        <Clock size={11} /> {statusName}
-      </span>
-    );
   };
 
   const getPriorityBadgeClass = (priorityName?: string) => {
@@ -174,28 +175,332 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
     return "bg-slate-50 text-slate-600 border-slate-200";
   };
 
-  // Filter tasks based on statusFilter
-  const filteredTasks = tasks.filter((t) => {
-    if (statusFilter && statusFilter !== "All") {
-      const taskStatus = (t.taskStatusName || "").toLowerCase().trim();
-      const filter = statusFilter.toLowerCase().trim();
-      const isDone =
-        t.isCompleted ||
-        t.taskStatusId === 4 ||
-        taskStatus.includes("completed") ||
-        taskStatus.includes("approved");
+  // Filter tasks based on search, status, and priority
+  const filteredTasks = useMemo(() => {
+    return tasks.filter((t) => {
+      // 1. Search filter
+      if (search.trim()) {
+        const q = search.toLowerCase().trim();
+        const matchesTitle = (t.taskTitle || "").toLowerCase().includes(q);
+        const matchesDesc = (t.description || "").toLowerCase().includes(q);
+        const matchesCompany = (t.companyName || "").toLowerCase().includes(q);
+        const matchesBy = (t.assignedByName || "").toLowerCase().includes(q);
+        const matchesTo = (t.assignedToName || "").toLowerCase().includes(q);
+        if (!matchesTitle && !matchesDesc && !matchesCompany && !matchesBy && !matchesTo) {
+          return false;
+        }
+      }
 
-      if (filter === "completed") return isDone;
-      if (filter === "pending") return !isDone && !taskStatus.includes("progress");
-      if (filter === "in progress") return !isDone && taskStatus.includes("progress");
-      return taskStatus === filter;
+      // 2. Priority filter
+      if (selectedPriorityId && selectedPriorityId !== "All") {
+        if (Number(t.priorityId) !== Number(selectedPriorityId)) {
+          return false;
+        }
+      }
+
+      // 3. Status filter
+      if (statusFilter && statusFilter !== "All") {
+        const taskStatus = (t.taskStatusName || "").toLowerCase().trim();
+        const filter = statusFilter.toLowerCase().trim();
+        const isDone =
+          t.isCompleted ||
+          t.taskStatusId === 4 ||
+          taskStatus.includes("completed") ||
+          taskStatus.includes("approved");
+
+        if (filter === "completed") return isDone;
+        if (filter === "pending") return !isDone && !taskStatus.includes("progress");
+        if (filter === "in progress") return !isDone && taskStatus.includes("progress");
+        return taskStatus === filter;
+      }
+
+      return true;
+    });
+  }, [tasks, search, selectedPriorityId, statusFilter]);
+
+  const handleExportClick = () => {
+    if (!filteredTasks || filteredTasks.length === 0) {
+      toast.error("No tasks to export.");
+      return;
     }
-    return true;
-  });
+
+    const dataToExport = filteredTasks.map((t, index) => ({
+      "Sr. No.": index + 1,
+      "Company Name": t.companyName || "I-Square Safety Equipments Pvt. Ltd.",
+      "Task Title": t.taskTitle,
+      "Description": t.description || "-",
+      "Assigned By": formatEmployeeDisplayName(t.assignedByName),
+      "Assigned To": formatEmployeeDisplayName(t.assignedToName),
+      "Due Date": t.dueDate || "-",
+      "Priority": t.priorityName || "Medium",
+      "Status":
+        t.isCompleted || t.taskStatusId === 4
+          ? "Completed"
+          : t.taskStatusName || "Pending",
+    }));
+
+    const timestamp = new Date().toISOString().slice(0, 10);
+    exportToExcel(dataToExport, `Task_Assignment_List_${timestamp}`, "Tasks");
+  };
+
+  const columns: TableColumn<TaskItem>[] = [
+    { name: "Sr. No.", cell: (_row, index) => (index ?? 0) + 1, width: "60px" },
+    {
+      name: "Company Name",
+      selector: (row) => row.companyName || "I-Square Safety Equipments Pvt. Ltd.",
+      cell: (row) => (
+        <div className="w-full min-w-0 pr-1 break-words whitespace-normal leading-snug">
+          <span className="text-[13px] font-medium text-slate-700">
+            {row.companyName || "I-Square Safety Equipments Pvt. Ltd."}
+          </span>
+        </div>
+      ),
+      minWidth: "160px",
+      grow: 2,
+      wrap: true,
+    },
+    {
+      name: "Task Title",
+      selector: (row) => row.taskTitle,
+      cell: (row) => (
+        <div className="py-1 w-full min-w-0 pr-2 overflow-hidden">
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedTask(row);
+              setIsViewOpen(true);
+            }}
+            className="w-full text-left font-semibold text-[#172B4D] hover:text-[#153E63] text-[13px] leading-snug break-words whitespace-normal transition cursor-pointer"
+          >
+            {row.taskTitle}
+          </button>
+          {row.description && (
+            <p className="text-[11px] text-slate-400 break-words whitespace-normal line-clamp-2 mt-0.5">
+              {row.description}
+            </p>
+          )}
+        </div>
+      ),
+      minWidth: "220px",
+      grow: 2.5,
+      wrap: true,
+    },
+    {
+      name: "Assigned By",
+      selector: (row) => formatEmployeeDisplayName(row.assignedByName),
+      cell: (row) => (
+        <div className="w-full min-w-0 break-words whitespace-normal">
+          <span className="text-[13px] font-medium text-slate-600">
+            {formatEmployeeDisplayName(row.assignedByName)}
+          </span>
+        </div>
+      ),
+      minWidth: "120px",
+      grow: 1,
+      wrap: true,
+    },
+    {
+      name: "Assigned To",
+      selector: (row) => formatEmployeeDisplayName(row.assignedToName),
+      cell: (row) => (
+        <div className="w-full min-w-0 break-words whitespace-normal">
+          <span className="text-[13px] font-medium text-slate-600">
+            {formatEmployeeDisplayName(row.assignedToName)}
+          </span>
+        </div>
+      ),
+      minWidth: "120px",
+      grow: 1,
+      wrap: true,
+    },
+    {
+      name: "Due Date",
+      selector: (row) => row.dueDate || "—",
+      cell: (row) => (
+        <div className="text-[12.5px] font-medium text-slate-600 whitespace-nowrap">
+          <span>{row.dueDate || "—"}</span>
+          {row.reminderTime && (
+            <p className="text-[11px] text-slate-400 mt-0.5">Reminder: {row.reminderTime}</p>
+          )}
+        </div>
+      ),
+      minWidth: "115px",
+      grow: 1,
+    },
+    {
+      name: "Priority",
+      selector: (row) => row.priorityName || "Medium",
+      cell: (row) => (
+        <span
+          className={`inline-block px-2 py-0.5 rounded text-[11px] font-bold border uppercase tracking-wider ${getPriorityBadgeClass(
+            row.priorityName
+          )}`}
+        >
+          {row.priorityName || "Medium"}
+        </span>
+      ),
+      minWidth: "95px",
+      grow: 1,
+    },
+    {
+      name: "Status",
+      cell: (row) => {
+        const isCompleted =
+          row.isCompleted ||
+          row.taskStatusId === 4 ||
+          (row.taskStatusName || "").toLowerCase().includes("completed") ||
+          (row.taskStatusName || "").toLowerCase().includes("approved");
+
+        return (
+          <div className="flex justify-center w-full">
+            <label
+              className="relative inline-flex items-center cursor-pointer"
+              onClick={() => handleStatusToggle(row)}
+              title={isCompleted ? "Completed" : "Click to Mark Completed"}
+            >
+              <input
+                type="checkbox"
+                checked={isCompleted}
+                readOnly
+                className="sr-only"
+              />
+              <div
+                className={`w-11 h-6 rounded-full transition-colors relative ${isCompleted ? "bg-[#154068]" : "bg-gray-300"
+                  }`}
+              >
+                <span
+                  className="absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform duration-200 ease-in-out"
+                  style={{
+                    left: isCompleted ? "calc(100% - 1.25rem - 0.125rem)" : "0.125rem",
+                  }}
+                />
+              </div>
+            </label>
+          </div>
+        );
+      },
+      width: "80px",
+    },
+    {
+      name: "Actions",
+      cell: (row) => (
+        <div className="flex justify-center gap-3.5">
+          <button
+            onClick={() => {
+              setSelectedTask(row);
+              setIsViewOpen(true);
+            }}
+            className={`${actionButtonStyles.base} ${actionButtonStyles.view}`}
+            title="View Details"
+          >
+            <FaEye size={16} />
+          </button>
+          <button
+            onClick={() => setTaskToEdit(row)}
+            className={`${actionButtonStyles.base} ${actionButtonStyles.edit}`}
+            title="Edit Task"
+          >
+            <FaEdit size={16} />
+          </button>
+          <button
+            onClick={() => setTaskToDelete(row)}
+            className={`${actionButtonStyles.base} ${actionButtonStyles.delete}`}
+            title="Delete Task"
+          >
+            <FaTrash size={16} />
+          </button>
+        </div>
+      ),
+      width: "120px",
+    },
+  ];
 
   return (
-    <div className="space-y-5 animate-in fade-in duration-200">
-      {isAddOpen ? (
+    <>
+      {/* Top Header Card matching screenshot with View Switcher */}
+      {!isAddOpen ? (
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.04)] p-4 md:p-5 mb-5">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-xl bg-[#153E63] text-white flex items-center justify-center shrink-0 shadow-sm">
+                <CheckSquare size={22} />
+              </div>
+              <div>
+                <h2 className="text-xl md:text-2xl font-bold tracking-tight text-[#172B4D]">
+                  Task Assignment
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Track team assignments, tasks and deadlines
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              {/* View Switcher: Overview, All Tasks, Activities */}
+              <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setCurrentView("overview")}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                    currentView === "overview"
+                      ? "bg-white text-[#153E63] shadow-sm font-bold"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  Overview
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentView("tasks")}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                    currentView === "tasks"
+                      ? "bg-white text-[#153E63] shadow-sm font-bold"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  All Tasks
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentView("activities")}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                    currentView === "activities"
+                      ? "bg-white text-[#153E63] shadow-sm font-bold"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  Activities
+                </button>
+              </div>
+
+              {/* Refresh Button */}
+              <button
+                type="button"
+                onClick={loadTasks}
+                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs md:text-sm font-semibold text-[#153E63] shadow-sm transition hover:bg-slate-50 cursor-pointer"
+                title="Refresh tasks"
+              >
+                <RefreshCw size={15} className={isLoading ? "animate-spin" : ""} />
+              </button>
+
+              {/* Add Task Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  setTaskToEdit(null);
+                  setIsAddOpen(true);
+                }}
+                className="rounded-xl bg-[#FF7900] hover:bg-[#e06800] text-white px-4 py-2 text-xs md:text-sm font-semibold shadow-[0_10px_18px_rgba(255,121,0,0.22)] transition cursor-pointer inline-flex items-center gap-1.5"
+              >
+                <span>+ Add Task</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {/* INLINE CREATE FORM */}
+      {isAddOpen && (
         <AddTaskModal
           isOpen={isAddOpen}
           isModal={false}
@@ -205,482 +510,222 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
             loadTasks();
           }}
         />
-      ) : (
-        <>
-          {/* Header & Navigation Bar */}
-          <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-xl bg-[#00234a] text-white flex items-center justify-center shadow-xs">
-                <CheckSquare size={22} />
-              </div>
-              <div>
-                <h1 className="text-lg sm:text-xl font-bold text-slate-900 leading-tight">
-                  Task Assignment
-                </h1>
-                <p className="text-xs text-slate-500">
-                  Track team assignments, tasks and deadlines
-                </p>
-              </div>
-            </div>
+      )}
 
-            {/* Navigation View Switcher + Add Task Button */}
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
-                <button
-                  type="button"
-                  onClick={() => setCurrentView("overview")}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
-                    currentView === "overview"
-                      ? "bg-white text-[#00234a] shadow-xs"
-                      : "text-slate-600 hover:text-slate-900"
-                  }`}
-                >
-                  Overview
-                </button>
+      {/* KPI METRIC CARDS (Visible in Overview & All Tasks) */}
+      {!isAddOpen && (currentView === "overview" || currentView === "tasks") && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
+          {/* TOTAL TASKS */}
+          <div
+            onClick={() => setStatusFilter("All")}
+            className={`rounded-2xl border bg-white p-4 sm:p-5 transition cursor-pointer shadow-[0_10px_30px_rgba(15,23,42,0.04)] ${
+              statusFilter === "All"
+                ? "border-[#153E63] ring-2 ring-[#153E63]/20"
+                : "border-slate-200 hover:border-slate-300"
+            }`}
+          >
+            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              TOTAL TASKS
+            </p>
+            <p className="text-2xl sm:text-3xl font-extrabold text-[#172B4D] mt-2">
+              {stats.total}
+            </p>
+          </div>
+
+          {/* PENDING */}
+          <div
+            onClick={() => setStatusFilter("Pending")}
+            className={`rounded-2xl border bg-white p-4 sm:p-5 transition cursor-pointer shadow-[0_10px_30px_rgba(15,23,42,0.04)] ${
+              statusFilter === "Pending"
+                ? "border-amber-500 ring-2 ring-amber-500/20"
+                : "border-amber-200/80 hover:border-amber-300"
+            }`}
+          >
+            <p className="text-[11px] font-bold text-amber-600 uppercase tracking-wider">
+              PENDING
+            </p>
+            <p className="text-2xl sm:text-3xl font-extrabold text-amber-600 mt-2">
+              {stats.pending}
+            </p>
+          </div>
+
+          {/* IN PROGRESS */}
+          <div
+            onClick={() => setStatusFilter("In Progress")}
+            className={`rounded-2xl border bg-white p-4 sm:p-5 transition cursor-pointer shadow-[0_10px_30px_rgba(15,23,42,0.04)] ${
+              statusFilter === "In Progress"
+                ? "border-blue-500 ring-2 ring-blue-500/20"
+                : "border-blue-200/80 hover:border-blue-300"
+            }`}
+          >
+            <p className="text-[11px] font-bold text-blue-600 uppercase tracking-wider">
+              IN PROGRESS
+            </p>
+            <p className="text-2xl sm:text-3xl font-extrabold text-blue-600 mt-2">
+              {stats.inProgress}
+            </p>
+          </div>
+
+          {/* COMPLETED */}
+          <div
+            onClick={() => setStatusFilter("Completed")}
+            className={`rounded-2xl border bg-white p-4 sm:p-5 transition cursor-pointer shadow-[0_10px_30px_rgba(15,23,42,0.04)] ${
+              statusFilter === "Completed"
+                ? "border-emerald-500 ring-2 ring-emerald-500/20"
+                : "border-emerald-200/80 hover:border-emerald-300"
+            }`}
+          >
+            <p className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">
+              COMPLETED
+            </p>
+            <p className="text-2xl sm:text-3xl font-extrabold text-emerald-600 mt-2">
+              {stats.completed}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* VIEW 1 & 2: OVERVIEW / ALL TASKS TABLE */}
+      {!isAddOpen && (currentView === "overview" || currentView === "tasks") && (
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
+          <div className="p-5 md:p-6">
+            {/* Table Section Header in Overview view */}
+            {currentView === "overview" && (
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-bold text-[#172B4D]">My Assigned Tasks</h3>
+                  <p className="text-xs text-slate-500">Tasks assigned to you and active assignments</p>
+                </div>
                 <button
                   type="button"
                   onClick={() => setCurrentView("tasks")}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
-                    currentView === "tasks"
-                      ? "bg-white text-[#00234a] shadow-xs"
-                      : "text-slate-600 hover:text-slate-900"
-                  }`}
+                  className="text-xs font-semibold text-[#153E63] hover:underline cursor-pointer"
                 >
-                  All Tasks
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCurrentView("activities")}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
-                    currentView === "activities"
-                      ? "bg-white text-[#00234a] shadow-xs"
-                      : "text-slate-600 hover:text-slate-900"
-                  }`}
-                >
-                  Activities
+                  View all tasks →
                 </button>
               </div>
+            )}
 
-              <button
-                type="button"
-                onClick={loadTasks}
-                className="p-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition cursor-pointer"
-                title="Refresh"
-              >
-                <RefreshCw size={15} className={isLoading ? "animate-spin" : ""} />
-              </button>
+            {/* Filter Bar matching EmployeeMaster */}
+            <div className="mb-4 flex flex-col items-center justify-between gap-4 md:flex-row">
+              <div className="flex w-full items-center md:w-auto">
+                <label className="mr-2 text-sm font-medium text-slate-600">Search:</label>
+                <input
+                  type="text"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 shadow-sm outline-none transition focus:border-[#153E63] focus:bg-white md:w-72"
+                  placeholder="Search by name or code..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
 
-              <button
-                type="button"
-                onClick={() => setIsAddOpen(true)}
-                className="px-4 py-2 bg-[#FF7900] hover:bg-[#e06800] text-white rounded-xl text-sm font-semibold transition flex items-center gap-1.5 shadow-xs cursor-pointer"
-              >
-                <Plus size={15} />
-                <span>Add Task</span>
-              </button>
+              <div className="flex flex-wrap w-full items-center justify-end gap-3 md:w-auto">
+                <div className="relative">
+                  <select
+                    className="appearance-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 pr-9 text-sm text-slate-700 outline-none transition hover:bg-white focus:border-[#153E63]"
+                    value={selectedPriorityId}
+                    onChange={(e) => setSelectedPriorityId(e.target.value)}
+                  >
+                    <option value="All">All Priorities</option>
+                    {priorities.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown
+                    size={16}
+                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
+                  />
+                </div>
+
+                <div className="relative">
+                  <select
+                    className="appearance-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 pr-9 text-sm text-slate-700 outline-none transition hover:bg-white focus:border-[#153E63]"
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                  >
+                    <option value="All">All Statuses</option>
+                    {statuses.map((s) => (
+                      <option key={s.id} value={s.statusName}>
+                        {s.statusName}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown
+                    size={16}
+                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
+                  />
+                </div>
+
+                <button
+                  onClick={handleExportClick}
+                  className="inline-flex items-center gap-2 rounded-xl border border-[#153E63] bg-white px-4 py-2.5 text-sm font-semibold text-[#153E63] transition hover:bg-slate-50 cursor-pointer"
+                >
+                  <Upload size={16} />
+                  <span>Export</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <DataTable
+                columns={columns}
+                data={filteredTasks}
+                progressComponent={<LogoLoader />}
+                pagination
+                striped
+                highlightOnHover
+                progressPending={isLoading}
+                customStyles={listingTableStyles}
+              />
             </div>
           </div>
+        </div>
+      )}
 
-          {/* VIEW 1: OVERVIEW */}
-          {currentView === "overview" && (
-            <div className="space-y-5 animate-in fade-in duration-200">
-              {/* KPI Dashboard Cards */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
-                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                    Total Tasks
-                  </p>
-                  <p className="text-2xl font-extrabold text-[#00234a] mt-1">{stats.total}</p>
-                </div>
-                <div className="bg-white p-4 rounded-xl border border-amber-200 shadow-xs bg-amber-50/20">
-                  <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">
-                    Pending
-                  </p>
-                  <p className="text-2xl font-extrabold text-amber-600 mt-1">{stats.pending}</p>
-                </div>
-                <div className="bg-white p-4 rounded-xl border border-blue-200 shadow-xs bg-blue-50/20">
-                  <p className="text-[10px] font-bold text-blue-700 uppercase tracking-wider">
-                    In Progress
-                  </p>
-                  <p className="text-2xl font-extrabold text-blue-600 mt-1">{stats.inProgress}</p>
-                </div>
-                <div className="bg-white p-4 rounded-xl border border-emerald-200 shadow-xs bg-emerald-50/20">
-                  <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">
-                    Completed
-                  </p>
-                  <p className="text-2xl font-extrabold text-emerald-600 mt-1">{stats.completed}</p>
-                </div>
-              </div>
+      {/* VIEW 3: ACTIVITIES FEED */}
+      {!isAddOpen && currentView === "activities" && (
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.04)] p-6 space-y-4">
+          <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-bold text-[#172B4D]">Team Activity Visibility</h3>
+              <p className="text-xs text-slate-500 mt-0.5">Recent task updates and team assignments</p>
+            </div>
+            <span className="text-xs font-semibold px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg">
+              {activities.length} activities
+            </span>
+          </div>
 
-              {/* My Assigned Tasks Section */}
-              <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-5">
-                <div className="flex items-center justify-between gap-3 mb-4">
-                  <h3 className="font-bold text-sm sm:text-base text-slate-800">
-                    My Assigned Tasks
-                  </h3>
-                  <button
-                    type="button"
-                    onClick={() => setCurrentView("tasks")}
-                    className="text-xs font-semibold text-[#00234a] hover:text-[#FF7900] transition cursor-pointer"
-                  >
-                    View all tasks →
-                  </button>
-                </div>
-                <div className="overflow-x-auto w-full">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-slate-100 text-[13px] font-semibold text-slate-500 uppercase tracking-wider">
-                        <th className="text-left py-2.5 px-3">Task Title</th>
-                        <th className="text-left py-2.5 px-3">Assigned By</th>
-                        <th className="text-left py-2.5 px-3">Assigned To</th>
-                        <th className="text-left py-2.5 px-3">Due Date</th>
-                        <th className="text-center py-2.5 px-3">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {tasks.length === 0 ? (
-                        <tr>
-                          <td colSpan={5} className="py-8 text-center text-slate-400 text-xs">
-                            No tasks assigned yet.
-                          </td>
-                        </tr>
-                      ) : (
-                        tasks.slice(0, 5).map((t) => (
-                          <tr key={t.taskId} className="hover:bg-slate-50/70 transition">
-                            <td className="py-3 px-3">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setSelectedTask(t);
-                                  setIsViewOpen(true);
-                                }}
-                                className="font-bold text-slate-800 hover:text-blue-600 text-left cursor-pointer"
-                              >
-                                {t.taskTitle}
-                              </button>
-                              {t.companyName && (
-                                <p className="text-[11px] text-slate-400 mt-0.5">
-                                  {t.companyName}
-                                </p>
-                              )}
-                            </td>
-                            <td className="py-3 px-3 text-sm font-medium text-slate-700">
-                              {formatEmployeeDisplayName(t.assignedByName)}
-                            </td>
-                            <td className="py-3 px-3 text-sm font-medium text-slate-700">
-                              {formatEmployeeDisplayName(t.assignedToName)}
-                            </td>
-                            <td className="py-3 px-3 text-sm text-slate-600">
-                              {t.dueDate || "—"}
-                            </td>
-                            <td className="py-3 px-3 text-center">
-                              {getStatusBadge(t)}
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* Team Activity Feed Preview */}
-              <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-5">
-                <div className="flex items-center justify-between gap-3 mb-3">
-                  <div>
-                    <h3 className="font-bold text-sm sm:text-base text-slate-800">
-                      Team Activity Visibility
-                    </h3>
+          <div className="space-y-3 pt-2">
+            {activities.length === 0 ? (
+              <p className="text-xs text-slate-400 py-10 text-center">
+                No team activities recorded yet.
+              </p>
+            ) : (
+              activities.map((act) => (
+                <div
+                  key={act.id}
+                  className="flex items-start gap-3.5 p-4 bg-slate-50 rounded-xl border border-slate-100 hover:bg-slate-100/60 transition"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm shrink-0">
+                    {act.by ? act.by.slice(0, 1).toUpperCase() : "T"}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setCurrentView("activities")}
-                    className="text-xs font-semibold text-[#00234a] hover:text-[#FF7900] transition cursor-pointer"
-                  >
-                    View feed →
-                  </button>
-                </div>
-                <div className="space-y-3 pt-2">
-                  {activities.length === 0 ? (
-                    <p className="text-xs text-slate-400 py-4 text-center">
-                      No team activities recorded yet.
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-slate-800">{act.text}</p>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      {act.by} {act.customer ? `· ${act.customer}` : ""}
                     </p>
-                  ) : (
-                    activities.slice(0, 4).map((act) => (
-                      <div
-                        key={act.id}
-                        className="flex items-start gap-3 p-3 bg-slate-50/70 rounded-xl border border-slate-100"
-                      >
-                        <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs shrink-0">
-                          {act.by.slice(0, 1)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-bold text-slate-800">{act.text}</p>
-                          <p className="text-[11px] text-slate-500 mt-0.5">
-                            {act.by} {act.customer ? `· ${act.customer}` : ""}
-                          </p>
-                          <p className="text-[10px] text-slate-400 mt-0.5">{act.time}</p>
-                        </div>
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 shrink-0">
-                          Shared
-                        </span>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* VIEW 2: ALL TASKS */}
-          {currentView === "tasks" && (
-            <div className="space-y-4 animate-in fade-in duration-200">
-              {/* Filters */}
-              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {/* Status Filter */}
-                  <div>
-                    <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
-                      Filter by Status
-                    </label>
-                    <SearchableSelect
-                      value={statusFilter}
-                      onChange={(val) => setStatusFilter(String(val || "All"))}
-                      options={[
-                        { value: "All", label: "All statuses" },
-                        ...statuses.map((s) => ({
-                          value: s.statusName,
-                          label: s.statusName,
-                        })),
-                      ]}
-                      placeholder="All statuses"
-                      isClearable={false}
-                      minHeight="34px"
-                    />
+                    <p className="text-[11px] text-slate-400 mt-1">{act.time}</p>
                   </div>
-
-                  {/* Priority Filter */}
-                  <div>
-                    <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
-                      Priority Level
-                    </label>
-                    <SearchableSelect
-                      value={selectedPriorityId}
-                      onChange={(val) => setSelectedPriorityId(String(val || "All"))}
-                      options={[
-                        { value: "All", label: "All Priorities" },
-                        ...priorities.map((p) => ({ value: String(p.id), label: p.name })),
-                      ]}
-                      placeholder="All Priorities"
-                      isClearable={false}
-                      minHeight="34px"
-                    />
-                  </div>
-
-                  {/* Search */}
-                  <div>
-                    <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
-                      Search Task
-                    </label>
-                    <div className="relative">
-                      <Search
-                        size={14}
-                        className="absolute left-3 top-2.5 text-slate-400"
-                      />
-                      <input
-                        type="text"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Search title, assignee, customer..."
-                        className="w-full pl-8 pr-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-700 outline-none focus:border-blue-500"
-                      />
-                    </div>
-                  </div>
+                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200 shrink-0">
+                    Shared
+                  </span>
                 </div>
-              </div>
-
-              {/* Tasks Table (No Task Type column) */}
-              <div className="bg-white rounded-xl shadow-xs overflow-hidden border border-slate-200">
-                <div className="overflow-x-auto w-full">
-                  <table className="w-full text-sm">
-                    <thead className="bg-[#FF7900] text-white border-b border-[#e06800]">
-                      <tr>
-                        <th className="px-4 py-3 text-left text-[13px] font-semibold uppercase tracking-wider">
-                          Sr.
-                        </th>
-                        <th className="px-4 py-3 text-left text-[13px] font-semibold uppercase tracking-wider">
-                          Task Title
-                        </th>
-                        <th className="px-4 py-3 text-left text-[13px] font-semibold uppercase tracking-wider">
-                          Assigned By
-                        </th>
-                        <th className="px-4 py-3 text-left text-[13px] font-semibold uppercase tracking-wider">
-                          Assigned To
-                        </th>
-                        <th className="px-4 py-3 text-left text-[13px] font-semibold uppercase tracking-wider">
-                          Customer
-                        </th>
-                        <th className="px-4 py-3 text-left text-[13px] font-semibold uppercase tracking-wider">
-                          Due Date
-                        </th>
-                        <th className="px-4 py-3 text-left text-[13px] font-semibold uppercase tracking-wider">
-                          Priority
-                        </th>
-                        <th className="px-4 py-3 text-center text-[13px] font-semibold uppercase tracking-wider">
-                          Status
-                        </th>
-                        <th className="px-4 py-3 text-center text-[13px] font-semibold uppercase tracking-wider">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {isLoading ? (
-                        <tr>
-                          <td colSpan={9} className="py-12 text-center text-slate-400 text-xs">
-                            Loading tasks...
-                          </td>
-                        </tr>
-                      ) : filteredTasks.length === 0 ? (
-                        <tr>
-                          <td colSpan={9} className="py-12 text-center">
-                            <CheckSquare size={32} className="mx-auto text-slate-300 mb-2" />
-                            <p className="text-sm font-semibold text-slate-700">No tasks found</p>
-                          </td>
-                        </tr>
-                      ) : (
-                        filteredTasks.map((task, idx) => {
-                          const isDone =
-                            task.isCompleted ||
-                            task.taskStatusId === 4 ||
-                            (task.taskStatusName || "").toLowerCase().includes("completed") ||
-                            (task.taskStatusName || "").toLowerCase().includes("approved");
-
-                          return (
-                            <tr key={task.taskId} className="hover:bg-slate-50 transition">
-                              <td className="px-4 py-3 text-sm text-slate-500 font-medium">
-                                {idx + 1}
-                              </td>
-                              <td className="px-4 py-3 max-w-xs">
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setSelectedTask(task);
-                                    setIsViewOpen(true);
-                                  }}
-                                  className="font-bold text-slate-900 hover:text-blue-600 text-left transition cursor-pointer"
-                                >
-                                  {task.taskTitle}
-                                </button>
-                                {task.description && (
-                                  <p className="text-[11px] text-slate-400 truncate mt-0.5 max-w-[200px]">
-                                    {task.description}
-                                  </p>
-                                )}
-                              </td>
-                              <td className="px-4 py-3 text-sm text-slate-700 font-medium">
-                                {formatEmployeeDisplayName(task.assignedByName)}
-                              </td>
-                              <td className="px-4 py-3 text-sm text-slate-700 font-semibold">
-                                {formatEmployeeDisplayName(task.assignedToName)}
-                              </td>
-                              <td className="px-4 py-3 text-sm text-slate-600">
-                                {task.companyName || "—"}
-                              </td>
-                              <td className="px-4 py-3 text-sm text-slate-600">
-                                <p className="font-medium">{task.dueDate || "—"}</p>
-                                {task.reminderTime && (
-                                  <p className="text-[11px] text-slate-400 mt-0.5">
-                                    Reminder: {task.reminderTime}
-                                  </p>
-                                )}
-                              </td>
-                              <td className="px-4 py-3">
-                                <span
-                                  className={`inline-block px-2.5 py-0.5 rounded text-[11px] font-bold border ${getPriorityBadgeClass(
-                                    task.priorityName
-                                  )}`}
-                                >
-                                  {task.priorityName || "Medium"}
-                                </span>
-                              </td>
-                              <td className="px-4 py-3 text-center">
-                                {getStatusBadge(task)}
-                              </td>
-                              <td className="px-4 py-3 text-center">
-                                <div className="flex items-center justify-center gap-1.5">
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setSelectedTask(task);
-                                      setIsViewOpen(true);
-                                    }}
-                                    className="p-1.5 text-slate-500 hover:text-[#00234a] hover:bg-slate-100 rounded-lg transition cursor-pointer"
-                                    title="View Details"
-                                  >
-                                    <Eye size={16} />
-                                  </button>
-                                  {!isDone && (
-                                    <button
-                                      type="button"
-                                      onClick={() => handleMarkComplete(task.taskId)}
-                                      className="p-1.5 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 rounded-lg transition cursor-pointer"
-                                      title="Mark as Completed"
-                                    >
-                                      <CheckCircle size={16} />
-                                    </button>
-                                  )}
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        })
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* VIEW 3: ACTIVITIES FEED */}
-          {currentView === "activities" && (
-            <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-6 space-y-4 animate-in fade-in duration-200">
-              <div className="border-b border-slate-100 pb-3">
-                <h2 className="text-base font-bold text-slate-900">Activity Feed</h2>
-              </div>
-
-              <div className="space-y-3 pt-2">
-                {activities.length === 0 ? (
-                  <p className="text-xs text-slate-400 py-6 text-center">
-                    No team activities recorded yet.
-                  </p>
-                ) : (
-                  activities.map((act) => (
-                    <div
-                      key={act.id}
-                      className="flex items-start gap-3.5 p-4 bg-slate-50 rounded-xl border border-slate-100 hover:bg-slate-50/80 transition"
-                    >
-                      <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm shrink-0">
-                        {act.by.slice(0, 1)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-slate-800">{act.text}</p>
-                        <p className="text-xs text-slate-500 mt-0.5">
-                          {act.by} {act.customer ? `· ${act.customer}` : ""}
-                        </p>
-                        <p className="text-[11px] text-slate-400 mt-1">{act.time}</p>
-                      </div>
-                      <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200 shrink-0">
-                        Shared
-                      </span>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          )}
-        </>
+              ))
+            )}
+          </div>
+        </div>
       )}
 
       {/* View Task Details Modal */}
@@ -693,9 +738,71 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
             setSelectedTask(null);
           }}
           onStatusUpdated={loadTasks}
+          onDelete={(t) => setTaskToDelete(t)}
+          onEdit={(t) => {
+            setSelectedTask(null);
+            setIsViewOpen(false);
+            setTaskToEdit(t);
+          }}
         />
       )}
-    </div>
+
+      {/* Edit / Update Task Modal */}
+      {taskToEdit && (
+        <AddTaskModal
+          isOpen={!!taskToEdit}
+          isModal={true}
+          taskToEdit={taskToEdit}
+          onClose={() => setTaskToEdit(null)}
+          onSuccess={() => {
+            setTaskToEdit(null);
+            loadTasks();
+          }}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {taskToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 transform transition-all space-y-4">
+            <div className="flex items-center gap-3 text-rose-600">
+              <div className="w-10 h-10 rounded-full bg-rose-50 flex items-center justify-center shrink-0">
+                <AlertTriangle size={20} />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-900 text-base">Delete Task</h3>
+                <p className="text-xs text-slate-500">This action cannot be undone.</p>
+              </div>
+            </div>
+            <p className="text-sm text-slate-600 leading-relaxed">
+              Are you sure you want to delete task{" "}
+              <strong className="font-semibold text-slate-800">
+                "{taskToDelete.taskTitle}"
+              </strong>
+              ?
+            </p>
+            <div className="flex items-center justify-end gap-2.5 pt-2">
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => setTaskToDelete(null)}
+                className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-semibold rounded-lg transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={handleConfirmDelete}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold rounded-lg transition flex items-center gap-1.5 cursor-pointer shadow-xs disabled:opacity-50"
+              >
+                {isDeleting ? "Deleting..." : "Delete Task"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

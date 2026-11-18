@@ -9,6 +9,8 @@ import {
   Bell,
   FileText,
   Loader2,
+  Trash2,
+  Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { TaskItem } from "../Types/TaskTypes";
@@ -20,6 +22,8 @@ interface ViewTaskModalProps {
   task: TaskItem | null;
   onClose: () => void;
   onStatusUpdated?: () => void;
+  onDelete?: (task: TaskItem) => void;
+  onEdit?: (task: TaskItem) => void;
 }
 
 const DetailCard: React.FC<{
@@ -45,6 +49,8 @@ export const ViewTaskModal: React.FC<ViewTaskModalProps> = ({
   task,
   onClose,
   onStatusUpdated,
+  onDelete,
+  onEdit,
 }) => {
   const [isCompleting, setIsCompleting] = useState<boolean>(false);
 
@@ -189,34 +195,62 @@ export const ViewTaskModal: React.FC<ViewTaskModalProps> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 bg-gray-50 border-t border-slate-200 flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className={buttonStyles.cancel}
-          >
-            Close
-          </button>
-          {!isCompleted && (
+        <div className="p-4 bg-gray-50 border-t border-slate-200 flex flex-wrap justify-between items-center gap-3">
+          {onDelete ? (
             <button
               type="button"
-              onClick={handleMarkComplete}
-              disabled={isCompleting}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold transition flex items-center gap-2 shadow-xs cursor-pointer"
+              onClick={() => {
+                onDelete(task);
+                onClose();
+              }}
+              className="px-3.5 py-2 text-rose-600 hover:text-rose-700 hover:bg-rose-50 border border-rose-200 rounded-lg text-sm font-semibold transition flex items-center gap-1.5 cursor-pointer"
             >
-              {isCompleting ? (
-                <>
-                  <Loader2 size={14} className="animate-spin" />
-                  Updating...
-                </>
-              ) : (
-                <>
-                  <CheckCircle size={14} />
-                  Mark as Completed / Approved
-                </>
-              )}
+              <Trash2 size={15} />
+              Delete Task
             </button>
-          )}
+          ) : <div />}
+          <div className="flex items-center gap-2">
+            {onEdit && (
+              <button
+                type="button"
+                onClick={() => {
+                  onEdit(task);
+                  onClose();
+                }}
+                className="px-3.5 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 border border-blue-200 rounded-lg text-sm font-semibold transition flex items-center gap-1.5 cursor-pointer"
+              >
+                <Pencil size={15} />
+                Edit Task
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              className={buttonStyles.cancel}
+            >
+              Close
+            </button>
+            {!isCompleted && (
+              <button
+                type="button"
+                onClick={handleMarkComplete}
+                disabled={isCompleting}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold transition flex items-center gap-2 shadow-xs cursor-pointer"
+              >
+                {isCompleting ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle size={14} />
+                    Mark as Completed / Approved
+                  </>
+                )}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

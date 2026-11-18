@@ -2,7 +2,7 @@ export const listingTableStyles = {
   headRow: {
     style: {
       backgroundColor: "#FF7900",
-      minHeight: "52px",
+      minHeight: "50px",
     },
   },
   headCells: {
@@ -12,22 +12,24 @@ export const listingTableStyles = {
       fontSize: "13px",
       borderRight: "1px solid #e06800",
       paddingLeft: "12px",
+      paddingRight: "12px",
     },
   },
   cells: {
     style: {
       borderRight: "1px solid #d9dde5",
-      fontSize: "16px",
+      fontSize: "13px",
       fontWeight: 500,
-      color: "#6b7280",
-      paddingLeft: "15px",
-      paddingTop: "12px",
-      paddingBottom: "12px",
+      color: "#374151",
+      paddingLeft: "12px",
+      paddingRight: "12px",
+      paddingTop: "10px",
+      paddingBottom: "10px",
     },
   },
   rows: {
     style: {
-      minHeight: "60px",
+      minHeight: "52px",
       borderBottom: "1px solid #d9dde5",
     },
   },

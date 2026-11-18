@@ -8,8 +8,9 @@ import {
   PieChart,
   Flag,
   Paperclip,
+  Upload,
 } from "lucide-react";
-import { FaPlus, FaFileExcel } from "react-icons/fa";
+import { FaPlus } from "react-icons/fa";
 import { toast } from "sonner";
 import type {
   ActivityStatus,
@@ -416,10 +417,10 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
             />
           ) : (
             <div className="space-y-6">
-              {/* Listing Action Header matching CustomerMaster */}
+              {/* Listing Action Header matching EmployeeMaster */}
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                  <h2 className="border-b-2 border-[#FF7900] pb-2 text-2xl sm:text-3xl font-bold tracking-tight text-[#00234a]">
+                  <h2 className="border-b-2 border-[#153E63] pb-2 text-3xl font-bold tracking-[-0.03em] text-[#172B4D]">
                     All Activities
                   </h2>
                 </div>
@@ -427,25 +428,25 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
                   <button
                     type="button"
                     onClick={loadData}
-                    className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer"
+                    className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#153E63] shadow-sm transition hover:bg-slate-50 cursor-pointer"
                   >
-                    <RefreshCw size={15} className={isLoading ? "animate-spin" : ""} />
+                    <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
                     <span>Refresh</span>
                   </button>
                   <button
                     type="button"
                     onClick={handleExportClick}
-                    className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer"
+                    className="inline-flex items-center gap-2 rounded-xl border border-[#153E63] bg-white px-4 py-2.5 text-sm font-semibold text-[#153E63] transition hover:bg-slate-50 cursor-pointer"
                   >
-                    <FaFileExcel className="text-emerald-600" />
+                    <Upload size={16} />
                     <span>Export</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => navigate("/rsm/task-assignment")}
-                    className="inline-flex items-center gap-2 rounded-xl bg-[#00234a] hover:bg-[#003366] text-white px-4 py-2.5 text-xs sm:text-sm font-semibold shadow-sm transition cursor-pointer"
+                    className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#153E63] shadow-sm transition hover:bg-slate-50 cursor-pointer"
                   >
-                    <CheckSquare size={13} />
+                    <CheckSquare size={16} />
                     <span>Task Assignment</span>
                   </button>
                   <button
@@ -454,9 +455,9 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
                       setIsAddOpen(true);
                       window.scrollTo({ top: 0, behavior: "smooth" });
                     }}
-                    className="inline-flex items-center gap-2 rounded-xl bg-[#FF7900] hover:bg-[#e06800] text-white px-5 py-2.5 text-xs sm:text-sm font-semibold shadow-md shadow-orange-500/25 transition cursor-pointer"
+                    className="rounded-xl bg-[#153E63] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_18px_rgba(21,62,99,0.18)] transition hover:bg-[#103454] cursor-pointer inline-flex items-center gap-2"
                   >
-                    <FaPlus size={12} />
+                    <FaPlus size={13} />
                     <span>Record Activity</span>
                   </button>
                 </div>

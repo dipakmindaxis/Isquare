@@ -40,6 +40,7 @@ export interface TaskCreatePayload {
   assignedBy: number;
   assignedByName?: string;
   priorityId: number;
+  priorityName?: string;
   taskStatusId: number;
   taskStatusName?: string;
   startDate: string;
@@ -65,7 +66,9 @@ export interface TaskUpdatePayload {
   assignedBy?: number;
   assignedByName?: string;
   priorityId?: number;
+  priorityName?: string;
   taskStatusId?: number;
+  taskStatusName?: string;
   startDate?: string;
   dueDate?: string;
   completionDate?: string;
@@ -111,5 +114,6 @@ export interface TaskActivityFeedItem {
   text: string;
   customer?: string;
   time: string;
+  createdAt?: string;
   type?: string;
 }
