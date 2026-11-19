@@ -22,11 +22,8 @@ export const ISquareIcon: React.FC<{ className?: string; size?: number }> = ({
 
   const iconSources = [
     iconImg,
-    "/frontend/isquare-icon-square.png",
     "/isquare-icon-square.png",
-    "/frontend/assets/isquare-icon-square.png",
     "/assets/isquare-icon-square.png",
-    "/frontend/favicon.png",
     "/favicon.png",
   ];
 
@@ -106,14 +103,10 @@ export const ISquareLogo: React.FC<ISquareLogoProps> = ({
 
   const candidateSources = [
     primaryImg,
-    isWhite ? "/frontend/isquare-logo-white.png" : "/frontend/isquare-logo.png",
     isWhite ? "/isquare-logo-white.png" : "/isquare-logo.png",
-    isWhite ? "/frontend/assets/isquare-logo-white.png" : "/frontend/assets/isquare-logo.png",
     isWhite ? "/assets/isquare-logo-white.png" : "/assets/isquare-logo.png",
     secondaryImg,
-    isWhite ? "/frontend/isquare-logo.png" : "/frontend/isquare-logo-white.png",
     isWhite ? "/isquare-logo.png" : "/isquare-logo-white.png",
-    "/frontend/favicon.png",
     "/favicon.png",
   ];
 
