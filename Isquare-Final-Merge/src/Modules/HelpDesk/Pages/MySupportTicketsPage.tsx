@@ -8,36 +8,38 @@ import {
   CheckCircle2,
   Clock,
   AlertTriangle,
-  Tag,
   ChevronLeft,
   ChevronRight,
   Inbox,
   Calendar,
+  MessageSquare,
 } from "lucide-react";
 import { toast } from "sonner";
 import { SearchableSelect } from "../../../Components/Common/SearchableSelect";
+import { useAuth } from "../../../hooks/useAuth";
 import {
-  getMySupportTickets,
-  getTicketSummaryStats,
+  getExternalSupportTickets,
+  computeTicketStats,
+  getCachedTickets,
 } from "../Services/HelpDeskService";
 import type {
-  SupportTicketItem,
+  ExternalTicketListItem,
   TicketSummaryStats,
-  TicketStatus,
 } from "../Types/HelpDeskTypes";
 import { CreateSupportTicketModal } from "../Components/CreateSupportTicketModal";
 import { ViewTicketDetailsModal } from "../Components/ViewTicketDetailsModal";
 
 export const MySupportTicketsPage: React.FC = () => {
-  const [tickets, setTickets] = useState<SupportTicketItem[]>([]);
+  const { user } = useAuth();
+
+  const [tickets, setTickets] = useState<ExternalTicketListItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [stats, setStats] = useState<TicketSummaryStats>({
     total: 0,
-    submitted: 0,
-    received: 0,
+    open: 0,
     inProgress: 0,
     resolved: 0,
-    rejected: 0,
+    closed: 0,
   });
 
   // Filters
@@ -45,54 +47,89 @@ export const MySupportTicketsPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>("All");
   const [priorityFilter, setPriorityFilter] = useState<string>("All");
 
-  // Modals
-  const [isCreateOpen, setIsCreateOpen] = useState<boolean>(false);
-  const [selectedTicket, setSelectedTicket] = useState<SupportTicketItem | null>(null);
-  const [isViewOpen, setIsViewOpen] = useState<boolean>(false);
-
-  // Pagination
+  // Server-Side Pagination
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [itemsPerPage, setItemsPerPage] = useState<number>(10);
+  const [totalCount, setTotalCount] = useState<number>(0);
+  const [totalPages, setTotalPages] = useState<number>(1);
 
+  // Modals
+  const [isCreateOpen, setIsCreateOpen] = useState<boolean>(false);
+  const [selectedTicket, setSelectedTicket] = useState<ExternalTicketListItem | null>(null);
+  const [isViewOpen, setIsViewOpen] = useState<boolean>(false);
+
+  // Load Tickets from API 2
   const loadTickets = useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await getMySupportTickets({
-        search,
-        status: statusFilter,
-        priority: priorityFilter,
-      });
-      setTickets(data);
-      setStats(getTicketSummaryStats(data));
+      const response = await getExternalSupportTickets(
+        {
+          search,
+          status: statusFilter !== "All" ? statusFilter : undefined,
+          page: currentPage,
+          pageSize: itemsPerPage,
+        },
+        user
+      );
+
+      setTickets(response.items);
+      setTotalCount(response.totalCount);
+      setTotalPages(response.totalPages);
+
+      // Compute statistics from current cache or returned items
+      const cached = getCachedTickets();
+      const allForStats = cached.length > 0 ? cached : response.items;
+      setStats(computeTicketStats(allForStats));
     } catch {
       toast.error("Failed to load support tickets.");
     } finally {
       setIsLoading(false);
     }
-  }, [search, statusFilter, priorityFilter]);
+  }, [search, statusFilter, currentPage, itemsPerPage, user]);
 
   useEffect(() => {
     loadTickets();
   }, [loadTickets]);
 
+  // When search or status filter changes, reset to page 1
+  const handleSearchChange = (val: string) => {
+    setSearch(val);
+    setCurrentPage(1);
+  };
+
+  const handleStatusFilterChange = (status: string) => {
+    setStatusFilter(status);
+    setCurrentPage(1);
+  };
+
+  const handlePriorityFilterChange = (priority: string) => {
+    setPriorityFilter(priority);
+    setCurrentPage(1);
+  };
+
   const handleTicketCreated = () => {
     loadTickets();
   };
 
-  const handleTicketUpdated = (updated: SupportTicketItem) => {
-    setSelectedTicket(updated);
-    setTickets((prev) =>
-      prev.map((t) => (String(t.id) === String(updated.id) ? updated : t))
-    );
+  const handleTicketUpdated = () => {
+    loadTickets();
   };
 
+  // Optional client-side priority filter if API 2 does not filter priority on server
+  const displayedTickets = useMemo(() => {
+    if (!priorityFilter || priorityFilter === "All") return tickets;
+    return tickets.filter(
+      (t) => (t.priority || "").toLowerCase().trim() === priorityFilter.toLowerCase().trim()
+    );
+  }, [tickets, priorityFilter]);
+
   // Status Badge Helper
-  const renderStatusBadge = (status: TicketStatus | string) => {
+  const renderStatusBadge = (status: string) => {
     const s = (status || "").toLowerCase().trim();
-    if (s === "submitted") {
+    if (s === "open" || s === "submitted") {
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
-          <Clock size={11} /> Submitted
+          <Clock size={11} /> {status || "Open"}
         </span>
       );
     }
@@ -117,10 +154,10 @@ export const MySupportTicketsPage: React.FC = () => {
         </span>
       );
     }
-    if (s === "rejected") {
+    if (s === "closed" || s === "rejected") {
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
-          <AlertTriangle size={11} /> Rejected
+          <AlertTriangle size={11} /> {status || "Closed"}
         </span>
       );
     }
@@ -137,7 +174,7 @@ export const MySupportTicketsPage: React.FC = () => {
     if (p.includes("urgent") || p.includes("critical")) {
       return (
         <span className="px-2.5 py-0.5 rounded text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
-          Urgent
+          Critical
         </span>
       );
     }
@@ -162,12 +199,20 @@ export const MySupportTicketsPage: React.FC = () => {
     );
   };
 
-  // Pagination Calculations
-  const totalPages = Math.max(1, Math.ceil(tickets.length / itemsPerPage));
-  const paginatedTickets = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return tickets.slice(start, start + itemsPerPage);
-  }, [tickets, currentPage, itemsPerPage]);
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return "-";
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      return d.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+    } catch {
+      return dateStr;
+    }
+  };
 
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-full space-y-6 animate-in fade-in duration-200">
@@ -186,9 +231,6 @@ export const MySupportTicketsPage: React.FC = () => {
                 Help Desk
               </span>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Track your support requests, status updates, and responses from MindAxis Support
-            </p>
           </div>
         </div>
 
@@ -197,7 +239,7 @@ export const MySupportTicketsPage: React.FC = () => {
             type="button"
             onClick={loadTickets}
             className="p-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition cursor-pointer"
-            title="Refresh"
+            title="Refresh Tickets"
           >
             <RefreshCw size={15} className={isLoading ? "animate-spin" : ""} />
           </button>
@@ -213,9 +255,9 @@ export const MySupportTicketsPage: React.FC = () => {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <div
-          onClick={() => setStatusFilter("All")}
+          onClick={() => handleStatusFilterChange("All")}
           className={`p-4 rounded-xl border transition cursor-pointer ${
             statusFilter === "All"
               ? "bg-white border-[#00234a] shadow-xs ring-1 ring-[#00234a]"
@@ -229,35 +271,21 @@ export const MySupportTicketsPage: React.FC = () => {
         </div>
 
         <div
-          onClick={() => setStatusFilter("Submitted")}
+          onClick={() => handleStatusFilterChange("Open")}
           className={`p-4 rounded-xl border transition cursor-pointer ${
-            statusFilter === "Submitted"
+            statusFilter === "Open"
               ? "bg-white border-amber-500 shadow-xs ring-1 ring-amber-500"
               : "bg-white border-slate-200 hover:border-slate-300"
           }`}
         >
           <p className="text-[10px] font-bold text-amber-600 uppercase tracking-wider">
-            Submitted
+            Open
           </p>
-          <p className="text-2xl font-extrabold text-amber-600 mt-1">{stats.submitted}</p>
+          <p className="text-2xl font-extrabold text-amber-600 mt-1">{stats.open}</p>
         </div>
 
         <div
-          onClick={() => setStatusFilter("Received")}
-          className={`p-4 rounded-xl border transition cursor-pointer ${
-            statusFilter === "Received"
-              ? "bg-white border-blue-500 shadow-xs ring-1 ring-blue-500"
-              : "bg-white border-slate-200 hover:border-slate-300"
-          }`}
-        >
-          <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">
-            Received
-          </p>
-          <p className="text-2xl font-extrabold text-blue-600 mt-1">{stats.received}</p>
-        </div>
-
-        <div
-          onClick={() => setStatusFilter("In Progress")}
+          onClick={() => handleStatusFilterChange("In Progress")}
           className={`p-4 rounded-xl border transition cursor-pointer ${
             statusFilter === "In Progress"
               ? "bg-white border-indigo-500 shadow-xs ring-1 ring-indigo-500"
@@ -271,7 +299,7 @@ export const MySupportTicketsPage: React.FC = () => {
         </div>
 
         <div
-          onClick={() => setStatusFilter("Resolved")}
+          onClick={() => handleStatusFilterChange("Resolved")}
           className={`p-4 rounded-xl border transition cursor-pointer ${
             statusFilter === "Resolved"
               ? "bg-white border-emerald-500 shadow-xs ring-1 ring-emerald-500"
@@ -285,17 +313,17 @@ export const MySupportTicketsPage: React.FC = () => {
         </div>
 
         <div
-          onClick={() => setStatusFilter("Rejected")}
+          onClick={() => handleStatusFilterChange("Closed")}
           className={`p-4 rounded-xl border transition cursor-pointer ${
-            statusFilter === "Rejected"
+            statusFilter === "Closed"
               ? "bg-white border-rose-500 shadow-xs ring-1 ring-rose-500"
               : "bg-white border-slate-200 hover:border-slate-300"
           }`}
         >
           <p className="text-[10px] font-bold text-rose-600 uppercase tracking-wider">
-            Rejected
+            Closed
           </p>
-          <p className="text-2xl font-extrabold text-rose-600 mt-1">{stats.rejected}</p>
+          <p className="text-2xl font-extrabold text-rose-600 mt-1">{stats.closed}</p>
         </div>
       </div>
 
@@ -315,8 +343,8 @@ export const MySupportTicketsPage: React.FC = () => {
               <input
                 type="text"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search ticket #, subject, category..."
+                onChange={(e) => handleSearchChange(e.target.value)}
+                placeholder="Search ticket # or subject..."
                 className="w-full pl-8 pr-3 py-1.5 border border-slate-300 rounded-lg text-xs sm:text-sm text-slate-700 outline-none focus:border-blue-500 min-h-[34px]"
               />
             </div>
@@ -329,14 +357,13 @@ export const MySupportTicketsPage: React.FC = () => {
             </label>
             <SearchableSelect
               value={statusFilter}
-              onChange={(val) => setStatusFilter(String(val || "All"))}
+              onChange={(val) => handleStatusFilterChange(String(val || "All"))}
               options={[
                 { value: "All", label: "All Statuses" },
-                { value: "Submitted", label: "Submitted" },
-                { value: "Received", label: "Received" },
+                { value: "Open", label: "Open" },
                 { value: "In Progress", label: "In Progress" },
                 { value: "Resolved", label: "Resolved" },
-                { value: "Rejected", label: "Rejected" },
+                { value: "Closed", label: "Closed" },
               ]}
               placeholder="All Statuses"
               isClearable={false}
@@ -351,10 +378,10 @@ export const MySupportTicketsPage: React.FC = () => {
             </label>
             <SearchableSelect
               value={priorityFilter}
-              onChange={(val) => setPriorityFilter(String(val || "All"))}
+              onChange={(val) => handlePriorityFilterChange(String(val || "All"))}
               options={[
                 { value: "All", label: "All Priorities" },
-                { value: "Urgent", label: "Urgent" },
+                { value: "Critical", label: "Critical" },
                 { value: "High", label: "High" },
                 { value: "Medium", label: "Medium" },
                 { value: "Low", label: "Low" },
@@ -367,7 +394,7 @@ export const MySupportTicketsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Tickets Table */}
+      {/* Tickets Table: Strictly 7 columns as required */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
         <div className="overflow-x-auto w-full">
           <table className="w-full text-left border-collapse">
@@ -375,11 +402,11 @@ export const MySupportTicketsPage: React.FC = () => {
               <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-600 text-[11px] font-extrabold uppercase tracking-wider">
                 <th className="px-4 py-3.5">Ticket Number</th>
                 <th className="px-4 py-3.5">Subject</th>
-                <th className="px-4 py-3.5">Category</th>
                 <th className="px-4 py-3.5">Priority</th>
                 <th className="px-4 py-3.5 text-center">Status</th>
                 <th className="px-4 py-3.5">Created Date</th>
-                <th className="px-4 py-3.5 text-center">Actions</th>
+                <th className="px-4 py-3.5 text-center">Reply Count</th>
+                <th className="px-4 py-3.5 text-center">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-sm">
@@ -390,7 +417,7 @@ export const MySupportTicketsPage: React.FC = () => {
                     Loading support tickets...
                   </td>
                 </tr>
-              ) : paginatedTickets.length === 0 ? (
+              ) : displayedTickets.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-16 text-center">
                     <Inbox size={40} className="mx-auto text-slate-300 mb-3 stroke-[1.5]" />
@@ -409,9 +436,9 @@ export const MySupportTicketsPage: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                paginatedTickets.map((t) => (
-                  <tr key={t.id} className="hover:bg-slate-50/70 transition">
-                    {/* Ticket Number */}
+                displayedTickets.map((t) => (
+                  <tr key={t.ticketNumber} className="hover:bg-slate-50/70 transition">
+                    {/* 1. Ticket Number */}
                     <td className="px-4 py-3.5">
                       <button
                         type="button"
@@ -425,7 +452,7 @@ export const MySupportTicketsPage: React.FC = () => {
                       </button>
                     </td>
 
-                    {/* Subject */}
+                    {/* 2. Subject */}
                     <td className="px-4 py-3.5 max-w-md">
                       <button
                         type="button"
@@ -437,40 +464,35 @@ export const MySupportTicketsPage: React.FC = () => {
                       >
                         {t.subject}
                       </button>
-                      {t.description && (
-                        <p className="text-[11px] text-slate-400 truncate mt-0.5 max-w-[280px]">
-                          {t.description}
-                        </p>
-                      )}
                     </td>
 
-                    {/* Category */}
+                    {/* 3. Priority */}
                     <td className="px-4 py-3.5">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-slate-50 text-slate-700 border border-slate-200">
-                        <Tag size={10} className="text-slate-400" />
-                        {t.categoryName}
-                      </span>
+                      {renderPriorityBadge(t.priority)}
                     </td>
 
-                    {/* Priority */}
-                    <td className="px-4 py-3.5">
-                      {renderPriorityBadge(t.priorityName)}
-                    </td>
-
-                    {/* Status */}
+                    {/* 4. Status */}
                     <td className="px-4 py-3.5 text-center">
                       {renderStatusBadge(t.status)}
                     </td>
 
-                    {/* Created Date */}
+                    {/* 5. Created Date */}
                     <td className="px-4 py-3.5 text-xs text-slate-600 whitespace-nowrap">
                       <span className="flex items-center gap-1">
                         <Calendar size={12} className="text-slate-400" />
-                        {t.createdDate}
+                        {formatDate(t.createdDate)}
                       </span>
                     </td>
 
-                    {/* Actions */}
+                    {/* 6. Reply Count */}
+                    <td className="px-4 py-3.5 text-center">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700">
+                        <MessageSquare size={11} className="text-slate-400" />
+                        {t.replyCount ?? 0}
+                      </span>
+                    </td>
+
+                    {/* 7. Action */}
                     <td className="px-4 py-3.5 text-center">
                       <button
                         type="button"
@@ -493,18 +515,18 @@ export const MySupportTicketsPage: React.FC = () => {
         </div>
 
         {/* Pagination Bar */}
-        {tickets.length > 0 && (
+        {totalCount > 0 && (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-3.5 bg-slate-50/60 border-t border-slate-200 text-xs text-slate-500">
             <div>
               Showing{" "}
               <strong className="text-slate-800">
-                {Math.min(tickets.length, (currentPage - 1) * itemsPerPage + 1)}
+                {Math.min(totalCount, (currentPage - 1) * itemsPerPage + 1)}
               </strong>{" "}
               to{" "}
               <strong className="text-slate-800">
-                {Math.min(tickets.length, currentPage * itemsPerPage)}
+                {Math.min(totalCount, currentPage * itemsPerPage)}
               </strong>{" "}
-              of <strong className="text-slate-800">{tickets.length}</strong> tickets
+              of <strong className="text-slate-800">{totalCount}</strong> tickets
             </div>
 
             <div className="flex items-center gap-3">
@@ -529,8 +551,9 @@ export const MySupportTicketsPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
+                  disabled={currentPage <= 1}
                   className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-white disabled:opacity-40 transition cursor-pointer"
+                  title="Previous Page"
                 >
                   <ChevronLeft size={16} />
                 </button>
@@ -540,8 +563,9 @@ export const MySupportTicketsPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={currentPage === totalPages}
+                  disabled={currentPage >= totalPages}
                   className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-white disabled:opacity-40 transition cursor-pointer"
+                  title="Next Page"
                 >
                   <ChevronRight size={16} />
                 </button>
@@ -562,6 +586,7 @@ export const MySupportTicketsPage: React.FC = () => {
       <ViewTicketDetailsModal
         isOpen={isViewOpen}
         ticket={selectedTicket}
+        ticketNumber={selectedTicket?.ticketNumber}
         onClose={() => {
           setIsViewOpen(false);
           setSelectedTicket(null);

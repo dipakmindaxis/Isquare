@@ -195,9 +195,6 @@ export const EnquiryMaster: React.FC<EnquiryMasterProps> = ({ initialTab }) => {
                   Unified Master
                 </span>
               </div>
-              <p className="text-gray-500 mt-1 text-xs md:text-sm">
-                Unified master management for enquiry sources, types, statuses, stages, categories, UOM, currency, departments, place of supply, sales managers, territories, and lost reasons.
-              </p>
             </div>
           </div>
         </div>

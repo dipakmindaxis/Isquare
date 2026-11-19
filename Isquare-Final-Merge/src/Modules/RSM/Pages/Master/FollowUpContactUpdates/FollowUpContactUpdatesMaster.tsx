@@ -142,9 +142,6 @@ export const FollowUpContactUpdatesMaster: React.FC<
                   Unified Master
                 </span>
               </div>
-              <p className="text-gray-500 mt-1 text-xs md:text-sm">
-                Unified master management for customer follow-up cadence, contact roles, communication channels, meetings, activity outcomes, and priority thresholds.
-              </p>
             </div>
           </div>
         </div>

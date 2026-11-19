@@ -8,6 +8,8 @@ import {
   ChevronDown,
   AlertTriangle,
   CheckSquare,
+  Clock,
+  CheckCircle2,
 } from "lucide-react";
 import type {
   TaskItem,
@@ -512,75 +514,87 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
         />
       )}
 
-      {/* KPI METRIC CARDS (Visible in Overview & All Tasks) */}
+      {/* KPI METRIC CARDS (Visible in Overview & All Tasks) - Styled like Customer Module */}
       {!isAddOpen && (currentView === "overview" || currentView === "tasks") && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-5">
           {/* TOTAL TASKS */}
           <div
             onClick={() => setStatusFilter("All")}
-            className={`rounded-2xl border bg-white p-4 sm:p-5 transition cursor-pointer shadow-[0_10px_30px_rgba(15,23,42,0.04)] ${
+            className={`bg-white p-4 rounded-xl border shadow-sm flex items-center gap-3 sm:gap-4 cursor-pointer transition ${
               statusFilter === "All"
-                ? "border-[#153E63] ring-2 ring-[#153E63]/20"
-                : "border-slate-200 hover:border-slate-300"
+                ? "border-blue-500 ring-2 ring-blue-500/20"
+                : "border-gray-100 hover:border-gray-300"
             }`}
           >
-            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-              TOTAL TASKS
-            </p>
-            <p className="text-2xl sm:text-3xl font-extrabold text-[#172B4D] mt-2">
-              {stats.total}
-            </p>
+            <div className="p-3 bg-blue-50 text-blue-600 rounded-xl shrink-0">
+              <CheckSquare size={20} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase text-gray-400 tracking-wider truncate">
+                Total Tasks
+              </p>
+              <p className="text-2xl font-bold text-gray-800">{stats.total}</p>
+            </div>
           </div>
 
           {/* PENDING */}
           <div
             onClick={() => setStatusFilter("Pending")}
-            className={`rounded-2xl border bg-white p-4 sm:p-5 transition cursor-pointer shadow-[0_10px_30px_rgba(15,23,42,0.04)] ${
+            className={`bg-white p-4 rounded-xl border shadow-sm flex items-center gap-3 sm:gap-4 cursor-pointer transition ${
               statusFilter === "Pending"
                 ? "border-amber-500 ring-2 ring-amber-500/20"
-                : "border-amber-200/80 hover:border-amber-300"
+                : "border-gray-100 hover:border-gray-300"
             }`}
           >
-            <p className="text-[11px] font-bold text-amber-600 uppercase tracking-wider">
-              PENDING
-            </p>
-            <p className="text-2xl sm:text-3xl font-extrabold text-amber-600 mt-2">
-              {stats.pending}
-            </p>
+            <div className="p-3 bg-amber-50 text-amber-600 rounded-xl shrink-0">
+              <Clock size={20} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase text-gray-400 tracking-wider truncate">
+                Pending
+              </p>
+              <p className="text-2xl font-bold text-amber-600">{stats.pending}</p>
+            </div>
           </div>
 
           {/* IN PROGRESS */}
           <div
             onClick={() => setStatusFilter("In Progress")}
-            className={`rounded-2xl border bg-white p-4 sm:p-5 transition cursor-pointer shadow-[0_10px_30px_rgba(15,23,42,0.04)] ${
+            className={`bg-white p-4 rounded-xl border shadow-sm flex items-center gap-3 sm:gap-4 cursor-pointer transition ${
               statusFilter === "In Progress"
                 ? "border-blue-500 ring-2 ring-blue-500/20"
-                : "border-blue-200/80 hover:border-blue-300"
+                : "border-gray-100 hover:border-gray-300"
             }`}
           >
-            <p className="text-[11px] font-bold text-blue-600 uppercase tracking-wider">
-              IN PROGRESS
-            </p>
-            <p className="text-2xl sm:text-3xl font-extrabold text-blue-600 mt-2">
-              {stats.inProgress}
-            </p>
+            <div className="p-3 bg-blue-50 text-blue-600 rounded-xl shrink-0">
+              <RefreshCw size={20} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase text-gray-400 tracking-wider truncate">
+                In Progress
+              </p>
+              <p className="text-2xl font-bold text-blue-600">{stats.inProgress}</p>
+            </div>
           </div>
 
           {/* COMPLETED */}
           <div
             onClick={() => setStatusFilter("Completed")}
-            className={`rounded-2xl border bg-white p-4 sm:p-5 transition cursor-pointer shadow-[0_10px_30px_rgba(15,23,42,0.04)] ${
+            className={`bg-white p-4 rounded-xl border shadow-sm flex items-center gap-3 sm:gap-4 cursor-pointer transition ${
               statusFilter === "Completed"
                 ? "border-emerald-500 ring-2 ring-emerald-500/20"
-                : "border-emerald-200/80 hover:border-emerald-300"
+                : "border-gray-100 hover:border-gray-300"
             }`}
           >
-            <p className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">
-              COMPLETED
-            </p>
-            <p className="text-2xl sm:text-3xl font-extrabold text-emerald-600 mt-2">
-              {stats.completed}
-            </p>
+            <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl shrink-0">
+              <CheckCircle2 size={20} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase text-gray-400 tracking-wider truncate">
+                Completed
+              </p>
+              <p className="text-2xl font-bold text-emerald-600">{stats.completed}</p>
+            </div>
           </div>
         </div>
       )}
