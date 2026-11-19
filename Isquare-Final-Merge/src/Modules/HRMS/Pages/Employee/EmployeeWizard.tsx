@@ -14,7 +14,7 @@ import { getLevels } from "../../../RSM/Pages/Customer/Services/HierarchyLevelSe
 import BankDetailsTab from "./Tabs/BankDetailsTab";
 import EmployeeAddressTab from "./Tabs/EmployeeAddressTab";
 // import { type Employee } from "../../HRMS/Pages/Employee/Services/EmployeeService";
-import { type Employee } from "./Services/EmployeeSerivce";
+import { type Employee, getNextEmployeeCode } from "./Services/EmployeeSerivce";
 import {
   getCompanies,
   getCountries,
@@ -223,8 +223,24 @@ const EmployeeWizard: React.FC<EmployeeWizardProps> = ({
   const employeeDetailsRef = useRef<EmployeeDetailsTabRef>(null);
 
   useEffect(() => {
-    if (editData)
+    if (editData) {
       setFormData((prev) => ({ ...prev, ...editData }) as EmployeeFormData);
+    } else {
+      const initCode = async () => {
+        try {
+          const nextCode = await getNextEmployeeCode();
+          if (nextCode) {
+            setFormData((prev) => ({
+              ...prev,
+              employeeCode: prev.employeeCode ? prev.employeeCode : nextCode,
+            }));
+          }
+        } catch (e) {
+          console.warn("Could not auto-generate employee code:", e);
+        }
+      };
+      initCode();
+    }
   }, [editData]);
 
   useEffect(() => {
@@ -411,7 +427,15 @@ const EmployeeWizard: React.FC<EmployeeWizardProps> = ({
     const nameParts = formData.firstName.trim().split(/\s+/);
     const fName = nameParts[0] || "";
     const lName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : ".";
-    data.append("EmployeeCode", String(formData.employeeCode ?? ""));
+    let finalCode = String(formData.employeeCode ?? "").trim();
+    if (!finalCode) {
+      try {
+        finalCode = await getNextEmployeeCode();
+      } catch {
+        finalCode = `EMP${Date.now().toString().slice(-4)}`;
+      }
+    }
+    data.append("EmployeeCode", finalCode);
     data.append("FirstName", fName);
     data.append("LastName", lName);
     data.append("Email", formData.curEmail);
