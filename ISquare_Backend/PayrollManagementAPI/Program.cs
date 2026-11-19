@@ -275,6 +275,8 @@ builder.Services.AddScoped<INotificationLogsService, NotificationLogsService>();
 
 //Deepak 
 builder.Services.AddScoped<ICustomerService, CustomerService>();
+#pragma warning disable CS0618
+#pragma warning restore CS0618
 builder.Services.AddScoped<ICustomerStatusService, CustomerStatusService>();
 builder.Services.AddScoped<IIndustryService, IndustryService>();
 builder.Services.AddScoped<IClientTypeService, ClientTypeService>();
@@ -447,9 +449,9 @@ app.UseStaticFiles(new StaticFileOptions
 {
     OnPrepareResponse = ctx =>
     {
-        ctx.Context.Response.Headers["Access-Control-Allow-Origin"] = "*";
-        ctx.Context.Response.Headers["Access-Control-Allow-Headers"] = "*";
-        ctx.Context.Response.Headers["Access-Control-Allow-Methods"] = "*";
+        ctx.Context.Response.Headers.AccessControlAllowOrigin = "*";
+        ctx.Context.Response.Headers.AccessControlAllowHeaders = "*";
+        ctx.Context.Response.Headers.AccessControlAllowMethods = "*";
     }
 });
 app.UseWhen(context =>

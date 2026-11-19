@@ -6,7 +6,7 @@ namespace CompanyPlatform.CRM.Services.LocationMasters
     {
         Task<IEnumerable<CountryDto>> GetAllCountriesAsync();
 
-        Task<CountryDto?> GetCountryByIdAsync(int id);
+        Task<CountryDto> GetCountryByIdAsync(int id);
 
         Task<CountryDto> CreateCountryAsync(CountryDto dto);
 

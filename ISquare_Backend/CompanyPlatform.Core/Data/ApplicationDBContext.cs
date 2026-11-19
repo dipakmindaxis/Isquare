@@ -11,18 +11,12 @@ using CompanyPlatform.Core.Models.CRM.SalesCoordinator;
 using CompanyPlatform.Core.Models.HRMS;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using System.Reflection.Emit;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace CompanyPlatform.Core.Data
 {
-    public class ApplicationDBContext : IdentityDbContext<ApplicationUser>
+    public class ApplicationDBContext(
+        DbContextOptions<ApplicationDBContext> options) : IdentityDbContext<ApplicationUser>(options)
     {
-        public ApplicationDBContext(
-            DbContextOptions<ApplicationDBContext> options)
-            : base(options)
-        {
-        }
 
 
         //pa

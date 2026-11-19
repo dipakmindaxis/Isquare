@@ -45,7 +45,6 @@ type FormValue =
   | undefined;
 interface ApiErrorResponse {
   message?: string;
-  errors?: Record<string, string[]>;
 }
 
 export interface Qualification {
@@ -77,7 +76,6 @@ export interface EmployeeFormData {
   passportNumber: string;
   email: string;
   password: string;
-  confirmPassword?: string;
   roleId?: string;
   // Address Fields
   curFlatNo: string;
@@ -170,8 +168,7 @@ const EmployeeWizard: React.FC<EmployeeWizardProps> = ({
     aadhaarNumber: "",
     passportNumber: "",
     email: "",
-    password: "",
-    confirmPassword: "",
+    password: "Password@123",
     curFlatNo: "",
     curPremisesName: "",
     curRoadName: "",
@@ -263,24 +260,6 @@ const EmployeeWizard: React.FC<EmployeeWizardProps> = ({
     fetchMasterData();
   }, []);
 
-  useEffect(() => {
-    setErrors((prev) => {
-      if (!prev.password && !prev.confirmPassword) return prev;
-      const next = { ...prev };
-      if (next.password && formData.password && formData.password.length >= 6) {
-        delete next.password;
-      }
-      if (
-        next.confirmPassword &&
-        formData.confirmPassword &&
-        formData.password === formData.confirmPassword
-      ) {
-        delete next.confirmPassword;
-      }
-      return next;
-    });
-  }, [formData.password, formData.confirmPassword]);
-
   // --- Validation functions for each tab ---
   const validateEmployeeDetails = (): boolean => {
     const newErrors: ValidationErrors = { ...errors };
@@ -294,20 +273,6 @@ const EmployeeWizard: React.FC<EmployeeWizardProps> = ({
       newErrors.firstName = ["Employee Name is required"];
       hasErrors = true;
     } else delete newErrors.firstName;
-    if (!formData.password?.trim()) {
-      newErrors.password = ["Password is required"];
-      hasErrors = true;
-    } else if (formData.password.length < 6) {
-      newErrors.password = ["Password must be at least 6 characters"];
-      hasErrors = true;
-    } else delete newErrors.password;
-    if (!formData.confirmPassword?.trim()) {
-      newErrors.confirmPassword = ["Confirm Password is required"];
-      hasErrors = true;
-    } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = ["Password and Confirm Password do not match"];
-      hasErrors = true;
-    } else delete newErrors.confirmPassword;
     if (!formData.designationID) {
       newErrors.designationID = ["Designation is required"];
       hasErrors = true;
@@ -393,17 +358,7 @@ const EmployeeWizard: React.FC<EmployeeWizardProps> = ({
       else if (!validateCurrentAddress()) scrollToSection("emp-section-1");
       else if (!validatePermanentAddress()) scrollToSection("emp-section-2");
       else if (!validateBankDetails()) scrollToSection("emp-section-3");
-      if (
-        formData.password?.trim() &&
-        formData.confirmPassword?.trim() &&
-        formData.password !== formData.confirmPassword
-      ) {
-        toast.error("Password and Confirm Password do not match");
-      } else if (formData.password?.trim() && formData.password.length < 6) {
-        toast.error("Password must be at least 6 characters");
-      } else {
-        toast.error("Please fill all required fields");
-      }
+      toast.error("Please fill all required fields");
       return;
     }
 
@@ -416,7 +371,6 @@ const EmployeeWizard: React.FC<EmployeeWizardProps> = ({
     data.append("LastName", lName);
     data.append("Email", formData.curEmail);
     data.append("Password", formData.password);
-    data.append("ConfirmPassword", formData.confirmPassword ?? "");
 
     const appendIfValid = (key: string, value: FormValue): void => {
       if (
@@ -492,16 +446,9 @@ const EmployeeWizard: React.FC<EmployeeWizardProps> = ({
     } catch (err: unknown) {
       const error = err as AxiosError<ApiErrorResponse>;
       console.error("Error details:", error.response?.data);
-      const apiData = error.response?.data;
-      const firstValidationError = apiData?.errors
-        ? Object.values(apiData.errors).flat()[0]
-        : undefined;
-      toast.error(
-        apiData?.message || firstValidationError || "Error saving employee",
-        {
-          id: "save-emp",
-        },
-      );
+      toast.error(error.response?.data?.message || "Error saving employee", {
+        id: "save-emp",
+      });
     } finally {
       setIsSaving(false);
     }

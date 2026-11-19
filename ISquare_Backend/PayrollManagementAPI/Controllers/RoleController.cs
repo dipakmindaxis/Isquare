@@ -41,7 +41,7 @@ namespace PayrollManagementAPI.Controllers
 
             var (result, roleDto) = await _roleService.CreateRoleAsync(createRoleDto);
 
-            if (result.Succeeded && roleDto != null)
+            if (result.Succeeded)
             {
                 return Ok(new { message = $"Role '{roleDto.Name}' created successfully.", role = roleDto });
             }

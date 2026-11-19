@@ -343,10 +343,8 @@ export const getAllEmployees = async (): Promise<Employee[]> => {
   let employees = records.map(mapCrmEmployeeToHrms);
 
   // If any employees are missing PAN or Aadhaar, attempt bulk lookup from statutory details
-  let bulkStatLoaded = false;
   try {
     const statRes = await apiClient.get<any[]>(API_ENDPOINTS.EmployeeStatutoryDetails);
-    bulkStatLoaded = true;
     const statList = Array.isArray(statRes.data)
       ? statRes.data
       : Array.isArray((statRes.data as any)?.data)
@@ -372,40 +370,38 @@ export const getAllEmployees = async (): Promise<Employee[]> => {
     }
   } catch {}
 
-  // Parallel fallback: fetch statutory details per employee only if bulk endpoint was unavailable
-  if (!bulkStatLoaded) {
-    const missingStatutory = employees.filter(
-      (emp) => (!emp.panNumber || !emp.aadhaarNumber) && emp.id > 0
-    );
+  // Parallel fallback: fetch statutory details per employee for any remaining records missing PAN or Aadhaar
+  const missingStatutory = employees.filter(
+    (emp) => (!emp.panNumber || !emp.aadhaarNumber) && emp.id > 0
+  );
 
-    if (missingStatutory.length > 0) {
-      await Promise.allSettled(
-        missingStatutory.map(async (emp) => {
-          try {
-            const s = await getStatutoryDetailsByEmployeeId(emp.id);
-            if (s) {
-              emp.panNumber =
-                emp.panNumber ||
-                s.panNumber ||
-                (s as any).PANNumber ||
-                (s as any).panNo ||
-                (s as any).PANNo ||
-                "";
-              emp.aadhaarNumber =
-                emp.aadhaarNumber ||
-                s.aadhaarNumber ||
-                (s as any).AadhaarNumber ||
-                (s as any).aadharNumber ||
-                (s as any).AadharNumber ||
-                (s as any).aadhaarNo ||
-                "";
-            }
-          } catch {
-            // Ignore individual 404/failure
+  if (missingStatutory.length > 0) {
+    await Promise.allSettled(
+      missingStatutory.map(async (emp) => {
+        try {
+          const s = await getStatutoryDetailsByEmployeeId(emp.id);
+          if (s) {
+            emp.panNumber =
+              emp.panNumber ||
+              s.panNumber ||
+              (s as any).PANNumber ||
+              (s as any).panNo ||
+              (s as any).PANNo ||
+              "";
+            emp.aadhaarNumber =
+              emp.aadhaarNumber ||
+              s.aadhaarNumber ||
+              (s as any).AadhaarNumber ||
+              (s as any).aadharNumber ||
+              (s as any).AadharNumber ||
+              (s as any).aadhaarNo ||
+              "";
           }
-        })
-      );
-    }
+        } catch {
+          // Ignore individual 404/failure
+        }
+      })
+    );
   }
 
   return employees;

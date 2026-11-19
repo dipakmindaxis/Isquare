@@ -1,5 +1,3 @@
-using CompanyPlatform.Core.Models.CRM;
-using Employee = CompanyPlatform.Core.Models.CRM.Employee.Employee;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using CompanyPlatform.Core.Data;

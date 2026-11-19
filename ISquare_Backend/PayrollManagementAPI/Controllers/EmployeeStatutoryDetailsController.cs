@@ -22,15 +22,6 @@ namespace PayrollManagementAPI.Controllers
             _logger = logger;
         }
 
-        [HttpGet]
-        [Authorize]
-        public async Task<IActionResult> GetAll()
-        {
-            _logger.LogInformation("API endpoint called: GetAll statutory details");
-            var result = await _service.GetAllAsync();
-            return Ok(result);
-        }
-
         [HttpGet("by-employee/{employeeId}")]
         [Authorize]
         public async Task<IActionResult> GetByEmployeeId(int employeeId)

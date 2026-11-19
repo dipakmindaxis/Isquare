@@ -9,8 +9,8 @@ namespace CompanyPlatform.Core.DTO.EmployeeDocuments
         public int EmployeeID { get; set; }
 
         [Required]
-        public IFormFile File { get; set; } = null!;
+        public IFormFile File { get; set; }
 
-        public string DocumentName { get; set; } = string.Empty;
+        public string DocumentName { get; set; }
     }
 }

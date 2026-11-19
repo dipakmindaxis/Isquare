@@ -161,11 +161,6 @@ namespace CompanyPlatform.CRM.Controllers
 
                 return Ok(new { message = "Employee updated successfully." });
             }
-            catch (ArgumentException ex)
-            {
-                _logger.LogWarning(ex, "Invalid input while updating Employee.");
-                return BadRequest(new { message = ex.Message });
-            }
             catch (InvalidOperationException ex)
             {
                 _logger.LogWarning(ex, "Validation failure while updating Employee.");

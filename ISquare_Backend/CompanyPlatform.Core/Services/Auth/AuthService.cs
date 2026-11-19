@@ -54,25 +54,6 @@ namespace CompanyPlatform.Core.Services.Auth
         public async Task<(IdentityResult, string)> RegisterEmployeeAsync(RegisterEmployeeDto registerDto)
         {
             // 1. Initial Validations
-            if (string.IsNullOrWhiteSpace(registerDto.Password))
-                return (IdentityResult.Failed(), "Password is required.");
-
-            if (string.IsNullOrWhiteSpace(registerDto.ConfirmPassword))
-                return (IdentityResult.Failed(), "Confirm Password is required.");
-
-            if (!string.Equals(registerDto.Password, registerDto.ConfirmPassword, StringComparison.Ordinal))
-                return (IdentityResult.Failed(), "Password and Confirm Password do not match.");
-
-            var validationUser = new ApplicationUser { UserName = registerDto.Email, Email = registerDto.Email };
-            foreach (var validator in _userManager.PasswordValidators)
-            {
-                var pwdValidation = await validator.ValidateAsync(_userManager, validationUser, registerDto.Password);
-                if (!pwdValidation.Succeeded)
-                {
-                    return (pwdValidation, pwdValidation.Errors.First().Description);
-                }
-            }
-
             //var emailExists = await _userManager.FindByEmailAsync(registerDto.Email);
             //if (emailExists != null) return (IdentityResult.Failed(), "Email already exists.");
 
@@ -106,7 +87,7 @@ namespace CompanyPlatform.Core.Services.Auth
             try
             {
                 // 2. Handle Photo Upload Logic
-                string? photoPath = null;
+                string photoPath = null;
                 if (registerDto.Photo != null && registerDto.Photo.Length > 0)
                 {
                     var fileName = Guid.NewGuid() + Path.GetExtension(registerDto.Photo.FileName);
@@ -197,8 +178,7 @@ namespace CompanyPlatform.Core.Services.Auth
                     {
                         var fName = Guid.NewGuid() + Path.GetExtension(file.FileName);
                         var fPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/Uploads/Documents", fName);
-                        var docDir = Path.GetDirectoryName(fPath);
-                        if (!string.IsNullOrEmpty(docDir) && !Directory.Exists(docDir)) Directory.CreateDirectory(docDir);
+                        if (!Directory.Exists(Path.GetDirectoryName(fPath))) Directory.CreateDirectory(Path.GetDirectoryName(fPath));
                         using (var stream = new FileStream(fPath, FileMode.Create)) { await file.CopyToAsync(stream); }
 
                         _dbContext.Tb_EmployeeDocuments.Add(new EmployeeDocument
@@ -217,19 +197,16 @@ namespace CompanyPlatform.Core.Services.Auth
                     if (!string.IsNullOrEmpty(registerDto.QualificationsJson))
                     {
                         var qualifications = JsonConvert.DeserializeObject<List<QualificationSubDto>>(registerDto.QualificationsJson);
-                        if (qualifications != null)
+                        foreach (var q in qualifications)
                         {
-                            foreach (var q in qualifications)
+                            _dbContext.Tbl_EmployeeQualifications.Add(new EmployeeQualification
                             {
-                                _dbContext.Tbl_EmployeeQualifications.Add(new EmployeeQualification
-                                {
-                                    EmployeeID = newEmployee.ID,
-                                    Degree = q.Degree,
-                                    University = q.University,
-                                    PassingYear = q.PassingYear,
-                                    Percentage = q.Percentage
-                                });
-                            }
+                                EmployeeID = newEmployee.ID,
+                                Degree = q.Degree,
+                                University = q.University,
+                                PassingYear = q.PassingYear,
+                                Percentage = q.Percentage
+                            });
                         }
                     }
 
@@ -237,20 +214,17 @@ namespace CompanyPlatform.Core.Services.Auth
                     if (!string.IsNullOrEmpty(registerDto.ExperiencesJson))
                     {
                         var experiences = JsonConvert.DeserializeObject<List<ExperienceSubDto>>(registerDto.ExperiencesJson);
-                        if (experiences != null)
+                        foreach (var ex in experiences)
                         {
-                            foreach (var ex in experiences)
+                            _dbContext.Tbl_EmployeeExperiences.Add(new EmployeeExperience
                             {
-                                _dbContext.Tbl_EmployeeExperiences.Add(new EmployeeExperience
-                                {
-                                    EmployeeID = newEmployee.ID,
-                                    CompanyName = ex.CompanyName,
-                                    Designation = ex.Designation,
-                                    FromDate = ex.FromDate,
-                                    ToDate = ex.ToDate,
-                                    Location = ex.Location
-                                });
-                            }
+                                EmployeeID = newEmployee.ID,
+                                CompanyName = ex.CompanyName,
+                                Designation = ex.Designation,
+                                FromDate = ex.FromDate,
+                                ToDate = ex.ToDate,
+                                Location = ex.Location
+                            });
                         }
                     }
 
@@ -380,7 +354,7 @@ namespace CompanyPlatform.Core.Services.Auth
         //        _logger.LogInformation("Successfully assigned {Count} leave types to new EmployeeID: {EmployeeID} for FY {FinancialYear}.", newAllocations.Count, employeeId, currentFinancialYear);
         //    }
         //}
-        public async Task<LoginResponseDto?> LoginAsync(LoginRequestDto loginDto)
+        public async Task<LoginResponseDto> LoginAsync(LoginRequestDto loginDto)
         {
             // 1. Look up Identity user using UserManager and fallback to DbContext with Employee navigation
             var user = await _userManager.FindByEmailAsync(loginDto.Email);
@@ -500,13 +474,13 @@ namespace CompanyPlatform.Core.Services.Auth
             {
                 Token = new JwtSecurityTokenHandler().WriteToken(token),
                 Expiration = token.ValidTo,
-                Email = user.Email ?? string.Empty,
+                Email = user.Email,
                 Role = role,
                 WorkLocationID = workLocationId,
                 DepartmentID = departmentId,
                 DesignationID = designationId,
-                FirstName = firstName ?? string.Empty,
-                LastName = lastName ?? string.Empty,
+                FirstName = firstName,
+                LastName = lastName,
                 IsActive = isActive,
                 IsDeleted = isDeleted,
                 EmployeeId = employeeId,
@@ -682,6 +656,12 @@ namespace CompanyPlatform.Core.Services.Auth
                 return (result, error);
             }
 
+            var employeeMessage =
+                "Your password was successfully reset. If you did not make this change, contact support immediately.";
+
+          
+           
+
             return (IdentityResult.Success, "Password has been reset successfully.");
         }
 
@@ -719,6 +699,9 @@ namespace CompanyPlatform.Core.Services.Auth
 
                 return (result, "Password changed successfully!");
             }
+
+            var employeeMessage = "Your password was successfully changed from a logged-in session. If you did not make this change, please secure your account immediately.";
+           
 
             var employee = await _dbContext.Tbl_Employee.FindAsync(user.EmployeeId);
             if (employee?.ReportingTo != null)

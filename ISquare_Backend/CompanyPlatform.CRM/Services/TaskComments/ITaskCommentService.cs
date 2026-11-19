@@ -6,7 +6,7 @@ namespace CompanyPlatform.CRM.Services.TaskComments
     {
         Task<IEnumerable<TaskCommentDto>> GetAllTaskCommentsAsync();
 
-        Task<TaskCommentDto?> GetTaskCommentByIdAsync(int id);
+        Task<TaskCommentDto> GetTaskCommentByIdAsync(int id);
 
         Task<TaskCommentDto> CreateTaskCommentAsync(TaskCommentDto dto);
 
