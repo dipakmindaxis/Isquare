@@ -73,8 +73,15 @@ namespace CompanyPlatform.Core.DTO
         public string? ESINo { get; set; }
 
         // Auth
-        [Required] public string Email { get; set; }
-        [Required] public string Password { get; set; }
+        [Required] public string Email { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Password is required.")]
+        [DataType(DataType.Password)]
+        public string Password { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Confirm Password is required.")]
+        [DataType(DataType.Password)]
+        [Compare("Password", ErrorMessage = "Password and Confirm Password do not match.")]
+        public string ConfirmPassword { get; set; } = string.Empty;
         public string? Role { get; set; }
         public bool IsActive { get; set; } = true;
         public bool IsDeleted { get; set; } = false;

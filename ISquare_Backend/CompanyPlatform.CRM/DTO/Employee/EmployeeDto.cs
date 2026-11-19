@@ -105,5 +105,11 @@ namespace CompanyPlatform.CRM.DTO.Employee
         public string? UserId { get; set; }
         public DateTime? DateOfLeaving { get; set; }
         public bool IsActive { get; set; } = true;
+
+        // Password update fields (optional)
+        public string? Password { get; set; }
+        public string? NewPassword { get; set; }
+        public string? ConfirmPassword { get; set; }
+        public string? ConfirmNewPassword { get; set; }
     }
 }

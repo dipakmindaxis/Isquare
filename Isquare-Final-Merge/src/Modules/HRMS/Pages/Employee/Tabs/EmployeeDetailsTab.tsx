@@ -366,6 +366,11 @@ const EmployeeDetailsTab = forwardRef<
                       ? "border-red-500 shadow-sm shadow-red-200"
                       : "border-gray-300"
                     }`}
+                  className={`${baseInputStyle} pr-10 ${
+                    errors.confirmPassword || passwordMismatch
+                      ? "border-red-500 shadow-sm shadow-red-200"
+                      : "border-gray-300"
+                  }`}
                   value={String(formData.confirmPassword ?? "")}
                   onChange={(e) =>
                     setFormData((prev) => ({
@@ -393,6 +398,11 @@ const EmployeeDetailsTab = forwardRef<
                 </p>
               ) : passwordMismatch ? (
                 <p className="text-xs text-red-500 mt-1">
+                <p className="text-xs text-red-500 mt-1 font-medium">
+                  {errors.confirmPassword[0]}
+                </p>
+              ) : passwordMismatch ? (
+                <p className="text-xs text-red-500 mt-1 font-medium">
                   Password and Confirm Password do not match
                 </p>
               ) : null}

@@ -4,9 +4,11 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using CompanyPlatform.Core.Data;
+using CompanyPlatform.Core.Models;
 using EmployeeEntity = CompanyPlatform.Core.Models.CRM.Employee.Employee;
 using CompanyPlatform.CRM.DTO.Employee;
 
@@ -16,14 +18,17 @@ namespace CompanyPlatform.CRM.Services.Employee
     {
         private readonly ApplicationDBContext _context;
         private readonly ILogger<CRMEmployeeService> _logger;
+        private readonly UserManager<ApplicationUser> _userManager;
         private static readonly SemaphoreSlim _codeLock = new SemaphoreSlim(1, 1);
 
         public CRMEmployeeService(
             ApplicationDBContext context,
-            ILogger<CRMEmployeeService> logger)
+            ILogger<CRMEmployeeService> logger,
+            UserManager<ApplicationUser> userManager)
         {
             _context = context;
             _logger = logger;
+            _userManager = userManager;
         }
 
         public async Task<string> GetNextEmployeeCodeAsync()
@@ -262,6 +267,41 @@ namespace CompanyPlatform.CRM.Services.Employee
             if (entity == null)
                 return false;
 
+            // Optional password update validation
+            var passwordToSet = !string.IsNullOrWhiteSpace(dto.Password) ? dto.Password : dto.NewPassword;
+            var confirmPasswordToSet = !string.IsNullOrWhiteSpace(dto.ConfirmPassword) ? dto.ConfirmPassword : dto.ConfirmNewPassword;
+            ApplicationUser? identityUser = null;
+
+            if (!string.IsNullOrWhiteSpace(passwordToSet))
+            {
+                if (string.IsNullOrWhiteSpace(confirmPasswordToSet))
+                {
+                    throw new InvalidOperationException("Confirm Password is required when changing password.");
+                }
+
+                if (!string.Equals(passwordToSet, confirmPasswordToSet, StringComparison.Ordinal))
+                {
+                    throw new InvalidOperationException("Password and Confirm Password do not match.");
+                }
+
+                if (passwordToSet.Length < 6)
+                {
+                    throw new InvalidOperationException("Password must be at least 6 characters long.");
+                }
+
+                // Locate existing Identity user associated with the employee (via EmployeeId or AspNetUsers table)
+                identityUser = await _userManager.Users.FirstOrDefaultAsync(u => u.EmployeeId == id);
+                if (identityUser == null && !string.IsNullOrWhiteSpace(entity.EmailAddress))
+                {
+                    identityUser = await _userManager.FindByEmailAsync(entity.EmailAddress);
+                }
+
+                if (identityUser == null)
+                {
+                    throw new InvalidOperationException($"No Identity user account found for employee ID {id}.");
+                }
+            }
+
             // Check email uniqueness if email has changed
             if (!string.Equals(entity.EmailAddress, dto.EmailAddress.Trim(), StringComparison.OrdinalIgnoreCase))
             {
@@ -345,6 +385,32 @@ namespace CompanyPlatform.CRM.Services.Employee
 
             _context.Tbl_Employee.Update(entity);
             await _context.SaveChangesAsync();
+
+            // Secure Identity password update if requested
+            if (identityUser != null && !string.IsNullOrWhiteSpace(passwordToSet))
+            {
+                if (await _userManager.HasPasswordAsync(identityUser))
+                {
+                    var resetToken = await _userManager.GeneratePasswordResetTokenAsync(identityUser);
+                    var resetResult = await _userManager.ResetPasswordAsync(identityUser, resetToken, passwordToSet);
+                    if (!resetResult.Succeeded)
+                    {
+                        var errorMsg = resetResult.Errors.FirstOrDefault()?.Description ?? "Failed to update password.";
+                        throw new InvalidOperationException(errorMsg);
+                    }
+                }
+                else
+                {
+                    var addResult = await _userManager.AddPasswordAsync(identityUser, passwordToSet);
+                    if (!addResult.Succeeded)
+                    {
+                        var errorMsg = addResult.Errors.FirstOrDefault()?.Description ?? "Failed to set password.";
+                        throw new InvalidOperationException(errorMsg);
+                    }
+                }
+
+                _logger.LogInformation("Password successfully updated for Employee ID {Id}, User {UserName}", id, identityUser.UserName);
+            }
 
             return true;
         }
