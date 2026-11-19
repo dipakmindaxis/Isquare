@@ -8,6 +8,7 @@
     <InvariantGlobalization>false</InvariantGlobalization>
     <SelfContained>false</SelfContained>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+    <NoWarn>$(NoWarn);NU1902;NU1903</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

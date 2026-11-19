@@ -8,7 +8,7 @@ namespace CompanyPlatform.CRM.Services.TaskStatus
     {
         Task<IEnumerable<TaskStatusDto>> GetAllTaskStatusesAsync();
 
-        Task<TaskStatusDto?> GetTaskStatusByIdAsync(int id);
+        Task<TaskStatusDto> GetTaskStatusByIdAsync(int id);
 
         Task<TaskStatusDto> CreateTaskStatusAsync(TaskStatusDto dto);
 

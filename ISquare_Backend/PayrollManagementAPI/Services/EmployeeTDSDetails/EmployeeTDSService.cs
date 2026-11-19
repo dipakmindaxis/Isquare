@@ -13,7 +13,7 @@ namespace CompanyPlatform.Core.Services.EmployeeTDSDetails
             _context = context;
         }
 
-        public async Task<ViewTDSDetailsDto?> GetByEmployeeIdAsync(int employeeId)
+        public async Task<ViewTDSDetailsDto> GetByEmployeeIdAsync(int employeeId)
         {
             var tds = await _context.EmployeeTDSDetails
                 .FirstOrDefaultAsync(t => t.EmployeeID == employeeId && !t.IsDeleted);
@@ -38,7 +38,7 @@ namespace CompanyPlatform.Core.Services.EmployeeTDSDetails
                 _context.EmployeeTDSDetails.Add(existing);
             }
             await _context.SaveChangesAsync();
-            return (await GetByEmployeeIdAsync(dto.EmployeeID))!;
+            return await GetByEmployeeIdAsync(dto.EmployeeID);
         }
     }
 }

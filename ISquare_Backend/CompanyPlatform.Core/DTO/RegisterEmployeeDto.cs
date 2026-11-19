@@ -8,18 +8,18 @@ namespace CompanyPlatform.Core.DTO
     public class RegisterEmployeeDto
     {
         // STEP 1: Basic Details
-        [Required] public string EmployeeCode { get; set; } = string.Empty;
-        [Required] public string FirstName { get; set; } = string.Empty;
+        [Required] public string EmployeeCode { get; set; }
+        [Required] public string FirstName { get; set; }
         public string? MiddleName { get; set; }
-        [Required] public string LastName { get; set; } = string.Empty;
+        [Required] public string LastName { get; set; }
         public int? CompanyId { get; set; }
         public int? DepartmentID { get; set; }
         public int? DesignationID { get; set; }
 
         public int? LevelID { get; set; }
-        public string PANNumber { get; set; } = string.Empty;
+        public string PANNumber { get; set; }
         public string? PassportNumber { get; set; }
-        public string AadhaarNumber { get; set; } = string.Empty;
+        public string AadhaarNumber { get; set; }
         public IFormFile? Photo { get; set; }
         public List<IFormFile>? Attachments { get; set; } 
 
@@ -73,15 +73,8 @@ namespace CompanyPlatform.Core.DTO
         public string? ESINo { get; set; }
 
         // Auth
-        [Required] public string Email { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Password is required.")]
-        [DataType(DataType.Password)]
-        public string Password { get; set; } = string.Empty;
-
-        [Required(ErrorMessage = "Confirm Password is required.")]
-        [DataType(DataType.Password)]
-        [Compare("Password", ErrorMessage = "Password and Confirm Password do not match.")]
-        public string ConfirmPassword { get; set; } = string.Empty;
+        [Required] public string Email { get; set; }
+        [Required] public string Password { get; set; }
         public string? Role { get; set; }
         public bool IsActive { get; set; } = true;
         public bool IsDeleted { get; set; } = false;
@@ -92,16 +85,16 @@ namespace CompanyPlatform.Core.DTO
 
     public class QualificationSubDto
     {
-        public string Degree { get; set; } = string.Empty;
-        public string University { get; set; } = string.Empty;
-        public string PassingYear { get; set; } = string.Empty;
+        public string Degree { get; set; }
+        public string University { get; set; }
+        public string PassingYear { get; set; }
         public decimal Percentage { get; set; }
     }
 
     public class ExperienceSubDto
     {
-        public string CompanyName { get; set; } = string.Empty;
-        public string Designation { get; set; } = string.Empty;
+        public string CompanyName { get; set; }
+        public string Designation { get; set; }
         public DateTime? FromDate { get; set; }
         public DateTime? ToDate { get; set; }
         public string? Location { get; set; }

@@ -52,7 +52,7 @@ public class AccessControlController : ControllerBase
         var role = await _roleManager.FindByIdAsync(roleId);
         if (role == null) return NotFound("Role not found.");
 
-        if (string.Equals(role.Name, "Admin", StringComparison.OrdinalIgnoreCase))
+        if (role.Name.Equals("Admin", StringComparison.OrdinalIgnoreCase))
         {
             return BadRequest("Cannot modify permissions for the Admin role.");
         }

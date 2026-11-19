@@ -35,7 +35,7 @@ namespace PayrollManagementAPI.Services.Designation
                 });
         }
 
-        public async Task<DesignationDto?> GetDesignationByIdAsync(int id)
+        public async Task<DesignationDto> GetDesignationByIdAsync(int id)
         {
             _logger.LogInformation("Fetching designation by ID: {DesignationId}", id);
             var item = await _repository.GetByIdAsync(id);

@@ -17,7 +17,7 @@ namespace CompanyPlatform.Core.Repository
 
         public async Task<IEnumerable<T>> GetAll() => await _dbSet.ToListAsync();
 
-        public async Task<T?> GetById(int id) => await _dbSet.FindAsync(id);
+        public async Task<T> GetById(int id) => await _dbSet.FindAsync(id);
 
         public async Task<IEnumerable<T>> FindByCondition(Expression<Func<T, bool>> expression)
         {
@@ -69,7 +69,7 @@ namespace CompanyPlatform.Core.Repository
         {
             _dbSet.Update(entity);await _context.SaveChangesAsync();
         }
-        public async Task<T?> GetByIdAsync(int id)
+        public async Task<T> GetByIdAsync(int id)
         {
             return await _dbSet.FindAsync(id);
         }

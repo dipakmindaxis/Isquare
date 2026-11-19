@@ -7,7 +7,7 @@ namespace CompanyPlatform.Core.Services
     {
         Task<IEnumerable<PriorityDto>> GetAllPrioritiesAsync();
 
-        Task<PriorityDto?> GetPriorityByIdAsync(int id);
+        Task<PriorityDto> GetPriorityByIdAsync(int id);
 
         Task<PriorityDto> CreatePriorityAsync(PriorityDto dto);
 
