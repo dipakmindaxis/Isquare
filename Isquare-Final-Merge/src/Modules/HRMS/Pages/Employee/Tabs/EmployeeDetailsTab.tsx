@@ -362,10 +362,6 @@ const EmployeeDetailsTab = forwardRef<
                   type={showConfirmPassword ? "text" : "password"}
                   autoComplete="new-password"
                   placeholder="Confirm Password"
-                  className={`${baseInputStyle} pr-10 ${errors.confirmPassword || passwordMismatch
-                      ? "border-red-500 shadow-sm shadow-red-200"
-                      : "border-gray-300"
-                    }`}
                   className={`${baseInputStyle} pr-10 ${
                     errors.confirmPassword || passwordMismatch
                       ? "border-red-500 shadow-sm shadow-red-200"
@@ -393,11 +389,6 @@ const EmployeeDetailsTab = forwardRef<
                 </button>
               </div>
               {errors.confirmPassword ? (
-                <p className="text-xs text-red-500 mt-1">
-                  {errors.confirmPassword[0]}
-                </p>
-              ) : passwordMismatch ? (
-                <p className="text-xs text-red-500 mt-1">
                 <p className="text-xs text-red-500 mt-1 font-medium">
                   {errors.confirmPassword[0]}
                 </p>
