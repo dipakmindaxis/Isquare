@@ -301,9 +301,6 @@ const EnquiryMaster: React.FC = () => {
                   Operations
                 </span>
               </div>
-              <p className="text-gray-500 mt-1 text-xs md:text-sm">
-                Manage commercial enquiries, requirements, pipelines, and follow-ups.
-              </p>
             </div>
           </div>
         </div>

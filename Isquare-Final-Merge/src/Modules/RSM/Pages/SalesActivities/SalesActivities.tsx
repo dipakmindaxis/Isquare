@@ -347,9 +347,6 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
                   Unified Master
                 </span>
               </div>
-              <p className="text-gray-500 mt-1 text-xs md:text-sm">
-                Unified master management for sales activities, follow-ups, activity types, customer statuses, priorities, and document types.
-              </p>
             </div>
           </div>
         </div>

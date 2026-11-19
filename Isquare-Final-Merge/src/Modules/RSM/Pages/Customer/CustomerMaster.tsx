@@ -804,9 +804,6 @@ const CustomerMaster: React.FC<CustomerMasterProps> = ({
                   Unified Master
                 </span>
               </div>
-              <p className="text-gray-500 mt-1 text-xs md:text-sm">
-                Unified master management for customer directory, industry classifications, lifecycle statuses, lead acquisition sources, geographic areas, and payment terms.
-              </p>
             </div>
           </div>
         </div>

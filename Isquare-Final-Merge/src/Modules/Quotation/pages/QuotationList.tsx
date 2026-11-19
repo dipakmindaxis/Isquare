@@ -291,9 +291,6 @@ export const QuotationList: React.FC = () => {
                   Quotation Management
                 </span>
               </div>
-              <p className="text-gray-500 mt-1 text-xs md:text-sm">
-                Manage proposal documents, customer pricing, revisions, and approval cycles
-              </p>
             </div>
           </div>
         </div>

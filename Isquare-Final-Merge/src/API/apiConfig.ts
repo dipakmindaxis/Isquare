@@ -1,9 +1,9 @@
 //const BASE_URL = "https://localhost:7296/api";
 //const BASE_URL = "https://sama9890-001-site1.jtempurl.com/api";
-//const BASE_URL = "https://localhost:44363/api";
+const BASE_URL = "https://localhost:44363/api";
 //const BASE_URL = "https://localhost:7296/api";
 //const BASE_URL = "https://sama9890-001-site1.jtempurl.com/api";
-const BASE_URL = "https://vishalkakde-001-site1.etempurl.com/api";
+//const BASE_URL = "https://vishalkakde-001-site1.etempurl.com/api";
 
 export interface ApiEndpoints {
   BaseUrl: string;
@@ -183,4 +183,27 @@ export const API_ENDPOINTS: ApiEndpoints = {
   Enquiries: `${BASE_URL}/Enquiry`,
   HelpDeskTickets: `${BASE_URL}/helpdesk/tickets`,
   HelpDeskCategories: `${BASE_URL}/helpdesk/categories`,
+  ExternalSupportTickets: "https://mindaxis-001-site1.jtempurl.com/api/external-support/tickets",
+};
+
+/**
+ * MindAxis Customer Support API Integration Configuration (Option A - External Software Integration)
+ * Base URL: https://mindaxis-001-site1.jtempurl.com/api
+ * Base Path: /api/external-support
+ */
+export const MINDAXIS_SUPPORT_BASE_URL = "https://mindaxis-001-site1.jtempurl.com/api";
+
+export const MINDAXIS_SUPPORT_CONFIG = {
+  BaseUrl: MINDAXIS_SUPPORT_BASE_URL,
+  CompanyCode: "CMP-001",
+  SoftwareCode: "POS_CLIENT",
+  Endpoints: {
+    Tickets: `${MINDAXIS_SUPPORT_BASE_URL}/external-support/tickets`,
+    TicketDetails: (ticketNumber: string) =>
+      `${MINDAXIS_SUPPORT_BASE_URL}/external-support/tickets/${encodeURIComponent(ticketNumber)}`,
+    TicketReplies: (ticketNumber: string) =>
+      `${MINDAXIS_SUPPORT_BASE_URL}/external-support/tickets/${encodeURIComponent(ticketNumber)}/replies`,
+    DownloadAttachment: (ticketNumber: string, attachmentId: string | number) =>
+      `${MINDAXIS_SUPPORT_BASE_URL}/external-support/tickets/${encodeURIComponent(ticketNumber)}/attachments/${encodeURIComponent(attachmentId)}/download`,
+  },
 };
