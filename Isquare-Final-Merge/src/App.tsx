@@ -689,11 +689,7 @@ const router = createBrowserRouter([
     path: "*",
     element: <NotFoundPage />,
   },
-],
-  {
-    basename: "/frontend",
-  }
-);
+]);
 
 const App: React.FC = () => {
   return <RouterProvider router={router} />;
