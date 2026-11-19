@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import { Camera, UploadCloud } from "lucide-react";
 import type { EmployeeFormData } from "../EmployeeWizard";
+import { getNextEmployeeCode } from "../Services/EmployeeSerivce";
 import type {
   CompanyItem,
   DepartmentItem,
@@ -245,6 +246,26 @@ const EmployeeDetailsTab = forwardRef<
     });
 
     const photoUrl = preview || (photoFile ? URL.createObjectURL(photoFile) : null);
+
+    const handleAutoGenerateCode = async () => {
+      try {
+        const nextCode = await getNextEmployeeCode();
+        if (nextCode) {
+          setFormData((prev) => ({
+            ...prev,
+            employeeCode: nextCode,
+          }));
+        }
+      } catch (err) {
+        console.error("Failed to generate code:", err);
+      }
+    };
+
+    useEffect(() => {
+      if (!formData.employeeCode) {
+        handleAutoGenerateCode();
+      }
+    }, []);
 
     return (
       <div className="flex flex-col gap-8">

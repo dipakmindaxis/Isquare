@@ -679,3 +679,59 @@ export const updateEmployeeStatus = async (id: number, isActive: boolean) => {
     },
   );
 };
+
+export const getNextEmployeeCode = async (): Promise<string> => {
+  // 1. Try backend endpoint: GET /api/employee/next-code
+  try {
+    const nextCodeUrl = `${API_ENDPOINTS.CRMEmployee || `${API_ENDPOINTS.BaseUrl}/employee`}/next-code`;
+    const response = await apiClient.get<any>(nextCodeUrl);
+    const code =
+      response.data?.employeeCode ||
+      response.data?.code ||
+      (typeof response.data === "string" ? response.data : "");
+    if (code && typeof code === "string" && code.trim().length > 0) {
+      return code.trim();
+    }
+  } catch (err) {
+    console.warn("Primary /api/employee/next-code unavailable, attempting fallback...", err);
+  }
+
+  // 2. Try secondary endpoint: GET /api/employees/next-code
+  try {
+    const nextCodeUrl2 = `${API_ENDPOINTS.Employees || `${API_ENDPOINTS.BaseUrl}/employees`}/next-code`;
+    const response = await apiClient.get<any>(nextCodeUrl2);
+    const code =
+      response.data?.employeeCode ||
+      response.data?.code ||
+      (typeof response.data === "string" ? response.data : "");
+    if (code && typeof code === "string" && code.trim().length > 0) {
+      return code.trim();
+    }
+  } catch {}
+
+  // 3. Fallback: calculate dynamically from existing employees list
+  try {
+    const all = await getAllEmployees();
+    let maxNumber = 0;
+    all.forEach((emp) => {
+      const c = (emp.employeeCode || (emp as any).EmployeeCode || "").trim();
+      if (!c) return;
+      const prefixMatch = c.match(/^(?:EMP-?|E-?)(\d+)$/i);
+      if (prefixMatch && prefixMatch[1]) {
+        const num = parseInt(prefixMatch[1], 10);
+        if (!isNaN(num) && num > maxNumber) maxNumber = num;
+      } else {
+        const digitMatch = c.match(/\d+/);
+        if (digitMatch) {
+          const num = parseInt(digitMatch[0], 10);
+          if (!isNaN(num) && num > maxNumber) maxNumber = num;
+        }
+      }
+    });
+
+    return `EMP${String(maxNumber + 1).padStart(3, "0")}`;
+  } catch (fallbackErr) {
+    console.error("Fallback getNextEmployeeCode calculation error:", fallbackErr);
+    return "EMP001";
+  }
+};
