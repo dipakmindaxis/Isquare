@@ -1,4 +1,4 @@
-using CompanyPlatform.Core.Data;
+﻿using CompanyPlatform.Core.Data;
 using CompanyPlatform.Core.Models;
 using CompanyPlatform.Core.Models.CRM;
 using Employee = CompanyPlatform.Core.Models.CRM.Employee.Employee;

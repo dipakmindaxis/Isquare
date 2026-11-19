@@ -6,7 +6,7 @@ import React, {
   forwardRef,
   useImperativeHandle,
 } from "react";
-import { Camera, UploadCloud } from "lucide-react";
+import { Camera, UploadCloud, Eye, EyeOff } from "lucide-react";
 import type { EmployeeFormData } from "../EmployeeWizard";
 import { getNextEmployeeCode } from "../Services/EmployeeSerivce";
 import type {
@@ -64,6 +64,8 @@ const EmployeeDetailsTab = forwardRef<
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [preview, setPreview] = useState<string | null>(null);
     const docInputRef = useRef<HTMLInputElement>(null);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const validate = (): boolean => {
       return true;
@@ -246,6 +248,9 @@ const EmployeeDetailsTab = forwardRef<
     });
 
     const photoUrl = preview || (photoFile ? URL.createObjectURL(photoFile) : null);
+    const passwordMismatch =
+      Boolean(formData.confirmPassword) &&
+      String(formData.password ?? "") !== String(formData.confirmPassword ?? "");
 
     const handleAutoGenerateCode = async () => {
       try {
@@ -310,6 +315,88 @@ const EmployeeDetailsTab = forwardRef<
               {errors.firstName && (
                 <p className="text-xs text-red-500 mt-1">{errors.firstName[0]}</p>
               )}
+            </div>
+
+            <div className="relative">
+              <label className={labelStyle}>
+                Password
+                <RequiredAst />
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="new-password"
+                  placeholder="Enter Password"
+                  className={`${baseInputStyle} pr-10 ${getInputBorderClass("password")}`}
+                  value={String(formData.password ?? "")}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      password: e.target.value,
+                    }))
+                  }
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-[#FF7900] transition cursor-pointer"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+              {errors.password && (
+                <p className="text-xs text-red-500 mt-1">
+                  {errors.password[0]}
+                </p>
+              )}
+            </div>
+
+            <div className="relative">
+              <label className={labelStyle}>
+                Confirm Password
+                <RequiredAst />
+              </label>
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  autoComplete="new-password"
+                  placeholder="Confirm Password"
+                  className={`${baseInputStyle} pr-10 ${
+                    errors.confirmPassword || passwordMismatch
+                      ? "border-red-500 shadow-sm shadow-red-200"
+                      : "border-gray-300"
+                  }`}
+                  value={String(formData.confirmPassword ?? "")}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      confirmPassword: e.target.value,
+                    }))
+                  }
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword((prev) => !prev)}
+                  aria-label={
+                    showConfirmPassword
+                      ? "Hide confirm password"
+                      : "Show confirm password"
+                  }
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-[#FF7900] transition cursor-pointer"
+                >
+                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+              {errors.confirmPassword ? (
+                <p className="text-xs text-red-500 mt-1 font-medium">
+                  {errors.confirmPassword[0]}
+                </p>
+              ) : passwordMismatch ? (
+                <p className="text-xs text-red-500 mt-1 font-medium">
+                  Password and Confirm Password do not match
+                </p>
+              ) : null}
             </div>
 
             <div>

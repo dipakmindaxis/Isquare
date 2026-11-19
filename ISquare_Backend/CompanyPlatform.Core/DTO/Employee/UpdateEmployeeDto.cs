@@ -71,6 +71,12 @@ namespace CompanyPlatform.Core.DTO.Employee
 
         [DefaultValue(false)]
         public bool IsDeleted { get; set; }
+
+        // Optional password update
+        public string? Password { get; set; }
+        public string? NewPassword { get; set; }
+        public string? ConfirmPassword { get; set; }
+        public string? ConfirmNewPassword { get; set; }
     }
 
     public class UpdateEmployeeStatusDto

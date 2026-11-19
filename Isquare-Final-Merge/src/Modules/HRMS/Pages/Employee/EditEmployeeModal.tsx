@@ -19,6 +19,9 @@ import {
   Check,
   Paperclip,
   Trash2,
+  Eye,
+  EyeOff,
+  Lock,
 } from "lucide-react";
 import axios from "axios";
 
@@ -69,6 +72,14 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
   const [activeTab, setActiveTab] = useState<TabIndex>(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Optional Change Password state
+  const [changePassword, setChangePassword] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
+  const [passwordTouched, setPasswordTouched] = useState(false);
 
   const [reportingManagers, setReportingManagers] = useState<{ value: number; label: string }[]>([]);
   const [isLoadingManagers, setIsLoadingManagers] = useState(false);
@@ -153,6 +164,12 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
       setIsLoading(false);
       return;
     }
+    setChangePassword(false);
+    setNewPassword("");
+    setConfirmNewPassword("");
+    setShowNewPassword(false);
+    setShowConfirmNewPassword(false);
+    setPasswordTouched(false);
     setIsLoading(true);
     try {
       const [
@@ -316,6 +333,31 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
 
   const handleSaveAll = async () => {
     if (!employeeId) return;
+
+    if (changePassword) {
+      setPasswordTouched(true);
+      if (!newPassword.trim()) {
+        toast.error("Please enter a new password");
+        setActiveTab(0);
+        return;
+      }
+      if (newPassword.length < 6) {
+        toast.error("New password must be at least 6 characters long");
+        setActiveTab(0);
+        return;
+      }
+      if (!confirmNewPassword.trim()) {
+        toast.error("Please confirm your new password");
+        setActiveTab(0);
+        return;
+      }
+      if (newPassword !== confirmNewPassword) {
+        toast.error("Passwords do not match");
+        setActiveTab(0);
+        return;
+      }
+    }
+
     setIsSaving(true);
 
     const nameStr = (formData.firstName || "").trim();
@@ -396,6 +438,14 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
       dateOfLeaving: parseDate(formData.dateOfLeaving),
       isActive:
         formData.isActive !== undefined ? Boolean(formData.isActive) : true,
+      ...(changePassword && newPassword.trim()
+        ? {
+            password: newPassword,
+            confirmPassword: confirmNewPassword,
+            newPassword: newPassword,
+            confirmNewPassword: confirmNewPassword,
+          }
+        : {}),
     };
 
     try {
@@ -408,6 +458,10 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
         },
       });
       toast.success(response.data?.message || "Employee updated successfully");
+      setChangePassword(false);
+      setNewPassword("");
+      setConfirmNewPassword("");
+      setPasswordTouched(false);
       onSuccess();
       onClose();
     } catch (err: any) {
@@ -893,6 +947,128 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
                 />
               </div>
             </div>
+
+            {/* Optional Change Password Section */}
+            <div className="pt-6 border-t border-gray-200">
+              <div className="flex items-center gap-2.5 mb-4">
+                <input
+                  type="checkbox"
+                  id="changePasswordCheckbox"
+                  checked={changePassword}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setChangePassword(checked);
+                    if (!checked) {
+                      setNewPassword("");
+                      setConfirmNewPassword("");
+                      setPasswordTouched(false);
+                      setShowNewPassword(false);
+                      setShowConfirmNewPassword(false);
+                    }
+                  }}
+                  className="w-4 h-4 text-[#FF7900] rounded border-gray-300 focus:ring-[#FF7900] accent-[#FF7900] cursor-pointer"
+                />
+                <label
+                  htmlFor="changePasswordCheckbox"
+                  className="text-sm font-bold text-gray-700 cursor-pointer select-none flex items-center gap-1.5"
+                >
+                  <Lock size={15} className="text-[#FF7900]" />
+                  Change Password
+                </label>
+              </div>
+
+              {changePassword && (
+                <div className="grid grid-cols-2 gap-6 p-5 bg-orange-50/40 rounded-xl border border-orange-200/60 animate-in fade-in duration-200">
+                  <div className="relative">
+                    <label className={labelStyle}>
+                      New Password <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showNewPassword ? "text" : "password"}
+                        autoComplete="new-password"
+                        placeholder="Enter New Password (min. 6 characters)"
+                        className={`${inputStyle} pr-10 ${
+                          passwordTouched && (!newPassword || newPassword.length < 6)
+                            ? "border-red-500 ring-1 ring-red-200"
+                            : ""
+                        }`}
+                        value={newPassword}
+                        onChange={(e) => {
+                          setNewPassword(e.target.value);
+                          setPasswordTouched(true);
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPassword((prev) => !prev)}
+                        aria-label={showNewPassword ? "Hide password" : "Show password"}
+                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-[#FF7900] transition cursor-pointer"
+                      >
+                        {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+                    {passwordTouched && !newPassword && (
+                      <p className="text-xs text-red-500 mt-1 font-medium">
+                        New password is required.
+                      </p>
+                    )}
+                    {passwordTouched && newPassword && newPassword.length < 6 && (
+                      <p className="text-xs text-red-500 mt-1 font-medium">
+                        Password must be at least 6 characters.
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="relative">
+                    <label className={labelStyle}>
+                      Confirm New Password <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showConfirmNewPassword ? "text" : "password"}
+                        autoComplete="new-password"
+                        placeholder="Confirm New Password"
+                        className={`${inputStyle} pr-10 ${
+                          passwordTouched &&
+                          (!confirmNewPassword ||
+                            (confirmNewPassword && newPassword !== confirmNewPassword))
+                            ? "border-red-500 ring-1 ring-red-200"
+                            : ""
+                        }`}
+                        value={confirmNewPassword}
+                        onChange={(e) => {
+                          setConfirmNewPassword(e.target.value);
+                          setPasswordTouched(true);
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmNewPassword((prev) => !prev)}
+                        aria-label={
+                          showConfirmNewPassword
+                            ? "Hide confirm password"
+                            : "Show confirm password"
+                        }
+                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-[#FF7900] transition cursor-pointer"
+                      >
+                        {showConfirmNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+                    {passwordTouched && !confirmNewPassword && (
+                      <p className="text-xs text-red-500 mt-1 font-medium">
+                        Confirm password is required.
+                      </p>
+                    )}
+                    {confirmNewPassword && newPassword !== confirmNewPassword && (
+                      <p className="text-xs text-red-500 mt-1 font-medium">
+                        Passwords do not match.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         );
 
@@ -1362,7 +1538,28 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
         {activeTab < tabs.length - 1 ? (
           <button
             type="button"
-            onClick={() => setActiveTab((prev) => (prev + 1) as TabIndex)}
+            onClick={() => {
+              if (activeTab === 0 && changePassword) {
+                setPasswordTouched(true);
+                if (!newPassword.trim()) {
+                  toast.error("Please enter a new password");
+                  return;
+                }
+                if (newPassword.length < 6) {
+                  toast.error("New password must be at least 6 characters long");
+                  return;
+                }
+                if (!confirmNewPassword.trim()) {
+                  toast.error("Please confirm your new password");
+                  return;
+                }
+                if (newPassword !== confirmNewPassword) {
+                  toast.error("Passwords do not match");
+                  return;
+                }
+              }
+              setActiveTab((prev) => (prev + 1) as TabIndex);
+            }}
             className="px-8 py-2.5 bg-[#FF7900] text-white rounded-lg font-semibold text-sm hover:bg-[#e66d00] transition"
           >
             Next
