@@ -46,6 +46,7 @@ export interface NewEmployeePayload {
   esiNo?: string;
   email: string;
   password: string;
+  confirmPassword?: string;
   role: string;
 }
 
@@ -64,6 +65,10 @@ export interface UpdateEmployeePayload {
   reportingTo?: number | null;
   isActive: boolean;
   role?: string;
+  password?: string;
+  confirmPassword?: string;
+  newPassword?: string;
+  confirmNewPassword?: string;
 }
 
 export interface EmployeeDetail extends Employee {

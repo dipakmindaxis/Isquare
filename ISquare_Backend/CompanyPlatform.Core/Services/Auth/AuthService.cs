@@ -54,6 +54,15 @@ namespace CompanyPlatform.Core.Services.Auth
         public async Task<(IdentityResult, string)> RegisterEmployeeAsync(RegisterEmployeeDto registerDto)
         {
             // 1. Initial Validations
+            if (string.IsNullOrWhiteSpace(registerDto.Password))
+                return (IdentityResult.Failed(), "Password is required.");
+
+            if (string.IsNullOrWhiteSpace(registerDto.ConfirmPassword))
+                return (IdentityResult.Failed(), "Confirm Password is required.");
+
+            if (!string.Equals(registerDto.Password, registerDto.ConfirmPassword, StringComparison.Ordinal))
+                return (IdentityResult.Failed(), "Password and Confirm Password do not match.");
+
             //var emailExists = await _userManager.FindByEmailAsync(registerDto.Email);
             //if (emailExists != null) return (IdentityResult.Failed(), "Email already exists.");
 
