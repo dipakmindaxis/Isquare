@@ -97,9 +97,6 @@ const EditCustomerStatusModal: React.FC<EditCustomerStatusModalProps> = ({
                 <h2 className="text-lg font-bold text-gray-900">
                   Edit Customer Status
                 </h2>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Update customer status details and active state
-                </p>
               </div>
             </div>
             <button

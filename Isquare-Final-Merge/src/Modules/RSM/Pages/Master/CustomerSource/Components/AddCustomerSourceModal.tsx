@@ -83,9 +83,6 @@ const AddCustomerSourceModal: React.FC<AddCustomerSourceModalProps> = ({
                 <h2 className="text-lg font-bold text-gray-900">
                   Add New Customer Source
                 </h2>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Register customer source, lead channel, or referral origin
-                </p>
               </div>
             </div>
             <button

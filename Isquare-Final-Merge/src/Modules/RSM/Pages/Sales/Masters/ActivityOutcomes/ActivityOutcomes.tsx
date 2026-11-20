@@ -166,19 +166,11 @@ export const ActivityOutcomes: React.FC = () => {
       {/* Top Header Card */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white rounded-xl shadow-xs border border-gray-200 p-5 mb-6">
         <div className="flex items-center gap-3.5">
-          <div className="w-11 h-11 bg-emerald-50 text-emerald-800 rounded-xl flex items-center justify-center font-bold">
+          <div className="w-11 h-11 bg-orange-50 border border-[#FF7900]/30 text-[#FF7900] rounded-xl flex items-center justify-center font-bold">
             <CheckCircle2 className="w-5 h-5" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold text-gray-900">Activity Outcomes Master</h1>
-              <span className="text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full">
-                Sales Activity Lookup
-              </span>
-            </div>
-            <p className="text-gray-500 mt-0.5 text-xs">
-              Configure Call & Meeting outcome tags (Connected, Quotation Requested, Demo Success, Closed Won).
-            </p>
+            <h1 className="text-xl font-bold text-gray-900">Activity Outcomes Master</h1>
           </div>
         </div>
 
@@ -269,24 +261,24 @@ export const ActivityOutcomes: React.FC = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="bg-[#FF7900] text-white border-b border-[#e06800]">
-                  <th className="py-3 px-4 font-semibold uppercase tracking-wider text-[11px] w-16 text-center">
+              <thead className="bg-[#FF7900] text-white text-[13px] font-semibold uppercase tracking-wider">
+                <tr className="h-[50px] min-h-[50px]">
+                  <th className="px-4 py-3.5 text-center font-bold w-16 border-r border-[#e06800]">
                     #
                   </th>
-                  <th className="py-3 px-4 font-semibold uppercase tracking-wider text-[11px]">
+                  <th className="px-4 py-3.5 text-left border-r border-[#e06800]">
                     Outcome Name / Label
                   </th>
-                  <th className="py-3 px-4 font-semibold uppercase tracking-wider text-[11px] w-28 text-center">
+                  <th className="px-4 py-3.5 text-center w-28 border-r border-[#e06800]">
                     Category
                   </th>
-                  <th className="py-3 px-4 font-semibold uppercase tracking-wider text-[11px] w-36">
+                  <th className="px-4 py-3.5 text-left w-36 border-r border-[#e06800]">
                     Code / Key
                   </th>
-                  <th className="py-3 px-4 font-semibold uppercase tracking-wider text-[11px] w-28 text-center">
+                  <th className="px-4 py-3.5 text-center w-28 border-r border-[#e06800]">
                     Status
                   </th>
-                  <th className="py-3 px-4 font-semibold uppercase tracking-wider text-[11px] w-28 text-center">
+                  <th className="px-4 py-3.5 text-right w-28">
                     Actions
                   </th>
                 </tr>
@@ -309,13 +301,12 @@ export const ActivityOutcomes: React.FC = () => {
                       </td>
                       <td className="py-3 px-4 text-center">
                         <span
-                          className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold ${
-                            item.category === "Call"
-                              ? "bg-blue-50 text-blue-700 border border-blue-200"
-                              : item.category === "Meeting"
+                          className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold ${item.category === "Call"
+                            ? "bg-blue-50 text-blue-700 border border-blue-200"
+                            : item.category === "Meeting"
                               ? "bg-teal-50 text-teal-700 border border-teal-200"
                               : "bg-purple-50 text-purple-700 border border-purple-200"
-                          }`}
+                            }`}
                         >
                           {item.category}
                         </span>
@@ -329,11 +320,10 @@ export const ActivityOutcomes: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => handleToggleStatus(item)}
-                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold cursor-pointer transition ${
-                            item.isActive
-                              ? "bg-green-100 text-green-800 hover:bg-green-200"
-                              : "bg-red-100 text-red-800 hover:bg-red-200"
-                          }`}
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold cursor-pointer transition ${item.isActive
+                            ? "bg-green-100 text-green-800 hover:bg-green-200"
+                            : "bg-red-100 text-red-800 hover:bg-red-200"
+                            }`}
                         >
                           {item.isActive ? "Active" : "Inactive"}
                         </button>
@@ -549,11 +539,10 @@ export const ActivityOutcomes: React.FC = () => {
               <div>
                 <span className="text-gray-500 block text-[11px]">Active Status:</span>
                 <span
-                  className={`inline-block mt-0.5 px-2 py-0.5 rounded-full text-[11px] font-semibold ${
-                    selectedItem.isActive
-                      ? "bg-green-100 text-green-800"
-                      : "bg-red-100 text-red-800"
-                  }`}
+                  className={`inline-block mt-0.5 px-2 py-0.5 rounded-full text-[11px] font-semibold ${selectedItem.isActive
+                    ? "bg-green-100 text-green-800"
+                    : "bg-red-100 text-red-800"
+                    }`}
                 >
                   {selectedItem.isActive ? "Active" : "Inactive"}
                 </span>

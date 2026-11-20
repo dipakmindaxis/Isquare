@@ -339,14 +339,9 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
               <Layers className="w-6 h-6" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl md:text-2xl font-bold text-gray-900">
-                  Sales Activities
-                </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-orange-50 text-[#FF7900] border border-[#FF7900]/20">
-                  Unified Master
-                </span>
-              </div>
+              <h1 className="text-xl md:text-2xl font-bold text-gray-900">
+                Sales Activities
+              </h1>
             </div>
           </div>
         </div>

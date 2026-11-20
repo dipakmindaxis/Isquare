@@ -6,19 +6,23 @@ import React, {
   useState,
 } from "react";
 import {
-  ChevronDown,
-  Upload,
   RefreshCw,
   Flag,
   X,
   Loader2,
+  Plus,
+  Search,
+  FileSpreadsheet,
+  CheckCircle2,
+  XCircle,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
 } from "lucide-react";
 import { FaEye, FaEdit, FaTrash } from "react-icons/fa";
-import DataTable, { type TableColumn } from "react-data-table-component";
 import { toast } from "sonner";
-import { listingTableStyles } from "../../../../../Components/Common/listingTableStyles";
 import { actionButtonStyles } from "../../../../../Components/Common/buttonStyles";
-import LogoLoader from "../../../../../Components/Common/LogoLoader";
 import ConfirmationModal from "../../../../../Components/Common/ConfirmationModal";
 import { exportToExcel } from "../../../../../Utils/exportToExcel";
 import {
@@ -54,6 +58,8 @@ export const PriorityMaster: React.FC<PriorityMasterProps> = ({ isTab = false })
   // Filters
   const [filterText, setFilterText] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("All");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [itemsPerPage, setItemsPerPage] = useState<number>(10);
 
   // View modal
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -203,6 +209,23 @@ export const PriorityMaster: React.FC<PriorityMasterProps> = ({ isTab = false })
     });
   }, [items, filterText, selectedStatus]);
 
+  const stats = useMemo(() => {
+    const total = items.length;
+    const active = items.filter((i) => i.isActive).length;
+    const inactive = total - active;
+    return { total, active, inactive };
+  }, [items]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterText, selectedStatus]);
+
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const paginatedItems = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredItems.slice(start, start + itemsPerPage);
+  }, [filteredItems, currentPage, itemsPerPage]);
+
   const handleExport = () => {
     if (items.length === 0) {
       toast.info("No data available to export.");
@@ -217,117 +240,6 @@ export const PriorityMaster: React.FC<PriorityMasterProps> = ({ isTab = false })
     exportToExcel(exportData, "Priority_Master", "Priorities");
   };
 
-  const columns: TableColumn<Priority>[] = [
-    {
-      name: "Priority",
-      cell: (row) => (
-        <div className="flex items-center gap-3 py-1">
-          <div
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg shadow-sm"
-            style={{
-              backgroundColor: `${row.colorCode}20`,
-              color: row.colorCode,
-              borderColor: `${row.colorCode}40`,
-              borderWidth: 1,
-            }}
-          >
-            <Flag size={16} />
-          </div>
-          <span
-            className="font-bold text-slate-800 hover:text-[#F37021] cursor-pointer"
-            onClick={() => {
-              setSelectedItem(row);
-              setIsViewModalOpen(true);
-            }}
-          >
-            {row.priorityName}
-          </span>
-        </div>
-      ),
-      sortable: true,
-      grow: 2,
-    },
-    {
-      name: "Color Code",
-      cell: (row) => (
-        <div className="flex items-center gap-2">
-          <span
-            className="h-4 w-4 rounded-full border border-slate-300 shadow-sm"
-            style={{ backgroundColor: row.colorCode }}
-          />
-          <span className="text-xs font-semibold uppercase text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-md border border-slate-200">
-            {row.colorCode}
-          </span>
-        </div>
-      ),
-      sortable: true,
-      width: "180px",
-    },
-    {
-      name: "Status",
-      cell: (row) => (
-        <div className="flex justify-center w-full">
-          <label
-            className="relative inline-flex items-center cursor-pointer"
-            onClick={() => handleStatusToggle(row)}
-          >
-            <input
-              type="checkbox"
-              checked={row.isActive}
-              readOnly
-              className="sr-only"
-            />
-            <div
-              className={`w-11 h-6 rounded-full transition-colors relative ${
-                row.isActive ? "bg-[#00234a]" : "bg-gray-300"
-              }`}
-            >
-              <span
-                className="absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform duration-200"
-                style={{
-                  left: row.isActive ? "calc(100% - 1.25rem - 0.125rem)" : "0.125rem",
-                }}
-              />
-            </div>
-          </label>
-        </div>
-      ),
-      width: "120px",
-    },
-    {
-      name: "Actions",
-      cell: (row) => (
-        <div className="flex items-center gap-3.5">
-          <button
-            onClick={() => {
-              setSelectedItem(row);
-              setIsViewModalOpen(true);
-            }}
-            className={`${actionButtonStyles.base} ${actionButtonStyles.view}`}
-            title="View"
-          >
-            <FaEye size={15} />
-          </button>
-          <button
-            onClick={() => handleOpenEdit(row)}
-            className={`${actionButtonStyles.base} ${actionButtonStyles.edit}`}
-            title="Edit"
-          >
-            <FaEdit size={15} />
-          </button>
-          <button
-            onClick={() => handleDeleteRequest(row)}
-            className={`${actionButtonStyles.base} ${actionButtonStyles.delete}`}
-            title="Delete"
-          >
-            <FaTrash size={14} />
-          </button>
-        </div>
-      ),
-      width: "130px",
-    },
-  ];
-
   const labelStyle =
     "text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block";
   const baseInputStyle =
@@ -337,28 +249,122 @@ export const PriorityMaster: React.FC<PriorityMasterProps> = ({ isTab = false })
     <>
       <div ref={pageTopRef} className={isTab ? "w-full space-y-6" : "min-h-screen space-y-6 bg-[#F4F7FB] p-4 md:p-6"}>
         {!showWizard ? (
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <h2 className="border-b-2 border-[#F37021] pb-2 text-3xl font-bold tracking-[-0.03em] text-[#00234a]">
-                Listing of Priorities
-              </h2>
+          <>
+            {/* Section Header */}
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <h2 className="border-b-2 border-[#FF7900] pb-2 text-3xl font-bold tracking-[-0.03em] text-[#00234a]">
+                  Priority Master
+                </h2>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={loadData}
+                  disabled={isLoading}
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer disabled:opacity-50"
+                  title="Refresh records"
+                >
+                  <RefreshCw className={`w-4 h-4 text-gray-600 ${isLoading ? "animate-spin" : ""}`} />
+                  <span>Refresh</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleExport}
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer"
+                  title="Export to Excel"
+                >
+                  <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                  <span>Export</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleOpenAdd}
+                  className="rounded-xl bg-[#00234a] hover:bg-[#FF7900] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_18px_rgba(0,35,74,0.18)] transition cursor-pointer flex items-center gap-2"
+                >
+                  <Plus size={16} />
+                  <span>Add Priority</span>
+                </button>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={loadData}
-                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer"
-              >
-                <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
-                Refresh
-              </button>
-              <button
-                onClick={handleOpenAdd}
-                className="rounded-xl bg-[#00234a] hover:bg-[#F37021] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_18px_rgba(0,35,74,0.18)] transition cursor-pointer flex items-center gap-2"
-              >
-                + Create New
-              </button>
+
+            {/* Analytics / Stats Bar */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+              <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 sm:gap-4">
+                <div className="p-3 bg-blue-50 text-blue-600 rounded-xl shrink-0">
+                  <Flag size={20} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase text-gray-400 tracking-wider truncate">
+                    Total Priorities
+                  </p>
+                  <p className="text-2xl font-bold text-gray-800">{stats.total}</p>
+                </div>
+              </div>
+
+              <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 sm:gap-4">
+                <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl shrink-0">
+                  <CheckCircle2 size={20} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase text-gray-400 tracking-wider truncate">
+                    Active Priorities
+                  </p>
+                  <p className="text-2xl font-bold text-emerald-600">{stats.active}</p>
+                </div>
+              </div>
+
+              <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 sm:gap-4">
+                <div className="p-3 bg-rose-50 text-rose-600 rounded-xl shrink-0">
+                  <XCircle size={20} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase text-gray-400 tracking-wider truncate">
+                    Inactive Priorities
+                  </p>
+                  <p className="text-2xl font-bold text-rose-600">{stats.inactive}</p>
+                </div>
+              </div>
             </div>
-          </div>
+
+            {/* Filter & Search Bar */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 sm:gap-4">
+              <div className="relative w-full md:w-96">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder="Search by priority name or color code..."
+                  className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 focus:border-[#FF7900] transition"
+                  value={filterText}
+                  onChange={(e) => setFilterText(e.target.value)}
+                />
+              </div>
+
+              <div className="flex items-center justify-between sm:justify-start gap-2 w-full md:w-auto">
+                <span className="text-xs font-semibold text-gray-500 whitespace-nowrap">
+                  Status:
+                </span>
+                <div className="flex bg-gray-100 p-1 rounded-lg flex-1 sm:flex-initial">
+                  {["All", "Active", "Inactive"].map((status) => (
+                    <button
+                      key={status}
+                      type="button"
+                      onClick={() => setSelectedStatus(status)}
+                      className={`px-3 py-1 text-xs font-semibold rounded-md transition cursor-pointer flex-1 sm:flex-initial ${
+                        selectedStatus === status
+                          ? "bg-white text-gray-900 shadow-xs"
+                          : "text-gray-500 hover:text-gray-900"
+                      }`}
+                    >
+                      {status} ({status === "All" ? stats.total : status === "Active" ? stats.active : stats.inactive})
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </>
         ) : null}
 
         {/* Wizard Form */}
@@ -538,62 +544,199 @@ export const PriorityMaster: React.FC<PriorityMasterProps> = ({ isTab = false })
           </div>
         )}
 
-        {/* Listing Card */}
-        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-          <div className="p-4 md:p-6 space-y-4">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div className="w-full md:w-80">
-                <input
-                  type="text"
-                  placeholder="Search by priority name or color code..."
-                  value={filterText}
-                  onChange={(e) => setFilterText(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 placeholder-slate-400 outline-none transition focus:border-[#F37021] focus:bg-white"
-                />
-              </div>
+        {/* Table Card matching Reference Standard */}
+        {!showWizard && (
+          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm border-collapse">
+                <thead className="bg-[#FF7900] text-white text-[13px] font-semibold uppercase tracking-wider">
+                  <tr>
+                    <th className="px-4 py-3.5 text-left font-bold w-16 border-r border-[#e06800]">
+                      Sr. No.
+                    </th>
+                    <th className="px-4 py-3.5 text-left font-bold border-r border-[#e06800]">
+                      Priority Name
+                    </th>
+                    <th className="px-4 py-3.5 text-left font-bold border-r border-[#e06800]">
+                      Color Code
+                    </th>
+                    <th className="px-4 py-3.5 text-center font-bold w-28 border-r border-[#e06800]">
+                      Status
+                    </th>
+                    <th className="px-4 py-3.5 text-center font-bold w-36">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-100">
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={5} className="text-center py-12 text-slate-500">
+                        <Loader2 className="animate-spin inline-block mr-2 text-[#00234a]" />
+                        Loading priorities...
+                      </td>
+                    </tr>
+                  ) : paginatedItems.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="text-center py-12 text-slate-400">
+                        <FileSpreadsheet className="w-10 h-10 mx-auto mb-2 text-slate-300" />
+                        No priorities found.
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedItems.map((item, index) => (
+                      <tr
+                        key={item.id}
+                        className="hover:bg-slate-50/80 transition-colors"
+                      >
+                        <td className="px-4 py-4 text-gray-700 font-semibold border-r border-gray-100">
+                          {(currentPage - 1) * itemsPerPage + index + 1}
+                        </td>
+                        <td className="px-4 py-4 font-bold text-[#00234a] border-r border-gray-100">
+                          <div className="flex items-center gap-2.5">
+                            <span
+                              className="h-3.5 w-3.5 rounded-full shrink-0 shadow-xs"
+                              style={{ backgroundColor: item.colorCode }}
+                            />
+                            <span>{item.priorityName}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 border-r border-gray-100">
+                          <span
+                            className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold uppercase tracking-wider"
+                            style={{
+                              backgroundColor: `${item.colorCode}15`,
+                              color: item.colorCode,
+                              border: `1px solid ${item.colorCode}40`,
+                            }}
+                          >
+                            {item.colorCode}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 text-center border-r border-gray-100">
+                          <div className="flex justify-center w-full">
+                            <label
+                              className="relative inline-flex items-center cursor-pointer"
+                              onClick={() => handleStatusToggle(item)}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={item.isActive}
+                                readOnly
+                                className="sr-only"
+                              />
+                              <div
+                                className={`w-11 h-6 rounded-full transition-colors relative ${
+                                  item.isActive ? "bg-[#00234a]" : "bg-gray-300"
+                                }`}
+                              >
+                                <span
+                                  className="absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform duration-200 ease-in-out shadow-sm"
+                                  style={{
+                                    left: item.isActive
+                                      ? "calc(100% - 1.25rem - 0.125rem)"
+                                      : "0.125rem",
+                                  }}
+                                />
+                              </div>
+                            </label>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="flex justify-center items-center gap-3 w-full">
+                            <button
+                              onClick={() => {
+                                setSelectedItem(item);
+                                setIsViewModalOpen(true);
+                              }}
+                              className={`${actionButtonStyles.base} ${actionButtonStyles.view}`}
+                              title="View"
+                            >
+                              <FaEye size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleOpenEdit(item)}
+                              className={`${actionButtonStyles.base} ${actionButtonStyles.edit}`}
+                              title="Edit"
+                            >
+                              <FaEdit size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteRequest(item)}
+                              className={`${actionButtonStyles.base} ${actionButtonStyles.delete}`}
+                              title="Delete"
+                            >
+                              <FaTrash size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
 
-              <div className="flex w-full items-center justify-end gap-3 md:w-auto">
-                <div className="relative">
-                  <select
-                    className="appearance-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 pr-9 text-sm text-slate-700 outline-none transition hover:bg-white focus:border-[#F37021]"
-                    value={selectedStatus}
-                    onChange={(e) => setSelectedStatus(e.target.value)}
-                  >
-                    <option value="All">All Statuses</option>
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
-                  </select>
-                  <ChevronDown
-                    size={16}
-                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
-                  />
-                </div>
-
-                <button
-                  onClick={handleExport}
-                  className="inline-flex items-center gap-2 rounded-xl border border-[#00234a] bg-white px-4 py-2.5 text-sm font-semibold text-[#00234a] transition hover:bg-slate-50 cursor-pointer"
+            {/* Pagination Footer */}
+            <div className="bg-white border-t border-gray-200 px-6 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-medium text-gray-600 select-none">
+              <div className="flex items-center gap-2">
+                <span>Rows per page:</span>
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                  className="rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-xs text-gray-700 outline-none focus:border-[#FF7900]"
                 >
-                  <Upload size={16} />
-                  <span>Export</span>
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
+              <div>
+                {filteredItems.length === 0
+                  ? "0-0 of 0"
+                  : `${(currentPage - 1) * itemsPerPage + 1}-${Math.min(
+                      currentPage * itemsPerPage,
+                      filteredItems.length
+                    )} of ${filteredItems.length}`}
+              </div>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setCurrentPage(1)}
+                  disabled={currentPage === 1}
+                  className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed text-gray-600 transition"
+                  title="First Page"
+                >
+                  <ChevronsLeft size={16} />
+                </button>
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed text-gray-600 transition"
+                  title="Previous Page"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed text-gray-600 transition"
+                  title="Next Page"
+                >
+                  <ChevronRight size={16} />
+                </button>
+                <button
+                  onClick={() => setCurrentPage(totalPages)}
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed text-gray-600 transition"
+                  title="Last Page"
+                >
+                  <ChevronsRight size={16} />
                 </button>
               </div>
             </div>
-
-            <div className="overflow-x-auto">
-              <DataTable
-                columns={columns}
-                data={filteredItems}
-                progressComponent={<LogoLoader />}
-                pagination
-                striped
-                highlightOnHover
-                progressPending={isLoading}
-                customStyles={listingTableStyles}
-                persistTableHead
-              />
-            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* View Modal */}

@@ -152,17 +152,9 @@ const RoleMaster: React.FC<RoleMasterProps> = ({ isTab = false }) => {
               <ISquareIcon size={34} />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl md:text-2xl font-bold text-gray-900">
-                  Role Master
-                </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-orange-50 text-[#FF7900] border border-[#FF7900]/30">
-                  Management
-                </span>
-              </div>
-              <p className="text-gray-500 mt-0.5 text-xs md:text-sm">
-                Manage system access roles, employee hierarchy positions, and organizational permissions.
-              </p>
+              <h1 className="text-xl md:text-2xl font-bold text-gray-900">
+                Role Master
+              </h1>
             </div>
           </div>
 
@@ -241,12 +233,12 @@ const RoleMaster: React.FC<RoleMasterProps> = ({ isTab = false }) => {
       {/* Table with Project Logo Orange Header Line */}
       <div className="bg-white rounded-xl shadow-xs overflow-hidden border border-gray-200">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-[#FF7900] text-white text-[13px] font-semibold uppercase tracking-wider border-b border-[#e06800]">
-              <tr>
-                <th className="px-6 py-4 text-left font-bold w-24">Sr. No.</th>
-                <th className="px-6 py-4 text-left font-bold">Role Name</th>
-                <th className="px-6 py-4 text-right font-bold w-48">Actions</th>
+          <table className="w-full text-sm border-collapse">
+            <thead className="bg-[#FF7900] text-white text-[13px] font-semibold uppercase tracking-wider">
+              <tr className="h-[50px] min-h-[50px]">
+                <th className="px-4 py-3.5 text-left font-bold w-24 border-r border-[#e06800]">Sr. No.</th>
+                <th className="px-4 py-3.5 text-left font-bold border-r border-[#e06800]">Role Name</th>
+                <th className="px-4 py-3.5 text-right font-bold w-48">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-100">

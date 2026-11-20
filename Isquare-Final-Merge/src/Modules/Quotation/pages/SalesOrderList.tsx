@@ -125,9 +125,6 @@ export const SalesOrderList: React.FC = () => {
           <h1 className="text-3xl font-bold tracking-[-0.03em] text-[#00234a]">
             Sales Order Management
           </h1>
-          <p className="text-xs text-gray-500 mt-1">
-            Confirmed commercial orders converted from approved and won customer quotations
-          </p>
         </div>
 
         <div className="flex items-center gap-3">

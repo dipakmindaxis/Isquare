@@ -225,6 +225,17 @@ export const MySupportTicketsPage: React.FC = () => {
           <h2 className="border-b-2 border-[#FF7900] pb-2 text-3xl font-bold tracking-[-0.03em] text-[#00234a]">
             My Support Tickets
           </h2>
+      {/* Header Banner */}
+      <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-orange-50 border border-[#FF7900]/30 text-[#FF7900] flex items-center justify-center shadow-xs shrink-0">
+            <Headphones size={22} className="stroke-[2.2]" />
+          </div>
+          <div>
+            <h1 className="text-lg sm:text-xl font-bold text-slate-900 leading-tight">
+              My Support Tickets
+            </h1>
+          </div>
         </div>
         <div className="flex items-center gap-3">
           <button

@@ -23,9 +23,6 @@ export const SalesActivityHeader: React.FC<SalesActivityHeaderProps> = ({
             <h1 className="text-2xl sm:text-3xl font-bold text-[#082B50] tracking-[-0.03em]">
               Sales Activities
             </h1>
-            <p className="text-xs sm:text-[13px] text-slate-500 font-medium mt-0.5">
-              Manage customer visits, calls, meetings, follow-ups, and director approval tasks
-            </p>
           </div>
         </div>
       </div>

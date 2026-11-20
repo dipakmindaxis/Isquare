@@ -162,9 +162,6 @@ export const DocumentTypes: React.FC = () => {
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
               Attachment Document Types
             </h1>
-            <p className="text-xs text-gray-500 mt-1">
-              Standard attachment and document categories for sales activities.
-            </p>
           </div>
 
           <div className="flex items-center gap-2.5">
@@ -224,13 +221,13 @@ export const DocumentTypes: React.FC = () => {
         {/* Data Table */}
         <div className="border border-gray-200 rounded-xl overflow-hidden">
           <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="bg-[#FF7900] text-white border-b border-[#e06800] text-xs uppercase tracking-wider">
-                <th className="py-3.5 px-4 w-16">SR NO</th>
-                <th className="py-3.5 px-4">VALUE / NAME</th>
-                <th className="py-3.5 px-4">CODE / KEY</th>
-                <th className="py-3.5 px-4 text-center">STATUS</th>
-                <th className="py-3.5 px-4 text-right">ACTIONS</th>
+            <thead className="bg-[#FF7900] text-white text-[13px] font-semibold uppercase tracking-wider">
+              <tr className="h-[50px] min-h-[50px]">
+                <th className="px-4 py-3.5 w-16 font-bold border-r border-[#e06800]">SR NO</th>
+                <th className="px-4 py-3.5 border-r border-[#e06800]">VALUE / NAME</th>
+                <th className="px-4 py-3.5 border-r border-[#e06800]">CODE / KEY</th>
+                <th className="px-4 py-3.5 text-center border-r border-[#e06800]">STATUS</th>
+                <th className="px-4 py-3.5 text-right">ACTIONS</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 text-xs">

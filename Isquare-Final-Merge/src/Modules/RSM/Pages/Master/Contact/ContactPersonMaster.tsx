@@ -272,9 +272,6 @@ export const ContactPersonMaster: React.FC<ContactPersonMasterProps> = ({
               <h1 className="text-xl md:text-2xl font-bold text-gray-900">
                 Contact Person
               </h1>
-              <p className="text-xs text-gray-500 mt-0.5">
-                Manage organization contact persons, representatives, and communications
-              </p>
             </div>
           </div>
 

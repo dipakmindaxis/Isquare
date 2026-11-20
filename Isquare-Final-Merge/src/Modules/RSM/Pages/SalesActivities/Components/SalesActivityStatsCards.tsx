@@ -64,7 +64,7 @@ export const SalesActivityStatsCards: React.FC<SalesActivityStatsCardsProps> = (
             onClick={() => onSelectTab(card.id)}
             className={`bg-white p-4 rounded-xl border shadow-sm flex items-center gap-3 sm:gap-4 cursor-pointer transition ${
               isActive
-                ? "border-[#154068] ring-2 ring-[#154068]/20"
+                ? "border-[#FF7900] ring-2 ring-[#FF7900]/20"
                 : "border-gray-100 hover:border-gray-300"
             }`}
           >
@@ -72,7 +72,7 @@ export const SalesActivityStatsCards: React.FC<SalesActivityStatsCardsProps> = (
               {card.icon}
             </div>
             <div className="min-w-0">
-              <p className="text-[11px] font-extrabold uppercase text-gray-400 tracking-widest truncate">
+              <p className="text-xs font-semibold uppercase text-gray-400 tracking-wider truncate">
                 {card.label}
               </p>
               <p className={`text-2xl font-bold ${card.textColor}`}>

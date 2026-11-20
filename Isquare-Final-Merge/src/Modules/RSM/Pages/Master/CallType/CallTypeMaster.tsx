@@ -6,6 +6,9 @@ import {
   ChevronLeft,
   ChevronRight,
   PhoneCall,
+  RefreshCw,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -35,8 +38,9 @@ export const CallTypeMaster: React.FC<CallTypeMasterProps> = ({ isTab = false })
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState<boolean>(false);
   const [selectedItem, setSelectedItem] = useState<CallType | null>(null);
 
-  // Search & Pagination
+  // Search, Status Filter & Pagination
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("All");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [itemsPerPage, setItemsPerPage] = useState<number>(10);
 
@@ -56,18 +60,32 @@ export const CallTypeMaster: React.FC<CallTypeMasterProps> = ({ isTab = false })
     fetchItems();
   }, [fetchItems]);
 
+  const stats = useMemo(() => {
+    const total = callTypes.length;
+    const active = callTypes.filter((c) => c.isActive).length;
+    const inactive = total - active;
+    return { total, active, inactive };
+  }, [callTypes]);
+
   const filteredItems = useMemo((): CallType[] => {
-    return callTypes.filter(
-      (item) =>
+    return callTypes.filter((item) => {
+      const matchesSearch =
         (item.callTypeName &&
           item.callTypeName.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        String(item.id).includes(searchQuery)
-    );
-  }, [callTypes, searchQuery]);
+        String(item.id).includes(searchQuery);
+
+      const matchesStatus =
+        statusFilter === "All" ||
+        (statusFilter === "Active" && item.isActive) ||
+        (statusFilter === "Inactive" && !item.isActive);
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [callTypes, searchQuery, statusFilter]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, itemsPerPage]);
+  }, [searchQuery, statusFilter, itemsPerPage]);
 
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
   const paginatedItems = useMemo((): CallType[] => {
@@ -105,63 +123,131 @@ export const CallTypeMaster: React.FC<CallTypeMasterProps> = ({ isTab = false })
   };
 
   return (
-    <div className={isTab ? "w-full space-y-4" : "p-4 md:p-6 bg-gray-50 min-h-full"}>
-      {/* Top Header Card with Action Button */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white rounded-xl shadow-xs border border-gray-200 p-5 mb-6">
+    <div className={isTab ? "w-full space-y-4" : "p-4 md:p-6 bg-gray-50 min-h-full space-y-4"}>
+      {/* Top Header Card */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white rounded-xl shadow-xs border border-gray-200 p-5">
         <div className="flex items-center gap-3.5">
-          <div className="w-11 h-11 bg-slate-100 text-[#00234a] rounded-xl flex items-center justify-center">
-            <PhoneCall className="w-5 h-5" />
+          <div className="w-12 h-12 bg-orange-50 border border-[#FF7900]/30 text-[#FF7900] rounded-xl flex items-center justify-center shrink-0 shadow-xs">
+            <PhoneCall className="w-6 h-6 text-[#FF7900]" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">Call Type</h1>
-            <p className="text-gray-500 mt-0.5 text-xs">
-              Manage sales call types, communication categories, and phone activity classifications.
-            </p>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">Call Type</h1>
           </div>
         </div>
 
-        <div>
+        <div className="flex items-center gap-3">
           <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center gap-2 bg-[#00234a] hover:bg-[#001833] text-white font-medium px-5 py-2.5 rounded-lg transition shadow-xs cursor-pointer text-sm"
+            type="button"
+            onClick={fetchItems}
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#00234a] shadow-xs transition hover:bg-slate-50 cursor-pointer"
+            title="Refresh"
           >
-            <Plus size={18} />
+            <RefreshCw className={`w-4 h-4 text-gray-600 ${isLoading ? "animate-spin" : ""}`} />
+            <span>Refresh</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsAddModalOpen(true)}
+            className="rounded-xl bg-[#00234a] hover:bg-[#FF7900] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_18px_rgba(0,35,74,0.18)] transition cursor-pointer flex items-center gap-2"
+          >
+            <Plus size={16} />
             <span>Add Call Type</span>
           </button>
         </div>
       </div>
 
-      {/* Search Bar */}
-      <div className="flex items-center justify-between gap-4 mb-4">
-        <div className="relative w-full md:max-w-md">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+      {/* Analytics / Stats Bar */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+        <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 sm:gap-4">
+          <div className="p-3 bg-blue-50 text-blue-600 rounded-xl shrink-0">
+            <PhoneCall size={20} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase text-gray-400 tracking-wider truncate">
+              Total Types
+            </p>
+            <p className="text-2xl font-bold text-gray-800">{stats.total}</p>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 sm:gap-4">
+          <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl shrink-0">
+            <CheckCircle size={20} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase text-gray-400 tracking-wider truncate">
+              Active Types
+            </p>
+            <p className="text-2xl font-bold text-emerald-600">{stats.active}</p>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 sm:gap-4">
+          <div className="p-3 bg-rose-50 text-rose-600 rounded-xl shrink-0">
+            <XCircle size={20} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase text-gray-400 tracking-wider truncate">
+              Inactive Types
+            </p>
+            <p className="text-2xl font-bold text-rose-600">{stats.inactive}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Filter & Search Bar */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 sm:gap-4">
+        <div className="relative w-full md:w-96">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
           <input
             type="text"
             placeholder="Search by call type name..."
-            className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#00234a] focus:border-[#00234a] transition"
+            className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 focus:border-[#FF7900] transition"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
+
+        <div className="flex items-center justify-between sm:justify-start gap-2 w-full md:w-auto">
+          <span className="text-xs font-semibold text-gray-500 whitespace-nowrap">
+            Status:
+          </span>
+          <div className="flex bg-gray-100 p-1 rounded-lg flex-1 sm:flex-initial">
+            {["All", "Active", "Inactive"].map((status) => (
+              <button
+                key={status}
+                type="button"
+                onClick={() => setStatusFilter(status)}
+                className={`px-3 py-1 text-xs font-semibold rounded-md transition cursor-pointer flex-1 sm:flex-initial ${
+                  statusFilter === status
+                    ? "bg-white text-gray-900 shadow-xs"
+                    : "text-gray-500 hover:text-gray-900"
+                }`}
+              >
+                {status}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-lg shadow-xs overflow-hidden border border-gray-200">
+      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-[#00234a] text-white text-xs uppercase tracking-wider">
-              <tr>
-                <th className="px-6 py-3.5 text-left">ID</th>
-                <th className="px-6 py-3.5 text-left">Call Type Name</th>
-                <th className="px-6 py-3.5 text-center">Status</th>
-                <th className="px-6 py-3.5 text-right">Actions</th>
+          <table className="w-full text-sm border-collapse">
+            <thead className="bg-[#FF7900] text-white text-[13px] font-semibold uppercase tracking-wider">
+              <tr className="h-[50px] min-h-[50px]">
+                <th className="px-4 py-3.5 text-left font-bold w-20 border-r border-[#e06800]">ID</th>
+                <th className="px-4 py-3.5 text-left border-r border-[#e06800]">Call Type Name</th>
+                <th className="px-4 py-3.5 text-center w-32 border-r border-[#e06800]">Status</th>
+                <th className="px-4 py-3.5 text-right w-36">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-100">
               {isLoading ? (
                 <tr>
                   <td colSpan={4} className="text-center py-12 text-gray-500">
-                    <Loader2 className="animate-spin inline-block mr-2 text-[#00234a]" />
+                    <Loader2 className="animate-spin inline-block mr-2 text-[#FF7900]" />
                     Loading call types...
                   </td>
                 </tr>
@@ -175,47 +261,50 @@ export const CallTypeMaster: React.FC<CallTypeMasterProps> = ({ isTab = false })
                 paginatedItems.map((item) => (
                   <tr
                     key={item.id}
-                    className="hover:bg-gray-50/80 transition"
+                    className="hover:bg-slate-50 transition"
                   >
-                    <td className="px-6 py-4 font-semibold text-gray-900">
+                    <td className="px-4 py-3 font-semibold text-gray-900 border-r border-gray-100">
                       {item.id}
                     </td>
-                    <td className="px-6 py-4 text-gray-800">
+                    <td className="px-4 py-3 text-gray-800 border-r border-gray-100 font-medium">
                       {item.callTypeName}
                     </td>
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-4 py-3 text-center border-r border-gray-100">
                       <span
-                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                           item.isActive
-                            ? "bg-green-50 text-green-700 border border-green-200"
-                            : "bg-red-50 text-red-700 border border-red-200"
+                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                            : "bg-rose-50 text-rose-700 border border-rose-200"
                         }`}
                       >
                         {item.isActive ? "Active" : "Inactive"}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex justify-end gap-3.5">
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex justify-end gap-2">
                         <button
+                          type="button"
                           onClick={() => handleViewClick(item)}
                           className={`${actionButtonStyles.base} ${actionButtonStyles.view}`}
                           title="View"
                         >
-                          <FaEye size={16} />
+                          <FaEye size={15} />
                         </button>
                         <button
+                          type="button"
                           onClick={() => handleEditClick(item)}
                           className={`${actionButtonStyles.base} ${actionButtonStyles.edit}`}
                           title="Edit"
                         >
-                          <FaEdit size={16} />
+                          <FaEdit size={15} />
                         </button>
                         <button
+                          type="button"
                           onClick={() => handleDeleteRequest(item)}
                           className={`${actionButtonStyles.base} ${actionButtonStyles.delete}`}
                           title="Delete"
                         >
-                          <FaTrash size={16} />
+                          <FaTrash size={15} />
                         </button>
                       </div>
                     </td>
@@ -229,13 +318,13 @@ export const CallTypeMaster: React.FC<CallTypeMasterProps> = ({ isTab = false })
 
       {/* Pagination */}
       {totalPages > 0 && (
-        <div className="flex items-center justify-between mt-4 text-sm text-gray-600 px-2">
+        <div className="flex items-center justify-between text-xs text-gray-600 px-2 pt-2">
           <div className="flex items-center gap-2">
             <span>Rows per page:</span>
             <select
               value={itemsPerPage}
               onChange={(e) => setItemsPerPage(Number(e.target.value))}
-              className="p-1.5 border border-gray-200 rounded-lg bg-white text-sm focus:outline-none"
+              className="p-1 border border-gray-200 rounded-md bg-white text-xs focus:outline-none"
             >
               <option value={5}>5</option>
               <option value={10}>10</option>
@@ -246,20 +335,22 @@ export const CallTypeMaster: React.FC<CallTypeMasterProps> = ({ isTab = false })
             <span>
               Page {currentPage} of {totalPages}
             </span>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               <button
+                type="button"
                 onClick={() => setCurrentPage((p) => p - 1)}
                 disabled={currentPage === 1}
-                className="p-2 border border-gray-200 rounded-lg disabled:text-gray-300 hover:bg-gray-100 disabled:cursor-not-allowed transition"
+                className="p-1.5 border border-gray-200 rounded-md disabled:text-gray-300 hover:bg-gray-100 disabled:cursor-not-allowed transition"
               >
-                <ChevronLeft size={16} />
+                <ChevronLeft size={14} />
               </button>
               <button
+                type="button"
                 onClick={() => setCurrentPage((p) => p + 1)}
                 disabled={currentPage === totalPages}
-                className="p-2 border border-gray-200 rounded-lg disabled:text-gray-300 hover:bg-gray-100 disabled:cursor-not-allowed transition"
+                className="p-1.5 border border-gray-200 rounded-md disabled:text-gray-300 hover:bg-gray-100 disabled:cursor-not-allowed transition"
               >
-                <ChevronRight size={16} />
+                <ChevronRight size={14} />
               </button>
             </div>
           </div>
