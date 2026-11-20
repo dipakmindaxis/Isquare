@@ -219,18 +219,13 @@ export const MySupportTicketsPage: React.FC = () => {
       {/* Header Banner */}
       <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-xl bg-[#00234a] text-white flex items-center justify-center shadow-xs shrink-0">
+          <div className="w-11 h-11 rounded-xl bg-orange-50 border border-[#FF7900]/30 text-[#FF7900] flex items-center justify-center shadow-xs shrink-0">
             <Headphones size={22} className="stroke-[2.2]" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-lg sm:text-xl font-bold text-slate-900 leading-tight">
-                My Support Tickets
-              </h1>
-              <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                Help Desk
-              </span>
-            </div>
+            <h1 className="text-lg sm:text-xl font-bold text-slate-900 leading-tight">
+              My Support Tickets
+            </h1>
           </div>
         </div>
 

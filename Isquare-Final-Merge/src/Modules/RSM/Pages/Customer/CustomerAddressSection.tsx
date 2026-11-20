@@ -132,9 +132,6 @@ const CustomerAddressSection: React.FC<CustomerAddressSectionProps> = ({
           <h4 className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest">
             Customer Addresses ({addresses.length})
           </h4>
-          <p className="text-xs text-gray-400 mt-0.5">
-            Add multiple plant or office locations with plant codes, billing, and delivery specifications.
-          </p>
         </div>
         {!readOnly && (
           <button
@@ -149,7 +146,7 @@ const CustomerAddressSection: React.FC<CustomerAddressSectionProps> = ({
 
       {/* Empty State */}
       {addresses.length === 0 ? (
-        <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-xl text-gray-400 text-xs sm:text-sm">
+        <div className="text-center py-5 border border-dashed border-gray-200 rounded-lg text-gray-400 text-xs">
           No addresses added. {!readOnly && 'Click "+ Add Address" to configure locations.'}
         </div>
       ) : (

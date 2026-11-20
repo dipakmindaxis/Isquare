@@ -93,9 +93,6 @@ const EditCustomerSourceModal: React.FC<EditCustomerSourceModalProps> = ({
                 <h2 className="text-lg font-bold text-gray-900">
                   Edit Customer Source
                 </h2>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Update customer source details and active status
-                </p>
               </div>
             </div>
             <button

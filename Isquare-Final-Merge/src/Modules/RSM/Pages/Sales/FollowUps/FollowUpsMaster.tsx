@@ -297,19 +297,11 @@ export const FollowUpsMaster: React.FC<FollowUpsMasterProps> = ({ isTab = false 
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white rounded-xl shadow-xs border border-gray-200 p-5 mb-6">
         <div className="flex items-center gap-3.5">
-          <div className="w-11 h-11 bg-amber-50 text-[#00234a] rounded-xl flex items-center justify-center font-bold">
+          <div className="w-11 h-11 bg-orange-50 border border-[#FF7900]/30 text-[#FF7900] rounded-xl flex items-center justify-center font-bold">
             <Clock className="w-5 h-5" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold text-gray-900">Follow-Up Tracker</h1>
-              <span className="text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-300 px-2.5 py-0.5 rounded-full">
-                {stats.overdue} Overdue • {stats.dueToday} Today
-              </span>
-            </div>
-            <p className="text-gray-500 mt-0.5 text-xs">
-              Never miss a client follow-up: track overdue actions, due dates, quotes & callback commitments.
-            </p>
+            <h1 className="text-xl font-bold text-gray-900">Follow-Up Tracker</h1>
           </div>
         </div>
 
@@ -422,17 +414,17 @@ export const FollowUpsMaster: React.FC<FollowUpsMasterProps> = ({ isTab = false 
       {/* Table */}
       <div className="bg-white rounded-xl shadow-xs overflow-hidden border border-gray-200">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-[#00234a] text-white text-xs uppercase tracking-wider">
-              <tr>
-                <th className="px-5 py-3.5 text-left">Code</th>
-                <th className="px-5 py-3.5 text-left">Customer & Contact</th>
-                <th className="px-4 py-3.5 text-left">Follow-Up Action</th>
-                <th className="px-4 py-3.5 text-left">Due Date & Time</th>
-                <th className="px-4 py-3.5 text-left">Assigned Rep</th>
-                <th className="px-4 py-3.5 text-center">Priority</th>
-                <th className="px-4 py-3.5 text-center">Status</th>
-                <th className="px-5 py-3.5 text-right">Actions</th>
+          <table className="w-full text-sm border-collapse">
+            <thead className="bg-[#FF7900] text-white text-[13px] font-semibold uppercase tracking-wider">
+              <tr className="h-[50px] min-h-[50px]">
+                <th className="px-4 py-3.5 text-left font-bold border-r border-[#e06800]">Code</th>
+                <th className="px-4 py-3.5 text-left border-r border-[#e06800]">Customer & Contact</th>
+                <th className="px-4 py-3.5 text-left border-r border-[#e06800]">Follow-Up Action</th>
+                <th className="px-4 py-3.5 text-left border-r border-[#e06800]">Due Date & Time</th>
+                <th className="px-4 py-3.5 text-left border-r border-[#e06800]">Assigned Rep</th>
+                <th className="px-4 py-3.5 text-center border-r border-[#e06800]">Priority</th>
+                <th className="px-4 py-3.5 text-center border-r border-[#e06800]">Status</th>
+                <th className="px-4 py-3.5 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-100">

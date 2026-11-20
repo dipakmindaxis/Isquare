@@ -52,9 +52,6 @@ const ViewCustomerStatusModal: React.FC<ViewCustomerStatusModalProps> = ({
               <h2 className="text-lg font-bold text-gray-900">
                 Customer Status Details
               </h2>
-              <p className="text-xs text-gray-500 mt-0.5">
-                View customer status information
-              </p>
             </div>
           </div>
           <button
@@ -111,11 +108,10 @@ const ViewCustomerStatusModal: React.FC<ViewCustomerStatusModalProps> = ({
                 Active Status
               </span>
               <span
-                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
-                  data?.isActive
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${data?.isActive
                     ? "bg-green-50 text-green-700 border border-green-200"
                     : "bg-red-50 text-red-700 border border-red-200"
-                }`}
+                  }`}
               >
                 {data?.isActive ? (
                   <>

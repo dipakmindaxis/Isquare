@@ -170,110 +170,128 @@ const CustomerSource: React.FC<CustomerSourceProps> = ({ isTab = false }) => {
   };
 
   return (
-    <div className={isTab ? "w-full space-y-4" : "p-4 md:p-6 bg-gray-50 min-h-full space-y-5"}>
-      {/* Top Header Card */}
-      <div className="bg-white rounded-none shadow-xs border border-gray-200 p-5">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className={isTab ? "w-full space-y-6" : "p-4 md:p-6 bg-gray-50 min-h-full space-y-6"}>
+      {/* Top Header Card when Standalone */}
+      {!isTab && (
+        <div className="bg-white rounded-xl shadow-xs border border-gray-200 p-5 mb-6">
           <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 bg-orange-50 border border-[#FF7900]/30 rounded-none flex items-center justify-center shrink-0 text-[#FF7900]">
+            <div className="w-12 h-12 bg-orange-50 border border-[#FF7900]/30 rounded-xl flex items-center justify-center shrink-0 text-[#FF7900]">
               <Share2 className="w-6 h-6" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-[#00234a]">Customer Source</h1>
             </div>
           </div>
+        </div>
+      )}
 
-          <div className="flex items-center gap-2.5 flex-wrap">
-            <button
-              onClick={fetchItems}
-              disabled={isLoading}
-              className="flex items-center gap-2 px-3.5 py-2.5 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 rounded-none text-sm font-semibold transition cursor-pointer shadow-xs disabled:opacity-50"
-              title="Refresh records"
-            >
-              <RefreshCw className={`w-4 h-4 text-gray-600 ${isLoading ? "animate-spin" : ""}`} />
-              <span className="hidden sm:inline">Refresh</span>
-            </button>
+      {/* Section Header matching Reference Customers Tab */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 className="border-b-2 border-[#FF7900] pb-2 text-3xl font-bold tracking-[-0.03em] text-[#00234a]">
+            Customer Source
+          </h2>
+        </div>
 
-            <button
-              onClick={handleExportExcel}
-              className="flex items-center gap-2 px-3.5 py-2.5 bg-white hover:bg-gray-50 text-emerald-700 border border-emerald-300 rounded-none text-sm font-semibold transition cursor-pointer shadow-xs"
-              title="Export to Excel"
-            >
-              <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-              <span className="hidden sm:inline">Export</span>
-            </button>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={fetchItems}
+            disabled={isLoading}
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer disabled:opacity-50"
+            title="Refresh records"
+          >
+            <RefreshCw className={`w-4 h-4 text-gray-600 ${isLoading ? "animate-spin" : ""}`} />
+            <span>Refresh</span>
+          </button>
 
-            <button
-              onClick={() => setIsAddModalOpen(true)}
-              className="flex items-center gap-2 bg-[#FF7900] hover:bg-[#E66D00] text-white font-semibold px-5 py-2.5 rounded-none transition shadow-sm cursor-pointer text-sm"
-            >
-              <Plus size={18} />
-              <span>Add Customer Source</span>
-            </button>
+          <button
+            type="button"
+            onClick={handleExportExcel}
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer"
+            title="Export to Excel"
+          >
+            <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+            <span>Export</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsAddModalOpen(true)}
+            className="rounded-xl bg-[#00234a] hover:bg-[#FF7900] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_18px_rgba(0,35,74,0.18)] transition cursor-pointer flex items-center gap-2"
+          >
+            <Plus size={16} />
+            <span>Add Customer Source</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Analytics / Stats Bar */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+        <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 sm:gap-4">
+          <div className="p-3 bg-blue-50 text-blue-600 rounded-xl shrink-0">
+            <Share2 size={20} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase text-gray-400 tracking-wider truncate">
+              Total Sources
+            </p>
+            <p className="text-2xl font-bold text-gray-800">{stats.total}</p>
           </div>
         </div>
 
-        {/* Quick Stats Strip */}
-        <div className="grid grid-cols-3 gap-3 pt-5 mt-5 border-t border-gray-100">
-          <div className="flex items-center gap-3 bg-gray-50/80 p-3 rounded-none border border-gray-100">
-            <div className="w-9 h-9 rounded-none bg-blue-100 text-[#00234a] flex items-center justify-center shrink-0">
-              <Share2 className="w-4 h-4" />
-            </div>
-            <div>
-              <p className="text-xs font-medium text-gray-500">Total Sources</p>
-              <p className="text-base font-bold text-gray-900">{stats.total}</p>
-            </div>
+        <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 sm:gap-4">
+          <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl shrink-0">
+            <CheckCircle2 size={20} />
           </div>
-
-          <div className="flex items-center gap-3 bg-gray-50/80 p-3 rounded-none border border-gray-100">
-            <div className="w-9 h-9 rounded-none bg-green-100 text-green-700 flex items-center justify-center shrink-0">
-              <CheckCircle2 className="w-4 h-4" />
-            </div>
-            <div>
-              <p className="text-xs font-medium text-gray-500">Active</p>
-              <p className="text-base font-bold text-green-700">{stats.active}</p>
-            </div>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase text-gray-400 tracking-wider truncate">
+              Active Sources
+            </p>
+            <p className="text-2xl font-bold text-emerald-600">{stats.active}</p>
           </div>
+        </div>
 
-          <div className="flex items-center gap-3 bg-gray-50/80 p-3 rounded-none border border-gray-100">
-            <div className="w-9 h-9 rounded-none bg-red-100 text-red-700 flex items-center justify-center shrink-0">
-              <XCircle className="w-4 h-4" />
-            </div>
-            <div>
-              <p className="text-xs font-medium text-gray-500">Inactive</p>
-              <p className="text-base font-bold text-red-600">{stats.inactive}</p>
-            </div>
+        <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 sm:gap-4 sm:col-span-2 lg:col-span-1">
+          <div className="p-3 bg-rose-50 text-rose-600 rounded-xl shrink-0">
+            <XCircle size={20} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase text-gray-400 tracking-wider truncate">
+              Inactive Sources
+            </p>
+            <p className="text-2xl font-bold text-rose-600">{stats.inactive}</p>
           </div>
         </div>
       </div>
 
-      {/* Search & Filter Bar */}
-      <div className="bg-white rounded-none shadow-xs border border-gray-200 p-4 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3">
-        <div className="relative w-full md:max-w-md">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+      {/* Filter & Search Bar */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 sm:gap-4">
+        <div className="relative w-full md:w-96">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
           <input
             type="text"
             placeholder="Search by code or name..."
-            className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-none text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#FF7900] focus:border-[#FF7900] transition"
+            className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#FF8500]/20 focus:border-[#FF8500] transition"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+        <div className="flex items-center justify-between sm:justify-start gap-2 w-full md:w-auto">
+          <span className="text-xs font-semibold text-gray-500 whitespace-nowrap">
             Status:
           </span>
-          <div className="flex bg-gray-100 p-1 rounded-none">
+          <div className="flex bg-gray-100 p-1 rounded-lg flex-1 sm:flex-initial">
             {["All", "Active", "Inactive"].map((status) => (
               <button
                 key={status}
                 type="button"
                 onClick={() => setStatusFilter(status)}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-none transition-all cursor-pointer ${
+                className={`px-3 py-1 text-xs font-semibold rounded-md transition cursor-pointer flex-1 sm:flex-initial ${
                   statusFilter === status
-                    ? "bg-white text-[#FF7900] shadow-xs"
-                    : "text-gray-600 hover:text-gray-900"
+                    ? "bg-white text-gray-900 shadow-xs"
+                    : "text-gray-500 hover:text-gray-900"
                 }`}
               >
                 {status}
@@ -283,11 +301,11 @@ const CustomerSource: React.FC<CustomerSourceProps> = ({ isTab = false }) => {
         </div>
       </div>
 
-      {/* Table matching Screenshot 2 */}
-      <div className="bg-white rounded-none shadow-xs overflow-hidden border border-gray-200">
+      {/* Table matching Reference Design */}
+      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
-            <thead className="bg-[#FF7900] text-white text-[13px] font-semibold uppercase tracking-wider border-b border-[#e06800]">
+            <thead className="bg-[#FF7900] text-white text-[13px] font-semibold uppercase tracking-wider">
               <tr>
                 <th className="px-4 py-3.5 text-left font-bold w-16 border-r border-[#e06800]">
                   Sr. No.
@@ -410,7 +428,7 @@ const CustomerSource: React.FC<CustomerSourceProps> = ({ isTab = false }) => {
             <select
               value={itemsPerPage}
               onChange={(e) => setItemsPerPage(Number(e.target.value))}
-              className="px-2 py-1 border border-gray-300 rounded-none bg-white text-xs font-medium focus:outline-none focus:ring-1 focus:ring-[#FF7900]"
+              className="px-2 py-1 border border-gray-300 rounded-md bg-white text-xs font-medium focus:outline-none focus:ring-1 focus:ring-[#FF7900]"
             >
               <option value={5}>5</option>
               <option value={10}>10</option>
@@ -430,7 +448,7 @@ const CustomerSource: React.FC<CustomerSourceProps> = ({ isTab = false }) => {
             <button
               onClick={() => setCurrentPage(1)}
               disabled={currentPage === 1}
-              className="p-1.5 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed text-gray-600 transition"
+              className="p-1.5 hover:bg-gray-100 rounded-md disabled:opacity-30 disabled:cursor-not-allowed text-gray-600 transition"
               title="First Page"
             >
               <ChevronsLeft size={16} />
@@ -438,7 +456,7 @@ const CustomerSource: React.FC<CustomerSourceProps> = ({ isTab = false }) => {
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="p-1.5 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed text-gray-600 transition"
+              className="p-1.5 hover:bg-gray-100 rounded-md disabled:opacity-30 disabled:cursor-not-allowed text-gray-600 transition"
               title="Previous Page"
             >
               <ChevronLeft size={16} />
@@ -446,7 +464,7 @@ const CustomerSource: React.FC<CustomerSourceProps> = ({ isTab = false }) => {
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages || totalPages === 0}
-              className="p-1.5 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed text-gray-600 transition"
+              className="p-1.5 hover:bg-gray-100 rounded-md disabled:opacity-30 disabled:cursor-not-allowed text-gray-600 transition"
               title="Next Page"
             >
               <ChevronRight size={16} />
@@ -454,7 +472,7 @@ const CustomerSource: React.FC<CustomerSourceProps> = ({ isTab = false }) => {
             <button
               onClick={() => setCurrentPage(totalPages)}
               disabled={currentPage === totalPages || totalPages === 0}
-              className="p-1.5 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed text-gray-600 transition"
+              className="p-1.5 hover:bg-gray-100 rounded-md disabled:opacity-30 disabled:cursor-not-allowed text-gray-600 transition"
               title="Last Page"
             >
               <ChevronsRight size={16} />

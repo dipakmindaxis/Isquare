@@ -45,16 +45,13 @@ const ViewCallTypeModal: React.FC<ViewCallTypeModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between p-6 pb-4 border-b border-gray-100">
           <div className="flex items-center gap-3.5">
-            <div className="w-11 h-11 bg-slate-100 text-[#00234a] rounded-xl flex items-center justify-center">
-              <PhoneCall className="w-5 h-5" />
+            <div className="w-11 h-11 bg-orange-50 text-[#FF7900] border border-[#FF7900]/20 rounded-xl flex items-center justify-center">
+              <PhoneCall className="w-5 h-5 text-[#FF7900]" />
             </div>
             <div>
               <h2 className="text-lg font-bold text-gray-900">
                 Call Type Details
               </h2>
-              <p className="text-xs text-gray-500 mt-0.5">
-                View call type information and status
-              </p>
             </div>
           </div>
           <button
@@ -69,7 +66,7 @@ const ViewCallTypeModal: React.FC<ViewCallTypeModalProps> = ({
         {/* Content */}
         {isLoading ? (
           <div className="p-12 flex justify-center items-center gap-3 text-gray-500">
-            <Loader2 className="animate-spin text-[#00234a]" size={24} />
+            <Loader2 className="animate-spin text-[#FF7900]" size={24} />
             <span>Loading details...</span>
           </div>
         ) : (
@@ -77,7 +74,7 @@ const ViewCallTypeModal: React.FC<ViewCallTypeModalProps> = ({
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-gray-50 p-3.5 rounded-xl border border-gray-100">
                 <div className="flex items-center gap-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
-                  <Hash size={14} className="text-[#00234a]" />
+                  <Hash size={14} className="text-[#FF7900]" />
                   <span>ID</span>
                 </div>
                 <p className="text-sm font-bold text-gray-900">
@@ -87,7 +84,7 @@ const ViewCallTypeModal: React.FC<ViewCallTypeModalProps> = ({
 
               <div className="bg-gray-50 p-3.5 rounded-xl border border-gray-100">
                 <div className="flex items-center gap-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
-                  <PhoneCall size={14} className="text-[#00234a]" />
+                  <PhoneCall size={14} className="text-[#FF7900]" />
                   <span>Call Type Name</span>
                 </div>
                 <p className="text-sm font-bold text-gray-900">
@@ -98,24 +95,22 @@ const ViewCallTypeModal: React.FC<ViewCallTypeModalProps> = ({
 
             <div className="bg-gray-50 p-3.5 rounded-xl border border-gray-100 flex items-center justify-between">
               <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                Active Status
+                Status
               </span>
               <span
-                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
                   data?.isActive
-                    ? "bg-green-50 text-green-700 border border-green-200"
-                    : "bg-red-50 text-red-700 border border-red-200"
+                    ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                    : "bg-rose-50 text-rose-700 border border-rose-200"
                 }`}
               >
                 {data?.isActive ? (
                   <>
-                    <CheckCircle size={14} />
-                    <span>Active</span>
+                    <CheckCircle size={14} /> Active
                   </>
                 ) : (
                   <>
-                    <XCircle size={14} />
-                    <span>Inactive</span>
+                    <XCircle size={14} /> Inactive
                   </>
                 )}
               </span>
@@ -124,11 +119,11 @@ const ViewCallTypeModal: React.FC<ViewCallTypeModalProps> = ({
         )}
 
         {/* Footer */}
-        <div className="flex justify-end items-center px-6 py-4 bg-gray-50 border-t border-gray-200">
+        <div className="flex justify-end p-4 bg-gray-50 border-t border-gray-200">
           <button
             type="button"
             onClick={onClose}
-            className="px-6 py-2 bg-[#00234a] hover:bg-[#001833] text-white rounded-lg text-sm font-medium transition cursor-pointer"
+            className="px-5 py-2 rounded-lg text-sm font-medium bg-gray-500 hover:bg-gray-600 text-white transition cursor-pointer"
           >
             Close
           </button>

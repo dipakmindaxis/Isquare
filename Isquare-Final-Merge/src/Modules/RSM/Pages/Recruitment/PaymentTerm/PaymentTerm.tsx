@@ -110,14 +110,11 @@ const PaymentTerm: React.FC = () => {
       {/* Top Header Card with Action Button */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white rounded-xl shadow-xs border border-gray-200 p-5 mb-6">
         <div className="flex items-center gap-3.5">
-          <div className="w-11 h-11 bg-slate-100 text-[#00234a] rounded-xl flex items-center justify-center">
+          <div className="w-11 h-11 bg-orange-50 border border-[#FF7900]/30 text-[#FF7900] rounded-xl flex items-center justify-center">
             <Receipt className="w-5 h-5" />
           </div>
           <div>
             <h1 className="text-xl font-bold text-gray-900">Payment Terms</h1>
-            <p className="text-gray-500 mt-0.5 text-xs">
-              Manage payment terms, credit limits, and billing conditions.
-            </p>
           </div>
         </div>
 
@@ -149,13 +146,13 @@ const PaymentTerm: React.FC = () => {
       {/* Table */}
       <div className="bg-white rounded-lg shadow-xs overflow-hidden border border-gray-200">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-[#00234a] text-white text-xs uppercase tracking-wider">
-              <tr>
-                <th className="px-6 py-3.5 text-left">Payment Term Code</th>
-                <th className="px-6 py-3.5 text-left">Payment Term Name</th>
-                <th className="px-6 py-3.5 text-center">Status</th>
-                <th className="px-6 py-3.5 text-right">Actions</th>
+          <table className="w-full text-sm border-collapse">
+            <thead className="bg-[#FF7900] text-white text-[13px] font-semibold uppercase tracking-wider">
+              <tr className="h-[50px] min-h-[50px]">
+                <th className="px-4 py-3.5 text-left font-bold border-r border-[#e06800]">Payment Term Code</th>
+                <th className="px-4 py-3.5 text-left border-r border-[#e06800]">Payment Term Name</th>
+                <th className="px-4 py-3.5 text-center w-32 border-r border-[#e06800]">Status</th>
+                <th className="px-4 py-3.5 text-right w-36">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-100">
@@ -186,11 +183,10 @@ const PaymentTerm: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 text-center">
                       <span
-                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                          item.isActive
-                            ? "bg-green-50 text-green-700 border border-green-200"
-                            : "bg-red-50 text-red-700 border border-red-200"
-                        }`}
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${item.isActive
+                          ? "bg-green-50 text-green-700 border border-green-200"
+                          : "bg-red-50 text-red-700 border border-red-200"
+                          }`}
                       >
                         {item.isActive ? "Active" : "Inactive"}
                       </span>

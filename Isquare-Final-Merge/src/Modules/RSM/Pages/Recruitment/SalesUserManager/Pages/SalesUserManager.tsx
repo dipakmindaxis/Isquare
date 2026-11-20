@@ -79,15 +79,9 @@ const SalesUserManager: React.FC = () => {
     <div className="min-h-full bg-[#f5f6f8] p-6">
       <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h5 className="text-[#154068]">MASTER TABLE</h5>
-
           <h1 className="text-2xl font-semibold text-[#154068]">
             Users / Sales Managers
           </h1>
-
-          <p className="mt-1 text-sm text-gray-500">
-            Sales ownership and assignment list.
-          </p>
         </div>
 
         <div className="flex items-center gap-3">

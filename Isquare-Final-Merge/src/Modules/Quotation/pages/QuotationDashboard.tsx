@@ -95,9 +95,6 @@ export const QuotationDashboard: React.FC = () => {
           <h1 className="text-3xl font-bold tracking-[-0.03em] text-[#00234a]">
             Quotation Management Dashboard
           </h1>
-          <p className="text-xs text-gray-500 mt-1">
-            Real-time commercial proposals, approvals, pipeline stages and revenue metrics
-          </p>
         </div>
 
         <div className="flex items-center gap-3">

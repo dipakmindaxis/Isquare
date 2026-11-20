@@ -60,39 +60,39 @@ export const SalesActivityTable: React.FC<SalesActivityTableProps> = ({
   };
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
+    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.04)] p-5 md:p-6">
       <div className="overflow-x-auto w-full">
         <table className="w-full text-left border-collapse">
           <thead className="bg-[#FF7900] text-white">
-            <tr className="min-h-[50px]">
-              <th className="px-3 py-3 text-center text-[13px] font-semibold text-white border-r border-[#e06800] w-[60px] tracking-normal">
+            <tr className="h-[50px] min-h-[50px]">
+              <th className="px-3 py-0 h-[50px] text-center text-[13px] font-semibold text-white border-r border-[#e06800] w-[60px] tracking-normal align-middle">
                 Sr.
               </th>
-              <th className="px-3 py-3 text-left text-[13px] font-semibold text-white border-r border-[#e06800] tracking-normal min-w-[130px]">
+              <th className="px-3 py-0 h-[50px] text-left text-[13px] font-semibold text-white border-r border-[#e06800] tracking-normal min-w-[130px] align-middle">
                 Activity / Code
               </th>
-              <th className="px-3 py-3 text-left text-[13px] font-semibold text-white border-r border-[#e06800] tracking-normal min-w-[200px]">
+              <th className="px-3 py-0 h-[50px] text-left text-[13px] font-semibold text-white border-r border-[#e06800] tracking-normal min-w-[200px] align-middle">
                 Subject & Notes
               </th>
-              <th className="px-3 py-3 text-left text-[13px] font-semibold text-white border-r border-[#e06800] tracking-normal min-w-[170px]">
+              <th className="px-3 py-0 h-[50px] text-left text-[13px] font-semibold text-white border-r border-[#e06800] tracking-normal min-w-[170px] align-middle">
                 Customer & Contact
               </th>
-              <th className="px-3 py-3 text-left text-[13px] font-semibold text-white border-r border-[#e06800] tracking-normal min-w-[150px]">
+              <th className="px-3 py-0 h-[50px] text-left text-[13px] font-semibold text-white border-r border-[#e06800] tracking-normal min-w-[150px] align-middle">
                 Email ID
               </th>
-              <th className="px-3 py-3 text-left text-[13px] font-semibold text-white border-r border-[#e06800] tracking-normal min-w-[120px]">
+              <th className="px-3 py-0 h-[50px] text-left text-[13px] font-semibold text-white border-r border-[#e06800] tracking-normal min-w-[120px] align-middle">
                 Assigned Rep
               </th>
-              <th className="px-3 py-3 text-left text-[13px] font-semibold text-white border-r border-[#e06800] tracking-normal min-w-[115px]">
+              <th className="px-3 py-0 h-[50px] text-left text-[13px] font-semibold text-white border-r border-[#e06800] tracking-normal min-w-[115px] align-middle">
                 Date & Time
               </th>
-              <th className="px-3 py-3 text-center text-[13px] font-semibold text-white border-r border-[#e06800] tracking-normal min-w-[100px]">
+              <th className="px-3 py-0 h-[50px] text-center text-[13px] font-semibold text-white border-r border-[#e06800] tracking-normal min-w-[100px] align-middle">
                 Status
               </th>
-              <th className="px-3 py-3 text-left text-[13px] font-semibold text-white border-r border-[#e06800] tracking-normal min-w-[115px]">
+              <th className="px-3 py-0 h-[50px] text-left text-[13px] font-semibold text-white border-r border-[#e06800] tracking-normal min-w-[115px] align-middle">
                 Next Action
               </th>
-              <th className="px-3 py-3 text-center text-[13px] font-semibold text-white tracking-normal min-w-[120px]">
+              <th className="px-3 py-0 h-[50px] text-center text-[13px] font-semibold text-white tracking-normal min-w-[120px] align-middle">
                 Actions
               </th>
             </tr>
@@ -299,7 +299,7 @@ export const SalesActivityTable: React.FC<SalesActivityTableProps> = ({
       </div>
 
       {/* Pagination Controls matching Employee Master */}
-      <div className="flex flex-col sm:flex-row items-center justify-end gap-4 p-4 border-t border-[#d9dde5] text-xs text-slate-600 bg-white">
+      <div className="flex flex-col sm:flex-row items-center justify-end gap-4 pt-4 border-t border-[#d9dde5] text-xs text-slate-600 bg-white">
         <div className="flex items-center gap-2">
           <span>Rows per page:</span>
           <select

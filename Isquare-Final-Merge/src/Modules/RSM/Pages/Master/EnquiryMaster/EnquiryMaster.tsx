@@ -28,7 +28,7 @@ import { CurrencyMaster } from "./Currency/CurrencyMaster";
 import { DepartmentMaster } from "./Department/DepartmentMaster";
 import { SalesTerritoryMaster } from "./SalesTerritory/SalesTerritoryMaster";
 import { PlaceOfSupplyMaster } from "./PlaceOfSupply/PlaceOfSupplyMaster";
-import { ProductCategoryMaster } from "./ProductCategory/ProductCategoryMaster"; 
+import { ProductCategoryMaster } from "./ProductCategory/ProductCategoryMaster";
 import { SalesManagerMaster } from "./SalesManager/SalesManagerMaster";
 
 export type EnquiryTab =
@@ -183,18 +183,13 @@ export const EnquiryMaster: React.FC<EnquiryMasterProps> = ({ initialTab }) => {
       <div className="bg-white rounded-xl shadow-xs border border-gray-200 p-5 pb-0">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-gray-100">
           <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 bg-blue-50 border border-blue-500/30 text-blue-600 rounded-xl flex items-center justify-center shrink-0 shadow-xs">
+            <div className="w-12 h-12 bg-orange-50 border border-[#FF7900]/30 text-[#FF7900] rounded-xl flex items-center justify-center shrink-0 shadow-xs">
               <ClipboardList className="w-6 h-6" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold text-[#00234a]">
-                  Enquiry Masters
-                </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-600 border border-blue-500/20">
-                  Unified Master
-                </span>
-              </div>
+              <h1 className="text-2xl font-bold text-[#00234a]">
+                Enquiry Masters
+              </h1>
             </div>
           </div>
         </div>
@@ -208,11 +203,10 @@ export const EnquiryMaster: React.FC<EnquiryMasterProps> = ({ initialTab }) => {
                 key={tab.id}
                 type="button"
                 onClick={() => handleSelectTab(tab.id)}
-                className={`flex items-center gap-2 px-3.5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-all cursor-pointer shrink-0 ${
-                  isActive
-                    ? "border-blue-600 text-blue-600 font-semibold bg-blue-50/50 rounded-t-lg"
-                    : "border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300"
-                }`}
+                className={`flex items-center gap-2 px-3.5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-all cursor-pointer shrink-0 ${isActive
+                  ? "border-blue-600 text-blue-600 font-semibold bg-blue-50/50 rounded-t-lg"
+                  : "border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300"
+                  }`}
               >
                 <span className={isActive ? "text-blue-600" : "text-gray-400"}>
                   {tab.icon}

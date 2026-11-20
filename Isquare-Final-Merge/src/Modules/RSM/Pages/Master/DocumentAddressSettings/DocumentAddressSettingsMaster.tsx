@@ -79,17 +79,9 @@ export const DocumentAddressSettingsMaster: React.FC<DocumentAddressSettingsMast
               <Paperclip className="w-6 h-6" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl md:text-2xl font-bold text-gray-900">
-                  Document & Address Settings
-                </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-orange-50 text-[#FF7900] border border-[#FF7900]/20">
-                  Unified Master
-                </span>
-              </div>
-              <p className="text-gray-500 mt-1 text-xs md:text-sm">
-                Centralized configuration for customer document upload classifications and address location types.
-              </p>
+              <h1 className="text-xl md:text-2xl font-bold text-gray-900">
+                Document & Address Settings
+              </h1>
             </div>
           </div>
         </div>
