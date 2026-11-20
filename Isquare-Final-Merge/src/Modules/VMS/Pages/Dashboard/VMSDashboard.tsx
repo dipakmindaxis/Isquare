@@ -54,18 +54,14 @@ const VMSDashboard: React.FC = () => {
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-3">
-          <div className="bg-[#00234a] text-white p-3 rounded-xl">
-            <Building2 size={30} />
+          <div className="w-12 h-12 bg-orange-50 border border-[#FF7900]/30 text-[#FF7900] rounded-xl flex items-center justify-center shrink-0">
+            <Building2 size={26} />
           </div>
 
           <div>
             <h1 className="text-2xl font-bold text-gray-800">
               Visitor Management System
             </h1>
-
-            <p className="text-gray-500 text-sm">
-              Manage visitors, appointments and visitor check-in/check-out
-            </p>
           </div>
         </div>
       </div>

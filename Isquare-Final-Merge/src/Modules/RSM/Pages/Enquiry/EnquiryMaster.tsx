@@ -293,14 +293,9 @@ const EnquiryMaster: React.FC = () => {
               <FileText className="w-6 h-6" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold text-[#00234a]">
-                  Enquiry Master
-                </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-orange-50 text-[#FF7900] border border-[#FF7900]/20">
-                  Operations
-                </span>
-              </div>
+              <h1 className="text-2xl font-bold text-[#00234a]">
+                Enquiry Master
+              </h1>
             </div>
           </div>
         </div>

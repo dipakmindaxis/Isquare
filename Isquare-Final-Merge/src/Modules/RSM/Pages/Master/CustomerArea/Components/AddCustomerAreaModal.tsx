@@ -83,9 +83,6 @@ const AddCustomerAreaModal: React.FC<AddCustomerAreaModalProps> = ({
                 <h2 className="text-lg font-bold text-gray-900">
                   Add New Customer Area
                 </h2>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Register customer area, territory, or delivery zone
-                </p>
               </div>
             </div>
             <button

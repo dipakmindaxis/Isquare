@@ -110,9 +110,6 @@ const AccessControlManagement: React.FC = () => {
         <h2 className="border-b-2 border-[#153E63] pb-2 text-3xl font-bold tracking-[-0.03em] text-[#172B4D] inline-block">
           Access Control Management
         </h2>
-        <p className="text-slate-600 mt-2 text-sm font-medium">
-          Set module-wise permissions for different user roles.
-        </p>
       </div>
 
       {/* Role & System Selection Card */}

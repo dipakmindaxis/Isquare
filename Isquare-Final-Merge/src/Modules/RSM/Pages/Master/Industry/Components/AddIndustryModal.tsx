@@ -83,9 +83,6 @@ const AddIndustryModal: React.FC<AddIndustryModalProps> = ({
                 <h2 className="text-lg font-bold text-gray-900">
                   Add New Industry
                 </h2>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Register industry sector, classification, or domain
-                </p>
               </div>
             </div>
             <button

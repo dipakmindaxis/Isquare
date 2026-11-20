@@ -126,17 +126,9 @@ export const CompanyProfile: React.FC = () => {
             <Building2 size={24} />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl sm:text-2xl font-bold text-[#00234a] tracking-tight">
-                Company Profile Master
-              </h1>
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-orange-50 text-[#FF7900] border border-[#FF7900]/30">
-                Corporate Identity
-              </span>
-            </div>
-            <p className="text-xs text-gray-500 mt-0.5">
-              Corporate identity, GSTIN, legal name, registered premises, and bank remittance accounts.
-            </p>
+            <h1 className="text-xl sm:text-2xl font-bold text-[#00234a] tracking-tight">
+              Company Profile Master
+            </h1>
           </div>
         </div>
       </div>

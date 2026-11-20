@@ -93,9 +93,6 @@ const EditPaymentTermModal: React.FC<EditModalProps> = ({
                 <h2 className="text-lg font-bold text-gray-900">
                   Edit Payment Term
                 </h2>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Update payment term details and status
-                </p>
               </div>
             </div>
             <button

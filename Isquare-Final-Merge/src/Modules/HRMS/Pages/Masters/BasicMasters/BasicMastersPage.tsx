@@ -33,9 +33,6 @@ const BasicMastersPage: React.FC = () => {
         <h2 className="border-b-2 border-[#153E63] pb-2 text-3xl font-bold tracking-[-0.03em] text-[#172B4D] inline-block">
           Basic Masters
         </h2>
-        <p className="text-slate-600 mt-2 text-sm font-medium">
-          Manage core organizational data like departments, designations, roles, and payment terms.
-        </p>
       </div>
 
       {/* Main Tab Container */}

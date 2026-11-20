@@ -69,16 +69,13 @@ const AddCallTypeModal: React.FC<AddCallTypeModalProps> = ({
           {/* Header */}
           <div className="flex items-center justify-between p-6 pb-4 border-b border-gray-100">
             <div className="flex items-center gap-3.5">
-              <div className="w-11 h-11 bg-slate-100 text-[#00234a] rounded-xl flex items-center justify-center">
-                <PhoneCall className="w-5 h-5" />
+              <div className="w-11 h-11 bg-orange-50 text-[#FF7900] border border-[#FF7900]/20 rounded-xl flex items-center justify-center">
+                <PhoneCall className="w-5 h-5 text-[#FF7900]" />
               </div>
               <div>
                 <h2 className="text-lg font-bold text-gray-900">
                   Add New Call Type
                 </h2>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Register new call type, communication method, or phone activity category
-                </p>
               </div>
             </div>
             <button
@@ -106,7 +103,7 @@ const AddCallTypeModal: React.FC<AddCallTypeModalProps> = ({
                   value={formData.callTypeName}
                   onChange={handleChange}
                   placeholder="e.g., Cold Call, Follow-up, Discovery, Demo Call"
-                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#00234a] focus:border-[#00234a] transition"
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 focus:border-[#FF7900] transition"
                   required
                 />
               </div>
@@ -119,7 +116,7 @@ const AddCallTypeModal: React.FC<AddCallTypeModalProps> = ({
                   name="isActive"
                   checked={formData.isActive}
                   onChange={handleChange}
-                  className="w-4 h-4 text-[#00234a] rounded border-gray-300 focus:ring-[#00234a] cursor-pointer"
+                  className="w-4 h-4 text-[#FF7900] rounded border-gray-300 focus:ring-[#FF7900] cursor-pointer"
                 />
                 <span className="text-sm font-medium text-gray-700">
                   Active Status
@@ -134,14 +131,14 @@ const AddCallTypeModal: React.FC<AddCallTypeModalProps> = ({
               type="button"
               onClick={handleClose}
               disabled={isLoading}
-              className="px-6 py-2 rounded-lg text-sm font-medium bg-gray-500 hover:bg-gray-600 text-white transition cursor-pointer"
+              className="px-5 py-2 rounded-lg text-sm font-medium bg-gray-500 hover:bg-gray-600 text-white transition cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="flex items-center gap-2 px-6 py-2 bg-[#00234a] hover:bg-[#001833] text-white rounded-lg text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="flex items-center gap-2 px-6 py-2 bg-[#FF7900] hover:bg-[#E66D00] text-white rounded-lg text-sm font-semibold transition shadow-md shadow-orange-500/25 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {isLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

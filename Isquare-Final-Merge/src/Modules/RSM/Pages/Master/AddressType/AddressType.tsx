@@ -271,14 +271,14 @@ const AddressType: React.FC<AddressTypeProps> = ({ isTab = false }) => {
       {/* Table with Project Logo Orange Header */}
       <div className="bg-white rounded-xl shadow-xs overflow-hidden border border-gray-200">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-[#FF7900] text-white text-xs uppercase tracking-wider border-b border-[#e06800]">
-              <tr>
-                <th className="px-6 py-4 text-left font-bold w-20">Sr. No.</th>
-                <th className="px-6 py-4 text-left font-bold">Type Code</th>
-                <th className="px-6 py-4 text-left font-bold">Type Name</th>
-                <th className="px-6 py-4 text-center font-bold">Status</th>
-                <th className="px-6 py-4 text-right font-bold">Actions</th>
+          <table className="w-full text-sm border-collapse">
+            <thead className="bg-[#FF7900] text-white text-[13px] font-semibold uppercase tracking-wider">
+              <tr className="h-[50px] min-h-[50px]">
+                <th className="px-4 py-3.5 text-left font-bold w-20 border-r border-[#e06800]">Sr. No.</th>
+                <th className="px-4 py-3.5 text-left font-bold border-r border-[#e06800]">Type Code</th>
+                <th className="px-4 py-3.5 text-left font-bold border-r border-[#e06800]">Type Name</th>
+                <th className="px-4 py-3.5 text-center font-bold w-32 border-r border-[#e06800]">Status</th>
+                <th className="px-4 py-3.5 text-right font-bold w-36">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-100">

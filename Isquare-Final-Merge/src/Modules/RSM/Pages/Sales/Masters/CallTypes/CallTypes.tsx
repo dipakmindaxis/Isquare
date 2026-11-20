@@ -158,19 +158,11 @@ export const CallTypes: React.FC = () => {
       {/* Top Header Card */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white rounded-xl shadow-xs border border-gray-200 p-5 mb-6">
         <div className="flex items-center gap-3.5">
-          <div className="w-11 h-11 bg-blue-50 text-[#00234a] rounded-xl flex items-center justify-center font-bold">
+          <div className="w-11 h-11 bg-orange-50 border border-[#FF7900]/30 text-[#FF7900] rounded-xl flex items-center justify-center font-bold">
             <PhoneCall className="w-5 h-5" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold text-gray-900">Call Types Master</h1>
-              <span className="text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200 px-2.5 py-0.5 rounded-full">
-                Sales Activity Lookup
-              </span>
-            </div>
-            <p className="text-gray-500 mt-0.5 text-xs">
-              Configure call types and categories used across CRM Phone Calls and Activity tracking.
-            </p>
+            <h1 className="text-xl font-bold text-gray-900">Call Types Master</h1>
           </div>
         </div>
 
@@ -244,21 +236,21 @@ export const CallTypes: React.FC = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="bg-[#FF7900] text-white border-b border-[#e06800]">
-                  <th className="py-3 px-4 font-semibold uppercase tracking-wider text-[11px] w-16 text-center">
+              <thead className="bg-[#FF7900] text-white text-[13px] font-semibold uppercase tracking-wider">
+                <tr className="h-[50px] min-h-[50px]">
+                  <th className="px-4 py-3.5 text-center font-bold w-16 border-r border-[#e06800]">
                     #
                   </th>
-                  <th className="py-3 px-4 font-semibold uppercase tracking-wider text-[11px]">
+                  <th className="px-4 py-3.5 text-left border-r border-[#e06800]">
                     Call Type / Value
                   </th>
-                  <th className="py-3 px-4 font-semibold uppercase tracking-wider text-[11px] w-36">
+                  <th className="px-4 py-3.5 text-left w-36 border-r border-[#e06800]">
                     Code / Key
                   </th>
-                  <th className="py-3 px-4 font-semibold uppercase tracking-wider text-[11px] w-28 text-center">
+                  <th className="px-4 py-3.5 text-center w-28 border-r border-[#e06800]">
                     Status
                   </th>
-                  <th className="py-3 px-4 font-semibold uppercase tracking-wider text-[11px] w-28 text-center">
+                  <th className="px-4 py-3.5 text-right w-28">
                     Actions
                   </th>
                 </tr>

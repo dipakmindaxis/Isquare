@@ -8,7 +8,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Receipt,
-  Download,
+  RefreshCw,
   CheckCircle2,
   XCircle,
   FileSpreadsheet,
@@ -84,8 +84,8 @@ const PaymentTerm: React.FC<PaymentTermProps> = ({ isTab = false }) => {
         statusFilter === "ALL"
           ? true
           : statusFilter === "ACTIVE"
-          ? item.isActive
-          : !item.isActive;
+            ? item.isActive
+            : !item.isActive;
 
       return matchesSearch && matchesStatus;
     });
@@ -139,8 +139,7 @@ const PaymentTerm: React.FC<PaymentTermProps> = ({ isTab = false }) => {
         isActive: updatedStatus,
       });
       toast.success(
-        `Payment term "${item.paymentTermName}" marked as ${
-          updatedStatus ? "Active" : "Inactive"
+        `Payment term "${item.paymentTermName}" marked as ${updatedStatus ? "Active" : "Inactive"
         }.`
       );
       fetchItems();
@@ -170,112 +169,167 @@ const PaymentTerm: React.FC<PaymentTermProps> = ({ isTab = false }) => {
 
   return (
     <div className={isTab ? "w-full space-y-6" : "min-h-screen space-y-6 bg-[#e4e8e1] p-4 md:p-6"}>
-      {/* Top Header Card */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white rounded-2xl border border-slate-200 p-5 md:p-6 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
-        <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 bg-[#FFF1E6] border border-[#FFE0CC] text-[#FF7900] rounded-2xl flex items-center justify-center shadow-xs">
-            <Receipt className="w-6 h-6" />
+      {/* Top Header Card (only when standalone) */}
+      {!isTab && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white rounded-xl border border-gray-100 p-5 md:p-6 shadow-sm">
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 bg-orange-50 border border-orange-100 text-[#FF7900] rounded-xl flex items-center justify-center shadow-xs">
+              <Receipt className="w-6 h-6" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-[#00234a] tracking-tight">Payment Terms</h1>
+            </div>
           </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={fetchItems}
+              disabled={isLoading}
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer disabled:opacity-50"
+              title="Refresh records"
+            >
+              <RefreshCw className={`w-4 h-4 text-gray-600 ${isLoading ? "animate-spin" : ""}`} />
+              <span>Refresh</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleExportExcel}
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer"
+              title="Export to Excel"
+            >
+              <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+              <span>Export</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsAddModalOpen(true)}
+              className="rounded-xl bg-[#00234a] hover:bg-[#FF7900] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_18px_rgba(0,35,74,0.18)] transition cursor-pointer flex items-center gap-2"
+            >
+              <Plus size={16} />
+              <span>Add Payment Term</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Section Header (when inside tab) */}
+      {isTab && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-[#00234a] tracking-tight">Payment Terms</h1>
-            <p className="text-xs text-slate-500 font-medium mt-0.5">Manage credit terms, schedules, and payment conditions.</p>
+            <h2 className="border-b-2 border-[#FF7900] pb-2 text-3xl font-bold tracking-[-0.03em] text-[#00234a]">
+              Payment Terms
+            </h2>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={fetchItems}
+              disabled={isLoading}
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer disabled:opacity-50"
+              title="Refresh records"
+            >
+              <RefreshCw className={`w-4 h-4 text-gray-600 ${isLoading ? "animate-spin" : ""}`} />
+              <span>Refresh</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleExportExcel}
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer"
+              title="Export to Excel"
+            >
+              <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+              <span>Export</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsAddModalOpen(true)}
+              className="rounded-xl bg-[#00234a] hover:bg-[#FF7900] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_18px_rgba(0,35,74,0.18)] transition cursor-pointer flex items-center gap-2"
+            >
+              <Plus size={16} />
+              <span>Add Payment Term</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Analytics / Stats Bar */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+        <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 sm:gap-4">
+          <div className="p-3 bg-blue-50 text-blue-600 rounded-xl shrink-0">
+            <Receipt size={20} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase text-gray-400 tracking-wider truncate">
+              Total Terms
+            </p>
+            <p className="text-2xl font-bold text-gray-800">{stats.total}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <button
-            onClick={handleExportExcel}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-[#153E63] hover:bg-slate-50 font-semibold text-sm transition cursor-pointer shadow-xs"
-            title="Export to Excel"
-          >
-            <Download size={15} />
-            <span>Export</span>
-          </button>
-          <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="inline-flex items-center gap-2 rounded-xl bg-[#153E63] hover:bg-[#103454] text-white font-semibold px-5 py-2.5 transition shadow-[0_10px_18px_rgba(21,62,99,0.18)] cursor-pointer text-sm"
-          >
-            <Plus size={18} />
-            <span>+ Add Payment Term</span>
-          </button>
+        <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 sm:gap-4">
+          <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl shrink-0">
+            <CheckCircle2 size={20} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase text-gray-400 tracking-wider truncate">
+              Active Terms
+            </p>
+            <p className="text-2xl font-bold text-emerald-600">{stats.active}</p>
+          </div>
         </div>
-      </div>
 
-      {/* Stats Counter Strip */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-[0_4px_16px_rgba(15,23,42,0.03)] flex items-center justify-between">
-          <div>
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Terms</p>
-            <p className="text-2xl font-extrabold text-[#172B4D] mt-1">{stats.total}</p>
+        <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 sm:gap-4">
+          <div className="p-3 bg-rose-50 text-rose-600 rounded-xl shrink-0">
+            <XCircle size={20} />
           </div>
-          <div className="w-11 h-11 rounded-xl bg-[#FFF1E6] text-[#FF7900] flex items-center justify-center shadow-2xs">
-            <Receipt size={22} />
-          </div>
-        </div>
-        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-[0_4px_16px_rgba(15,23,42,0.03)] flex items-center justify-between">
-          <div>
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Active</p>
-            <p className="text-2xl font-extrabold text-emerald-600 mt-1">{stats.active}</p>
-          </div>
-          <div className="w-11 h-11 rounded-xl bg-[#E8F8F5] text-[#00A995] flex items-center justify-center shadow-2xs">
-            <CheckCircle2 size={22} />
-          </div>
-        </div>
-        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-[0_4px_16px_rgba(15,23,42,0.03)] flex items-center justify-between">
-          <div>
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Inactive</p>
-            <p className="text-2xl font-extrabold text-rose-600 mt-1">{stats.inactive}</p>
-          </div>
-          <div className="w-11 h-11 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center shadow-2xs">
-            <XCircle size={22} />
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase text-gray-400 tracking-wider truncate">
+              Inactive Terms
+            </p>
+            <p className="text-2xl font-bold text-rose-600">{stats.inactive}</p>
           </div>
         </div>
       </div>
 
       {/* Search and Filters */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-[0_4px_16px_rgba(15,23,42,0.03)]">
-        <div className="flex w-full items-center sm:w-auto">
-          <label className="mr-2 text-sm font-medium text-slate-600">Search:</label>
-          <div className="relative w-full sm:w-80">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search by code or name..."
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#153E63] focus:bg-white shadow-xs"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-white p-3 sm:p-4 rounded-xl border border-gray-100 shadow-sm">
+        <div className="relative w-full sm:w-80">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search by code or name..."
+            className="w-full rounded-lg border border-gray-200 bg-white pl-9 pr-4 py-2 text-sm text-gray-700 outline-none transition focus:border-[#FF7900] shadow-xs"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
 
-        <div className="flex bg-slate-100 p-1 rounded-xl w-full sm:w-auto">
+        <div className="flex bg-gray-100 p-1 rounded-xl w-full sm:w-auto">
           <button
             onClick={() => setStatusFilter("ALL")}
-            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
-              statusFilter === "ALL"
-                ? "bg-white text-[#153E63] shadow-xs"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
+            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${statusFilter === "ALL"
+              ? "bg-white text-[#00234a] shadow-xs"
+              : "text-gray-600 hover:text-gray-900"
+              }`}
           >
             All ({stats.total})
           </button>
           <button
             onClick={() => setStatusFilter("ACTIVE")}
-            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
-              statusFilter === "ACTIVE"
-                ? "bg-white text-emerald-600 shadow-xs"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
+            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${statusFilter === "ACTIVE"
+              ? "bg-white text-emerald-600 shadow-xs"
+              : "text-gray-600 hover:text-gray-900"
+              }`}
           >
             Active ({stats.active})
           </button>
           <button
             onClick={() => setStatusFilter("INACTIVE")}
-            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
-              statusFilter === "INACTIVE"
-                ? "bg-white text-rose-600 shadow-xs"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
+            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${statusFilter === "INACTIVE"
+              ? "bg-white text-rose-600 shadow-xs"
+              : "text-gray-600 hover:text-gray-900"
+              }`}
           >
             Inactive ({stats.inactive})
           </button>
@@ -283,7 +337,7 @@ const PaymentTerm: React.FC<PaymentTermProps> = ({ isTab = false }) => {
       </div>
 
       {/* Table Card */}
-      <div className="bg-white rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.04)] overflow-hidden border border-slate-200">
+      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-[#FF7900] text-white text-[13px] font-semibold uppercase tracking-wider">
@@ -305,18 +359,18 @@ const PaymentTerm: React.FC<PaymentTermProps> = ({ isTab = false }) => {
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-slate-100">
+            <tbody className="bg-white divide-y divide-gray-100">
               {isLoading ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-12 text-slate-500">
-                    <Loader2 className="animate-spin inline-block mr-2 text-[#153E63]" />
+                  <td colSpan={5} className="text-center py-12 text-gray-500">
+                    <Loader2 className="animate-spin inline-block mr-2 text-[#00234a]" />
                     Loading payment terms...
                   </td>
                 </tr>
               ) : paginatedItems.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-12 text-slate-400">
-                    <FileSpreadsheet className="w-10 h-10 mx-auto mb-2 text-slate-300" />
+                  <td colSpan={5} className="text-center py-12 text-gray-400">
+                    <FileSpreadsheet className="w-10 h-10 mx-auto mb-2 text-gray-300" />
                     No payment terms found.
                   </td>
                 </tr>
@@ -326,16 +380,16 @@ const PaymentTerm: React.FC<PaymentTermProps> = ({ isTab = false }) => {
                     key={item.paymentTermId}
                     className="hover:bg-slate-50/80 transition-colors"
                   >
-                    <td className="px-5 py-4 text-slate-700 font-semibold border-r border-slate-100">
+                    <td className="px-5 py-4 text-gray-700 font-semibold border-r border-gray-100">
                       {(currentPage - 1) * itemsPerPage + index + 1}
                     </td>
-                    <td className="px-5 py-4 font-bold text-[#172B4D] border-r border-slate-100">
+                    <td className="px-5 py-4 font-bold text-[#00234a] border-r border-gray-100">
                       {item.paymentTermCode}
                     </td>
-                    <td className="px-5 py-4 text-slate-800 font-semibold border-r border-slate-100">
+                    <td className="px-5 py-4 text-gray-800 font-semibold border-r border-gray-100">
                       {item.paymentTermName}
                     </td>
-                    <td className="px-5 py-4 text-center border-r border-slate-100">
+                    <td className="px-5 py-4 text-center border-r border-gray-100">
                       <div className="flex justify-center w-full">
                         <label
                           className="relative inline-flex items-center cursor-pointer"
@@ -348,9 +402,8 @@ const PaymentTerm: React.FC<PaymentTermProps> = ({ isTab = false }) => {
                             className="sr-only"
                           />
                           <div
-                            className={`w-11 h-6 rounded-full transition-colors relative ${
-                              item.isActive ? "bg-[#153E63]" : "bg-slate-300"
-                            }`}
+                            className={`w-11 h-6 rounded-full transition-colors relative ${item.isActive ? "bg-[#00234a]" : "bg-gray-300"
+                              }`}
                           >
                             <span
                               className="absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform duration-200 ease-in-out shadow-sm"
@@ -397,13 +450,13 @@ const PaymentTerm: React.FC<PaymentTermProps> = ({ isTab = false }) => {
         </div>
 
         {/* Pagination Footer */}
-        <div className="bg-white border-t border-slate-200 px-6 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-medium text-slate-600 select-none">
+        <div className="bg-white border-t border-gray-200 px-6 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-medium text-gray-600 select-none">
           <div className="flex items-center gap-2">
             <span>Rows per page:</span>
             <select
               value={itemsPerPage}
               onChange={(e) => setItemsPerPage(Number(e.target.value))}
-              className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs text-slate-700 outline-none focus:border-[#153E63]"
+              className="rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-xs text-gray-700 outline-none focus:border-[#FF7900]"
             >
               <option value={5}>5</option>
               <option value={10}>10</option>
@@ -415,15 +468,15 @@ const PaymentTerm: React.FC<PaymentTermProps> = ({ isTab = false }) => {
             {filteredItems.length === 0
               ? "0-0 of 0"
               : `${(currentPage - 1) * itemsPerPage + 1}-${Math.min(
-                  currentPage * itemsPerPage,
-                  filteredItems.length
-                )} of ${filteredItems.length}`}
+                currentPage * itemsPerPage,
+                filteredItems.length
+              )} of ${filteredItems.length}`}
           </div>
           <div className="flex items-center gap-1.5">
             <button
               onClick={() => setCurrentPage(1)}
               disabled={currentPage === 1}
-              className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed text-slate-600 transition"
+              className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed text-gray-600 transition"
               title="First Page"
             >
               <ChevronsLeft size={16} />
@@ -431,7 +484,7 @@ const PaymentTerm: React.FC<PaymentTermProps> = ({ isTab = false }) => {
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed text-slate-600 transition"
+              className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed text-gray-600 transition"
               title="Previous Page"
             >
               <ChevronLeft size={16} />
@@ -439,7 +492,7 @@ const PaymentTerm: React.FC<PaymentTermProps> = ({ isTab = false }) => {
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages || totalPages === 0}
-              className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed text-slate-600 transition"
+              className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed text-gray-600 transition"
               title="Next Page"
             >
               <ChevronRight size={16} />
@@ -447,7 +500,7 @@ const PaymentTerm: React.FC<PaymentTermProps> = ({ isTab = false }) => {
             <button
               onClick={() => setCurrentPage(totalPages)}
               disabled={currentPage === totalPages || totalPages === 0}
-              className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed text-slate-600 transition"
+              className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed text-gray-600 transition"
               title="Last Page"
             >
               <ChevronsRight size={16} />

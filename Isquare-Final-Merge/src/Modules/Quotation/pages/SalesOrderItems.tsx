@@ -48,9 +48,6 @@ export const SalesOrderItems: React.FC = () => {
           <h1 className="text-3xl font-bold tracking-[-0.03em] text-[#00234a]">
             Sales Order Items Master
           </h1>
-          <p className="text-xs text-gray-500 mt-1">
-            Global catalog of itemized equipment and accessories ordered across active sales orders
-          </p>
         </div>
 
         <button

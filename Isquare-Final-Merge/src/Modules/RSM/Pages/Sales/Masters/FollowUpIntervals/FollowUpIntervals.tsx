@@ -162,9 +162,6 @@ export const FollowUpIntervals: React.FC = () => {
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
               Follow-up Intervals
             </h1>
-            <p className="text-xs text-gray-500 mt-1">
-              Standard reminder frequencies for sales team.
-            </p>
           </div>
 
           <div className="flex items-center gap-2.5">
@@ -224,13 +221,13 @@ export const FollowUpIntervals: React.FC = () => {
         {/* Data Table */}
         <div className="border border-gray-200 rounded-xl overflow-hidden">
           <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="bg-[#FF7900] text-white border-b border-[#e06800] text-xs uppercase tracking-wider">
-                <th className="py-3.5 px-4 w-16">SR NO</th>
-                <th className="py-3.5 px-4">VALUE / NAME</th>
-                <th className="py-3.5 px-4">CODE / KEY</th>
-                <th className="py-3.5 px-4 text-center">STATUS</th>
-                <th className="py-3.5 px-4 text-right">ACTIONS</th>
+            <thead className="bg-[#FF7900] text-white text-[13px] font-semibold uppercase tracking-wider">
+              <tr className="h-[50px] min-h-[50px]">
+                <th className="px-4 py-3.5 w-16 font-bold border-r border-[#e06800]">SR NO</th>
+                <th className="px-4 py-3.5 border-r border-[#e06800]">VALUE / NAME</th>
+                <th className="px-4 py-3.5 border-r border-[#e06800]">CODE / KEY</th>
+                <th className="px-4 py-3.5 text-center border-r border-[#e06800]">STATUS</th>
+                <th className="px-4 py-3.5 text-right">ACTIONS</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 text-xs">
@@ -262,16 +259,14 @@ export const FollowUpIntervals: React.FC = () => {
                     </td>
                     <td className="py-3.5 px-4 text-center">
                       <span
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
-                          item.isActive
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${item.isActive
                             ? "bg-emerald-50 text-emerald-700"
                             : "bg-gray-100 text-gray-500"
-                        }`}
+                          }`}
                       >
                         <span
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            item.isActive ? "bg-emerald-500" : "bg-gray-400"
-                          }`}
+                          className={`w-1.5 h-1.5 rounded-full ${item.isActive ? "bg-emerald-500" : "bg-gray-400"
+                            }`}
                         />
                         {item.isActive ? "Active" : "Inactive"}
                       </span>

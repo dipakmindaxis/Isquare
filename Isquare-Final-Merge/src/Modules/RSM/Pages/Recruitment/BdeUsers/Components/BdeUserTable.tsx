@@ -20,22 +20,22 @@ const BdeUserTable: React.FC<BdeUserTableProps> = ({
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
       <div className="overflow-x-auto">
-        <table className="w-full text-sm text-left">
-          <thead className="bg-[#154068] text-white">
-            <tr>
-              <th className="px-6 py-3 font-semibold text-left">
+        <table className="w-full text-sm text-left border-collapse">
+          <thead className="bg-[#FF7900] text-white text-[13px] font-semibold uppercase tracking-wider">
+            <tr className="h-[50px] min-h-[50px]">
+              <th className="px-4 py-3.5 font-bold text-left border-r border-[#e06800]">
                 SR NO
               </th>
-              <th className="px-6 py-3 font-semibold text-left">
+              <th className="px-4 py-3.5 font-semibold text-left border-r border-[#e06800]">
                 VALUE
               </th>
-              <th className="px-6 py-3 font-semibold text-left">
+              <th className="px-4 py-3.5 font-semibold text-left border-r border-[#e06800]">
                 CODE / KEY
               </th>
-              <th className="px-6 py-3 font-semibold text-left">
+              <th className="px-4 py-3.5 font-semibold text-center w-32 border-r border-[#e06800]">
                 STATUS
               </th>
-              <th className="px-6 py-3 font-semibold text-right">
+              <th className="px-4 py-3.5 font-semibold text-right w-36">
                 ACTIONS
               </th>
             </tr>

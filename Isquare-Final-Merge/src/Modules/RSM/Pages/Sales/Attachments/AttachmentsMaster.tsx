@@ -190,17 +190,9 @@ export const AttachmentsMaster: React.FC<AttachmentsMasterProps> = ({ isTab = fa
             <Paperclip className="w-5 h-5" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold text-gray-900">
-                Sales Attachments Master
-              </h1>
-              <span className="text-[11px] font-semibold bg-orange-50 text-[#FF7900] border border-[#FF7900]/20 px-2.5 py-0.5 rounded-full">
-                {attachments.length} Stored Documents
-              </span>
-            </div>
-            <p className="text-gray-500 mt-0.5 text-xs">
-              Repository of site photographs, signed handover challans, calibration test certificates, and compliance reports.
-            </p>
+            <h1 className="text-xl font-bold text-gray-900">
+              Sales Attachments Master
+            </h1>
           </div>
         </div>
 

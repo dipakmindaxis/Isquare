@@ -52,9 +52,6 @@ const ViewCustomerAreaModal: React.FC<ViewCustomerAreaModalProps> = ({
               <h2 className="text-lg font-bold text-gray-900">
                 Customer Area Details
               </h2>
-              <p className="text-xs text-gray-500 mt-0.5">
-                View customer area information
-              </p>
             </div>
           </div>
           <button

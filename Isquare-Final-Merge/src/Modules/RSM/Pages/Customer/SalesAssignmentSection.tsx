@@ -242,7 +242,8 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
 
   const [selectedOwnerValue, setSelectedOwnerValue] = useState<string>(() => {
     if (values.customerOwnerValue) return values.customerOwnerValue;
-    if (values.customerOwnerType && values.customerOwnerId) { return `${values.customerOwnerType}:${values.customerOwnerId}`;
+    if (values.customerOwnerType && values.customerOwnerId) {
+      return `${values.customerOwnerType}:${values.customerOwnerId}`;
 
     }
     if (values.customerOwnerId && values.bdeUserId && Number(values.customerOwnerId) === Number(values.bdeUserId)) {
@@ -255,8 +256,10 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
       return `BDE:${values.bdeUserId || values.customerOwnerId}`;
     }
     if (values.customerOwnerName && values.directorName && values.customerOwnerName.trim().toLowerCase() === values.directorName.trim().toLowerCase()) {
-      return `Director:${values.directorId || values.customerOwnerId}`; } if (false) { if (false) {
-    }
+      return `Director:${values.directorId || values.customerOwnerId}`;
+    } if (false) {
+      if (false) {
+      }
 
 
     }
@@ -1350,16 +1353,13 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
         <div className="p-5 md:p-6 pb-0 border-b border-gray-100">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4">
             <div className="flex items-start gap-3.5">
-              <div className="w-11 h-11 bg-blue-50 border border-blue-200 text-[#154068] rounded-xl flex items-center justify-center shrink-0 shadow-xs">
+              <div className="w-11 h-11 bg-orange-50 border border-[#FF7900]/30 text-[#FF7900] rounded-xl flex items-center justify-center shrink-0 shadow-xs">
                 <Users className="w-5 h-5" />
               </div>
               <div>
                 <h1 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">
                   Hierarchy Management
                 </h1>
-                <p className="text-xs md:text-sm text-gray-500 mt-1">
-                  Manage organization hierarchy levels and reporting structure.
-                </p>
               </div>
             </div>
           </div>
@@ -1370,11 +1370,11 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
               type="button"
               onClick={() => setActiveSubTab("levels")}
               className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition-all cursor-pointer ${activeSubTab === "levels"
-                  ? "border-[#154068] text-[#154068] bg-blue-50/40 rounded-t-lg"
-                  : "border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300"
+                ? "border-[#FF7900] text-[#FF7900] bg-orange-50/50 rounded-t-lg"
+                : "border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300"
                 }`}
             >
-              <Layers className="w-4 h-4 text-[#154068]" />
+              <Layers className="w-4 h-4 text-[#FF7900]" />
               <span>Levels</span>
             </button>
 
@@ -1382,11 +1382,11 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
               type="button"
               onClick={() => setActiveSubTab("reporting")}
               className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition-all cursor-pointer ${activeSubTab === "reporting"
-                  ? "border-blue-600 text-blue-600 bg-blue-50/40 rounded-t-lg"
-                  : "border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300"
+                ? "border-[#FF7900] text-[#FF7900] bg-orange-50/50 rounded-t-lg"
+                : "border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300"
                 }`}
             >
-              <GitBranch className="w-4 h-4 text-purple-600" />
+              <GitBranch className="w-4 h-4 text-[#FF7900]" />
               <span>Reporting To</span>
             </button>
           </div>
@@ -1485,11 +1485,11 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
                   value={
                     salesPersonDisplayOptions.find((sp) => String(sp.salesCoordinatorId) === String(selectedSalesPersonId))
                       ? {
-                          value: selectedSalesPersonId,
-                          label: getSalesPersonOptionLabel(
-                            salesPersonDisplayOptions.find((sp) => String(sp.salesCoordinatorId) === String(selectedSalesPersonId))!
-                          ),
-                        }
+                        value: selectedSalesPersonId,
+                        label: getSalesPersonOptionLabel(
+                          salesPersonDisplayOptions.find((sp) => String(sp.salesCoordinatorId) === String(selectedSalesPersonId))!
+                        ),
+                      }
                       : null
                   }
                   onChange={(opt: any) => {
@@ -1717,18 +1717,18 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
       {activeSubTab === "levels" && (
         <div className={standalone ? "p-5 md:p-6 space-y-6" : "space-y-4"}>
           <div className="bg-white rounded-xl border border-gray-200 shadow-xs p-5 md:p-6 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-gray-100">
-              <h2 className="text-base sm:text-lg font-bold text-gray-800 tracking-tight border-b-2 border-[#154068] pb-1 inline-block">
-                Listing of Levels
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+              <h2 className="border-b-2 border-[#FF7900] pb-2 text-2xl sm:text-3xl font-bold tracking-[-0.03em] text-[#00234a]">
+                Levels
               </h2>
 
               <div className="flex flex-wrap items-center gap-3">
                 <button
                   type="button"
                   onClick={handleOpenAddLevel}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-[#0f2c4d] hover:bg-[#154068] text-white text-xs sm:text-sm font-semibold rounded-lg shadow-xs transition cursor-pointer"
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#00234a] hover:bg-[#FF7900] text-white font-semibold px-5 py-2.5 transition shadow-[0_10px_18px_rgba(0,35,74,0.18)] cursor-pointer text-sm"
                 >
-                  <Plus size={14} />
+                  <Plus size={18} />
                   <span>+ Add Level</span>
                 </button>
 
@@ -1738,22 +1738,22 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
                     type="text"
                     value={levelSearchText}
                     onChange={(e) => setLevelSearchText(e.target.value)}
-                    placeholder=""
-                    className="border border-gray-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-blue-500 bg-white w-40 sm:w-48"
+                    placeholder="Search levels..."
+                    className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs sm:text-sm text-gray-700 outline-none transition focus:border-[#FF7900] shadow-xs w-40 sm:w-56"
                   />
                 </div>
               </div>
             </div>
 
-            {/* Levels Table matching Screenshot 1 */}
-            <div className="overflow-x-auto border border-gray-200 rounded-lg">
+            {/* Levels Table matching reference standard */}
+            <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs">
               <table className="w-full text-left text-sm border-collapse">
                 <thead>
-                  <tr className="bg-[#0f2c4d] text-white text-[13px] font-semibold uppercase tracking-wider">
-                    <th className="py-3 px-4 border-r border-[#154068]/40">Sr. No.</th>
-                    <th className="py-3 px-4 border-r border-[#154068]/40">Level Name</th>
-                    <th className="py-3 px-4 border-r border-[#154068]/40">Level Order</th>
-                    <th className="py-3 px-4 border-r border-[#154068]/40">Status</th>
+                  <tr className="bg-[#FF7900] text-white text-[13px] font-semibold uppercase tracking-wider">
+                    <th className="py-3 px-4 border-r border-[#e06800]">Sr. No.</th>
+                    <th className="py-3 px-4 border-r border-[#e06800]">Level Name</th>
+                    <th className="py-3 px-4 border-r border-[#e06800]">Level Order</th>
+                    <th className="py-3 px-4 border-r border-[#e06800]">Status</th>
                     <th className="py-3 px-4 text-center">Actions</th>
                   </tr>
                 </thead>
@@ -1762,7 +1762,7 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
                     <tr>
                       <td colSpan={5} className="py-10 text-center text-gray-500">
                         <div className="flex items-center justify-center gap-2">
-                          <Loader2 className="w-5 h-5 animate-spin text-[#154068]" />
+                          <Loader2 className="w-5 h-5 animate-spin text-[#00234a]" />
                           <span className="text-sm font-medium">Loading levels from database...</span>
                         </div>
                       </td>

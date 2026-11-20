@@ -52,9 +52,6 @@ const ViewPaymentTermModal: React.FC<ViewPaymentTermModalProps> = ({
               <h2 className="text-lg font-bold text-gray-900">
                 Payment Term Details
               </h2>
-              <p className="text-xs text-gray-500 mt-0.5">
-                View payment term information
-              </p>
             </div>
           </div>
           <button

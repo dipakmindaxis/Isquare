@@ -93,9 +93,6 @@ const EditCustomerAreaModal: React.FC<EditCustomerAreaModalProps> = ({
                 <h2 className="text-lg font-bold text-gray-900">
                   Edit Customer Area
                 </h2>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Update customer area details and active status
-                </p>
               </div>
             </div>
             <button

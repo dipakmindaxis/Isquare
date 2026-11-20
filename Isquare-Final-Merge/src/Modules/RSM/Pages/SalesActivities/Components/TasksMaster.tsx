@@ -424,16 +424,13 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.04)] p-4 md:p-5 mb-5">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-3.5">
-              <div className="w-11 h-11 rounded-xl bg-[#153E63] text-white flex items-center justify-center shrink-0 shadow-sm">
+              <div className="w-11 h-11 rounded-xl bg-orange-50 border border-[#FF7900]/30 text-[#FF7900] flex items-center justify-center shrink-0 shadow-xs">
                 <CheckSquare size={22} />
               </div>
               <div>
                 <h2 className="text-xl md:text-2xl font-bold tracking-tight text-[#172B4D]">
                   Task Assignment
                 </h2>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Track team assignments, tasks and deadlines
-                </p>
               </div>
             </div>
 
