@@ -219,12 +219,6 @@ export const MySupportTicketsPage: React.FC = () => {
 
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-full space-y-6 animate-in fade-in duration-200">
-      {/* Listing Header matching Customer Master style */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h2 className="border-b-2 border-[#FF7900] pb-2 text-3xl font-bold tracking-[-0.03em] text-[#00234a]">
-            My Support Tickets
-          </h2>
       {/* Header Banner */}
       <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
