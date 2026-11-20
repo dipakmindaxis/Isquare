@@ -10,6 +10,7 @@ export type TicketStatus =
 export interface ExternalAttachment {
   id?: string | number;
   attachmentId?: string | number;
+  originalFileName?: string;
   fileName?: string;
   name?: string;
   fileSize?: number;
@@ -107,6 +108,7 @@ export interface CreateTicketResponse {
   replyCount?: number;
   attachmentCount?: number;
   message?: string;
+  isOptimistic?: boolean;
 }
 
 export interface TicketSummaryStats {
