@@ -11,6 +11,7 @@ import {
 import { toast } from "sonner";
 import { useAuth } from "../../../hooks/useAuth";
 import { SearchableSelect } from "../../../Components/Common/SearchableSelect";
+import { buttonStyles } from "../../../Components/Common/buttonStyles";
 import {
   createExternalSupportTicket,
   getTicketCategories,
@@ -186,7 +187,11 @@ export const CreateSupportTicketModal: React.FC<CreateSupportTicketModalProps> =
         user
       );
 
-      toast.success(`Support ticket #${response.ticketNumber} created successfully!`);
+      if (response.isOptimistic) {
+        toast.success("Support ticket submitted successfully to MindAxis!");
+      } else {
+        toast.success(`Support ticket #${response.ticketNumber} created successfully!`);
+      }
       resetForm();
       onClose();
       if (onSuccess) onSuccess(response.ticketNumber);
@@ -205,16 +210,14 @@ export const CreateSupportTicketModal: React.FC<CreateSupportTicketModalProps> =
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden my-auto max-h-[92vh] flex flex-col"
+        className="relative w-full max-w-2xl bg-white rounded-xl sm:rounded-2xl shadow-2xl border border-gray-200 overflow-hidden my-auto max-h-[92vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header - Clean with no description line */}
-        <div className="flex items-center justify-between px-6 py-4.5 bg-[#00234a] text-white border-b border-[#001833] shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-orange-400">
-              <Headphones size={18} />
-            </div>
-            <h2 className="text-lg font-bold text-white tracking-tight">
+        {/* Form Top Bar (matching AddCustomerModal top bar) */}
+        <div className="flex justify-between items-center bg-[#FF7900] text-white px-6 py-4 shrink-0 border-b border-[#e06800]">
+          <div className="flex items-center gap-2.5">
+            <Headphones size={20} className="text-white" />
+            <h2 className="text-base sm:text-lg font-bold tracking-tight text-white leading-tight">
               Create Support Ticket
             </h2>
           </div>
@@ -222,205 +225,226 @@ export const CreateSupportTicketModal: React.FC<CreateSupportTicketModalProps> =
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="p-1.5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition cursor-pointer"
-            aria-label="Close"
+            className="text-white/80 hover:text-white p-1.5 hover:bg-white/10 rounded-lg transition shrink-0 cursor-pointer"
+            title="Close"
           >
             <X size={20} />
           </button>
         </div>
 
-        {/* Form Body */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
-          {/* Priority & Category */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
-                Priority
-              </label>
-              <SearchableSelect
-                value={priority}
-                onChange={(val) => setPriority(String(val || "Medium"))}
-                options={PRIORITY_OPTIONS}
-                placeholder="Select Priority"
-                isClearable={false}
-                minHeight="38px"
-              />
-            </div>
-
-            <div>
-              <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
-                Category
-              </label>
-              <SearchableSelect
-                value={categoryId ? String(categoryId) : ""}
-                onChange={(val) => setCategoryId(val ? String(val) : "")}
-                options={categories.map((c) => ({ value: String(c.id), label: c.name }))}
-                placeholder="Select Category"
-                isClearable={true}
-                minHeight="38px"
-              />
-            </div>
-          </div>
-
-          {/* Subject Field */}
-          <div>
-            <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
-              Subject <span className="text-rose-500">*</span>
-            </label>
-            <input
-              type="text"
-              required
-              value={subject}
-              onChange={(e) => {
-                setSubject(e.target.value);
-                if (errors.subject) setErrors((prev) => ({ ...prev, subject: undefined }));
-              }}
-              placeholder="Enter subject"
-              className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs font-medium"
-            />
-            {errors.subject && (
-              <p className="text-xs text-rose-500 mt-1 flex items-center gap-1">
-                <AlertCircle size={12} /> {errors.subject}
-              </p>
-            )}
-          </div>
-
-          {/* Description Field */}
-          <div>
-            <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
-              Description <span className="text-rose-500">*</span>
-            </label>
-            <textarea
-              required
-              rows={4}
-              value={description}
-              onChange={(e) => {
-                setDescription(e.target.value);
-                if (errors.description) setErrors((prev) => ({ ...prev, description: undefined }));
-              }}
-              placeholder="Enter description"
-              className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
-            />
-            {errors.description && (
-              <p className="text-xs text-rose-500 mt-1 flex items-center gap-1">
-                <AlertCircle size={12} /> {errors.description}
-              </p>
-            )}
-          </div>
-
-          {/* Attachments Section */}
-          <div>
-            <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
-              Attachments
-            </label>
-
-            <div
-              onDragOver={(e) => {
-                e.preventDefault();
-                setIsDragging(true);
-              }}
-              onDragLeave={(e) => {
-                e.preventDefault();
-                setIsDragging(false);
-              }}
-              onDrop={(e) => {
-                e.preventDefault();
-                setIsDragging(false);
-                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                  const dropped = Array.from(e.dataTransfer.files);
-                  const { valid, error } = validateFiles(dropped);
-                  if (error) {
-                    setErrors((prev) => ({ ...prev, attachments: error }));
-                    toast.error(error);
-                  } else {
-                    setAttachments((prev) => [...prev, ...valid]);
-                    setErrors((prev) => ({ ...prev, attachments: undefined }));
-                  }
-                }
-              }}
-              onClick={() => fileInputRef.current?.click()}
-              className={`p-4 border-2 border-dashed rounded-xl text-center cursor-pointer transition flex flex-col items-center justify-center gap-1.5 ${
-                isDragging
-                  ? "border-[#FF7900] bg-orange-50/50"
-                  : "border-slate-300 hover:border-[#FF7900] bg-slate-50/50 hover:bg-orange-50/20"
-              }`}
-            >
-              <input
-                ref={fileInputRef}
-                type="file"
-                multiple
-                accept=".jpg,.jpeg,.png,.pdf"
-                className="hidden"
-                onChange={handleFileChange}
-              />
-              <Upload size={22} className="text-slate-400" />
-              <p className="text-xs font-semibold text-slate-700">
-                Choose files or drag & drop
-              </p>
-              <p className="text-[11px] text-slate-400">
-                PNG, JPG, JPEG, PDF (Max 5MB)
-              </p>
-            </div>
-
-            {errors.attachments && (
-              <p className="text-xs text-rose-500 mt-1 flex items-center gap-1">
-                <AlertCircle size={12} /> {errors.attachments}
-              </p>
-            )}
-
-            {/* Attachments List */}
-            {attachments.length > 0 && (
-              <div className="mt-3 space-y-2">
-                {attachments.map((att) => {
-                  const isImg = att.type.includes("image");
-                  return (
-                    <div
-                      key={att.id}
-                      className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs"
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 text-blue-600 flex items-center justify-center shrink-0">
-                          {isImg ? <ImageIcon size={16} /> : <FileText size={16} />}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="font-semibold text-slate-800 truncate" title={att.name}>
-                            {att.name}
-                          </p>
-                          <p className="text-[10px] text-slate-400">{att.formattedSize}</p>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemoveAttachment(att.id);
-                        }}
-                        className="text-slate-400 hover:text-rose-600 p-1 rounded-md transition cursor-pointer"
-                        title="Remove file"
-                      >
-                        <X size={15} />
-                      </button>
-                    </div>
-                  );
-                })}
+        {/* Single Unified Form matching Customer design */}
+        <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden bg-white">
+          <div className="p-6 sm:p-8 bg-gray-50/60 space-y-6 overflow-y-auto">
+            {/* SECTION 1: TICKET INFORMATION */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
+              <div className="flex items-center gap-2.5 text-[#FF7900] font-bold text-base border-b border-orange-100 pb-3">
+                <div className="bg-[#FF7900] p-1.5 rounded text-white">
+                  <Headphones size={14} />
+                </div>
+                <span>Section 1 - Ticket Information</span>
               </div>
-            )}
+
+              {/* Priority & Category in 2 columns */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                <div>
+                  <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1">
+                    Priority
+                  </label>
+                  <SearchableSelect
+                    value={priority}
+                    onChange={(val) => setPriority(String(val || "Medium"))}
+                    options={PRIORITY_OPTIONS}
+                    placeholder="Select Priority"
+                    isClearable={false}
+                    minHeight="44px"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1">
+                    Category
+                  </label>
+                  <SearchableSelect
+                    value={categoryId ? String(categoryId) : ""}
+                    onChange={(val) => setCategoryId(val ? String(val) : "")}
+                    options={categories.map((c) => ({ value: String(c.id), label: c.name }))}
+                    placeholder="Select Category"
+                    isClearable={true}
+                    minHeight="44px"
+                  />
+                </div>
+              </div>
+
+              {/* Subject */}
+              <div>
+                <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1">
+                  Subject <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={subject}
+                  onChange={(e) => {
+                    setSubject(e.target.value);
+                    if (errors.subject) setErrors((prev) => ({ ...prev, subject: undefined }));
+                  }}
+                  placeholder="Enter ticket subject"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-700 min-h-[44px]"
+                />
+                {errors.subject && (
+                  <p className="text-xs text-rose-500 mt-1 flex items-center gap-1 font-medium">
+                    <AlertCircle size={12} /> {errors.subject}
+                  </p>
+                )}
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1">
+                  Description <span className="text-rose-500">*</span>
+                </label>
+                <textarea
+                  required
+                  rows={4}
+                  value={description}
+                  onChange={(e) => {
+                    setDescription(e.target.value);
+                    if (errors.description) setErrors((prev) => ({ ...prev, description: undefined }));
+                  }}
+                  placeholder="Describe your issue or query in detail"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-700 min-h-[100px]"
+                />
+                {errors.description && (
+                  <p className="text-xs text-rose-500 mt-1 flex items-center gap-1 font-medium">
+                    <AlertCircle size={12} /> {errors.description}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* SECTION 2: ATTACHMENTS */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
+              <div className="flex items-center gap-2.5 text-[#FF7900] font-bold text-base border-b border-orange-100 pb-3">
+                <div className="bg-[#FF7900] p-1.5 rounded text-white">
+                  <Upload size={14} />
+                </div>
+                <span>Section 2 - Attachments</span>
+              </div>
+
+              <div>
+                <div
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setIsDragging(true);
+                  }}
+                  onDragLeave={(e) => {
+                    e.preventDefault();
+                    setIsDragging(false);
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setIsDragging(false);
+                    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                      const dropped = Array.from(e.dataTransfer.files);
+                      const { valid, error } = validateFiles(dropped);
+                      if (error) {
+                        setErrors((prev) => ({ ...prev, attachments: error }));
+                        toast.error(error);
+                      } else {
+                        setAttachments((prev) => [...prev, ...valid]);
+                        setErrors((prev) => ({ ...prev, attachments: undefined }));
+                      }
+                    }
+                  }}
+                  onClick={() => fileInputRef.current?.click()}
+                  className={`p-6 border-2 border-dashed rounded-xl text-center cursor-pointer transition flex flex-col items-center justify-center gap-2 ${
+                    isDragging
+                      ? "border-[#FF7900] bg-orange-50/50"
+                      : "border-gray-300 hover:border-[#FF7900] bg-gray-50/50 hover:bg-orange-50/20"
+                  }`}
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept=".jpg,.jpeg,.png,.pdf"
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+                  <div className="w-10 h-10 rounded-full bg-orange-50 text-[#FF7900] flex items-center justify-center">
+                    <Upload size={20} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-800">
+                      Choose files or drag & drop here
+                    </p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      Supported formats: PNG, JPG, JPEG, PDF (Up to 5 files, Max 5MB each)
+                    </p>
+                  </div>
+                </div>
+
+                {errors.attachments && (
+                  <p className="text-xs text-rose-500 mt-2 flex items-center gap-1 font-medium">
+                    <AlertCircle size={12} /> {errors.attachments}
+                  </p>
+                )}
+
+                {/* Attachments List */}
+                {attachments.length > 0 && (
+                  <div className="mt-4 space-y-2">
+                    {attachments.map((att) => {
+                      const isImg = att.type.includes("image");
+                      return (
+                        <div
+                          key={att.id}
+                          className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-8 h-8 rounded-lg bg-white border border-gray-200 text-blue-600 flex items-center justify-center shrink-0">
+                              {isImg ? <ImageIcon size={16} /> : <FileText size={16} />}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-semibold text-gray-800 truncate" title={att.name}>
+                                {att.name}
+                              </p>
+                              <p className="text-[11px] text-gray-400">{att.formattedSize}</p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveAttachment(att.id);
+                            }}
+                            className="text-gray-400 hover:text-rose-600 p-1.5 rounded-md hover:bg-gray-100 transition cursor-pointer"
+                            title="Remove file"
+                          >
+                            <X size={16} />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
-          {/* Modal Footer */}
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+          {/* Modal Footer Actions matching AddCustomerModal style */}
+          <div className="p-4 sm:p-5 bg-gray-50 flex justify-end gap-3 border-t border-gray-200 shrink-0">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2 rounded-xl border border-gray-300 text-gray-700 font-semibold text-xs sm:text-sm hover:bg-gray-50 transition cursor-pointer"
+              className={buttonStyles.cancel}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="rounded-xl bg-[#00234a] hover:bg-[#FF7900] px-5 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition cursor-pointer flex items-center gap-2 disabled:opacity-60"
+              className="rounded-xl bg-[#00234a] hover:bg-[#FF7900] px-8 py-2.5 text-sm font-semibold text-white shadow-sm transition flex items-center gap-2 disabled:opacity-60 cursor-pointer"
             >
               {isSubmitting ? (
                 <>

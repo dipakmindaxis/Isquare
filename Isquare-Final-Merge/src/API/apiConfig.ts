@@ -191,19 +191,19 @@ export const API_ENDPOINTS: ApiEndpoints = {
  * Base URL: https://mindaxis-001-site1.jtempurl.com/api
  * Base Path: /api/external-support
  */
-export const MINDAXIS_SUPPORT_BASE_URL = "https://mindaxis-001-site1.jtempurl.com/api";
+export const MINDAXIS_SUPPORT_BASE_URL = "https://mindaxis-001-site1.jtempurl.com/api/external-support";
 
 export const MINDAXIS_SUPPORT_CONFIG = {
   BaseUrl: MINDAXIS_SUPPORT_BASE_URL,
-  CompanyCode: "CMP-001",
-  SoftwareCode: "POS_CLIENT",
+  CompanyCode: "CMP#126",
+  SoftwareCode: "IS_001",
   Endpoints: {
-    Tickets: `${MINDAXIS_SUPPORT_BASE_URL}/external-support/tickets`,
+    Tickets: `${MINDAXIS_SUPPORT_BASE_URL}/tickets`,
     TicketDetails: (ticketNumber: string) =>
-      `${MINDAXIS_SUPPORT_BASE_URL}/external-support/tickets/${encodeURIComponent(ticketNumber)}`,
+      `${MINDAXIS_SUPPORT_BASE_URL}/tickets/${encodeURIComponent(ticketNumber)}`,
     TicketReplies: (ticketNumber: string) =>
-      `${MINDAXIS_SUPPORT_BASE_URL}/external-support/tickets/${encodeURIComponent(ticketNumber)}/replies`,
+      `${MINDAXIS_SUPPORT_BASE_URL}/tickets/${encodeURIComponent(ticketNumber)}/replies`,
     DownloadAttachment: (ticketNumber: string, attachmentId: string | number) =>
-      `${MINDAXIS_SUPPORT_BASE_URL}/external-support/tickets/${encodeURIComponent(ticketNumber)}/attachments/${encodeURIComponent(attachmentId)}/download`,
+      `${MINDAXIS_SUPPORT_BASE_URL}/tickets/${encodeURIComponent(ticketNumber)}/attachments/${encodeURIComponent(attachmentId)}/download`,
   },
 };

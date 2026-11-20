@@ -29,6 +29,11 @@ import type {
 import { CreateSupportTicketModal } from "../Components/CreateSupportTicketModal";
 import { ViewTicketDetailsModal } from "../Components/ViewTicketDetailsModal";
 
+const actionButtonStyles = {
+  base: "p-2 rounded-lg transition-all duration-200 flex items-center justify-center shadow-xs hover:shadow cursor-pointer",
+  view: "bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white",
+};
+
 export const MySupportTicketsPage: React.FC = () => {
   const { user } = useAuth();
 
@@ -58,7 +63,7 @@ export const MySupportTicketsPage: React.FC = () => {
   const [selectedTicket, setSelectedTicket] = useState<ExternalTicketListItem | null>(null);
   const [isViewOpen, setIsViewOpen] = useState<boolean>(false);
 
-  // Load Tickets from API 2
+  // Load Tickets from API
   const loadTickets = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -91,7 +96,6 @@ export const MySupportTicketsPage: React.FC = () => {
     loadTickets();
   }, [loadTickets]);
 
-  // When search or status filter changes, reset to page 1
   const handleSearchChange = (val: string) => {
     setSearch(val);
     setCurrentPage(1);
@@ -115,7 +119,6 @@ export const MySupportTicketsPage: React.FC = () => {
     loadTickets();
   };
 
-  // Optional client-side priority filter if API 2 does not filter priority on server
   const displayedTickets = useMemo(() => {
     if (!priorityFilter || priorityFilter === "All") return tickets;
     return tickets.filter(
@@ -216,166 +219,171 @@ export const MySupportTicketsPage: React.FC = () => {
 
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-full space-y-6 animate-in fade-in duration-200">
-      {/* Header Banner */}
-      <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-xl bg-[#00234a] text-white flex items-center justify-center shadow-xs shrink-0">
-            <Headphones size={22} className="stroke-[2.2]" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-lg sm:text-xl font-bold text-slate-900 leading-tight">
-                My Support Tickets
-              </h1>
-              <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                Help Desk
-              </span>
-            </div>
-          </div>
+      {/* Listing Header matching Customer Master style */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 className="border-b-2 border-[#FF7900] pb-2 text-3xl font-bold tracking-[-0.03em] text-[#00234a]">
+            My Support Tickets
+          </h2>
         </div>
-
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={loadTickets}
-            className="p-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition cursor-pointer"
-            title="Refresh Tickets"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#00234a] shadow-sm transition hover:bg-slate-50 cursor-pointer"
           >
             <RefreshCw size={15} className={isLoading ? "animate-spin" : ""} />
+            <span>Refresh</span>
           </button>
           <button
             type="button"
             onClick={() => setIsCreateOpen(true)}
-            className="px-4 py-2.5 rounded-xl bg-[#FF7900] hover:bg-[#e06800] text-white text-xs sm:text-sm font-bold shadow-md shadow-orange-500/20 transition flex items-center gap-2 cursor-pointer"
+            className="rounded-xl bg-[#00234a] hover:bg-[#FF7900] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_18px_rgba(0,35,74,0.18)] transition cursor-pointer flex items-center gap-2"
           >
-            <Plus size={16} />
+            <Plus size={15} />
             <span>Create Support Ticket</span>
           </button>
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      {/* Analytics / KPI Stats Cards (matching Customer Master horizontal card style) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+        {/* Total Tickets */}
         <div
           onClick={() => handleStatusFilterChange("All")}
-          className={`p-4 rounded-xl border transition cursor-pointer ${
+          className={`bg-white p-4 rounded-xl border shadow-sm flex items-center gap-3 sm:gap-4 transition cursor-pointer hover:border-slate-300 ${
             statusFilter === "All"
-              ? "bg-white border-[#00234a] shadow-xs ring-1 ring-[#00234a]"
-              : "bg-white border-slate-200 hover:border-slate-300"
+              ? "border-[#00234a] ring-2 ring-[#00234a]/20"
+              : "border-gray-100"
           }`}
         >
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-            Total Tickets
-          </p>
-          <p className="text-2xl font-extrabold text-slate-900 mt-1">{stats.total}</p>
+          <div className="p-3 bg-blue-50 text-blue-600 rounded-xl shrink-0">
+            <Headphones size={20} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase text-gray-400 tracking-wider truncate">
+              Total Tickets
+            </p>
+            <p className="text-2xl font-bold text-gray-800">{stats.total}</p>
+          </div>
         </div>
 
+        {/* Open */}
         <div
           onClick={() => handleStatusFilterChange("Open")}
-          className={`p-4 rounded-xl border transition cursor-pointer ${
+          className={`bg-white p-4 rounded-xl border shadow-sm flex items-center gap-3 sm:gap-4 transition cursor-pointer hover:border-slate-300 ${
             statusFilter === "Open"
-              ? "bg-white border-amber-500 shadow-xs ring-1 ring-amber-500"
-              : "bg-white border-slate-200 hover:border-slate-300"
+              ? "border-amber-500 ring-2 ring-amber-500/20"
+              : "border-gray-100"
           }`}
         >
-          <p className="text-[10px] font-bold text-amber-600 uppercase tracking-wider">
-            Open
-          </p>
-          <p className="text-2xl font-extrabold text-amber-600 mt-1">{stats.open}</p>
+          <div className="p-3 bg-amber-50 text-amber-600 rounded-xl shrink-0">
+            <Clock size={20} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase text-gray-400 tracking-wider truncate">
+              Open
+            </p>
+            <p className="text-2xl font-bold text-amber-600">{stats.open}</p>
+          </div>
         </div>
 
+        {/* In Progress */}
         <div
           onClick={() => handleStatusFilterChange("In Progress")}
-          className={`p-4 rounded-xl border transition cursor-pointer ${
+          className={`bg-white p-4 rounded-xl border shadow-sm flex items-center gap-3 sm:gap-4 transition cursor-pointer hover:border-slate-300 ${
             statusFilter === "In Progress"
-              ? "bg-white border-indigo-500 shadow-xs ring-1 ring-indigo-500"
-              : "bg-white border-slate-200 hover:border-slate-300"
+              ? "border-indigo-500 ring-2 ring-indigo-500/20"
+              : "border-gray-100"
           }`}
         >
-          <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider">
-            In Progress
-          </p>
-          <p className="text-2xl font-extrabold text-indigo-600 mt-1">{stats.inProgress}</p>
+          <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl shrink-0">
+            <Clock size={20} className="animate-pulse" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase text-gray-400 tracking-wider truncate">
+              In Progress
+            </p>
+            <p className="text-2xl font-bold text-indigo-600">{stats.inProgress}</p>
+          </div>
         </div>
 
+        {/* Resolved */}
         <div
           onClick={() => handleStatusFilterChange("Resolved")}
-          className={`p-4 rounded-xl border transition cursor-pointer ${
+          className={`bg-white p-4 rounded-xl border shadow-sm flex items-center gap-3 sm:gap-4 transition cursor-pointer hover:border-slate-300 ${
             statusFilter === "Resolved"
-              ? "bg-white border-emerald-500 shadow-xs ring-1 ring-emerald-500"
-              : "bg-white border-slate-200 hover:border-slate-300"
+              ? "border-emerald-500 ring-2 ring-emerald-500/20"
+              : "border-gray-100"
           }`}
         >
-          <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">
-            Resolved
-          </p>
-          <p className="text-2xl font-extrabold text-emerald-600 mt-1">{stats.resolved}</p>
+          <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl shrink-0">
+            <CheckCircle2 size={20} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase text-gray-400 tracking-wider truncate">
+              Resolved
+            </p>
+            <p className="text-2xl font-bold text-emerald-600">{stats.resolved}</p>
+          </div>
         </div>
 
+        {/* Closed */}
         <div
           onClick={() => handleStatusFilterChange("Closed")}
-          className={`p-4 rounded-xl border transition cursor-pointer ${
+          className={`bg-white p-4 rounded-xl border shadow-sm flex items-center gap-3 sm:gap-4 transition cursor-pointer hover:border-slate-300 ${
             statusFilter === "Closed"
-              ? "bg-white border-rose-500 shadow-xs ring-1 ring-rose-500"
-              : "bg-white border-slate-200 hover:border-slate-300"
+              ? "border-rose-500 ring-2 ring-rose-500/20"
+              : "border-gray-100"
           }`}
         >
-          <p className="text-[10px] font-bold text-rose-600 uppercase tracking-wider">
-            Closed
-          </p>
-          <p className="text-2xl font-extrabold text-rose-600 mt-1">{stats.closed}</p>
+          <div className="p-3 bg-rose-50 text-rose-600 rounded-xl shrink-0">
+            <AlertTriangle size={20} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase text-gray-400 tracking-wider truncate">
+              Closed
+            </p>
+            <p className="text-2xl font-bold text-rose-600">{stats.closed}</p>
+          </div>
         </div>
       </div>
 
-      {/* Filter and Search Bar */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {/* Search Box */}
-          <div className="sm:col-span-1">
-            <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
-              Search Tickets
-            </label>
-            <div className="relative">
-              <Search
-                size={14}
-                className="absolute left-3 top-2.5 text-slate-400"
-              />
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                placeholder="Search ticket # or subject..."
-                className="w-full pl-8 pr-3 py-1.5 border border-slate-300 rounded-lg text-xs sm:text-sm text-slate-700 outline-none focus:border-blue-500 min-h-[34px]"
-              />
-            </div>
+      {/* Filter and Search Bar (matching Customer Master filter layout) */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 sm:gap-4">
+        {/* Search input with left icon */}
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            placeholder="Search ticket # or subject..."
+            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#FF7900] bg-gray-50/50"
+          />
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Status segmented pills */}
+          <div className="flex bg-gray-100 p-1 rounded-lg">
+            {["All", "Open", "In Progress", "Resolved", "Closed"].map((st) => (
+              <button
+                key={st}
+                type="button"
+                onClick={() => handleStatusFilterChange(st)}
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition cursor-pointer ${
+                  statusFilter === st
+                    ? "bg-white text-[#00234a] shadow-xs"
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                {st}
+              </button>
+            ))}
           </div>
 
-          {/* Status Filter */}
-          <div>
-            <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
-              Filter by Status
-            </label>
-            <SearchableSelect
-              value={statusFilter}
-              onChange={(val) => handleStatusFilterChange(String(val || "All"))}
-              options={[
-                { value: "All", label: "All Statuses" },
-                { value: "Open", label: "Open" },
-                { value: "In Progress", label: "In Progress" },
-                { value: "Resolved", label: "Resolved" },
-                { value: "Closed", label: "Closed" },
-              ]}
-              placeholder="All Statuses"
-              isClearable={false}
-              minHeight="34px"
-            />
-          </div>
-
-          {/* Priority Filter */}
-          <div>
-            <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
-              Filter by Priority
-            </label>
+          {/* Priority filter */}
+          <div className="min-w-[150px]">
             <SearchableSelect
               value={priorityFilter}
               onChange={(val) => handlePriorityFilterChange(String(val || "All"))}
@@ -388,104 +396,121 @@ export const MySupportTicketsPage: React.FC = () => {
               ]}
               placeholder="All Priorities"
               isClearable={false}
-              minHeight="34px"
+              minHeight="36px"
             />
           </div>
         </div>
       </div>
 
-      {/* Tickets Table: Strictly 7 columns as required */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+      {/* Tickets Table: Exactly matching Customer Master / listingTableStyles theme with #FF7900 orange header */}
+      <div className="bg-white rounded-xl shadow-xs border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto w-full">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-600 text-[11px] font-extrabold uppercase tracking-wider">
-                <th className="px-4 py-3.5">Ticket Number</th>
-                <th className="px-4 py-3.5">Subject</th>
-                <th className="px-4 py-3.5">Priority</th>
-                <th className="px-4 py-3.5 text-center">Status</th>
-                <th className="px-4 py-3.5">Created Date</th>
-                <th className="px-4 py-3.5 text-center">Reply Count</th>
-                <th className="px-4 py-3.5 text-center">Action</th>
+              <tr className="bg-[#FF7900] text-white">
+                <th className="px-4 py-3.5 text-white font-semibold text-[13px] tracking-wider uppercase border-r border-[#e06800] min-w-[140px]">
+                  Ticket Number
+                </th>
+                <th className="px-4 py-3.5 text-white font-semibold text-[13px] tracking-wider uppercase border-r border-[#e06800]">
+                  Subject
+                </th>
+                <th className="px-4 py-3.5 text-white font-semibold text-[13px] tracking-wider uppercase border-r border-[#e06800] min-w-[110px]">
+                  Priority
+                </th>
+                <th className="px-4 py-3.5 text-white font-semibold text-[13px] tracking-wider uppercase border-r border-[#e06800] text-center min-w-[120px]">
+                  Status
+                </th>
+                <th className="px-4 py-3.5 text-white font-semibold text-[13px] tracking-wider uppercase border-r border-[#e06800] min-w-[130px]">
+                  Created Date
+                </th>
+                <th className="px-4 py-3.5 text-white font-semibold text-[13px] tracking-wider uppercase border-r border-[#e06800] text-center min-w-[110px]">
+                  Reply Count
+                </th>
+                <th className="px-4 py-3.5 text-white font-semibold text-[13px] tracking-wider uppercase text-center min-w-[90px]">
+                  Action
+                </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 text-sm">
+            <tbody className="text-[13px]">
               {isLoading ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-slate-400 text-xs">
-                    <RefreshCw size={20} className="animate-spin mx-auto mb-2 text-slate-300" />
-                    Loading support tickets...
+                  <td colSpan={7} className="py-14 text-center text-gray-500">
+                    <RefreshCw size={22} className="animate-spin mx-auto mb-2 text-[#FF7900]" />
+                    <span className="font-semibold text-sm">Loading support tickets...</span>
                   </td>
                 </tr>
               ) : displayedTickets.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-16 text-center">
-                    <Inbox size={40} className="mx-auto text-slate-300 mb-3 stroke-[1.5]" />
-                    <h3 className="text-sm font-bold text-slate-700">No support tickets found</h3>
-                    <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
-                      You haven't logged any support tickets yet. Click "Create Support Ticket" to raise a new request with MindAxis Support.
+                    <Inbox size={42} className="mx-auto text-gray-300 mb-3 stroke-[1.5]" />
+                    <h3 className="text-base font-bold text-gray-700">No support tickets found</h3>
+                    <p className="text-xs text-gray-400 mt-1 max-w-sm mx-auto">
+                      You haven't logged any support tickets yet. Click "Create Support Ticket" to raise a new request.
                     </p>
                     <button
                       type="button"
                       onClick={() => setIsCreateOpen(true)}
-                      className="mt-4 px-4 py-2 rounded-xl bg-[#00234a] hover:bg-[#003366] text-white text-xs font-semibold shadow-xs transition inline-flex items-center gap-1.5 cursor-pointer"
+                      className="mt-4 rounded-xl bg-[#00234a] hover:bg-[#FF7900] px-5 py-2 text-xs font-semibold text-white shadow-sm transition inline-flex items-center gap-1.5 cursor-pointer"
                     >
                       <Plus size={14} />
-                      <span>Create Ticket</span>
+                      <span>Create Support Ticket</span>
                     </button>
                   </td>
                 </tr>
               ) : (
                 displayedTickets.map((t) => (
-                  <tr key={t.ticketNumber} className="hover:bg-slate-50/70 transition">
+                  <tr
+                    key={t.ticketNumber}
+                    className="border-b border-[#d9dde5] hover:bg-[#f0f7ff] transition-all duration-150 min-h-[52px]"
+                  >
                     {/* 1. Ticket Number */}
-                    <td className="px-4 py-3.5">
+                    <td className="px-4 py-3 border-r border-[#d9dde5] whitespace-nowrap">
                       <button
                         type="button"
                         onClick={() => {
                           setSelectedTicket(t);
                           setIsViewOpen(true);
                         }}
-                        className="font-mono text-xs font-bold text-[#00234a] hover:text-[#FF7900] bg-slate-100 px-2 py-1 rounded-md border border-slate-200 transition cursor-pointer"
+                        className="font-mono text-xs font-bold text-[#00234a] hover:text-[#FF7900] bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200 transition cursor-pointer"
                       >
                         {t.ticketNumber}
                       </button>
                     </td>
 
                     {/* 2. Subject */}
-                    <td className="px-4 py-3.5 max-w-md">
+                    <td className="px-4 py-3 border-r border-[#d9dde5] max-w-md">
                       <button
                         type="button"
                         onClick={() => {
                           setSelectedTicket(t);
                           setIsViewOpen(true);
                         }}
-                        className="font-bold text-slate-900 hover:text-blue-600 text-left transition cursor-pointer line-clamp-1 block"
+                        className="font-bold text-gray-900 hover:text-[#FF7900] text-left transition cursor-pointer line-clamp-1 block"
                       >
                         {t.subject}
                       </button>
                     </td>
 
                     {/* 3. Priority */}
-                    <td className="px-4 py-3.5">
+                    <td className="px-4 py-3 border-r border-[#d9dde5] whitespace-nowrap">
                       {renderPriorityBadge(t.priority)}
                     </td>
 
                     {/* 4. Status */}
-                    <td className="px-4 py-3.5 text-center">
+                    <td className="px-4 py-3 border-r border-[#d9dde5] text-center whitespace-nowrap">
                       {renderStatusBadge(t.status)}
                     </td>
 
                     {/* 5. Created Date */}
-                    <td className="px-4 py-3.5 text-xs text-slate-600 whitespace-nowrap">
-                      <span className="flex items-center gap-1">
-                        <Calendar size={12} className="text-slate-400" />
+                    <td className="px-4 py-3 border-r border-[#d9dde5] text-xs text-gray-600 whitespace-nowrap">
+                      <span className="flex items-center gap-1.5 font-medium">
+                        <Calendar size={13} className="text-gray-400" />
                         {formatDate(t.createdDate)}
                       </span>
                     </td>
 
                     {/* 6. Reply Count */}
-                    <td className="px-4 py-3.5 text-center">
+                    <td className="px-4 py-3 border-r border-[#d9dde5] text-center whitespace-nowrap">
                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700">
                         <MessageSquare size={11} className="text-slate-400" />
                         {t.replyCount ?? 0}
@@ -493,19 +518,20 @@ export const MySupportTicketsPage: React.FC = () => {
                     </td>
 
                     {/* 7. Action */}
-                    <td className="px-4 py-3.5 text-center">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedTicket(t);
-                          setIsViewOpen(true);
-                        }}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold text-[#00234a] hover:bg-slate-100 transition cursor-pointer border border-slate-200"
-                        title="View Details"
-                      >
-                        <Eye size={13} />
-                        <span>View Details</span>
-                      </button>
+                    <td className="px-4 py-3 text-center whitespace-nowrap">
+                      <div className="flex justify-center items-center">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedTicket(t);
+                            setIsViewOpen(true);
+                          }}
+                          className={`${actionButtonStyles.base} ${actionButtonStyles.view}`}
+                          title="View Details"
+                        >
+                          <Eye size={15} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -516,17 +542,17 @@ export const MySupportTicketsPage: React.FC = () => {
 
         {/* Pagination Bar */}
         {totalCount > 0 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-3.5 bg-slate-50/60 border-t border-slate-200 text-xs text-slate-500">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-3.5 bg-gray-50/80 border-t border-gray-200 text-xs text-gray-500">
             <div>
               Showing{" "}
-              <strong className="text-slate-800">
+              <strong className="text-gray-800 font-semibold">
                 {Math.min(totalCount, (currentPage - 1) * itemsPerPage + 1)}
               </strong>{" "}
               to{" "}
-              <strong className="text-slate-800">
+              <strong className="text-gray-800 font-semibold">
                 {Math.min(totalCount, currentPage * itemsPerPage)}
               </strong>{" "}
-              of <strong className="text-slate-800">{totalCount}</strong> tickets
+              of <strong className="text-gray-800 font-semibold">{totalCount}</strong> tickets
             </div>
 
             <div className="flex items-center gap-3">
@@ -538,7 +564,7 @@ export const MySupportTicketsPage: React.FC = () => {
                     setItemsPerPage(Number(e.target.value));
                     setCurrentPage(1);
                   }}
-                  className="bg-white border border-slate-200 rounded-md px-2 py-1 text-xs text-slate-700 outline-none cursor-pointer"
+                  className="bg-white border border-gray-200 rounded-md px-2 py-1 text-xs text-gray-700 outline-none cursor-pointer"
                 >
                   <option value={5}>5</option>
                   <option value={10}>10</option>
@@ -552,19 +578,19 @@ export const MySupportTicketsPage: React.FC = () => {
                   type="button"
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   disabled={currentPage <= 1}
-                  className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-white disabled:opacity-40 transition cursor-pointer"
+                  className="p-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-white disabled:opacity-40 transition cursor-pointer"
                   title="Previous Page"
                 >
                   <ChevronLeft size={16} />
                 </button>
-                <span className="font-semibold text-slate-700 px-2">
+                <span className="font-semibold text-gray-700 px-2">
                   Page {currentPage} of {totalPages}
                 </span>
                 <button
                   type="button"
                   onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                   disabled={currentPage >= totalPages}
-                  className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-white disabled:opacity-40 transition cursor-pointer"
+                  className="p-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-white disabled:opacity-40 transition cursor-pointer"
                   title="Next Page"
                 >
                   <ChevronRight size={16} />
