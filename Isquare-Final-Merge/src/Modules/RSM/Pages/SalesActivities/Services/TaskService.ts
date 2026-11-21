@@ -14,7 +14,6 @@ import { createReminder } from "../../Master/Reminder/Services/ReminderService";
 import { getDirectors as getDirectorEmployees, getBdeUsers as getAllBdeUsers } from "../../Customer/Services/CustomerMasterDataService";
 import { getAllCustomers } from "../../Customer/Services/CustomerService";
 import { getAllEmployees } from "../../../../HRMS/Pages/Employee/Services/EmployeeSerivce";
-import { getAllCustomerStatuses } from "../../Master/CustomerStatus/Services/CustomerStatusService";
 
 const getAllDirectors = getDirectorEmployees;
 
@@ -42,7 +41,7 @@ const fetchAllEmployees = async (): Promise<any[]> => {
   try {
     const list = await getAllEmployees();
     if (Array.isArray(list) && list.length > 0) return list;
-  } catch {}
+  } catch { }
 
   const endpointsToTry = [
     API_ENDPOINTS.EmployeeSelectionList || `${API_ENDPOINTS.BaseUrl}/employee/active`,
@@ -59,12 +58,12 @@ const fetchAllEmployees = async (): Promise<any[]> => {
       const arr = Array.isArray(data)
         ? data
         : Array.isArray(data?.data)
-        ? data.data
-        : Array.isArray(data?.result)
-        ? data.result
-        : [];
+          ? data.data
+          : Array.isArray(data?.result)
+            ? data.result
+            : [];
       if (arr.length > 0) return arr;
-    } catch {}
+    } catch { }
   }
 
   return [];
@@ -82,7 +81,7 @@ const safeGetTasks = (): TaskItem[] => {
 const safeSetTasks = (tasks: TaskItem[]): void => {
   try {
     localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(tasks));
-  } catch {}
+  } catch { }
 };
 
 const DELETED_TASKS_KEY = "isquare_deleted_tasks_v2";
@@ -104,85 +103,33 @@ export const markTaskAsDeletedLocally = (taskId: number, taskTitle?: string): vo
       ? Array.from(new Set([...data.titles, taskTitle.toLowerCase().trim()]))
       : data.titles;
     localStorage.setItem(DELETED_TASKS_KEY, JSON.stringify({ ids, titles }));
-  } catch {}
+  } catch { }
 };
 
+import { getAllTaskStatuses as getAllMasterTaskStatuses } from "../../Master/TaskStatus/Services/TaskStatusService";
+
 // ==========================================
-// Task Statuses (Dynamic from Customer Status Master API)
+// Task Statuses (Dedicated TaskStatus Master API)
 // ==========================================
 export const getAllTaskStatuses = async (): Promise<TaskStatusItem[]> => {
-  const dynamicStatuses: TaskStatusItem[] = [];
-  const seenNames = new Set<string>();
-
-  // 1. Fetch from Customer Status Master API (Primary master configured by user)
   try {
-    const custStatuses = await getAllCustomerStatuses();
-    if (Array.isArray(custStatuses) && custStatuses.length > 0) {
-      custStatuses
-        .filter((s) => s.isActive !== false && !s.isDeleted)
-        .forEach((s) => {
-          const id = Number(s.customerStatusId ?? (s as any).id ?? 0);
-          const name = String(s.statusName || "").trim();
-          if (name && !seenNames.has(name.toLowerCase())) {
-            seenNames.add(name.toLowerCase());
-            dynamicStatuses.push({
-              taskStatusId: id > 0 ? id : dynamicStatuses.length + 1,
-              id: id > 0 ? id : dynamicStatuses.length + 1,
-              statusName: name,
-              statusCode: String(s.statusCode || "").trim(),
-              isActive: true,
-            });
-          }
-        });
+    const list = await getAllMasterTaskStatuses();
+    if (Array.isArray(list) && list.length > 0) {
+      return list
+        .filter((s) => !s.isDeleted)
+        .map((s) => ({
+          taskStatusId: s.id,
+          id: s.id,
+          statusName: s.statusName,
+          statusCode: s.statusName.toUpperCase().replace(/\s+/g, "_"),
+          isActive: !s.isDeleted,
+        }));
     }
   } catch (err) {
-    console.warn("getAllTaskStatuses customer status master error:", err);
+    console.warn("getAllTaskStatuses error:", err);
   }
 
-  // 2. Also query TaskStatus API endpoint if available and append unique items
-  try {
-    const url = API_ENDPOINTS.TaskStatus || `${API_ENDPOINTS.BaseUrl}/TaskStatus`;
-    const response = await apiClient.get<any>(url);
-    const data = response.data;
-    const list: any[] = Array.isArray(data)
-      ? data
-      : Array.isArray(data?.data)
-      ? data.data
-      : Array.isArray(data?.result)
-      ? data.result
-      : [];
-
-    list.forEach((s: any) => {
-      const name = String(s.statusName ?? s.name ?? "").trim();
-      const id = Number(s.taskStatusId ?? s.id ?? 0);
-      if (name && !seenNames.has(name.toLowerCase()) && s.isActive !== false) {
-        seenNames.add(name.toLowerCase());
-        dynamicStatuses.push({
-          taskStatusId: id > 0 ? id : dynamicStatuses.length + 1,
-          id: id > 0 ? id : dynamicStatuses.length + 1,
-          statusName: name,
-          statusCode: String(s.statusCode ?? s.code ?? "").trim(),
-          isActive: true,
-        });
-      }
-    });
-  } catch (err) {
-    console.warn("getAllTaskStatuses TaskStatus API error:", err);
-  }
-
-  // Return dynamic statuses if available
-  if (dynamicStatuses.length > 0) {
-    return dynamicStatuses;
-  }
-
-  // Fallback only if APIs return no records so the UI never crashes
-  return [
-    { taskStatusId: 1, id: 1, statusName: "Pending", statusCode: "PENDING", isActive: true },
-    { taskStatusId: 2, id: 2, statusName: "In Progress", statusCode: "IN_PROGRESS", isActive: true },
-    { taskStatusId: 3, id: 3, statusName: "Under Review", statusCode: "REVIEW", isActive: true },
-    { taskStatusId: 4, id: 4, statusName: "Completed", statusCode: "COMPLETED", isActive: true },
-    { taskStatusId: 5, id: 5, statusName: "Rejected", statusCode: "REJECTED", isActive: true },
-  ];
+  return [];
 };
 
 // ==========================================
@@ -191,16 +138,6 @@ export const getAllTaskStatuses = async (): Promise<TaskStatusItem[]> => {
 export const getAllTasks = async (filters?: TaskFilterParams): Promise<TaskItem[]> => {
   let backendTasks: TaskItem[] = [];
 
-  const deletedData = getDeletedTaskIdentifiers();
-  const deletedIdSet = new Set(deletedData.ids);
-  const deletedTitleSet = new Set(deletedData.titles.map((t) => t.toLowerCase().trim()));
-
-  const isTaskDeleted = (id: number, title?: string): boolean => {
-    if (deletedIdSet.has(id)) return true;
-    if (title && deletedTitleSet.has(title.toLowerCase().trim())) return true;
-    return false;
-  };
-
   try {
     const url = API_ENDPOINTS.Task || `${API_ENDPOINTS.BaseUrl}/Task`;
     const response = await apiClient.get<any>(url);
@@ -208,10 +145,10 @@ export const getAllTasks = async (filters?: TaskFilterParams): Promise<TaskItem[
     const rawList: any[] = Array.isArray(data)
       ? data
       : Array.isArray(data?.data)
-      ? data.data
-      : Array.isArray(data?.result)
-      ? data.result
-      : [];
+        ? data.data
+        : Array.isArray(data?.result)
+          ? data.result
+          : [];
 
     if (rawList.length > 0) {
       backendTasks = rawList
@@ -239,45 +176,22 @@ export const getAllTasks = async (filters?: TaskFilterParams): Promise<TaskItem[
             isDeleted: Boolean(t.isDeleted),
           };
         })
-        .filter((t) => !t.isDeleted && !isTaskDeleted(t.taskId, t.taskTitle));
+        .filter((t) => !t.isDeleted);
     }
   } catch (error) {
     console.warn("getAllTasks: Backend fetch error, checking local store:", error);
   }
 
-  // Merge with locally stored tasks (excluding any that were deleted)
-  const localTasks = safeGetTasks();
-  const taskMap = new Map<string, TaskItem>();
+  let items: TaskItem[] = [];
 
-  // 1. Add backend tasks first
-  for (const t of backendTasks) {
-    if (!t.isDeleted && !isTaskDeleted(t.taskId, t.taskTitle)) {
-      const key = (t.taskTitle || "").toLowerCase().trim() || String(t.taskId);
-      taskMap.set(key, t);
-    }
+  if (backendTasks.length > 0) {
+    items = backendTasks;
+    safeSetTasks(backendTasks);
+  } else {
+    // If backend returned empty list, show empty list (or fallback if backend was unreachable)
+    const localTasks = safeGetTasks().filter((t) => !t.isDeleted);
+    items = localTasks;
   }
-
-  // 2. Add local tasks
-  for (const t of localTasks) {
-    if (!t.isDeleted && !isTaskDeleted(t.taskId, t.taskTitle)) {
-      const key = (t.taskTitle || "").toLowerCase().trim() || String(t.taskId);
-      if (!taskMap.has(key)) {
-        taskMap.set(key, t);
-      } else {
-        const existing = taskMap.get(key);
-        if (existing) {
-          if (!existing.assignedByName && t.assignedByName) {
-            existing.assignedByName = t.assignedByName;
-          }
-          if (!existing.assignedToName && t.assignedToName) {
-            existing.assignedToName = t.assignedToName;
-          }
-        }
-      }
-    }
-  }
-
-  let items = Array.from(taskMap.values());
 
   // Enrich with names
   try {
@@ -287,7 +201,7 @@ export const getAllTasks = async (filters?: TaskFilterParams): Promise<TaskItem[
       getAllCustomers().catch(() => []),
       getAllPriorities().catch(() => []),
       getAllTaskStatuses().catch(() => []),
-      fetchAllEmployees().catch(() => []), 
+      fetchAllEmployees().catch(() => []),
       getAllBdeUsers().catch(() => []),
     ]);
 
@@ -296,7 +210,7 @@ export const getAllTasks = async (filters?: TaskFilterParams): Promise<TaskItem[
     try {
       const rawUser = sessionStorage.getItem("user");
       if (rawUser) currentUser = JSON.parse(rawUser);
-    } catch {}
+    } catch { }
 
     const resolveEmployeeName = (targetId: number): string => {
       if (!targetId || targetId <= 0) return "—";
@@ -394,12 +308,12 @@ export const getAllTasks = async (filters?: TaskFilterParams): Promise<TaskItem[
         (c: any) =>
           Number(
             c.customerId ??
-              c.CustomerId ??
-              c.companyId ??
-              c.CompanyId ??
-              c.id ??
-              c.ID ??
-              0
+            c.CustomerId ??
+            c.companyId ??
+            c.CompanyId ??
+            c.id ??
+            c.ID ??
+            0
           ) === task.companyId
       );
       let companyName = matchedCust?.customerName || matchedCust?.companyName;
@@ -450,7 +364,7 @@ export const getAllTasks = async (filters?: TaskFilterParams): Promise<TaskItem[
           taskStatusName.toLowerCase().includes("approved"),
       };
     });
-  } catch {}
+  } catch { }
 
   safeSetTasks(items);
 
@@ -519,7 +433,7 @@ export const getTaskById = async (id: number): Promise<TaskItem | null> => {
         isCompleted: Boolean(t.isCompleted || t.taskStatusId === 4),
       };
     }
-  } catch {}
+  } catch { }
 
   const local = safeGetTasks().find((t) => t.taskId === id);
   return local || null;
@@ -534,7 +448,7 @@ export const createTask = async (payload: TaskCreatePayload): Promise<TaskItem> 
       if (custList && custList.length > 0) {
         validCompanyId = Number(custList[0].customerId || (custList[0] as any).id || 1);
       }
-    } catch {}
+    } catch { }
     if (validCompanyId <= 0) validCompanyId = 1;
   }
 
@@ -672,20 +586,20 @@ export const createTask = async (payload: TaskCreatePayload): Promise<TaskItem> 
   }
 
   if (!savedTask) {
-    const localId = Date.now();
+    const fallbackId = Date.now();
     savedTask = {
-      taskId: localId,
+      taskId: fallbackId,
       companyId: validCompanyId,
-      taskTitle: payload.taskTitle,
-      description: payload.description,
+      taskTitle: payload.taskTitle.trim(),
+      description: payload.description?.trim() || "",
       assignedTo: validAssignedTo,
       assignedToName: payload.assignedToName || undefined,
       assignedBy: validAssignedBy,
       assignedByName: payload.assignedByName || undefined,
       companyName: payload.companyName,
-      priorityId: payload.priorityId,
-      taskStatusId: payload.taskStatusId,
-      taskStatusName: payload.taskStatusName,
+      priorityId: Number(payload.priorityId || 1),
+      taskStatusId: Number(payload.taskStatusId || 1),
+      taskStatusName: payload.taskStatusName || undefined,
       startDate: payload.startDate,
       dueDate: payload.dueDate,
       reminderId: linkedReminderId,
@@ -698,7 +612,7 @@ export const createTask = async (payload: TaskCreatePayload): Promise<TaskItem> 
   }
 
   // Update local cache
-  const local = safeGetTasks();
+  const local = safeGetTasks().filter((t) => t.taskId !== savedTask!.taskId);
   safeSetTasks([savedTask, ...local]);
 
   return savedTask;
@@ -775,8 +689,24 @@ export const updateTask = async (
 
 export const completeTask = async (taskId: number): Promise<boolean> => {
   try {
-    const url = `${API_ENDPOINTS.Task || `${API_ENDPOINTS.BaseUrl}/Task`}/Complete/${taskId}`;
-    await apiClient.put(url, {});
+    const existing = await getTaskById(taskId);
+    const url = `${API_ENDPOINTS.Task || `${API_ENDPOINTS.BaseUrl}/Task`}/${taskId}`;
+    const updateBody = {
+      taskId: taskId,
+      companyId: existing?.companyId || 1,
+      taskTitle: existing?.taskTitle || "Task",
+      description: existing?.description || "",
+      assignedTo: existing?.assignedTo || 1,
+      assignedBy: existing?.assignedBy || 1,
+      priorityId: existing?.priorityId || 1,
+      taskStatusId: existing?.taskStatusId || 2,
+      startDate: existing?.startDate ? new Date(existing.startDate).toISOString() : new Date().toISOString(),
+      dueDate: existing?.dueDate ? new Date(existing.dueDate).toISOString() : new Date().toISOString(),
+      completionDate: new Date().toISOString(),
+      remarks: existing?.remarks || "",
+      createdBy: existing?.createdBy || 1,
+    };
+    await apiClient.put(url, updateBody);
   } catch (err) {
     console.warn("completeTask: API error fallback handled:", err);
   }
@@ -785,12 +715,11 @@ export const completeTask = async (taskId: number): Promise<boolean> => {
   const updated = local.map((t) =>
     t.taskId === taskId
       ? {
-          ...t,
-          isCompleted: true,
-          taskStatusId: 4,
-          completionDate: new Date().toISOString().split("T")[0],
-          taskStatusName: "Approved / Completed",
-        }
+        ...t,
+        isCompleted: true,
+        completionDate: new Date().toISOString().split("T")[0],
+        taskStatusName: "Completed",
+      }
       : t
   );
   safeSetTasks(updated);
@@ -799,8 +728,24 @@ export const completeTask = async (taskId: number): Promise<boolean> => {
 
 export const assignTask = async (taskId: number, payload: TaskAssignPayload): Promise<boolean> => {
   try {
-    const url = `${API_ENDPOINTS.Task || `${API_ENDPOINTS.BaseUrl}/Task`}/Assign/${taskId}`;
-    await apiClient.put(url, payload);
+    const existing = await getTaskById(taskId);
+    const url = `${API_ENDPOINTS.Task || `${API_ENDPOINTS.BaseUrl}/Task`}/${taskId}`;
+    const updateBody = {
+      taskId: taskId,
+      companyId: existing?.companyId || 1,
+      taskTitle: existing?.taskTitle || "Task",
+      description: existing?.description || "",
+      assignedTo: payload.assignedTo,
+      assignedBy: payload.assignedBy,
+      priorityId: existing?.priorityId || 1,
+      taskStatusId: existing?.taskStatusId || 1,
+      startDate: existing?.startDate ? new Date(existing.startDate).toISOString() : new Date().toISOString(),
+      dueDate: existing?.dueDate ? new Date(existing.dueDate).toISOString() : new Date().toISOString(),
+      completionDate: existing?.completionDate ? new Date(existing.completionDate).toISOString() : null,
+      remarks: existing?.remarks || "",
+      createdBy: existing?.createdBy || 1,
+    };
+    await apiClient.put(url, updateBody);
   } catch (err) {
     console.warn("assignTask: API error fallback handled:", err);
   }
@@ -818,8 +763,6 @@ export const deleteTask = async (taskId: number, taskTitle?: string): Promise<bo
   const deletedTask = local.find((t) => t.taskId === taskId);
   const resolvedTitle = taskTitle || deletedTask?.taskTitle;
 
-  // Mark task ID and Title permanently as deleted so it is NEVER restored
-  markTaskAsDeletedLocally(taskId, resolvedTitle);
   safeSetTasks(local.filter((t) => t.taskId !== taskId));
 
   try {
@@ -956,5 +899,5 @@ export const addTaskActivity = (item: Omit<TaskActivityFeedItem, "id" | "time">)
     };
     const updated = [newEntry, ...existing];
     localStorage.setItem(ACTIVITIES_STORAGE_KEY, JSON.stringify(updated.slice(0, 30)));
-  } catch {}
+  } catch { }
 };

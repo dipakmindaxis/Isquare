@@ -352,11 +352,10 @@ export const PriorityMaster: React.FC<PriorityMasterProps> = ({ isTab = false })
                       key={status}
                       type="button"
                       onClick={() => setSelectedStatus(status)}
-                      className={`px-3 py-1 text-xs font-semibold rounded-md transition cursor-pointer flex-1 sm:flex-initial ${
-                        selectedStatus === status
-                          ? "bg-white text-gray-900 shadow-xs"
-                          : "text-gray-500 hover:text-gray-900"
-                      }`}
+                      className={`px-3 py-1 text-xs font-semibold rounded-md transition cursor-pointer flex-1 sm:flex-initial ${selectedStatus === status
+                        ? "bg-white text-gray-900 shadow-xs"
+                        : "text-gray-500 hover:text-gray-900"
+                        }`}
                     >
                       {status} ({status === "All" ? stats.total : status === "Active" ? stats.active : stats.inactive})
                     </button>
@@ -414,9 +413,8 @@ export const PriorityMaster: React.FC<PriorityMasterProps> = ({ isTab = false })
                         priorityName: e.target.value,
                       }))
                     }
-                    className={`${baseInputStyle} ${
-                      errors.priorityName ? "border-red-500" : ""
-                    }`}
+                    className={`${baseInputStyle} ${errors.priorityName ? "border-red-500" : ""
+                      }`}
                   />
                   {errors.priorityName && (
                     <p className="text-xs text-red-500 mt-1">
@@ -482,11 +480,10 @@ export const PriorityMaster: React.FC<PriorityMasterProps> = ({ isTab = false })
                           setFormData((prev) => ({ ...prev, colorCode: p.hex }))
                         }
                         title={p.name}
-                        className={`h-5 w-5 rounded-full border transition transform hover:scale-110 ${
-                          formData.colorCode.toLowerCase() === p.hex.toLowerCase()
-                            ? "ring-2 ring-offset-1 ring-[#00234a] scale-110"
-                            : "border-gray-200"
-                        }`}
+                        className={`h-5 w-5 rounded-full border transition transform hover:scale-110 ${formData.colorCode.toLowerCase() === p.hex.toLowerCase()
+                          ? "ring-2 ring-offset-1 ring-[#00234a] scale-110"
+                          : "border-gray-200"
+                          }`}
                         style={{ backgroundColor: p.hex }}
                       />
                     ))}
@@ -626,9 +623,8 @@ export const PriorityMaster: React.FC<PriorityMasterProps> = ({ isTab = false })
                                 className="sr-only"
                               />
                               <div
-                                className={`w-11 h-6 rounded-full transition-colors relative ${
-                                  item.isActive ? "bg-[#00234a]" : "bg-gray-300"
-                                }`}
+                                className={`w-11 h-6 rounded-full transition-colors relative ${item.isActive ? "bg-[#00234a]" : "bg-gray-300"
+                                  }`}
                               >
                                 <span
                                   className="absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform duration-200 ease-in-out shadow-sm"
@@ -696,9 +692,9 @@ export const PriorityMaster: React.FC<PriorityMasterProps> = ({ isTab = false })
                 {filteredItems.length === 0
                   ? "0-0 of 0"
                   : `${(currentPage - 1) * itemsPerPage + 1}-${Math.min(
-                      currentPage * itemsPerPage,
-                      filteredItems.length
-                    )} of ${filteredItems.length}`}
+                    currentPage * itemsPerPage,
+                    filteredItems.length
+                  )} of ${filteredItems.length}`}
               </div>
               <div className="flex items-center gap-1.5">
                 <button
@@ -792,11 +788,10 @@ export const PriorityMaster: React.FC<PriorityMasterProps> = ({ isTab = false })
                     Status
                   </span>
                   <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                      selectedItem.isActive
-                        ? "bg-emerald-100 text-emerald-800"
-                        : "bg-slate-200 text-slate-700"
-                    }`}
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${selectedItem.isActive
+                      ? "bg-emerald-100 text-emerald-800"
+                      : "bg-slate-200 text-slate-700"
+                      }`}
                   >
                     {selectedItem.isActive ? "Active" : "Inactive"}
                   </span>

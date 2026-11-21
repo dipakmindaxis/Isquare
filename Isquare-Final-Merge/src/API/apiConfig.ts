@@ -172,6 +172,8 @@ export const API_ENDPOINTS: ApiEndpoints = {
   Tasks: `${BASE_URL}/Task`,
   TaskStatus: `${BASE_URL}/TaskStatus`,
   TaskStatuses: `${BASE_URL}/TaskStatus`,
+  TaskAttachment: `${BASE_URL}/TaskAttachment`,
+  TaskAttachments: `${BASE_URL}/TaskAttachment`,
   TaskAssignment: `${BASE_URL}/TaskAssignment`,
   TaskAssignments: `${BASE_URL}/TaskAssignment`,
   EnquiryPriorities: `${BASE_URL}/EnquiryPriority`,
