@@ -5,25 +5,23 @@ import {
   Clock,
   Send,
   MessageSquare,
-  ShieldCheck,
   CheckCircle2,
   AlertTriangle,
   FileText,
   Image as ImageIcon,
   Download,
   RefreshCw,
-  Trash2,
   Headphones,
   Calendar,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../../../hooks/useAuth";
-import { buttonStyles } from "../../../Components/Common/buttonStyles";
 import type {
   ExternalTicketDetail,
   ExternalTicketListItem,
   SupportTicketItem,
   ExternalAttachment,
+  ExternalTicketReply,
 } from "../Types/HelpDeskTypes";
 import {
   getExternalTicketDetails,
@@ -77,23 +75,187 @@ export const ViewTicketDetailsModal: React.FC<ViewTicketDetailsModalProps> = ({
 }) => {
   const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const isPollingRef = useRef<boolean>(false);
+  const hasInitialScrolledRef = useRef<string | null>(null);
 
   const activeTicketNumber = propTicketNumber || ticket?.ticketNumber;
 
   const [ticketDetail, setTicketDetail] = useState<ExternalTicketDetail | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<"chat" | "details">("chat");
   const [replyMessage, setReplyMessage] = useState<string>("");
   const [replyFiles, setReplyFiles] = useState<File[]>([]);
   const [isSending, setIsSending] = useState<boolean>(false);
   const [downloadingId, setDownloadingId] = useState<string | number | null>(null);
+  const [initialReplyCount, setInitialReplyCount] = useState<number | null>(null);
+
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior, block: "nearest" });
+    }
+  }, []);
+
+  const isUserNearBottom = useCallback(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return true;
+    return container.scrollHeight - container.scrollTop - container.clientHeight <= 150;
+  }, []);
+
+  // Helper: Format message time with UTC-to-local timezone conversion (e.g. "3:38 PM")
+  const formatMessageTime = (dateStr?: string) => {
+    if (!dateStr) return "";
+    try {
+      let normalized = dateStr.trim();
+      if (
+        !normalized.endsWith("Z") &&
+        !/[+-]\d{2}:\d{2}$/.test(normalized) &&
+        !/[+-]\d{4}$/.test(normalized)
+      ) {
+        normalized = normalized.includes("T")
+          ? `${normalized}Z`
+          : `${normalized.replace(" ", "T")}Z`;
+      }
+      const d = new Date(normalized);
+      if (isNaN(d.getTime())) {
+        const orig = new Date(dateStr);
+        if (isNaN(orig.getTime())) return "";
+        return orig.toLocaleTimeString("en-US", {
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+        });
+      }
+      return d.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+    } catch {
+      return "";
+    }
+  };
+
+  // Helper: Format full message date with UTC-to-local conversion (e.g. "Nov 21, 2026, 03:38 PM")
+  const formatMessageDate = (dateStr?: string) => {
+    if (!dateStr) return "";
+    try {
+      let normalized = dateStr.trim();
+      if (
+        !normalized.endsWith("Z") &&
+        !/[+-]\d{2}:\d{2}$/.test(normalized) &&
+        !/[+-]\d{4}$/.test(normalized)
+      ) {
+        normalized = normalized.includes("T")
+          ? `${normalized}Z`
+          : `${normalized.replace(" ", "T")}Z`;
+      }
+      const d = new Date(normalized);
+      if (isNaN(d.getTime())) return dateStr;
+      return d.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return dateStr || "";
+    }
+  };
+
+  // Helper: Extract sender initials (e.g. "Nilesh Patange" -> "NP")
+  const getInitials = (name?: string) => {
+    if (!name) return "NP";
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return "NP";
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  };
+
+  // Helper: Sender-based alignment
+  // MindAxis Employee / Support / Admin -> LEFT SIDE (isOutgoing = false)
+  // Our Message (External Customer / iSQUARE user) -> RIGHT SIDE (isOutgoing = true)
+  const isOutgoingMessage = useCallback(
+    (reply: ExternalTicketReply) => {
+      const role = (
+        reply.senderRole ||
+        (reply as any).role ||
+        (reply as any).userRole ||
+        (reply as any).senderType ||
+        (reply as any).userType ||
+        ""
+      ).toString().trim().toLowerCase();
+
+      // 1. MindAxis Employee, Staff, Support or Agent -> LEFT SIDE
+      if (
+        role.includes("employee") ||
+        role.includes("support") ||
+        role.includes("staff") ||
+        role.includes("agent")
+      ) {
+        return false;
+      }
+
+      // 2. Explicit non-customer reply from MindAxis portal -> LEFT SIDE
+      if (reply.isCustomerReply === false) {
+        return false;
+      }
+
+      // 3. External Customer / Client (our message from iSQUARE) -> RIGHT SIDE
+      if (
+        role.includes("external") ||
+        role.includes("customer") ||
+        role.includes("client")
+      ) {
+        return true;
+      }
+
+      // 4. Customer reply flag -> RIGHT SIDE
+      if (reply.isCustomerReply === true) {
+        return true;
+      }
+
+      // 5. Fallback: check senderName
+      const sender = (reply.senderName || "").trim().toLowerCase();
+      if (sender.includes("mindaxis") || sender.includes("support")) {
+        return false;
+      }
+
+      return true;
+    },
+    []
+  );
+
+  // Deduplicate helper for ticket replies
+  const deduplicateReplies = (replies: ExternalTicketReply[]): ExternalTicketReply[] => {
+    const seen = new Set<string>();
+    const deduped: ExternalTicketReply[] = [];
+    replies.forEach((r, idx) => {
+      const key = r.id
+        ? `id_${r.id}`
+        : `msg_${r.senderName}_${r.createdAt || r.createdDate || ""}_${r.message}_${idx}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        deduped.push(r);
+      }
+    });
+    return deduped;
+  };
 
   // Load ticket details from API 3
-  const loadTicketDetails = useCallback(async () => {
+  const loadTicketDetails = useCallback(async (resetInitialCount = false) => {
     if (!activeTicketNumber) return;
     setIsLoading(true);
     try {
       const data = await getExternalTicketDetails(activeTicketNumber, user);
+      if (data?.replies) {
+        data.replies = deduplicateReplies(data.replies);
+      }
       setTicketDetail(data);
+      const total = data?.replies?.length ?? 0;
+      setInitialReplyCount((prev) => (resetInitialCount || prev === null ? total : prev));
     } catch {
       toast.error("Failed to fetch ticket details. Please try again.");
     } finally {
@@ -101,17 +263,101 @@ export const ViewTicketDetailsModal: React.FC<ViewTicketDetailsModalProps> = ({
     }
   }, [activeTicketNumber, user]);
 
+  // Real-time automatic background polling to detect new incoming messages
+  const pollLatestMessages = useCallback(async () => {
+    if (!isOpen || !activeTicketNumber || isPollingRef.current) return;
+    isPollingRef.current = true;
+    try {
+      const updatedData = await getExternalTicketDetails(activeTicketNumber, user);
+      if (!updatedData) return;
+
+      setTicketDetail((prev) => {
+        if (!prev) return updatedData;
+
+        const prevReplies = prev.replies || [];
+        const newReplies = deduplicateReplies(updatedData.replies || []);
+
+        const prevKeys = new Set(
+          prevReplies.map(
+            (r, i) =>
+              r.id
+                ? `id_${r.id}`
+                : `msg_${r.senderName}_${r.createdAt || r.createdDate || ""}_${r.message}_${i}`
+          )
+        );
+
+        const hasNewIncoming = newReplies.some(
+          (r, i) =>
+            !prevKeys.has(
+              r.id
+                ? `id_${r.id}`
+                : `msg_${r.senderName}_${r.createdAt || r.createdDate || ""}_${r.message}_${i}`
+            )
+        );
+
+        const replyCountChanged =
+          (updatedData.replyCount ?? newReplies.length) !==
+          (prev.replyCount ?? prevReplies.length);
+        const statusChanged = updatedData.status !== prev.status;
+
+        // If no changes, preserve current state
+        if (!hasNewIncoming && !replyCountChanged && !statusChanged && prevReplies.length === newReplies.length) {
+          return prev;
+        }
+
+        // Auto-scroll to latest message if user is already near bottom
+        if (hasNewIncoming && isUserNearBottom()) {
+          setTimeout(() => scrollToBottom("smooth"), 100);
+        }
+
+        // Notify parent listing so table and KPI counts update
+        if (hasNewIncoming && onTicketUpdated) {
+          onTicketUpdated();
+        }
+
+        return {
+          ...prev,
+          ...updatedData,
+          replies: newReplies,
+          replyCount: updatedData.replyCount ?? newReplies.length,
+        };
+      });
+    } catch {
+      // Background poll silently fails without error alert
+    } finally {
+      isPollingRef.current = false;
+    }
+  }, [isOpen, activeTicketNumber, user, isUserNearBottom, scrollToBottom, onTicketUpdated]);
+
   useEffect(() => {
     if (isOpen && activeTicketNumber) {
+      setActiveTab("chat");
       setReplyMessage("");
       setReplyFiles([]);
+      hasInitialScrolledRef.current = null;
+      setInitialReplyCount(null);
       loadTicketDetails();
     } else {
       setTicketDetail(null);
+      hasInitialScrolledRef.current = null;
+      setInitialReplyCount(null);
     }
   }, [isOpen, activeTicketNumber, loadTicketDetails]);
 
-  if (!isOpen) return null;
+  // Real-time automatic message sync interval (every 3.5s when modal is open)
+  useEffect(() => {
+    if (!isOpen || !activeTicketNumber) return;
+
+    const intervalId = window.setInterval(() => {
+      if (document.visibilityState === "visible") {
+        pollLatestMessages();
+      }
+    }, 3500);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [isOpen, activeTicketNumber, pollLatestMessages]);
 
   // Handle file selection for reply (Max 5 files, 5MB each, .jpg, .jpeg, .png, .pdf)
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -175,7 +421,8 @@ export const ViewTicketDetailsModal: React.FC<ViewTicketDetailsModalProps> = ({
       toast.success("Reply submitted successfully!");
       setReplyMessage("");
       setReplyFiles([]);
-      await loadTicketDetails();
+      await loadTicketDetails(true);
+      setTimeout(() => scrollToBottom("smooth"), 150);
       if (onTicketUpdated) onTicketUpdated();
     } catch (err: any) {
       toast.error(err?.message || "Failed to submit reply. Please try again.");
@@ -183,6 +430,22 @@ export const ViewTicketDetailsModal: React.FC<ViewTicketDetailsModalProps> = ({
       setIsSending(false);
     }
   };
+
+  useEffect(() => {
+    if (
+      activeTicketNumber &&
+      ticketDetail?.replies &&
+      hasInitialScrolledRef.current !== activeTicketNumber
+    ) {
+      hasInitialScrolledRef.current = activeTicketNumber;
+      const timer = setTimeout(() => {
+        scrollToBottom("auto");
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [activeTicketNumber, ticketDetail?.replies, scrollToBottom]);
+
+  if (!isOpen) return null;
 
   // Download attachment via API 5 (Blob download)
   const handleDownload = async (att: ExternalAttachment) => {
@@ -292,41 +555,63 @@ export const ViewTicketDetailsModal: React.FC<ViewTicketDetailsModalProps> = ({
         className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-4xl h-[calc(100dvh-16px)] sm:h-auto sm:max-h-[90vh] flex flex-col overflow-hidden border border-gray-200"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header matching ViewCustomerModal header */}
-        <div className="bg-[#FF7900] p-4 sm:p-5 text-white flex justify-between items-center gap-3 shrink-0 border-b border-[#e06800]">
-          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white font-bold text-lg sm:text-xl shadow-inner shrink-0">
-              <Headphones size={22} />
+        {/* Premium Orange Gradient Header */}
+        <div className="bg-gradient-to-r from-[#FF5500] via-[#FF7500] to-[#FFA033] p-3.5 sm:p-4 text-white flex justify-between items-center gap-3 shrink-0 shadow-sm relative z-10 border-b border-[#e06800]">
+          <div className="flex items-center gap-3 min-w-0">
+            {/* Avatar with Online Indicator */}
+            <div className="relative shrink-0">
+              <div className="w-10 h-10 rounded-full bg-[#13759a] text-white font-bold text-sm flex items-center justify-center shadow-xs select-none">
+                {getInitials(displayCustomerName)}
+              </div>
+              <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white absolute -bottom-0.5 -right-0.5 shadow-2xs" />
             </div>
+
             <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                <h2 className="text-base sm:text-lg font-bold tracking-wide truncate max-w-[200px] sm:max-w-md text-white">
-                  {displaySubject}
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-sm sm:text-base font-bold tracking-wide truncate max-w-[150px] sm:max-w-xs text-white">
+                  {displayCustomerName}
                 </h2>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white/20 text-white border border-white/30 shrink-0 font-mono">
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-white/20 text-white border border-white/30 shrink-0 font-mono">
                   #{activeTicketNumber}
                 </span>
               </div>
-              {displayCreatedDate && (
-                <p className="text-xs text-orange-100 flex items-center gap-1.5 mt-0.5">
-                  <Calendar size={12} className="opacity-80" />
-                  <span>
-                    Created on {new Date(displayCreatedDate).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </span>
-                </p>
-              )}
+              <p className="text-xs text-orange-100 truncate max-w-[200px] sm:max-w-md mt-0.5 font-medium">
+                {displaySubject}
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
+            {/* Tab switchers */}
+            <div className="flex items-center bg-black/15 p-1 rounded-full border border-white/20 select-none">
+              <button
+                type="button"
+                onClick={() => setActiveTab("chat")}
+                className={`px-3.5 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${activeTab === "chat"
+                  ? "bg-white text-[#FF6A00] shadow-sm"
+                  : "text-white hover:bg-white/10"
+                  }`}
+              >
+                <MessageSquare size={13} />
+                <span>Chat ({ticketDetail?.replies?.length || 0})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("details")}
+                className={`px-3.5 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${activeTab === "details"
+                  ? "bg-white text-[#FF6A00] shadow-sm"
+                  : "text-white hover:bg-white/10"
+                  }`}
+              >
+                <FileText size={13} />
+                <span>Details</span>
+              </button>
+            </div>
+
             <button
               type="button"
-              onClick={loadTicketDetails}
-              className="p-1.5 sm:p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition cursor-pointer"
+              onClick={() => loadTicketDetails()}
+              className="p-1.5 sm:p-2 text-white/90 hover:text-white hover:bg-white/15 rounded-full transition cursor-pointer"
               title="Refresh Ticket Details"
             >
               <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
@@ -334,7 +619,7 @@ export const ViewTicketDetailsModal: React.FC<ViewTicketDetailsModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 sm:p-2 hover:bg-white/10 rounded-lg transition-colors text-white shrink-0 cursor-pointer"
+              className="p-1.5 sm:p-2 hover:bg-white/15 rounded-full transition text-white shrink-0 cursor-pointer"
               aria-label="Close"
             >
               <X size={20} />
@@ -342,248 +627,276 @@ export const ViewTicketDetailsModal: React.FC<ViewTicketDetailsModalProps> = ({
           </div>
         </div>
 
-        {/* Scrollable Content Body matching ViewCustomerModal design */}
-        <div className="p-6 sm:p-8 bg-gray-50/60 space-y-6 overflow-y-auto flex-1">
-          {isLoading && !ticketDetail ? (
-            <div className="py-20 text-center text-gray-500">
-              <RefreshCw size={28} className="animate-spin mx-auto mb-3 text-[#FF7900]" />
-              <p className="text-sm font-semibold">Loading ticket details and conversation...</p>
+        {/* Content Body: Chat View (Default) or Ticket Details View */}
+        {activeTab === "chat" ? (
+          <div className="flex-1 flex flex-col overflow-hidden relative bg-gradient-to-b from-[#f3f7fc] via-[#f7faff] to-[#f0f4fa]">
+            {/* Subtle decorative curved background shapes */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden select-none z-0">
+              <div className="absolute right-0 top-1/4 w-[380px] h-[380px] rounded-full bg-gradient-to-bl from-blue-100/40 via-sky-50/25 to-transparent blur-3xl" />
+              <div className="absolute -left-16 bottom-16 w-80 h-80 rounded-full bg-gradient-to-tr from-orange-100/35 via-rose-50/15 to-transparent blur-2xl" />
             </div>
-          ) : (
-            <>
-              {/* SECTION 1: TICKET INFORMATION */}
-              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-4">
-                <SectionHeader icon={Headphones} title="Section 1 - Ticket Information" />
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  <DetailItem label="Status" value={renderStatusBadge(displayStatus)} />
-                  <DetailItem label="Priority" value={renderPriorityBadge(displayPriority)} />
-                  <DetailItem label="Category" value={ticketDetail?.categoryName || "General Support"} />
-                  <DetailItem label="Customer Name" value={displayCustomerName} />
-                  <DetailItem label="Customer Email" value={displayEmail || "-"} />
-                  <DetailItem
-                    label="Created Date"
-                    value={
-                      displayCreatedDate
-                        ? new Date(displayCreatedDate).toLocaleString("en-US", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })
-                        : "-"
-                    }
-                  />
-                  <div className="col-span-1 sm:col-span-2 lg:col-span-3">
-                    <DetailItem
-                      label="Subject"
-                      value={displaySubject}
-                    />
-                  </div>
-                  <div className="col-span-1 sm:col-span-2 lg:col-span-3">
-                    <div className="bg-gray-50/80 p-3.5 rounded-lg border border-gray-100">
-                      <p className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest mb-1.5">
-                        Description
-                      </p>
-                      <p className="text-sm font-medium text-gray-800 leading-relaxed whitespace-pre-wrap">
-                        {displayDescription || "No detailed description provided."}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+
+            {isLoading && !ticketDetail ? (
+              <div className="py-24 text-center text-gray-500 relative z-10">
+                <RefreshCw size={28} className="animate-spin mx-auto mb-3 text-[#FF7900]" />
+                <p className="text-sm font-semibold">Loading conversation...</p>
               </div>
-
-              {/* SECTION 2: ATTACHMENTS (Blob Download) */}
-              {ticketDetail?.attachments && ticketDetail.attachments.length > 0 && (
-                <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-4">
-                  <SectionHeader icon={Paperclip} title={`Section 2 - Attachments (${ticketDetail.attachments.length})`} />
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {ticketDetail.attachments.map((att, idx) => {
-                      const attId = att.attachmentId || att.id || idx;
-                      const fileName = att.originalFileName || att.fileName || att.name || `Attachment-${idx + 1}`;
-                      const isImg =
-                        att.contentType?.includes("image") ||
-                        att.type?.includes("image") ||
-                        /\.(jpg|jpeg|png)$/i.test(fileName);
-                      const isPdf =
-                        att.contentType?.includes("pdf") ||
-                        /\.pdf$/i.test(fileName);
-                      const sizeStr = att.formattedSize || formatFileSize(att.fileSize || att.size);
-                      const isDownloading = downloadingId === attId;
-
-                      return (
-                        <div
-                          key={String(attId)}
-                          className="flex items-center justify-between p-3 bg-gray-50/80 border border-gray-200 rounded-xl hover:border-gray-300 transition"
-                        >
-                          <div className="flex items-center gap-3 min-w-0 mr-2">
-                            <div className="w-8 h-8 rounded-lg bg-white border border-gray-200 text-[#00234a] flex items-center justify-center shrink-0">
-                              {isImg ? (
-                                <ImageIcon size={16} className="text-blue-600" />
-                              ) : isPdf ? (
-                                <FileText size={16} className="text-rose-600" />
-                              ) : (
-                                <Paperclip size={16} className="text-gray-600" />
-                              )}
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-xs font-bold text-gray-800 truncate" title={fileName}>
-                                {fileName}
-                              </p>
-                              {sizeStr && (
-                                <p className="text-[11px] text-gray-400 mt-0.5">{sizeStr}</p>
-                              )}
-                            </div>
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={() => handleDownload(att)}
-                            disabled={isDownloading}
-                            className="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition cursor-pointer shrink-0 disabled:opacity-50"
-                            title="Download Attachment"
-                          >
-                            {isDownloading ? (
-                              <RefreshCw size={14} className="animate-spin" />
-                            ) : (
-                              <Download size={14} />
-                            )}
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* SECTION 3: CONVERSATION HISTORY & REPLY */}
-              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-4">
-                <SectionHeader icon={MessageSquare} title={`Section 3 - Conversation History (${ticketDetail?.replies?.length || 0})`} />
-
-                {/* Replies Messages */}
-                <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
-                  {!ticketDetail?.replies || ticketDetail.replies.length === 0 ? (
-                    <div className="p-4 rounded-xl bg-gray-50 border border-dashed border-gray-200 text-center text-xs text-gray-400">
-                      No replies posted yet. Send a message below to communicate with MindAxis Support.
+            ) : (
+              <>
+                {/* Messages Scroll Area */}
+                <div
+                  ref={scrollContainerRef}
+                  className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3 relative z-10"
+                >
+                  {/* Date Separator Pill */}
+                  <div className="flex justify-center my-2 select-none">
+                    <div className="bg-white/95 backdrop-blur-md px-3.5 py-1 rounded-full text-xs font-semibold text-gray-600 shadow-2xs border border-blue-100/70 flex items-center gap-1.5">
+                      <Calendar size={13} className="text-[#3b82f6]" />
+                      <span>Today</span>
                     </div>
-                  ) : (
-                    ticketDetail.replies.map((reply, idx) => {
-                      const isClient =
-                        reply.isCustomerReply === true ||
-                        (reply.senderRole || "").toLowerCase().trim() === "client" ||
-                        (reply.senderRole || "").toLowerCase().trim() === "customer";
+                  </div>
 
-                      const replyDate = reply.createdAt || reply.createdDate || "";
+                  {/* Initial Ticket Request Card (Clean Enterprise style) */}
+                  <div className="bg-white/90 backdrop-blur-sm rounded-xl p-3.5 sm:p-4 shadow-xs max-w-xl mx-auto w-full mb-3 border border-orange-100 border-l-4 border-l-[#FF7900]">
+                    <div className="flex items-center justify-between gap-2 border-b border-gray-100 pb-1.5 mb-2">
+                      <span className="text-[12px] font-bold text-[#FF7900] tracking-wide uppercase">
+                        Initial Ticket Request
+                      </span>
+                      {displayCreatedDate && (
+                        <span className="text-[11px] text-gray-400 font-medium">
+                          {formatMessageDate(displayCreatedDate)}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-sm font-semibold text-gray-900 mb-1">
+                      {displaySubject}
+                    </div>
+                    <p className="text-xs sm:text-[13px] text-gray-600 whitespace-pre-wrap leading-relaxed">
+                      {displayDescription || "No detailed description provided."}
+                    </p>
+
+                    {/* Attachments if any */}
+                    {ticketDetail?.attachments && ticketDetail.attachments.length > 0 && (
+                      <div className="mt-2.5 pt-2 border-t border-gray-100 flex flex-wrap gap-1.5">
+                        {ticketDetail.attachments.map((att, idx) => {
+                          const attId = att.attachmentId || att.id || idx;
+                          const fileName =
+                            att.originalFileName || att.fileName || att.name || `Attachment-${idx + 1}`;
+                          const isDownloading = downloadingId === attId;
+                          return (
+                            <button
+                              key={String(attId)}
+                              type="button"
+                              onClick={() => handleDownload(att)}
+                              disabled={isDownloading}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-gray-50 hover:bg-gray-100 border border-gray-200 text-xs font-medium text-gray-800 transition cursor-pointer select-none"
+                            >
+                              <Paperclip size={12} className="text-[#FF7900]" />
+                              <span className="max-w-[140px] truncate">{fileName}</span>
+                              <Download
+                                size={11}
+                                className={
+                                  isDownloading ? "animate-spin text-[#FF7900]" : "text-gray-400"
+                                }
+                              />
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Message Bubbles */}
+                  {!ticketDetail?.replies || ticketDetail.replies.length === 0 ? (
+                    <div className="text-center py-12 text-gray-400 text-xs font-medium">
+                      No conversation messages yet. Type below to send a message.
+                    </div>
+                  ) : (() => {
+                    // Find index of the first new incoming message from MindAxis Employee
+                    const firstNewIncomingIdx = ticketDetail.replies.findIndex(
+                      (r, i) =>
+                        !isOutgoingMessage(r) &&
+                        initialReplyCount !== null &&
+                        i >= initialReplyCount
+                    );
+
+                    return ticketDetail.replies.map((reply, idx) => {
+                      const isOutgoing = isOutgoingMessage(reply);
+                      const timeStr = formatMessageTime(reply.createdAt || reply.createdDate);
+                      const isNewIncomingMessage =
+                        !isOutgoing && initialReplyCount !== null && idx >= initialReplyCount;
+                      const isFirstNewMessage =
+                        firstNewIncomingIdx !== -1 && idx === firstNewIncomingIdx;
 
                       return (
-                        <div
-                          key={reply.id || idx}
-                          className={`p-3.5 rounded-xl border text-xs sm:text-sm ${
-                            isClient
-                              ? "bg-gray-50 border-gray-200 ml-4"
-                              : "bg-blue-50/70 border-blue-200 mr-4"
-                          }`}
-                        >
-                          <div className="flex items-center justify-between gap-2 mb-1.5">
-                            <div className="flex items-center gap-1.5 font-bold text-xs">
-                              <span
-                                className={
-                                  isClient
-                                    ? "text-gray-800"
-                                    : "text-[#00234a] flex items-center gap-1"
-                                }
-                              >
-                                {!isClient && <ShieldCheck size={14} className="text-blue-600" />}
-                                {reply.senderName || (isClient ? "Customer" : "MindAxis Support")}
+                        <React.Fragment key={reply.id || idx}>
+                          {/* New Messages Divider (only appears before incoming unread messages) */}
+                          {isFirstNewMessage && (
+                            <div className="relative flex items-center justify-center my-4 select-none">
+                              <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-[#FF7900]/40"></div>
+                              </div>
+                              <span className="relative bg-[#FF7900] text-white text-[11px] font-bold px-3 py-0.5 rounded-full shadow-xs tracking-wide">
+                                New Messages
                               </span>
-                              <span className="text-[10px] px-1.5 py-0.2 rounded font-semibold bg-white border border-gray-200 text-gray-500">
-                                {isClient ? "Client" : "Support"}
-                              </span>
-                            </div>
-                            {replyDate && (
-                              <span className="text-[10px] text-gray-400">
-                                {new Date(replyDate).toLocaleString("en-US", {
-                                  month: "short",
-                                  day: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                            {reply.message}
-                          </p>
-
-                          {/* Reply Attachments */}
-                          {reply.attachments && reply.attachments.length > 0 && (
-                            <div className="mt-2.5 pt-2 border-t border-gray-200/60 flex flex-wrap gap-2">
-                              {reply.attachments.map((rAtt, rIdx) => {
-                                const attName =
-                                  rAtt.originalFileName || rAtt.fileName || rAtt.name || "attachment";
-                                return (
-                                  <button
-                                    key={rAtt.id || rIdx}
-                                    type="button"
-                                    onClick={() => handleDownload(rAtt)}
-                                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white border border-gray-200 text-[11px] font-medium text-gray-700 hover:text-blue-600 transition cursor-pointer shadow-2xs"
-                                    title={attName}
-                                  >
-                                    <Download size={11} />
-                                    <span className="max-w-[150px] truncate">
-                                      {attName}
-                                    </span>
-                                  </button>
-                                );
-                              })}
                             </div>
                           )}
-                        </div>
+
+                          {!isOutgoing ? (
+                            /* LEFT BUBBLE (MindAxis Employee / Received messages) */
+                            <div className="flex justify-start mb-3">
+                              <div className="relative bg-white rounded-2xl rounded-tl-xs px-4 py-3 shadow-xs max-w-[85%] sm:max-w-[70%] border border-gray-100 text-gray-800">
+                                {/* Sender Header */}
+                                <div className="flex items-center gap-2 mb-1.5 select-none">
+                                  <span className="text-[13px] font-bold text-gray-900">
+                                    {reply.senderName || "System Admin"}
+                                  </span>
+                                  <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-[#eef2ff] text-[#4f46e5] border border-indigo-100">
+                                    MindAxis Employee
+                                  </span>
+                                  {isNewIncomingMessage && (
+                                    <span className="bg-[#FF7900] text-white text-[9px] font-extrabold px-1.5 py-0.2 rounded-full uppercase tracking-wider shadow-2xs ml-auto">
+                                      New
+                                    </span>
+                                  )}
+                                </div>
+
+                                {/* Message Content */}
+                                <div className="text-sm text-gray-800 font-normal leading-relaxed whitespace-pre-wrap break-words">
+                                  {reply.message}
+                                </div>
+
+                                {/* Attachments */}
+                                {reply.attachments && reply.attachments.length > 0 && (
+                                  <div className="mt-2.5 pt-2 border-t border-gray-100 flex flex-wrap gap-1.5">
+                                    {reply.attachments.map((rAtt, rIdx) => {
+                                      const attName =
+                                        rAtt.originalFileName || rAtt.fileName || rAtt.name || "attachment";
+                                      const attId = rAtt.attachmentId || rAtt.id || rIdx;
+                                      const isDownloading = downloadingId === attId;
+                                      return (
+                                        <button
+                                          key={attId}
+                                          type="button"
+                                          onClick={() => handleDownload(rAtt)}
+                                          disabled={isDownloading}
+                                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-gray-50 hover:bg-gray-100 border border-gray-200 text-xs font-medium text-gray-800 transition cursor-pointer select-none"
+                                        >
+                                          <Paperclip size={12} className="text-[#FF7900]" />
+                                          <span className="max-w-[140px] truncate">{attName}</span>
+                                          <Download
+                                            size={11}
+                                            className={
+                                              isDownloading ? "animate-spin text-[#FF7900]" : "text-gray-400"
+                                            }
+                                          />
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+
+                                {/* Timestamp */}
+                                <div className="flex items-center justify-end gap-1 text-[11px] text-gray-400 mt-1 select-none font-medium leading-none">
+                                  <Clock size={11} className="text-gray-400" />
+                                  <span>{timeStr}</span>
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            /* RIGHT BUBBLE (External Customer / Sent messages) */
+                            <div className="flex justify-end mb-3">
+                              <div className="relative bg-white rounded-2xl rounded-tr-xs px-4 py-3 shadow-[0_2px_12px_rgba(255,121,0,0.06)] max-w-[85%] sm:max-w-[70%] border border-[#fed7aa] text-gray-800">
+                                {/* Header with role, sender name in orange (never marked with 'New') */}
+                                <div className="flex items-center justify-between gap-3 mb-1.5 select-none">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-gray-100/90 text-gray-600">
+                                      External Customer
+                                    </span>
+                                    <span className="text-[13px] font-bold text-[#FF7900]">
+                                      {reply.senderName || displayCustomerName}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* Message Content */}
+                                <div className="text-sm text-gray-800 font-normal leading-relaxed whitespace-pre-wrap break-words">
+                                  {reply.message}
+                                </div>
+
+                                {/* Attachments */}
+                                {reply.attachments && reply.attachments.length > 0 && (
+                                  <div className="mt-2.5 pt-2 border-t border-orange-100 flex flex-wrap gap-1.5">
+                                    {reply.attachments.map((rAtt, rIdx) => {
+                                      const attName =
+                                        rAtt.originalFileName || rAtt.fileName || rAtt.name || "attachment";
+                                      const attId = rAtt.attachmentId || rAtt.id || rIdx;
+                                      const isDownloading = downloadingId === attId;
+                                      return (
+                                        <button
+                                          key={attId}
+                                          type="button"
+                                          onClick={() => handleDownload(rAtt)}
+                                          disabled={isDownloading}
+                                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-orange-50/70 hover:bg-orange-50 border border-orange-200/80 text-xs font-medium text-gray-800 transition cursor-pointer select-none shadow-2xs"
+                                        >
+                                          <Paperclip size={12} className="text-[#FF7900]" />
+                                          <span className="max-w-[140px] truncate">{attName}</span>
+                                          <Download
+                                            size={11}
+                                            className={
+                                              isDownloading ? "animate-spin text-[#FF7900]" : "text-gray-400"
+                                            }
+                                          />
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+
+                                {/* Timestamp */}
+                                <div className="flex items-center justify-end gap-1 text-[11px] text-gray-400 mt-1 select-none font-medium leading-none">
+                                  <Clock size={11} className="text-gray-400" />
+                                  <span>{timeStr}</span>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </React.Fragment>
                       );
-                    })
-                  )}
+                    });
+                  })()}
+                  <div ref={messagesEndRef} />
                 </div>
 
-                {/* Reply Form */}
-                <form onSubmit={handleSendReply} className="space-y-3 pt-3 border-t border-gray-100">
-                  <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block">
-                    Post a Reply
-                  </label>
-
-                  <textarea
-                    rows={2}
-                    value={replyMessage}
-                    onChange={(e) => setReplyMessage(e.target.value)}
-                    placeholder="Type your reply message here..."
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-700 min-h-[64px]"
-                    disabled={isSending}
-                  />
-
-                  {/* Attached files preview */}
+                {/* Modern Bottom Message Composer */}
+                <div className="p-3 sm:p-4 bg-white/90 backdrop-blur-sm border-t border-gray-100 shrink-0 relative z-10">
                   {replyFiles.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2 mb-2 px-1">
                       {replyFiles.map((file, i) => (
                         <span
                           key={i}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-100 border border-gray-200 text-xs text-gray-700 font-medium"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-50 border border-orange-200 text-xs text-gray-800 shadow-2xs"
                         >
-                          <Paperclip size={11} className="text-[#FF7900]" />
-                          <span className="max-w-[150px] truncate">{file.name}</span>
-                          <span className="text-[10px] text-gray-400">({formatFileSize(file.size)})</span>
+                          <Paperclip size={12} className="text-[#FF7900]" />
+                          <span className="max-w-[140px] truncate">{file.name}</span>
+                          <span className="text-[10px] text-gray-500">
+                            ({formatFileSize(file.size)})
+                          </span>
                           <button
                             type="button"
                             onClick={() => handleRemoveFile(i)}
-                            className="text-gray-400 hover:text-rose-600 transition cursor-pointer"
+                            className="text-gray-400 hover:text-rose-600 transition cursor-pointer ml-0.5"
                           >
-                            <Trash2 size={12} />
+                            <X size={12} />
                           </button>
                         </span>
                       ))}
                     </div>
                   )}
 
-                  <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-                    <div className="flex items-center gap-2">
+                  <form onSubmit={handleSendReply} className="flex items-center gap-2">
+                    <div className="flex-1 bg-white rounded-full border border-gray-200/90 shadow-xs flex items-center px-3.5 py-1 gap-2 focus-within:border-[#FF7900] focus-within:ring-2 focus-within:ring-orange-100 transition-all">
                       <input
                         ref={fileInputRef}
                         id="reply-attachment-input"
@@ -596,41 +909,163 @@ export const ViewTicketDetailsModal: React.FC<ViewTicketDetailsModalProps> = ({
                       />
                       <label
                         htmlFor="reply-attachment-input"
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 text-xs font-semibold hover:bg-gray-50 transition cursor-pointer select-none ${
-                          isSending || replyFiles.length >= 5
-                            ? "opacity-40 cursor-not-allowed pointer-events-none"
-                            : ""
-                        }`}
+                        className={`p-1.5 rounded-full text-gray-400 hover:text-gray-700 transition cursor-pointer shrink-0 select-none ${isSending || replyFiles.length >= 5
+                          ? "opacity-40 cursor-not-allowed pointer-events-none"
+                          : ""
+                          }`}
+                        title={`Attach Files (${replyFiles.length}/5)`}
                       >
-                        <Paperclip size={13} className="text-[#FF7900]" />
-                        <span>Attach Files ({replyFiles.length}/5)</span>
+                        <Paperclip size={18} />
                       </label>
-                      <span className="text-[10px] text-gray-400 hidden sm:inline">
-                        (Max 5 files, 5MB each: .jpg, .jpeg, .png, .pdf)
-                      </span>
+
+                      <input
+                        type="text"
+                        value={replyMessage}
+                        onChange={(e) => setReplyMessage(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            if (!isSending && replyMessage.trim()) {
+                              handleSendReply(e);
+                            }
+                          }
+                        }}
+                        placeholder="Type a message..."
+                        className="flex-1 bg-transparent border-0 outline-none text-sm text-gray-800 placeholder-gray-400 py-1.5"
+                        disabled={isSending}
+                      />
                     </div>
 
                     <button
                       type="submit"
                       disabled={isSending || !replyMessage.trim()}
-                      className="rounded-xl bg-[#00234a] hover:bg-[#FF7900] px-5 py-2 text-xs font-semibold text-white shadow-sm transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                      className="w-10 h-10 rounded-full bg-gradient-to-r from-[#FF5500] to-[#FF8E1D] hover:from-[#e64d00] hover:to-[#e67a0d] active:scale-95 text-white flex items-center justify-center shadow-md transition-all cursor-pointer shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                      title="Send Message"
                     >
-                      <Send size={12} />
-                      <span>{isSending ? "Sending..." : "Send Reply"}</span>
+                      {isSending ? (
+                        <RefreshCw size={15} className="animate-spin" />
+                      ) : (
+                        <Send size={15} className="translate-x-[0.5px]" />
+                      )}
                     </button>
+                  </form>
+                </div>
+              </>
+            )}
+          </div>
+        ) : (
+          /* DETAILS TAB */
+          <div className="p-6 sm:p-8 bg-gray-50/60 space-y-6 overflow-y-auto flex-1">
+            {/* SECTION 1: TICKET INFORMATION */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-4">
+              <SectionHeader icon={Headphones} title="Section 1 - Ticket Information" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <DetailItem label="Status" value={renderStatusBadge(displayStatus)} />
+                <DetailItem label="Priority" value={renderPriorityBadge(displayPriority)} />
+                <DetailItem label="Category" value={ticketDetail?.categoryName || "General Support"} />
+                <DetailItem label="Customer Name" value={displayCustomerName} />
+                <DetailItem label="Customer Email" value={displayEmail || "-"} />
+                <DetailItem
+                  label="Created Date"
+                  value={
+                    displayCreatedDate
+                      ? new Date(displayCreatedDate).toLocaleString("en-US", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
+                      : "-"
+                  }
+                />
+                <div className="col-span-1 sm:col-span-2 lg:col-span-3">
+                  <DetailItem label="Subject" value={displaySubject} />
+                </div>
+                <div className="col-span-1 sm:col-span-2 lg:col-span-3">
+                  <div className="bg-gray-50/80 p-3.5 rounded-lg border border-gray-100">
+                    <p className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest mb-1.5">
+                      Description
+                    </p>
+                    <p className="text-sm font-medium text-gray-800 leading-relaxed whitespace-pre-wrap">
+                      {displayDescription || "No detailed description provided."}
+                    </p>
                   </div>
-                </form>
+                </div>
               </div>
-            </>
-          )}
-        </div>
+            </div>
 
-        {/* Modal Footer matching ViewCustomerModal footer */}
-        <div className="p-3 sm:p-4 bg-gray-50 border-t border-gray-200 flex justify-end shrink-0">
+            {/* SECTION 2: ATTACHMENTS */}
+            {ticketDetail?.attachments && ticketDetail.attachments.length > 0 && (
+              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-4">
+                <SectionHeader
+                  icon={Paperclip}
+                  title={`Section 2 - Attachments (${ticketDetail.attachments.length})`}
+                />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {ticketDetail.attachments.map((att, idx) => {
+                    const attId = att.attachmentId || att.id || idx;
+                    const fileName =
+                      att.originalFileName || att.fileName || att.name || `Attachment-${idx + 1}`;
+                    const isImg =
+                      att.contentType?.includes("image") ||
+                      att.type?.includes("image") ||
+                      /\.(jpg|jpeg|png)$/i.test(fileName);
+                    const isPdf = att.contentType?.includes("pdf") || /\.pdf$/i.test(fileName);
+                    const sizeStr = att.formattedSize || formatFileSize(att.fileSize || att.size);
+                    const isDownloading = downloadingId === attId;
+
+                    return (
+                      <div
+                        key={String(attId)}
+                        className="flex items-center justify-between p-3 bg-gray-50/80 border border-gray-200 rounded-xl hover:border-gray-300 transition"
+                      >
+                        <div className="flex items-center gap-3 min-w-0 mr-2">
+                          <div className="w-8 h-8 rounded-lg bg-white border border-gray-200 text-[#00234a] flex items-center justify-center shrink-0">
+                            {isImg ? (
+                              <ImageIcon size={16} className="text-blue-600" />
+                            ) : isPdf ? (
+                              <FileText size={16} className="text-rose-600" />
+                            ) : (
+                              <Paperclip size={16} className="text-gray-600" />
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-gray-800 truncate" title={fileName}>
+                              {fileName}
+                            </p>
+                            {sizeStr && <p className="text-[11px] text-gray-400 mt-0.5">{sizeStr}</p>}
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => handleDownload(att)}
+                          disabled={isDownloading}
+                          className="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition cursor-pointer shrink-0 disabled:opacity-50"
+                          title="Download Attachment"
+                        >
+                          {isDownloading ? (
+                            <RefreshCw size={14} className="animate-spin" />
+                          ) : (
+                            <Download size={14} />
+                          )}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Modal Footer matching reference design */}
+        <div className="p-3 bg-gray-50/80 border-t border-gray-100 flex justify-end shrink-0">
           <button
             type="button"
             onClick={onClose}
-            className={buttonStyles.cancel}
+            className="px-6 py-2 rounded-lg bg-[#5b6471] hover:bg-[#4b5563] text-white text-xs font-semibold shadow-xs transition cursor-pointer"
           >
             Close
           </button>
