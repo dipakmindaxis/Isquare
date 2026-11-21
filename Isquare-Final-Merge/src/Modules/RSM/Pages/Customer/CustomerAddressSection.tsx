@@ -70,16 +70,15 @@ const CustomerAddressSection: React.FC<CustomerAddressSectionProps> = ({
     onChange(updated);
   };
 
-  const handleFieldChange = (
+  const handleMultipleFieldsChange = (
     index: number,
-    field: keyof CustomerAddress,
-    value: string | number | boolean | null
+    fields: Partial<CustomerAddress>
   ) => {
     const updated = [...addresses];
-    const current = { ...updated[index], [field]: value };
+    const current = { ...updated[index], ...fields };
 
     // Primary address exclusivity
-    if (field === "isPrimary" && value === true) {
+    if (fields.isPrimary === true) {
       updated.forEach((a, i) => {
         a.isPrimary = i === index;
       });
@@ -87,6 +86,14 @@ const CustomerAddressSection: React.FC<CustomerAddressSectionProps> = ({
 
     updated[index] = current;
     onChange(updated);
+  };
+
+  const handleFieldChange = (
+    index: number,
+    field: keyof CustomerAddress,
+    value: string | number | boolean | null
+  ) => {
+    handleMultipleFieldsChange(index, { [field]: value });
   };
 
   const handleValidateAddress = async (index: number) => {
@@ -152,7 +159,8 @@ const CustomerAddressSection: React.FC<CustomerAddressSectionProps> = ({
       ) : (
         <div className="space-y-4">
           {addresses.map((addr, idx) => {
-            const hasAtLeastOneUse = !!addr.isBilling || !!addr.isDelivery || !!addr.isShipping;
+            const isDeliveryChecked = addr.isDelivery !== undefined ? Boolean(addr.isDelivery) : Boolean(addr.isShipping);
+            const hasAtLeastOneUse = Boolean(addr.isBilling || isDeliveryChecked);
 
             // Options dynamically fetched from addressTypes master
             const typeOptions = (() => {
@@ -366,12 +374,16 @@ const CustomerAddressSection: React.FC<CustomerAddressSectionProps> = ({
                       <label className="inline-flex items-center gap-2 cursor-pointer font-medium text-gray-700 hover:text-gray-900 select-none">
                         <input
                           type="checkbox"
-                          checked={!!addr.isDelivery || !!addr.isShipping}
+                          disabled={readOnly}
+                          checked={isDeliveryChecked}
                           onChange={(e) => {
-                            handleFieldChange(idx, "isDelivery", e.target.checked);
-                            handleFieldChange(idx, "isShipping", e.target.checked);
+                            const checked = e.target.checked;
+                            handleMultipleFieldsChange(idx, {
+                              isDelivery: checked,
+                              isShipping: checked,
+                            });
                           }}
-                          className="w-4 h-4 text-[#FF7900] rounded border-gray-300 focus:ring-[#FF7900] cursor-pointer"
+                          className="w-4 h-4 text-[#FF7900] rounded border-gray-300 focus:ring-[#FF7900] cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
                         />
                         <span>Use for Delivery (Ship To)</span>
                       </label>

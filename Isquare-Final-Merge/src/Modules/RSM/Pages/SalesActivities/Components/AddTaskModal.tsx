@@ -1,6 +1,6 @@
 import { SearchableSelect } from "../../../../../Components/Common/SearchableSelect";
 import React, { useState, useEffect } from "react";
-import { X, Loader2, CheckSquare } from "lucide-react";
+import { X, Loader2, CheckSquare, Paperclip } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../../../../../hooks/useAuth";
 import { getAllCustomers } from "../../Customer/Services/CustomerService";
@@ -10,6 +10,7 @@ import {
   getAllTaskStatuses,
   addTaskActivity,
 } from "../Services/TaskService";
+import { createTaskAttachment } from "../../Master/TaskAttachment/Services/TaskAttachmentService";
 import {
   getPrioritiesWithFallback,
   getEmployeeOptions,
@@ -71,6 +72,8 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
   const [priorityId, setPriorityId] = useState<number>(2);
   const [taskStatusId, setTaskStatusId] = useState<number>(1);
   const [details, setDetails] = useState<string>("");
+  const [attachedFile, setAttachedFile] = useState<File | null>(null);
+  const [attachedDocName, setAttachedDocName] = useState<string>("");
 
   useEffect(() => {
     if (isOpen) {
@@ -82,6 +85,8 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
       );
       setReminderDateTime("");
       setDetails("");
+      setAttachedFile(null);
+      setAttachedDocName("");
 
       const isDirectorOrBde = (name: string, designation: string): boolean => {
         const d = (designation || "").toLowerCase().trim();
@@ -369,17 +374,37 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
         reminderRemarks: details.trim() || taskTitle.trim(),
       };
 
+      let savedTaskId: number | undefined;
+
       if (taskToEdit) {
         await updateTask(taskToEdit.taskId, payload);
+        savedTaskId = taskToEdit.taskId;
         toast.success("Task updated successfully!");
       } else {
-        await createTask(payload);
+        const createdTask = await createTask(payload);
+        savedTaskId = createdTask?.taskId;
         addTaskActivity({
           by: assignedBy,
           text: `Created task: ${taskTitle.trim()}`,
           customer: customerDisplayName || "General",
         });
         toast.success("Task assigned successfully!");
+      }
+
+      if (attachedFile && savedTaskId) {
+        try {
+          await createTaskAttachment({
+            taskId: savedTaskId,
+            documentName: attachedDocName.trim() || attachedFile.name,
+            file: attachedFile,
+            uploadedBy: Number(user?.employeeId || 1),
+            isActive: true,
+          });
+          toast.success("Task attachment uploaded successfully!");
+        } catch (attErr) {
+          console.warn("Failed to upload attachment with task:", attErr);
+          toast.info("Task saved, but attachment upload failed. You can re-upload in Attachments.");
+        }
       }
       onSuccess();
       onClose();
@@ -555,6 +580,44 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
                 placeholder="Enter task details, instructions or approval notes..."
                 className={`${baseInputStyle} resize-y min-h-[80px]`}
               />
+            </div>
+
+            {/* Task Attachment (Optional) */}
+            <div className="md:col-span-2 p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-700">
+                <Paperclip size={14} className="text-[#FF7900]" />
+                <span>Attach Document / File (Optional)</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className={labelStyle}>Document Name</label>
+                  <input
+                    type="text"
+                    value={attachedDocName}
+                    onChange={(e) => setAttachedDocName(e.target.value)}
+                    placeholder="e.g. Specification Sheet, Invoice"
+                    className={baseInputStyle}
+                  />
+                </div>
+                <div>
+                  <label className={labelStyle}>Select File</label>
+                  <input
+                    type="file"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        const f = e.target.files[0];
+                        setAttachedFile(f);
+                        if (!attachedDocName.trim()) {
+                          const base =
+                            f.name.substring(0, f.name.lastIndexOf(".")) || f.name;
+                          setAttachedDocName(base);
+                        }
+                      }
+                    }}
+                    className="w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-orange-50 file:text-[#FF7900] hover:file:bg-orange-100 cursor-pointer pt-1"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>

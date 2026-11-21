@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   X,
   Calendar,
@@ -11,11 +11,22 @@ import {
   Loader2,
   Trash2,
   Pencil,
+  Paperclip,
+  Download,
+  Plus,
+  Upload,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { TaskItem } from "../Types/TaskTypes";
 import { completeTask } from "../Services/TaskService";
+import {
+  getAttachmentsByTaskId,
+  createTaskAttachment,
+  deleteTaskAttachment,
+} from "../../Master/TaskAttachment/Services/TaskAttachmentService";
+import type { TaskAttachment } from "../../Master/TaskAttachment/Types/TaskAttachmentTypes";
 import { buttonStyles } from "../../../../../Components/Common/buttonStyles";
+import { API_ENDPOINTS } from "../../../../../API/apiConfig";
 
 interface ViewTaskModalProps {
   isOpen: boolean;
@@ -53,6 +64,67 @@ export const ViewTaskModal: React.FC<ViewTaskModalProps> = ({
   onEdit,
 }) => {
   const [isCompleting, setIsCompleting] = useState<boolean>(false);
+  const [attachments, setAttachments] = useState<TaskAttachment[]>([]);
+  const [isLoadingAttachments, setIsLoadingAttachments] = useState<boolean>(false);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [showUploadForm, setShowUploadForm] = useState<boolean>(false);
+  const [uploadDocName, setUploadDocName] = useState<string>("");
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+
+  const loadAttachments = useCallback(async () => {
+    if (!task?.taskId) return;
+    setIsLoadingAttachments(true);
+    try {
+      const list = await getAttachmentsByTaskId(task.taskId);
+      setAttachments(list);
+    } catch {
+      setAttachments([]);
+    } finally {
+      setIsLoadingAttachments(false);
+    }
+  }, [task?.taskId]);
+
+  useEffect(() => {
+    if (isOpen && task) {
+      loadAttachments();
+      setShowUploadForm(false);
+      setUploadDocName("");
+      setUploadFile(null);
+    }
+  }, [isOpen, task, loadAttachments]);
+
+  const handleUploadSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!task?.taskId || !uploadFile) return;
+    setIsUploading(true);
+    try {
+      await createTaskAttachment({
+        taskId: task.taskId,
+        documentName: uploadDocName.trim() || uploadFile.name,
+        file: uploadFile,
+        isActive: true,
+      });
+      toast.success("Attachment uploaded successfully!");
+      setShowUploadForm(false);
+      setUploadDocName("");
+      setUploadFile(null);
+      loadAttachments();
+    } catch {
+      toast.error("Failed to upload attachment.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleDeleteAttachment = async (attId: number) => {
+    try {
+      await deleteTaskAttachment(attId);
+      toast.success("Attachment deleted successfully!");
+      loadAttachments();
+    } catch {
+      toast.error("Failed to delete attachment.");
+    }
+  };
 
   if (!isOpen || !task) return null;
 
@@ -192,6 +264,135 @@ export const ViewTaskModal: React.FC<ViewTaskModalProps> = ({
               </div>
             </div>
           )}
+
+          {/* Attachments Section */}
+          <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-[11px] font-extrabold uppercase tracking-widest text-[#FF7900] flex items-center gap-1.5">
+                <Paperclip size={13} />
+                <span>Task Attachments ({attachments.length})</span>
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowUploadForm(!showUploadForm)}
+                className="text-xs font-semibold text-[#FF7900] hover:text-[#e06800] inline-flex items-center gap-1 transition cursor-pointer"
+              >
+                <Plus size={13} />
+                <span>{showUploadForm ? "Cancel" : "Add Attachment"}</span>
+              </button>
+            </div>
+
+            {/* Quick Upload Form */}
+            {showUploadForm && (
+              <form
+                onSubmit={handleUploadSubmit}
+                className="p-3 bg-white border border-gray-200 rounded-lg space-y-2.5 animate-in fade-in duration-150"
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <input
+                    type="text"
+                    value={uploadDocName}
+                    onChange={(e) => setUploadDocName(e.target.value)}
+                    placeholder="Document Name (e.g. Report)"
+                    className="px-3 py-1.5 text-xs rounded-lg border border-gray-200 focus:outline-none focus:border-[#FF7900]"
+                  />
+                  <input
+                    type="file"
+                    required
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        const f = e.target.files[0];
+                        setUploadFile(f);
+                        if (!uploadDocName.trim()) {
+                          const base =
+                            f.name.substring(0, f.name.lastIndexOf(".")) || f.name;
+                          setUploadDocName(base);
+                        }
+                      }
+                    }}
+                    className="text-xs file:mr-2 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-[11px] file:font-semibold file:bg-orange-50 file:text-[#FF7900]"
+                  />
+                </div>
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={isUploading || !uploadFile}
+                    className="px-3 py-1.5 rounded-lg bg-[#FF7900] hover:bg-[#e06800] text-white text-xs font-semibold inline-flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50"
+                  >
+                    {isUploading ? (
+                      <Loader2 size={12} className="animate-spin" />
+                    ) : (
+                      <Upload size={12} />
+                    )}
+                    <span>Upload</span>
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Attachments List */}
+            {isLoadingAttachments ? (
+              <div className="p-3 text-center text-xs text-gray-400 flex items-center justify-center gap-2">
+                <Loader2 size={13} className="animate-spin" />
+                <span>Loading attachments...</span>
+              </div>
+            ) : attachments.length === 0 ? (
+              <p className="text-xs text-gray-400 italic">No files attached to this task.</p>
+            ) : (
+              <div className="space-y-2">
+                {attachments.map((att) => {
+                  const fileUrl = att.filePath
+                    ? `${API_ENDPOINTS.BaseUrl.replace(/\/api$/, "")}/${att.filePath.replace(/^\/+/, "")}`
+                    : undefined;
+                  return (
+                    <div
+                      key={att.attachmentId}
+                      className="flex items-center justify-between p-2.5 bg-white border border-gray-200 rounded-lg text-xs"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <FileText size={15} className="text-[#FF7900] shrink-0" />
+                        <div className="truncate">
+                          <p className="font-bold text-gray-800 truncate">
+                            {att.documentName}
+                          </p>
+                          {att.fileName && (
+                            <p className="text-[11px] text-gray-400 truncate">
+                              {att.fileName}{" "}
+                              {att.fileSize
+                                ? `(${(att.fileSize / 1024).toFixed(1)} KB)`
+                                : ""}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                        {fileUrl && (
+                          <a
+                            href={fileUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            download
+                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition"
+                            title="Download file"
+                          >
+                            <Download size={13} />
+                          </a>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteAttachment(att.attachmentId)}
+                          className="p-1.5 text-rose-500 hover:bg-rose-50 rounded transition cursor-pointer"
+                          title="Delete attachment"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Footer Actions */}

@@ -344,11 +344,10 @@ export const DocumentTypeMaster: React.FC<DocumentTypeMasterProps> = ({ isTab = 
                       key={status}
                       type="button"
                       onClick={() => setSelectedStatus(status)}
-                      className={`px-3 py-1 text-xs font-semibold rounded-md transition cursor-pointer flex-1 sm:flex-initial ${
-                        selectedStatus === status
-                          ? "bg-white text-gray-900 shadow-xs"
-                          : "text-gray-500 hover:text-gray-900"
-                      }`}
+                      className={`px-3 py-1 text-xs font-semibold rounded-md transition cursor-pointer flex-1 sm:flex-initial ${selectedStatus === status
+                        ? "bg-white text-gray-900 shadow-xs"
+                        : "text-gray-500 hover:text-gray-900"
+                        }`}
                     >
                       {status} ({status === "All" ? stats.total : status === "Active" ? stats.active : stats.inactive})
                     </button>
@@ -371,11 +370,10 @@ export const DocumentTypeMaster: React.FC<DocumentTypeMasterProps> = ({ isTab = 
                   key={tab.label}
                   type="button"
                   onClick={() => setActiveTab(idx)}
-                  className={`flex-1 py-3 text-[11px] font-extrabold uppercase tracking-widest rounded-md transition-all duration-300 flex items-center justify-center gap-2 relative ${
-                    activeTab === idx
-                      ? "bg-white text-[#00234a] shadow-lg scale-[1.02] border-b-2 border-[#F37021]"
-                      : "text-white hover:bg-white/10"
-                  }`}
+                  className={`flex-1 py-3 text-[11px] font-extrabold uppercase tracking-widest rounded-md transition-all duration-300 flex items-center justify-center gap-2 relative ${activeTab === idx
+                    ? "bg-white text-[#00234a] shadow-lg scale-[1.02] border-b-2 border-[#F37021]"
+                    : "text-white hover:bg-white/10"
+                    }`}
                 >
                   {tab.icon} {tab.label}
                 </button>
@@ -562,9 +560,8 @@ export const DocumentTypeMaster: React.FC<DocumentTypeMasterProps> = ({ isTab = 
                                 className="sr-only"
                               />
                               <div
-                                className={`w-11 h-6 rounded-full transition-colors relative ${
-                                  item.isActive ? "bg-[#00234a]" : "bg-gray-300"
-                                }`}
+                                className={`w-11 h-6 rounded-full transition-colors relative ${item.isActive ? "bg-[#00234a]" : "bg-gray-300"
+                                  }`}
                               >
                                 <span
                                   className="absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform duration-200 ease-in-out shadow-sm"
@@ -632,9 +629,9 @@ export const DocumentTypeMaster: React.FC<DocumentTypeMasterProps> = ({ isTab = 
                 {filteredItems.length === 0
                   ? "0-0 of 0"
                   : `${(currentPage - 1) * itemsPerPage + 1}-${Math.min(
-                      currentPage * itemsPerPage,
-                      filteredItems.length
-                    )} of ${filteredItems.length}`}
+                    currentPage * itemsPerPage,
+                    filteredItems.length
+                  )} of ${filteredItems.length}`}
               </div>
               <div className="flex items-center gap-1.5">
                 <button

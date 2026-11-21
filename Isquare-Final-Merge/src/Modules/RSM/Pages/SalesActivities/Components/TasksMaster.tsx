@@ -19,7 +19,6 @@ import type {
 } from "../Types/TaskTypes";
 import {
   getAllTasks,
-  completeTask,
   deleteTask,
   getAllTaskStatuses,
   getTaskSummaryStats,
@@ -128,27 +127,6 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
   useEffect(() => {
     loadTasks();
   }, [loadTasks]);
-
-  const handleStatusToggle = async (row: TaskItem) => {
-    try {
-      const isCurrentlyDone =
-        row.isCompleted ||
-        row.taskStatusId === 4 ||
-        (row.taskStatusName || "").toLowerCase().includes("completed") ||
-        (row.taskStatusName || "").toLowerCase().includes("approved");
-
-      if (isCurrentlyDone) {
-        toast.info("Task is already completed.");
-        return;
-      }
-
-      await completeTask(row.taskId);
-      toast.success(`Task "${row.taskTitle}" marked as Completed!`);
-      loadTasks();
-    } catch {
-      toast.error("Failed to update status.");
-    }
-  };
 
   const handleConfirmDelete = async () => {
     if (!taskToDelete) return;
@@ -347,41 +325,33 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
     {
       name: "Status",
       cell: (row) => {
-        const isCompleted =
-          row.isCompleted ||
-          row.taskStatusId === 4 ||
-          (row.taskStatusName || "").toLowerCase().includes("completed") ||
-          (row.taskStatusName || "").toLowerCase().includes("approved");
+        const matchedStatus = statuses.find(
+          (s) => Number(s.id ?? s.taskStatusId) === Number(row.taskStatusId)
+        );
+        const statusName =
+          row.taskStatusName ||
+          matchedStatus?.statusName ||
+          (row.isCompleted ? "Completed" : "Pending");
+
+        const sLower = statusName.toLowerCase();
+        let badgeStyle = "bg-amber-50 text-amber-700 border-amber-200";
+        if (sLower.includes("complat") || sLower.includes("complet") || sLower.includes("approv")) {
+          badgeStyle = "bg-emerald-50 text-emerald-700 border-emerald-200";
+        } else if (sLower.includes("progress")) {
+          badgeStyle = "bg-blue-50 text-blue-700 border-blue-200";
+        } else if (sLower.includes("cancel") || sLower.includes("reject")) {
+          badgeStyle = "bg-rose-50 text-rose-700 border-rose-200";
+        }
 
         return (
-          <div className="flex justify-center w-full">
-            <label
-              className="relative inline-flex items-center cursor-pointer"
-              onClick={() => handleStatusToggle(row)}
-              title={isCompleted ? "Completed" : "Click to Mark Completed"}
-            >
-              <input
-                type="checkbox"
-                checked={isCompleted}
-                readOnly
-                className="sr-only"
-              />
-              <div
-                className={`w-11 h-6 rounded-full transition-colors relative ${isCompleted ? "bg-[#154068]" : "bg-gray-300"
-                  }`}
-              >
-                <span
-                  className="absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform duration-200 ease-in-out"
-                  style={{
-                    left: isCompleted ? "calc(100% - 1.25rem - 0.125rem)" : "0.125rem",
-                  }}
-                />
-              </div>
-            </label>
-          </div>
+          <span
+            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${badgeStyle}`}
+          >
+            {statusName}
+          </span>
         );
       },
-      width: "80px",
+      minWidth: "120px",
     },
     {
       name: "Actions",

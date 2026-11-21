@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 namespace CompanyPlatform.CRM.Controllers
 {
     [Route("api/[controller]")]
-    [Route("api/taskstatuses")]
     [ApiController]
     [Authorize]
     public class TaskStatusController : ControllerBase
@@ -24,6 +23,7 @@ namespace CompanyPlatform.CRM.Controllers
             _logger = logger;
         }
 
+        // 1. GET ALL
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -36,34 +36,8 @@ namespace CompanyPlatform.CRM.Controllers
             return Ok(taskStatuses);
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
-        {
-            _logger.LogInformation(
-                "API endpoint called: GetById for Task Status ID: {TaskStatusId}",
-                id);
-
-            var taskStatus =
-                await _taskStatusService.GetTaskStatusByIdAsync(id);
-
-            if (taskStatus == null)
-            {
-                _logger.LogWarning(
-                    "GetById failed. Task Status with ID {TaskStatusId} not found or is deleted.",
-                    id);
-
-                return NotFound(new
-                {
-                    message =
-                        $"Task Status with ID {id} not found or is deleted."
-                });
-            }
-
-            return Ok(taskStatus);
-        }
-
+        // 2. CREATE
         [HttpPost]
-        [Authorize(Roles = "Admin,HR")]
         public async Task<IActionResult> Create(
             [FromBody] TaskStatusDto taskStatusDto)
         {
@@ -79,14 +53,11 @@ namespace CompanyPlatform.CRM.Controllers
                 await _taskStatusService.CreateTaskStatusAsync(
                     taskStatusDto);
 
-            return CreatedAtAction(
-                nameof(GetById),
-                new { id = createdTaskStatus.ID },
-                createdTaskStatus);
+            return Ok(createdTaskStatus);
         }
 
+        // 3. UPDATE
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin,HR")]
         public async Task<IActionResult> Update(
             int id,
             [FromBody] TaskStatusDto taskStatusDto)
@@ -118,11 +89,14 @@ namespace CompanyPlatform.CRM.Controllers
                 });
             }
 
-            return NoContent();
+            return Ok(new
+            {
+                message = "Task Status updated successfully."
+            });
         }
 
+        // 4. DELETE
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
             _logger.LogInformation(

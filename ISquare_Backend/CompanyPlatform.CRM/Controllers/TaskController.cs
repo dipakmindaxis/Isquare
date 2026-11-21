@@ -55,9 +55,10 @@ namespace CompanyPlatform.CRM.Controllers
         // CREATE TASK
         // ==========================================
         [HttpPost]
-        [Authorize(Roles = "Admin,HR")]
-        public async Task<IActionResult> Create(TaskDto dto)
+        public async Task<IActionResult> Create([FromBody] TaskDto dto)
         {
+            _logger.LogInformation("Creating Task");
+
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
@@ -87,9 +88,10 @@ namespace CompanyPlatform.CRM.Controllers
         // UPDATE TASK
         // ==========================================
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin,HR")]
-        public async Task<IActionResult> Update(int id, TaskDto dto)
+        public async Task<IActionResult> Update(int id, [FromBody] TaskDto dto)
         {
+            _logger.LogInformation("Updating Task ID: {TaskId}", id);
+
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
@@ -123,86 +125,16 @@ namespace CompanyPlatform.CRM.Controllers
         // DELETE TASK
         // ==========================================
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
+            _logger.LogInformation("Deleting Task ID: {TaskId}", id);
+
             var success = await _taskService.DeleteTaskAsync(id);
 
             if (!success)
                 return NotFound(new { Message = $"Task with ID {id} not found." });
 
             return Ok(new { Message = "Task Deleted Successfully." });
-        }
-
-        // ==========================================
-        // ASSIGN TASK
-        // ==========================================
-        [HttpPut("Assign/{taskId}")]
-        [Authorize(Roles = "Admin,HR")]
-        public async Task<IActionResult> AssignTask(int taskId, AssignTaskDto dto)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            try
-            {
-                var success = await _taskService.AssignTaskAsync(taskId, dto);
-
-                if (!success)
-                    return NotFound(new { Message = $"Task with ID {taskId} not found." });
-
-                return Ok(new { Message = "Task Assigned Successfully." });
-            }
-            catch (KeyNotFoundException ex)
-            {
-                _logger.LogWarning(ex, "Assign Task failed due to invalid reference.");
-                return BadRequest(new { Message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while assigning Task.");
-                return BadRequest(new { Message = ex.Message });
-            }
-        }
-
-        // ==========================================
-        // COMPLETE TASK
-        // ==========================================
-        [HttpPut("Complete/{taskId}")]
-        [Authorize(Roles = "Admin,HR")]
-        public async Task<IActionResult> CompleteTask(int taskId)
-        {
-            var success = await _taskService.CompleteTaskAsync(taskId);
-
-            if (!success)
-                return NotFound(new { Message = $"Task with ID {taskId} not found." });
-
-            return Ok(new { Message = "Task Completed Successfully." });
-        }
-
-        // ==========================================
-        // TASK LIST
-        // ==========================================
-        [HttpGet("List")]
-        public async Task<IActionResult> GetTaskList()
-        {
-            var result = await _taskService.GetTaskListAsync();
-
-            return Ok(result);
-        }
-
-        // ==========================================
-        // TASK DETAILS
-        // ==========================================
-        [HttpGet("Details/{taskId}")]
-        public async Task<IActionResult> GetTaskDetails(int taskId)
-        {
-            var result = await _taskService.GetTaskDetailsAsync(taskId);
-
-            if (result == null)
-                return NotFound();
-
-            return Ok(result);
         }
     }
 }

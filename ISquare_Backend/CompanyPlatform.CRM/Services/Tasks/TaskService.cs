@@ -1,312 +1,14 @@
-using CompanyPlatform.Core.Models.CRM;
-using Employee = CompanyPlatform.Core.Models.CRM.Employee.Employee;
-//using Microsoft.Extensions.Logging;
-//using CompanyPlatform.CRM.DTO.Tasks;
-//using CompanyPlatform.CRM.Repository;
-//using CompanyPlatform.Core.Repository;
-
-//namespace CompanyPlatform.CRM.Services.Tasks
-//{
-//    public class TaskService : ITaskService
-//    {
-//        private readonly IRepositories<Model.Tasks> _repository;
-//        private readonly IRepositories<Model.TaskComment> _taskCommentRepository;
-//        private readonly IRepositories<Model.TaskChecklist> _taskChecklistRepository;
-//        private readonly ILogger<TaskService> _logger;
-
-//        public TaskService(
-//            IRepositories<Model.Tasks> repository,
-//            IRepositories<Model.TaskComment> taskCommentRepository,
-//            IRepositories<Model.TaskChecklist> taskChecklistRepository,
-//            ILogger<TaskService> logger)
-//        {
-//            _repository = repository;
-//            _taskCommentRepository = taskCommentRepository;
-//            _taskChecklistRepository = taskChecklistRepository;
-//            _logger = logger;
-//        }
-
-//        public async Task<IEnumerable<TaskDto>> GetAllTasksAsync()
-//        {
-//            _logger.LogInformation("Fetching all active tasks.");
-
-//            var items = await _repository.GetAll();
-
-//            return items
-//                .Where(x => !x.IsDeleted)
-//                .Select(x => new TaskDto
-//                {
-//                    TaskId = x.TaskId,
-//                    CompanyId = x.CompanyId,
-//                    TaskTitle = x.TaskTitle,
-//                    Description = x.Description,
-//                    AssignedTo = x.AssignedTo,
-//                    AssignedBy = x.AssignedBy,
-//                    PriorityId = x.PriorityId,
-//                    TaskStatusId = x.TaskStatusId,
-//                    StartDate = x.StartDate,
-//                    DueDate = x.DueDate,
-//                    CompletionDate = x.CompletionDate,
-//                    ReminderId = x.ReminderId,
-//                    Remarks = x.Remarks,
-//                    CreatedBy = x.CreatedBy,
-//                    UpdatedBy = x.UpdatedBy,
-//                    IsDeleted = x.IsDeleted
-//                });
-//        }
-
-//        public async Task<TaskDto> GetTaskByIdAsync(int id)
-//        {
-//            _logger.LogInformation("Fetching Task by ID : {TaskId}", id);
-
-//            var item = await _repository.GetByIdAsync(id);
-
-//            if (item == null || item.IsDeleted)
-//                return null;
-
-//            return new TaskDto
-//            {
-//                TaskId = item.TaskId,
-//                CompanyId = item.CompanyId,
-//                TaskTitle = item.TaskTitle,
-//                Description = item.Description,
-//                AssignedTo = item.AssignedTo,
-//                AssignedBy = item.AssignedBy,
-//                PriorityId = item.PriorityId,
-//                TaskStatusId = item.TaskStatusId,
-//                StartDate = item.StartDate,
-//                DueDate = item.DueDate,
-//                CompletionDate = item.CompletionDate,
-//                ReminderId = item.ReminderId,
-//                Remarks = item.Remarks,
-//                CreatedBy = item.CreatedBy,
-//                UpdatedBy = item.UpdatedBy,
-//                IsDeleted = item.IsDeleted
-//            };
-//        }
-
-//        public async Task<TaskDto> CreateTaskAsync(TaskDto dto)
-//        {
-//            _logger.LogInformation("Creating Task");
-
-//            var task = new Model.Tasks
-//            {
-//                CompanyId = dto.CompanyId,
-//                TaskTitle = dto.TaskTitle,
-//                Description = dto.Description,
-//                AssignedTo = dto.AssignedTo,
-//                AssignedBy = dto.AssignedBy,
-//                PriorityId = dto.PriorityId,
-//                TaskStatusId = dto.TaskStatusId,
-//                StartDate = dto.StartDate,
-//                DueDate = dto.DueDate,
-//                CompletionDate = dto.CompletionDate,
-//                ReminderId = dto.ReminderId,
-//                Remarks = dto.Remarks,
-//                CreatedBy = dto.CreatedBy,
-//                CreatedDate = DateTime.Now,
-//                UpdatedBy = dto.UpdatedBy,
-//                UpdatedDate = null,
-//                IsDeleted = false
-//            };
-
-//            await _repository.Create(task);
-
-//            dto.TaskId = task.TaskId;
-
-//            return dto;
-//        }
-
-//        public async Task<bool> UpdateTaskAsync(int id, TaskDto dto)
-//        {
-//            _logger.LogInformation("Updating Task : {TaskId}", id);
-
-//            var item = await _repository.GetByIdAsync(id);
-
-//            if (item == null || item.IsDeleted)
-//                return false;
-
-//            item.CompanyId = dto.CompanyId;
-//            item.TaskTitle = dto.TaskTitle;
-//            item.Description = dto.Description;
-//            item.AssignedTo = dto.AssignedTo;
-//            item.AssignedBy = dto.AssignedBy;
-//            item.PriorityId = dto.PriorityId;
-//            item.TaskStatusId = dto.TaskStatusId;
-//            item.StartDate = dto.StartDate;
-//            item.DueDate = dto.DueDate;
-//            item.CompletionDate = dto.CompletionDate;
-//            item.ReminderId = dto.ReminderId;
-//            item.Remarks = dto.Remarks;
-//            item.UpdatedBy = dto.UpdatedBy;
-//            item.UpdatedDate = DateTime.Now;
-
-//            await _repository.Update(item);
-
-//            return true;
-//        }
-
-//        public async Task<bool> DeleteTaskAsync(int id)
-//        {
-//            _logger.LogInformation("Deleting Task : {TaskId}", id);
-
-//            var item = await _repository.GetByIdAsync(id);
-
-//            if (item == null)
-//                return false;
-
-//            item.IsDeleted = true;
-
-//            await _repository.Update(item);
-
-//            return true;
-//        }        // ================================
-//        // Assign Task
-//        // ================================
-//        public async Task<bool> AssignTaskAsync(int taskId, AssignTaskDto dto)
-//        {
-//            _logger.LogInformation("Assigning Task : {TaskId}", taskId);
-
-//            var task = await _repository.GetByIdAsync(taskId);
-
-//            if (task == null || task.IsDeleted)
-//                return false;
-
-//            task.AssignedTo = dto.AssignedTo;
-//            task.AssignedBy = dto.AssignedBy;
-//            task.UpdatedDate = DateTime.Now;
-
-//            await _repository.Update(task);
-
-//            return true;
-//        }
-
-//        // ================================
-//        // Complete Task
-//        // ================================
-//        public async Task<bool> CompleteTaskAsync(int taskId)
-//        {
-//            _logger.LogInformation("Completing Task : {TaskId}", taskId);
-
-//            var task = await _repository.GetByIdAsync(taskId);
-
-//            if (task == null || task.IsDeleted)
-//                return false;
-
-//            // Change this ID if your Completed status has a different ID
-//            task.TaskStatusId = 2;
-
-//            task.CompletionDate = DateTime.Now;
-//            task.UpdatedDate = DateTime.Now;
-
-//            await _repository.Update(task);
-
-//            return true;
-//        }
-
-//        // ================================
-//        // Task List
-//        // ================================
-//        public async Task<IEnumerable<TaskListDto>> GetTaskListAsync()
-//        {
-//            _logger.LogInformation("Fetching Task List");
-
-//            var tasks = await _repository.GetAll();
-
-//            return tasks
-//                .Where(x => !x.IsDeleted)
-//                .Select(x => new TaskListDto
-//                {
-//                    TaskId = x.TaskId,
-//                    CompanyId = x.CompanyId,
-//                    TaskTitle = x.TaskTitle,
-//                    Description = x.Description,
-//                    AssignedTo = x.AssignedTo,
-//                    AssignedBy = x.AssignedBy,
-//                    PriorityId = x.PriorityId,
-//                    TaskStatusId = x.TaskStatusId,
-//                    StartDate = x.StartDate,
-//                    DueDate = x.DueDate,
-//                    CompletionDate = x.CompletionDate,
-//                    IsCompleted = x.CompletionDate != null
-//                });
-//        }
-
-//        // ================================
-//        // Task Details
-//        // ================================
-//        public async Task<TaskDetailsDto?> GetTaskDetailsAsync(int taskId)
-//        {
-//            _logger.LogInformation("Fetching Task Details : {TaskId}", taskId);
-
-//            var task = await _repository.GetByIdAsync(taskId);
-
-//            if (task == null || task.IsDeleted)
-//                return null;
-
-//            var comments = await _taskCommentRepository.GetAll();
-//            var checklists = await _taskChecklistRepository.GetAll();
-
-//            return new TaskDetailsDto
-//            {
-//                TaskId = task.TaskId,
-//                CompanyId = task.CompanyId,
-//                TaskTitle = task.TaskTitle,
-//                Description = task.Description,
-//                AssignedTo = task.AssignedTo,
-//                AssignedBy = task.AssignedBy,
-//                PriorityId = task.PriorityId,
-//                TaskStatusId = task.TaskStatusId,
-//                StartDate = task.StartDate,
-//                DueDate = task.DueDate,
-//                CompletionDate = task.CompletionDate,
-//                ReminderId = task.ReminderId,
-//                Remarks = task.Remarks,
-//                CreatedBy = task.CreatedBy,
-//                CreatedDate = task.CreatedDate,
-//                UpdatedBy = task.UpdatedBy,
-//                UpdatedDate = task.UpdatedDate,
-//                IsDeleted = task.IsDeleted,
-
-//                Comments = comments
-//                    .Where(c => c.TaskId == taskId && !c.IsDeleted)
-//                    .Select(c => new TaskCommentItemDto
-//                    {
-//                        CommentId = c.CommentId,
-//                        Comment = c.Comment,
-//                        CommentedBy = c.CommentedBy,
-//                        CommentDate = c.CommentDate
-//                    })
-//                    .ToList(),
-
-//                Checklists = checklists
-//                    .Where(c => c.TaskId == taskId && !c.IsDeleted)
-//                    .Select(c => new TaskChecklistItemDto
-//                    {
-//                        ChecklistId = c.ChecklistId,
-//                        ChecklistItem = c.ChecklistItem,
-//                        IsCompleted = c.IsCompleted,
-//                        CompletedDate = c.CompletedDate
-//                    })
-//                    .ToList()
-//            };
-//        }
-//    }
-//}
-
-
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using CompanyPlatform.Core.Models.CRM;
 using CompanyPlatform.CRM.DTO.Tasks;
 using CompanyPlatform.Core.Repository;
-
-using TasksEntity =
-    CompanyPlatform.Core.Models.CRM.Tasks;
-
-using TaskCommentEntity =
-    CompanyPlatform.Core.Models.CRM.TaskComment;
-
-using TaskChecklistEntity =
-    CompanyPlatform.Core.Models.CRM.TaskChecklist;
+using TasksEntity = CompanyPlatform.Core.Models.CRM.Tasks;
+using TaskCommentEntity = CompanyPlatform.Core.Models.CRM.TaskComment;
+using TaskChecklistEntity = CompanyPlatform.Core.Models.CRM.TaskChecklist;
 
 namespace CompanyPlatform.CRM.Services.Tasks
 {
@@ -390,9 +92,7 @@ namespace CompanyPlatform.CRM.Services.Tasks
         // ================================
         public async Task<TaskDto?> GetTaskByIdAsync(int id)
         {
-            _logger.LogInformation(
-                "Fetching Task by ID : {TaskId}",
-                id);
+            _logger.LogInformation("Fetching Task by ID : {TaskId}", id);
 
             var item = await _repository.GetByIdAsync(id);
 
@@ -432,47 +132,79 @@ namespace CompanyPlatform.CRM.Services.Tasks
         {
             _logger.LogInformation("Creating Task");
 
-            // Validate Foreign Keys
-            var company = await _companyRepository.GetByIdAsync(dto.CompanyId);
+            // 1. Validate Company (Fallback safely if ID not found)
+            var company = dto.CompanyId > 0 ? await _companyRepository.GetByIdAsync(dto.CompanyId) : null;
             if (company == null)
-                throw new KeyNotFoundException($"Company with ID {dto.CompanyId} not found.");
+            {
+                var allCompanies = await _companyRepository.GetAll();
+                var firstComp = allCompanies.FirstOrDefault();
+                if (firstComp != null)
+                {
+                    dto.CompanyId = firstComp.CompanyId;
+                }
+            }
 
-            var assignedTo = await _employeeRepository.GetByIdAsync(dto.AssignedTo);
+            // 2. Validate Employees (AssignedTo, AssignedBy, CreatedBy)
+            var allEmployees = await _employeeRepository.GetAll();
+            var activeEmployees = allEmployees.Where(e => !e.IsDeleted).ToList();
+            var defaultEmp = activeEmployees.FirstOrDefault() ?? allEmployees.FirstOrDefault();
+
+            var assignedTo = dto.AssignedTo > 0 ? await _employeeRepository.GetByIdAsync(dto.AssignedTo) : null;
             if (assignedTo == null || assignedTo.IsDeleted)
-                throw new KeyNotFoundException($"Employee with ID {dto.AssignedTo} (AssignedTo) not found.");
+            {
+                if (defaultEmp != null) dto.AssignedTo = defaultEmp.ID;
+            }
 
-            var assignedBy = await _employeeRepository.GetByIdAsync(dto.AssignedBy);
+            var assignedBy = dto.AssignedBy > 0 ? await _employeeRepository.GetByIdAsync(dto.AssignedBy) : null;
             if (assignedBy == null || assignedBy.IsDeleted)
-                throw new KeyNotFoundException($"Employee with ID {dto.AssignedBy} (AssignedBy) not found.");
+            {
+                if (defaultEmp != null) dto.AssignedBy = defaultEmp.ID;
+            }
 
-            var createdBy = await _employeeRepository.GetByIdAsync(dto.CreatedBy);
+            var createdBy = dto.CreatedBy > 0 ? await _employeeRepository.GetByIdAsync(dto.CreatedBy) : null;
             if (createdBy == null || createdBy.IsDeleted)
-                throw new KeyNotFoundException($"Employee with ID {dto.CreatedBy} (CreatedBy) not found.");
+            {
+                if (defaultEmp != null) dto.CreatedBy = defaultEmp.ID;
+            }
 
-            var priority = await _priorityRepository.GetByIdAsync(dto.PriorityId);
+            // 3. Validate Priority
+            var priority = dto.PriorityId > 0 ? await _priorityRepository.GetByIdAsync(dto.PriorityId) : null;
             if (priority == null)
-                throw new KeyNotFoundException($"Priority with ID {dto.PriorityId} not found.");
+            {
+                var allPriorities = await _priorityRepository.GetAll();
+                var defaultPriority = allPriorities.FirstOrDefault();
+                if (defaultPriority != null) dto.PriorityId = defaultPriority.Id;
+            }
 
-            var status = await _taskStatusRepository.GetByIdAsync(dto.TaskStatusId);
+            // 4. Validate TaskStatus
+            var status = dto.TaskStatusId > 0 ? await _taskStatusRepository.GetByIdAsync(dto.TaskStatusId) : null;
             if (status == null || status.IsDeleted)
-                throw new KeyNotFoundException($"TaskStatus with ID {dto.TaskStatusId} not found.");
+            {
+                var allStatuses = await _taskStatusRepository.GetAll();
+                var defaultStatus = allStatuses.FirstOrDefault(s => !s.IsDeleted) ?? allStatuses.FirstOrDefault();
+                if (defaultStatus != null) dto.TaskStatusId = defaultStatus.ID;
+            }
 
+            // 5. Optional Reminder
             int? reminderId = null;
             if (dto.ReminderId.HasValue && dto.ReminderId.Value > 0)
             {
                 var reminder = await _reminderRepository.GetByIdAsync(dto.ReminderId.Value);
-                if (reminder == null || reminder.IsDeleted)
-                    throw new KeyNotFoundException($"Reminder with ID {dto.ReminderId.Value} not found.");
-                reminderId = dto.ReminderId.Value;
+                if (reminder != null && !reminder.IsDeleted)
+                {
+                    reminderId = dto.ReminderId.Value;
+                }
             }
 
+            // 6. Optional UpdatedBy
             int? updatedBy = null;
             if (dto.UpdatedBy.HasValue && dto.UpdatedBy.Value > 0)
             {
                 var emp = await _employeeRepository.GetByIdAsync(dto.UpdatedBy.Value);
-                if (emp == null || emp.IsDeleted)
-                    throw new KeyNotFoundException($"Employee with ID {dto.UpdatedBy.Value} (UpdatedBy) not found.");
-                updatedBy = dto.UpdatedBy.Value;
+                if (emp != null && !emp.IsDeleted)
+                {
+                    updatedBy = dto.UpdatedBy.Value;
+                }
             }
 
             var task = new TasksEntity
@@ -508,13 +240,9 @@ namespace CompanyPlatform.CRM.Services.Tasks
         // ================================
         // Update Task
         // ================================
-        public async Task<bool> UpdateTaskAsync(
-            int id,
-            TaskDto dto)
+        public async Task<bool> UpdateTaskAsync(int id, TaskDto dto)
         {
-            _logger.LogInformation(
-                "Updating Task : {TaskId}",
-                id);
+            _logger.LogInformation("Updating Task : {TaskId}", id);
 
             var item = await _repository.GetByIdAsync(id);
 
@@ -522,56 +250,63 @@ namespace CompanyPlatform.CRM.Services.Tasks
                 return false;
 
             // Validate Foreign Keys
-            var company = await _companyRepository.GetByIdAsync(dto.CompanyId);
-            if (company == null)
-                throw new KeyNotFoundException($"Company with ID {dto.CompanyId} not found.");
+            if (dto.CompanyId > 0)
+            {
+                var company = await _companyRepository.GetByIdAsync(dto.CompanyId);
+                if (company != null) item.CompanyId = dto.CompanyId;
+            }
 
-            var assignedTo = await _employeeRepository.GetByIdAsync(dto.AssignedTo);
-            if (assignedTo == null || assignedTo.IsDeleted)
-                throw new KeyNotFoundException($"Employee with ID {dto.AssignedTo} (AssignedTo) not found.");
+            if (dto.AssignedTo > 0)
+            {
+                var assignedTo = await _employeeRepository.GetByIdAsync(dto.AssignedTo);
+                if (assignedTo != null && !assignedTo.IsDeleted) item.AssignedTo = dto.AssignedTo;
+            }
 
-            var assignedBy = await _employeeRepository.GetByIdAsync(dto.AssignedBy);
-            if (assignedBy == null || assignedBy.IsDeleted)
-                throw new KeyNotFoundException($"Employee with ID {dto.AssignedBy} (AssignedBy) not found.");
+            if (dto.AssignedBy > 0)
+            {
+                var assignedBy = await _employeeRepository.GetByIdAsync(dto.AssignedBy);
+                if (assignedBy != null && !assignedBy.IsDeleted) item.AssignedBy = dto.AssignedBy;
+            }
 
-            var priority = await _priorityRepository.GetByIdAsync(dto.PriorityId);
-            if (priority == null)
-                throw new KeyNotFoundException($"Priority with ID {dto.PriorityId} not found.");
+            if (dto.PriorityId > 0)
+            {
+                var priority = await _priorityRepository.GetByIdAsync(dto.PriorityId);
+                if (priority != null) item.PriorityId = dto.PriorityId;
+            }
 
-            var status = await _taskStatusRepository.GetByIdAsync(dto.TaskStatusId);
-            if (status == null || status.IsDeleted)
-                throw new KeyNotFoundException($"TaskStatus with ID {dto.TaskStatusId} not found.");
+            if (dto.TaskStatusId > 0)
+            {
+                var status = await _taskStatusRepository.GetByIdAsync(dto.TaskStatusId);
+                if (status != null && !status.IsDeleted) item.TaskStatusId = dto.TaskStatusId;
+            }
 
-            int? reminderId = null;
+            int? reminderId = item.ReminderId;
             if (dto.ReminderId.HasValue && dto.ReminderId.Value > 0)
             {
                 var reminder = await _reminderRepository.GetByIdAsync(dto.ReminderId.Value);
-                if (reminder == null || reminder.IsDeleted)
-                    throw new KeyNotFoundException($"Reminder with ID {dto.ReminderId.Value} not found.");
-                reminderId = dto.ReminderId.Value;
+                if (reminder != null && !reminder.IsDeleted)
+                {
+                    reminderId = dto.ReminderId.Value;
+                }
             }
 
-            int? updatedBy = null;
+            int? updatedBy = item.UpdatedBy;
             if (dto.UpdatedBy.HasValue && dto.UpdatedBy.Value > 0)
             {
                 var emp = await _employeeRepository.GetByIdAsync(dto.UpdatedBy.Value);
-                if (emp == null || emp.IsDeleted)
-                    throw new KeyNotFoundException($"Employee with ID {dto.UpdatedBy.Value} (UpdatedBy) not found.");
-                updatedBy = dto.UpdatedBy.Value;
+                if (emp != null && !emp.IsDeleted)
+                {
+                    updatedBy = dto.UpdatedBy.Value;
+                }
             }
 
-            item.CompanyId = dto.CompanyId;
-            item.TaskTitle = dto.TaskTitle;
-            item.Description = dto.Description;
-            item.AssignedTo = dto.AssignedTo;
-            item.AssignedBy = dto.AssignedBy;
-            item.PriorityId = dto.PriorityId;
-            item.TaskStatusId = dto.TaskStatusId;
-            item.StartDate = dto.StartDate;
-            item.DueDate = dto.DueDate;
-            item.CompletionDate = dto.CompletionDate;
+            item.TaskTitle = dto.TaskTitle ?? item.TaskTitle;
+            item.Description = dto.Description ?? item.Description;
+            item.StartDate = dto.StartDate != default ? dto.StartDate : item.StartDate;
+            item.DueDate = dto.DueDate != default ? dto.DueDate : item.DueDate;
+            item.CompletionDate = dto.CompletionDate ?? item.CompletionDate;
             item.ReminderId = reminderId;
-            item.Remarks = dto.Remarks;
+            item.Remarks = dto.Remarks ?? item.Remarks;
             item.UpdatedBy = updatedBy;
             item.UpdatedDate = DateTime.Now;
 
@@ -585,9 +320,7 @@ namespace CompanyPlatform.CRM.Services.Tasks
         // ================================
         public async Task<bool> DeleteTaskAsync(int id)
         {
-            _logger.LogInformation(
-                "Deleting Task : {TaskId}",
-                id);
+            _logger.LogInformation("Deleting Task : {TaskId}", id);
 
             var item = await _repository.GetByIdAsync(id);
 
@@ -604,26 +337,14 @@ namespace CompanyPlatform.CRM.Services.Tasks
         // ================================
         // Assign Task
         // ================================
-        public async Task<bool> AssignTaskAsync(
-            int taskId,
-            AssignTaskDto dto)
+        public async Task<bool> AssignTaskAsync(int taskId, AssignTaskDto dto)
         {
-            _logger.LogInformation(
-                "Assigning Task : {TaskId}",
-                taskId);
+            _logger.LogInformation("Assigning Task : {TaskId}", taskId);
 
             var task = await _repository.GetByIdAsync(taskId);
 
             if (task == null || task.IsDeleted)
                 return false;
-
-            var assignedTo = await _employeeRepository.GetByIdAsync(dto.AssignedTo);
-            if (assignedTo == null || assignedTo.IsDeleted)
-                throw new KeyNotFoundException($"Employee with ID {dto.AssignedTo} (AssignedTo) not found.");
-
-            var assignedBy = await _employeeRepository.GetByIdAsync(dto.AssignedBy);
-            if (assignedBy == null || assignedBy.IsDeleted)
-                throw new KeyNotFoundException($"Employee with ID {dto.AssignedBy} (AssignedBy) not found.");
 
             task.AssignedTo = dto.AssignedTo;
             task.AssignedBy = dto.AssignedBy;
@@ -639,16 +360,13 @@ namespace CompanyPlatform.CRM.Services.Tasks
         // ================================
         public async Task<bool> CompleteTaskAsync(int taskId)
         {
-            _logger.LogInformation(
-                "Completing Task : {TaskId}",
-                taskId);
+            _logger.LogInformation("Completing Task : {TaskId}", taskId);
 
             var task = await _repository.GetByIdAsync(taskId);
 
             if (task == null || task.IsDeleted)
                 return false;
 
-            // Find completed status if configured, or ID 2, or keep current
             var statuses = await _taskStatusRepository.GetAll();
             var completedStatus = statuses.FirstOrDefault(s => !s.IsDeleted && (s.StatusName.Equals("Completed", StringComparison.OrdinalIgnoreCase) || s.ID == 2));
             if (completedStatus != null)
@@ -704,12 +422,9 @@ namespace CompanyPlatform.CRM.Services.Tasks
         // ================================
         // Task Details
         // ================================
-        public async Task<TaskDetailsDto?> GetTaskDetailsAsync(
-            int taskId)
+        public async Task<TaskDetailsDto?> GetTaskDetailsAsync(int taskId)
         {
-            _logger.LogInformation(
-                "Fetching Task Details : {TaskId}",
-                taskId);
+            _logger.LogInformation("Fetching Task Details : {TaskId}", taskId);
 
             var task = await _repository.GetByIdAsync(taskId);
 
@@ -745,9 +460,7 @@ namespace CompanyPlatform.CRM.Services.Tasks
                 IsDeleted = task.IsDeleted,
 
                 Comments = comments
-                    .Where(c =>
-                        c.TaskId == taskId &&
-                        !c.IsDeleted)
+                    .Where(c => c.TaskId == taskId && !c.IsDeleted)
                     .Select(c => new TaskCommentItemDto
                     {
                         CommentId = c.CommentId,
@@ -758,9 +471,7 @@ namespace CompanyPlatform.CRM.Services.Tasks
                     .ToList(),
 
                 Checklists = checklists
-                    .Where(c =>
-                        c.TaskId == taskId &&
-                        !c.IsDeleted)
+                    .Where(c => c.TaskId == taskId && !c.IsDeleted)
                     .Select(c => new TaskChecklistItemDto
                     {
                         ChecklistId = c.ChecklistId,
