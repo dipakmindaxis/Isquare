@@ -139,7 +139,20 @@ export const getAllCustomers = async (): Promise<Customer[]> => {
     }
     return [];
   } catch (error) {
-    console.warn("Failed to fetch customers from backend:", error);
+    console.warn("Failed to fetch customers from backend via apiClient, attempting fallback:", error);
+    try {
+      let token = sessionStorage.getItem("token") || localStorage.getItem("token");
+      if (token) {
+        token = token.trim();
+        if (token.startsWith('"') && token.endsWith('"')) token = token.slice(1, -1);
+      }
+      const headers = token ? { Authorization: token.startsWith("Bearer ") ? token : `Bearer ${token}` } : {};
+      const fallbackRes = await axios.get<CustomerApiRecord[] | { data?: CustomerApiRecord[] }>(API_ENDPOINTS.Customer, { headers });
+      if (Array.isArray(fallbackRes.data)) return fallbackRes.data.map(normalizeCustomer);
+      if (fallbackRes.data && Array.isArray(fallbackRes.data.data)) {
+        return fallbackRes.data.data.map(normalizeCustomer);
+      }
+    } catch {}
     return [];
   }
 };

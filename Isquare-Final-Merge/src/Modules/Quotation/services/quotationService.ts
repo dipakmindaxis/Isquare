@@ -1,3 +1,4 @@
+import axios from "axios";
 import apiClient from "../../../API/apiClient";
 import { API_ENDPOINTS } from "../../../API/apiConfig";
 import type {
@@ -196,8 +197,19 @@ export const quotationService = {
       const list = normalizeArray<Quotation>(response.data);
       return await enrichQuotations(list);
     } catch (error) {
-      console.warn("Failed to fetch quotations:", error);
-      throw error;
+      console.warn("Failed to fetch quotations from backend via apiClient, attempting fallback:", error);
+      try {
+        let token = sessionStorage.getItem("token") || localStorage.getItem("token");
+        if (token) {
+          token = token.trim();
+          if (token.startsWith('"') && token.endsWith('"')) token = token.slice(1, -1);
+        }
+        const headers = token ? { Authorization: token.startsWith("Bearer ") ? token : `Bearer ${token}` } : {};
+        const fallbackRes = await axios.get(API_ENDPOINTS.Quotations, { headers });
+        const list = normalizeArray<Quotation>(fallbackRes.data);
+        return await enrichQuotations(list);
+      } catch {}
+      return [];
     }
   },
 
