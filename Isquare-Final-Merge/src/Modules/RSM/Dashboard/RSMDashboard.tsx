@@ -32,6 +32,7 @@ import {
 import { Line, Doughnut } from "react-chartjs-2";
 
 import LogoLoader from "../../../Components/Common/LogoLoader";
+import { useAuth } from "../../../hooks/useAuth";
 import { getAllCustomers, type Customer } from "../Pages/Customer/Services/CustomerService";
 import { getEnquiries } from "../Pages/Enquiry/Services/EnquiryService";
 import type { EnquiryDto } from "../Pages/Enquiry/Types/EnquiryTypes";
@@ -39,8 +40,6 @@ import { quotationService, salesOrderService } from "../../Quotation/services/qu
 import type { Quotation, SalesOrder } from "../../Quotation/models/quotationModels";
 import { getAllTasks } from "../Pages/SalesActivities/Services/TaskService";
 import type { TaskItem } from "../Pages/SalesActivities/Types/TaskTypes";
-import { getSalesActivities } from "../Pages/SalesActivities/Services/SalesActivityService";
-import type { SalesActivity } from "../Pages/SalesActivities/Types/SalesActivityTypes";
 
 // Register Chart.js components
 ChartJS.register(
@@ -155,6 +154,7 @@ const isWithinRange = (dateStr?: string | null, range: DateRangeOption = "all"):
 
 const RSMDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const { isAuthenticated, token } = useAuth();
 
   // Primary loading state
   const [loading, setLoading] = useState<boolean>(true);
@@ -165,7 +165,6 @@ const RSMDashboard: React.FC = () => {
   const [quotations, setQuotations] = useState<Quotation[]>([]);
   const [salesOrders, setSalesOrders] = useState<SalesOrder[]>([]);
   const [tasks, setTasks] = useState<TaskItem[]>([]);
-  const [, setActivities] = useState<SalesActivity[]>([]);
 
   // Default to "all" so dashboard reflects actual complete module listings (6, 6, 5, 2)
   const [selectedRange, setSelectedRange] = useState<DateRangeOption>("all");
@@ -234,12 +233,11 @@ const RSMDashboard: React.FC = () => {
           quotationService.getAll(),
           salesOrderService.getAll(),
           getAllTasks(),
-          getSalesActivities(),
         ]),
         new Promise((resolve) => setTimeout(resolve, 500)), // Smooth rotation feel
       ]);
 
-      const [custRes, enqRes, quoteRes, orderRes, taskRes, actRes] = results;
+      const [custRes, enqRes, quoteRes, orderRes, taskRes] = results;
 
       // Fail condition: if core entities completely failed
       const allPrimaryFailed = [custRes, enqRes, quoteRes, orderRes, taskRes].every(
@@ -263,9 +261,6 @@ const RSMDashboard: React.FC = () => {
       }
       if (taskRes.status === "fulfilled" && Array.isArray(taskRes.value)) {
         setTasks(taskRes.value);
-      }
-      if (actRes.status === "fulfilled" && Array.isArray(actRes.value)) {
-        setActivities(actRes.value);
       }
 
       // Success Toast (Design 3)
@@ -293,28 +288,38 @@ const RSMDashboard: React.FC = () => {
     };
   }, [handleManualRefresh]);
 
-  // Fetch Dashboard Data directly from existing APIs
-  const fetchDashboardData = useCallback(async () => {
+  // Fetch Dashboard Data directly from existing APIs with auth readiness and auto-heal
+  const fetchDashboardData = useCallback(async (retryCount = 0) => {
+    const currentToken = token || sessionStorage.getItem("token") || localStorage.getItem("token");
+    if (!currentToken && !isAuthenticated) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const [custRes, enqRes, quoteRes, orderRes, taskRes, actRes] = await Promise.allSettled([
+      const [custRes, enqRes, quoteRes, orderRes, taskRes] = await Promise.allSettled([
         getAllCustomers(),
         getEnquiries(),
         quotationService.getAll(),
         salesOrderService.getAll(),
         getAllTasks(),
-        getSalesActivities(),
       ]);
+
+      let loadedCustCount = 0;
+      let loadedQuoteCount = 0;
 
       if (custRes.status === "fulfilled" && Array.isArray(custRes.value)) {
         setCustomers(custRes.value);
+        loadedCustCount = custRes.value.length;
       }
       if (enqRes.status === "fulfilled" && Array.isArray(enqRes.value)) {
         setEnquiries(enqRes.value);
       }
       if (quoteRes.status === "fulfilled" && Array.isArray(quoteRes.value)) {
         setQuotations(quoteRes.value);
+        loadedQuoteCount = quoteRes.value.length;
       }
       if (orderRes.status === "fulfilled" && Array.isArray(orderRes.value)) {
         setSalesOrders(orderRes.value);
@@ -322,19 +327,30 @@ const RSMDashboard: React.FC = () => {
       if (taskRes.status === "fulfilled" && Array.isArray(taskRes.value)) {
         setTasks(taskRes.value);
       }
-      if (actRes.status === "fulfilled" && Array.isArray(actRes.value)) {
-        setActivities(actRes.value);
+
+      // Auto-heal cold-start latency:
+      // If on initial load (retryCount === 0), core authenticated entities (customers or quotations)
+      // returned 0 while user is logged in, perform one automatic transparent re-check after 1.2s.
+      if (retryCount === 0 && currentToken && (loadedCustCount === 0 || loadedQuoteCount === 0)) {
+        setTimeout(() => {
+          fetchDashboardData(1);
+        }, 1200);
       }
     } catch (err: any) {
       console.error("CRM Dashboard API fetch error:", err);
+      if (retryCount === 0 && currentToken) {
+        setTimeout(() => {
+          fetchDashboardData(1);
+        }, 1200);
+      }
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isAuthenticated, token]);
 
   useEffect(() => {
     fetchDashboardData();
-  }, [fetchDashboardData]);
+  }, [fetchDashboardData, isAuthenticated, token]);
 
   // Close date range dropdown when clicking outside
   useEffect(() => {

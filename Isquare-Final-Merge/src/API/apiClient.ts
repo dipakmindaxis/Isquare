@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const apiClient = axios.create({
-  timeout: 8000,
+  timeout: 30000,
   headers: {
     "Content-Type": "application/json",
   },
@@ -9,9 +9,13 @@ const apiClient = axios.create({
 
 apiClient.interceptors.request.use(
   (config) => {
-    const token = sessionStorage.getItem("token");
+    let token = sessionStorage.getItem("token") || localStorage.getItem("token");
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      token = token.trim();
+      if (token.startsWith('"') && token.endsWith('"')) {
+        token = token.slice(1, -1);
+      }
+      config.headers.Authorization = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
     }
     return config;
   },
