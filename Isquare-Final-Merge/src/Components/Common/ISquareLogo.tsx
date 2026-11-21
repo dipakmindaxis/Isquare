@@ -19,12 +19,13 @@ export const ISquareIcon: React.FC<{ className?: string; size?: number }> = ({
   size = 38,
 }) => {
   const [errorIdx, setErrorIdx] = useState(0);
+  const baseUrl = import.meta.env.BASE_URL || "/";
 
   const iconSources = [
     iconImg,
-    "/isquare-icon-square.png",
-    "/assets/isquare-icon-square.png",
-    "/favicon.png",
+    `${baseUrl}isquare-icon-square.png`,
+    `${baseUrl}assets/isquare-icon-square.png`,
+    `${baseUrl}favicon.png`,
   ];
 
   const currentSrc = iconSources[errorIdx] || iconImg;
@@ -100,14 +101,15 @@ export const ISquareLogo: React.FC<ISquareLogoProps> = ({
   const isWhite = theme === "light" || theme === "white";
   const primaryImg = isWhite ? logoWhiteImg : logoImg;
   const secondaryImg = isWhite ? logoImg : logoWhiteImg;
+  const baseUrl = import.meta.env.BASE_URL || "/";
 
   const candidateSources = [
     primaryImg,
-    isWhite ? "/isquare-logo-white.png" : "/isquare-logo.png",
-    isWhite ? "/assets/isquare-logo-white.png" : "/assets/isquare-logo.png",
+    isWhite ? `${baseUrl}isquare-logo-white.png` : `${baseUrl}isquare-logo.png`,
+    isWhite ? `${baseUrl}assets/isquare-logo-white.png` : `${baseUrl}assets/isquare-logo.png`,
     secondaryImg,
-    isWhite ? "/isquare-logo.png" : "/isquare-logo-white.png",
-    "/favicon.png",
+    isWhite ? `${baseUrl}isquare-logo.png` : `${baseUrl}isquare-logo-white.png`,
+    `${baseUrl}favicon.png`,
   ];
 
   const currentSrc = candidateSources[errorIdx] || primaryImg;

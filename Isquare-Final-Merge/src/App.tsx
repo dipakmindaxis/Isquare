@@ -68,6 +68,20 @@ const router = createBrowserRouter([
     ),
   },
   {
+    path: "/dashboard",
+    element: (
+      <ProtectedRoute>
+        <Dashboard />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        path: "",
+        element: <Home />,
+      },
+    ],
+  },
+  {
     path: "/hrms",
     element: (
       <ProtectedRoute>
@@ -689,7 +703,11 @@ const router = createBrowserRouter([
     path: "*",
     element: <NotFoundPage />,
   },
-]);
+],
+{
+  basename: "/frontend",
+}
+);
 
 const App: React.FC = () => {
   return <RouterProvider router={router} />;
