@@ -1,4 +1,4 @@
-﻿using CompanyPlatform.Core.Data;
+using CompanyPlatform.Core.Data;
 using CompanyPlatform.Core.Models;
 using CompanyPlatform.Core.Models.CRM;
 using Employee = CompanyPlatform.Core.Models.CRM.Employee.Employee;
@@ -114,7 +114,7 @@ using CompanyEmployee =
     CompanyPlatform.Core.Models.CRM.Employee.Employee;
 using CompanyPlatform.CRM.Services.Enquiry;
 var builder = WebApplication.CreateBuilder(args);
-ExcelPackage.License.SetNonCommercialOrganization("Gaxce Sensors");
+ExcelPackage.License.SetNonCommercialOrganization("ISquare Safety");
 builder.Services.Configure<FormOptions>(options =>
 {
     options.MultipartBodyLengthLimit = 268435456;
