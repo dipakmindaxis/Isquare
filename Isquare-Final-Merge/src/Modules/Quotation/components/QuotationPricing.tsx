@@ -4,8 +4,6 @@ import {
   Trash2,
   IndianRupee,
   Calculator,
-  CheckCircle2,
-  Info,
 } from "lucide-react";
 import type { QuotationCharge } from "../models/quotationModels";
 import { formatINR } from "../utils/quotationCalculations";
@@ -219,7 +217,7 @@ export const QuotationPricing: React.FC<QuotationPricingProps> = ({
               <option value="To-pay basis">To-pay basis</option>
             </select>
 
-            {selectedFreightType === "Custom value" ? (
+            {selectedFreightType === "Custom value" && (
               <div className="pt-1">
                 <label className="text-[11px] font-semibold text-gray-600 block mb-1">
                   Freight Amount (₹)
@@ -238,24 +236,6 @@ export const QuotationPricing: React.FC<QuotationPricingProps> = ({
                     placeholder="1500"
                     className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-8 pr-3 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
                   />
-                </div>
-              </div>
-            ) : (
-              <div className="p-3 bg-orange-50/60 border border-orange-200/80 rounded-lg text-xs text-orange-950 space-y-1">
-                <div className="flex items-center gap-1.5 font-semibold text-[#FF7900]">
-                  <Info size={14} className="text-[#FF7900] shrink-0" />
-                  <span>Freight Terms: {selectedFreightType}</span>
-                </div>
-                <p className="text-[11px] text-gray-600">
-                  {selectedFreightType === "Extra at actual" &&
-                    "Freight charges billed extra at actual receipt upon dispatch."}
-                  {selectedFreightType === "Inclusive" &&
-                    "Freight included within the quoted item unit rates."}
-                  {selectedFreightType === "To-pay basis" &&
-                    "Freight payable by customer directly to carrier on delivery."}
-                </p>
-                <div className="pt-0.5 text-right font-bold text-sm text-[#00234a]">
-                  ₹0 added to quotation
                 </div>
               </div>
             )}
@@ -285,7 +265,7 @@ export const QuotationPricing: React.FC<QuotationPricingProps> = ({
               <option value="At your scope">At your scope</option>
             </select>
 
-            {selectedInstallationType === "Custom value" ? (
+            {selectedInstallationType === "Custom value" && (
               <div className="pt-1">
                 <label className="text-[11px] font-semibold text-gray-600 block mb-1">
                   Installation Charges (₹)
@@ -306,19 +286,6 @@ export const QuotationPricing: React.FC<QuotationPricingProps> = ({
                     placeholder="2500"
                     className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-8 pr-3 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
                   />
-                </div>
-              </div>
-            ) : (
-              <div className="p-3 bg-emerald-50/60 border border-emerald-200/80 rounded-lg text-xs text-emerald-950 space-y-1">
-                <div className="flex items-center gap-1.5 font-semibold text-emerald-700">
-                  <CheckCircle2 size={14} className="text-emerald-600 shrink-0" />
-                  <span>Installation: Customer Scope</span>
-                </div>
-                <p className="text-[11px] text-gray-600">
-                  Installation and commissioning handled under buyer/site scope.
-                </p>
-                <div className="pt-0.5 text-right font-bold text-sm text-[#00234a]">
-                  ₹0 added to quotation
                 </div>
               </div>
             )}

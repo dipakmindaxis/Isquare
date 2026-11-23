@@ -275,3 +275,23 @@ export function getEffectiveApprovalStatus(
   return "NotRequired";
 }
 
+/**
+ * Checks whether any product or accessory in the quotation has a discount greater than 0.
+ */
+export function hasQuotationDiscount(quotation?: Quotation | null): boolean {
+  if (!quotation?.items || quotation.items.length === 0) return false;
+  return quotation.items.some((item) => {
+    const itemDisc = Number(item.discountPercentage) || 0;
+    const itemDiscAmt = Number(item.discountAmount) || 0;
+    if (itemDisc > 0 || itemDiscAmt > 0) return true;
+    if (item.accessories && item.accessories.length > 0) {
+      return item.accessories.some((acc) => {
+        const accDisc = Number(acc.discountPercentage) || 0;
+        const accDiscAmt = Number(acc.discountAmount) || 0;
+        return accDisc > 0 || accDiscAmt > 0;
+      });
+    }
+    return false;
+  });
+}
+

@@ -149,7 +149,7 @@ export async function enrichQuotations(quotations: Quotation[]): Promise<Quotati
 
   // 3. Map customerName and enquiryRef
   for (const q of quotations) {
-    if (!q.customerName && q.customerId) {
+    if (q.customerId) {
       const matchName = customerMap.get(Number(q.customerId));
       if (matchName) {
         q.customerName = matchName;

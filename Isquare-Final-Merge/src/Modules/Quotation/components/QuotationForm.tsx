@@ -79,6 +79,12 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
   const [contactPerson, setContactPerson] = useState<string>(
     initialQuotation?.contactPerson || ""
   );
+  const [contactPhone, setContactPhone] = useState<string | null>(
+    (initialQuotation as any)?.contactPhone || null
+  );
+  const [contactEmail, setContactEmail] = useState<string | null>(
+    (initialQuotation as any)?.contactEmail || null
+  );
   const [enquiryId, setEnquiryId] = useState<number | null>(
     initialQuotation?.enquiryId ?? null
   );
@@ -91,6 +97,8 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
       if (initialQuotation.customerId) setCustomerId(initialQuotation.customerId);
       if (initialQuotation.contactPersonId !== undefined) setContactId(initialQuotation.contactPersonId);
       if (initialQuotation.contactPerson) setContactPerson(initialQuotation.contactPerson);
+      if ((initialQuotation as any)?.contactPhone !== undefined) setContactPhone((initialQuotation as any).contactPhone);
+      if ((initialQuotation as any)?.contactEmail !== undefined) setContactEmail((initialQuotation as any).contactEmail);
       if (initialQuotation.enquiryId !== undefined) setEnquiryId(initialQuotation.enquiryId);
       if (initialQuotation.enquiryRef !== undefined) setEnquiryRef(initialQuotation.enquiryRef || "");
     }
@@ -533,7 +541,19 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
     setItems(items.filter((_, i) => i !== index));
   };
 
-  const selectedCustomer = customers.find((c) => c.customerId === customerId);
+  const selectedCustomer = customers.find(
+    (c) =>
+      Number(c.customerId) === Number(customerId) ||
+      Number(c.companyId) === Number(customerId)
+  );
+
+  const targetCompanyName =
+    selectedCustomer?.companyName ||
+    (selectedCustomer as any)?.company ||
+    selectedCustomer?.customerName ||
+    (selectedCustomer as any)?.clientName ||
+    initialQuotation?.customerName ||
+    "";
   const selectedPaymentTerm = paymentTerms.find((p) => p.paymentTermId === paymentTermId);
 
   // Form submission handler
@@ -564,9 +584,7 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
         quotationNumber: quotationNumber || undefined,
         customerId: customerId,
         customerName:
-          selectedCustomer?.companyName ||
-          selectedCustomer?.customerName ||
-          (selectedCustomer as any)?.clientName ||
+          targetCompanyName ||
           `Customer #${customerId}`,
         enquiryId: enquiryId || null,
         enquiryRef: enquiryRef || null,
@@ -593,8 +611,10 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
         items: items,
         charges: charges,
         contactPersonId: contactId,
-        contactPerson: contactPerson || (selectedCustomer as any)?.contactPerson || null,
-      };
+        contactPerson: contactPerson || null,
+        contactPhone: contactPhone || null,
+        contactEmail: contactEmail || null,
+      } as any;
 
       await onSave(fullQuotationData);
     } catch (err: any) {
@@ -609,7 +629,7 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
     quotationId: initialQuotation?.quotationId || 101,
     quotationNumber: quotationNumber || "QT-2026-DRAFT",
     customerId: customerId,
-    customerName: selectedCustomer?.customerName || selectedCustomer?.companyName,
+    customerName: targetCompanyName,
     enquiryId: enquiryId || null,
     enquiryRef: enquiryRef,
     quotationDate: quotationDate,
@@ -635,8 +655,10 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
     items: items,
     charges: charges,
     contactPersonId: contactId,
-    contactPerson: contactPerson || (selectedCustomer as any)?.contactPerson || null,
-  };
+    contactPerson: contactPerson || null,
+    contactPhone: contactPhone || null,
+    contactEmail: contactEmail || null,
+  } as any;
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200/90 shadow-sm overflow-hidden">
@@ -708,6 +730,8 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
                 if (f.customerId !== undefined) setCustomerId(f.customerId);
                 if (f.contactId !== undefined) setContactId(f.contactId);
                 if (f.contactPerson !== undefined) setContactPerson(f.contactPerson || "");
+                if (f.contactPhone !== undefined) setContactPhone(f.contactPhone || null);
+                if (f.contactEmail !== undefined) setContactEmail(f.contactEmail || null);
                 if (f.enquiryId !== undefined) setEnquiryId(f.enquiryId);
                 if (f.enquiryRef !== undefined) setEnquiryRef(f.enquiryRef);
                 if (f.quotationDate !== undefined) setQuotationDate(f.quotationDate);
@@ -805,7 +829,7 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
             </div>
             <QuotationSummary
               totals={totals}
-              customerName={selectedCustomer?.customerName || selectedCustomer?.companyName}
+              customerName={targetCompanyName}
               enquiryRef={enquiryRef}
               hasHighDiscount={hasHighDiscount}
               isSubmitting={isSubmitting}

@@ -333,12 +333,12 @@ export const CreateQuotation: React.FC = () => {
                       </span>
                     </td>
                     <td className="p-3.5 font-medium text-gray-800 border-r border-gray-100">
-                      {quotation.customerName ||
-                        customers.find(
+                      {customers.find(
                           (c) =>
                             Number(c.customerId || (c as any).companyId) ===
                             Number(quotation.customerId)
                         )?.companyName ||
+                        quotation.customerName ||
                         customers.find(
                           (c) =>
                             Number(c.customerId || (c as any).companyId) ===
