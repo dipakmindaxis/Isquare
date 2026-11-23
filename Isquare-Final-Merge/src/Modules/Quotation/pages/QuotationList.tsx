@@ -46,14 +46,16 @@ export const QuotationList: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const resolveCustomerName = (q: Quotation): string => {
-    if (q.customerName && !q.customerName.startsWith("Customer #")) {
-      return q.customerName;
-    }
     const match = customers.find(
       (c) => Number(c.customerId || (c as any).companyId) === Number(q.customerId)
     );
+    if (match?.companyName) {
+      return match.companyName;
+    }
+    if (q.customerName && !q.customerName.startsWith("Customer #")) {
+      return q.customerName;
+    }
     return (
-      match?.companyName ||
       match?.customerName ||
       (match as any)?.clientName ||
       q.customerName ||

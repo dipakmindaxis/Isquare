@@ -33,6 +33,8 @@ interface QuotationInformationProps {
     customerId?: number;
     contactId?: number | null;
     contactPerson?: string | null;
+    contactPhone?: string | null;
+    contactEmail?: string | null;
     enquiryId?: number | null;
     enquiryRef?: string;
     quotationDate?: string;
@@ -255,9 +257,14 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
     (c) => Number(c.customerId || c.companyId) === Number(customerId)
   );
 
+  // Track sequence ID to discard outdated responses if the user switches customers rapidly
+  const fetchSequenceRef = useRef<number>(0);
+
   // Fetch contacts whenever customerId (company) changes
   const fetchContactsForCompany = useCallback(
     async (compCompanyId: number, preferredContactId?: number | null) => {
+      const currentSeq = ++fetchSequenceRef.current;
+
       if (!compCompanyId || compCompanyId <= 0) {
         setContacts([]);
         setSelectedContactId(null);
@@ -267,57 +274,120 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
 
       setIsLoadingContacts(true);
       try {
+        const currentCust = customers.find(
+          (c) =>
+            Number(c.customerId) === Number(compCompanyId) ||
+            Number(c.companyId) === Number(compCompanyId)
+        );
+
+        const validCompanyIds = new Set<number>();
+        if (compCompanyId > 0) validCompanyIds.add(Number(compCompanyId));
+        if (currentCust?.companyId && Number(currentCust.companyId) > 0) {
+          validCompanyIds.add(Number(currentCust.companyId));
+        }
+        if (currentCust?.customerId && Number(currentCust.customerId) > 0) {
+          validCompanyIds.add(Number(currentCust.customerId));
+        }
+
+        const targetCompanyName = (
+          currentCust?.companyName ||
+          currentCust?.customerName ||
+          ""
+        ).trim().toLowerCase();
+
+        // 1. Fetch contacts via getContactsByCompanyId
         let list: Contact[] = [];
         try {
-          list = await getContactsByCompanyId(compCompanyId);
+          const fetchId = currentCust?.companyId || compCompanyId;
+          list = await getContactsByCompanyId(fetchId);
         } catch {
-          // fallback to getAllContacts filtered by companyId
+          // fallback
         }
 
+        // 2. Fallback to getAllContacts if list is empty
         if (!list || list.length === 0) {
           const all = await getAllContacts();
-          list = all.filter(
-            (c: Contact) => Number(c.companyId) === Number(compCompanyId)
-          );
+          list = all;
         }
 
-        const validList = Array.isArray(list) ? list : [];
-        setContacts(validList);
+        // Discard stale responses if user switched customers
+        if (currentSeq !== fetchSequenceRef.current) {
+          return;
+        }
 
-        // Determine which contact to select
+        // 3. Strictly filter so only contacts associated with the selected customer/company are kept
+        const filteredList = list.filter((c: Contact) => {
+          if (!c) return false;
+          const cCompId = Number(c.companyId || (c as any).customerId || 0);
+          if (cCompId > 0 && validCompanyIds.has(cCompId)) {
+            return true;
+          }
+          if (targetCompanyName && c.companyName) {
+            const contactComp = c.companyName.trim().toLowerCase();
+            if (contactComp === targetCompanyName) {
+              return true;
+            }
+          }
+          return false;
+        });
+
+        // Deduplicate contacts by contactId
+        const uniqueContacts: Contact[] = [];
+        const seenIds = new Set<number>();
+        for (const item of filteredList) {
+          const cid = Number(item.contactId);
+          if (cid && !seenIds.has(cid)) {
+            seenIds.add(cid);
+            uniqueContacts.push(item);
+          }
+        }
+
+        setContacts(uniqueContacts);
+
+        // 4. Determine contact selection:
+        // In Edit mode, if preferredContactId is valid and belongs to this customer, select it.
         if (
           preferredContactId &&
-          validList.some((c) => Number(c.contactId) === Number(preferredContactId))
+          uniqueContacts.some((c) => Number(c.contactId) === Number(preferredContactId))
         ) {
           setSelectedContactId(preferredContactId);
-          const matched = validList.find(
+          const matched = uniqueContacts.find(
             (c) => Number(c.contactId) === Number(preferredContactId)
           );
           onChangeRef.current({
             contactId: preferredContactId,
             contactPerson: matched?.fullName || null,
-          });
-        } else if (validList.length > 0) {
-          const first = validList[0];
-          setSelectedContactId(first.contactId);
-          onChangeRef.current({
-            contactId: first.contactId,
-            contactPerson: first.fullName,
+            contactPhone: matched?.mobileNo || matched?.altMobileNo || null,
+            contactEmail: matched?.emailAddress || matched?.altEmailAddress || null,
           });
         } else {
+          // When customer changes, or if no preferred contact person, clear selection
           setSelectedContactId(null);
-          onChangeRef.current({ contactId: null, contactPerson: null });
+          onChangeRef.current({
+            contactId: null,
+            contactPerson: null,
+            contactPhone: null,
+            contactEmail: null,
+          });
         }
       } catch (err) {
+        if (currentSeq !== fetchSequenceRef.current) return;
         console.warn("Failed to load contacts for company:", err);
         setContacts([]);
         setSelectedContactId(null);
-        onChangeRef.current({ contactId: null, contactPerson: null });
+        onChangeRef.current({
+          contactId: null,
+          contactPerson: null,
+          contactPhone: null,
+          contactEmail: null,
+        });
       } finally {
-        setIsLoadingContacts(false);
+        if (currentSeq === fetchSequenceRef.current) {
+          setIsLoadingContacts(false);
+        }
       }
     },
-    []
+    [customers]
   );
 
   const isFirstMountRef = useRef<boolean>(true);
@@ -332,16 +402,29 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
 
     if (prevCustomerIdRef.current !== customerId) {
       prevCustomerIdRef.current = customerId;
+      setSelectedContactId(null);
+      setContacts([]);
       fetchContactsForCompany(customerId, null);
     }
   }, [customerId, contactId, fetchContactsForCompany]);
 
-  // Keep local state in sync if contactId prop changes externally
+  // Keep local state in sync if contactId prop changes externally (e.g. edit mode async load)
   useEffect(() => {
-    if (contactId !== undefined && contactId !== selectedContactId) {
+    if (contactId !== undefined && contactId !== null && contactId !== selectedContactId) {
       setSelectedContactId(contactId);
+      if (contacts.length > 0) {
+        const found = contacts.find((c) => Number(c.contactId) === Number(contactId));
+        if (found) {
+          onChangeRef.current({
+            contactId,
+            contactPerson: found.fullName,
+            contactPhone: found.mobileNo || found.altMobileNo || null,
+            contactEmail: found.emailAddress || found.altEmailAddress || null,
+          });
+        }
+      }
     }
-  }, [contactId, selectedContactId]);
+  }, [contactId, selectedContactId, contacts]);
 
   // Listen for contacts updated/created in Master or other views
   useEffect(() => {
@@ -363,10 +446,13 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
   const handleCompanyChange = (newCompanyId: number) => {
     prevCustomerIdRef.current = newCompanyId;
     setSelectedContactId(null);
+    setContacts([]);
     onChangeRef.current({
       customerId: newCompanyId,
       contactId: null,
       contactPerson: null,
+      contactPhone: null,
+      contactEmail: null,
     });
     fetchContactsForCompany(newCompanyId, null);
   };
@@ -379,6 +465,8 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
     onChangeRef.current({
       contactId: newContactId || null,
       contactPerson: matched?.fullName || null,
+      contactPhone: matched?.mobileNo || matched?.altMobileNo || null,
+      contactEmail: matched?.emailAddress || matched?.altEmailAddress || null,
     });
   };
 
@@ -430,6 +518,8 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
       customerId: newCompanyId,
       contactId: newContactId,
       contactPerson: newFullName,
+      contactPhone: created.mobileNo || created.altMobileNo || null,
+      contactEmail: created.emailAddress || created.altEmailAddress || null,
     });
 
     // 3. Refresh customers master if requested
@@ -572,7 +662,7 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
                   <option value="">No contacts found — click + Add</option>
                 ) : (
                   <>
-                    <option value="" disabled>
+                    <option value="">
                       Select Contact Person...
                     </option>
                     {contacts.map((c) => (
@@ -798,8 +888,7 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
             </span>
             <span className="font-semibold text-gray-900">
               {selectedContact?.fullName ||
-                (selectedCustomer as any)?.contactPerson ||
-                "N/A"}
+                (selectedContactId ? "N/A" : "Select Contact Person")}
             </span>
 
             {(selectedContact?.designation || selectedContact?.department) && (
@@ -812,25 +901,17 @@ export const QuotationInformation: React.FC<QuotationInformationProps> = ({
               </span>
             )}
 
-            {(selectedContact?.emailAddress ||
-              (selectedCustomer as any)?.email) && (
+            {selectedContact?.emailAddress && (
               <span className="ml-3 text-slate-500 flex items-center gap-1">
                 <Mail size={12} className="text-gray-400" />
-                <span>
-                  {selectedContact?.emailAddress ||
-                    (selectedCustomer as any)?.email}
-                </span>
+                <span>{selectedContact.emailAddress}</span>
               </span>
             )}
 
-            {(selectedContact?.mobileNo ||
-              (selectedCustomer as any)?.phone) && (
+            {selectedContact?.mobileNo && (
               <span className="ml-3 text-slate-500 flex items-center gap-1">
                 <Phone size={12} className="text-gray-400" />
-                <span>
-                  {selectedContact?.mobileNo ||
-                    (selectedCustomer as any)?.phone}
-                </span>
+                <span>{selectedContact.mobileNo}</span>
               </span>
             )}
           </div>

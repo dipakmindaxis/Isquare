@@ -60,7 +60,8 @@ export const getContactsByCompanyId = async (companyId: number): Promise<Contact
     const endpoint = `${baseContactUrl}/company/${companyId}`;
     const response = await apiClient.get<any>(endpoint);
     const list = ensureArray<Contact>(response.data);
-    if (list.length > 0) return list;
+    const filtered = list.filter((c: Contact) => Number(c.companyId) === Number(companyId));
+    if (filtered.length > 0) return filtered;
   } catch {
     // Ignore and fallback
   }
@@ -69,7 +70,8 @@ export const getContactsByCompanyId = async (companyId: number): Promise<Contact
     const endpoint = `${baseContactUrl}?companyId=${companyId}`;
     const response = await apiClient.get<any>(endpoint);
     const list = ensureArray<Contact>(response.data);
-    if (list.length > 0) return list;
+    const filtered = list.filter((c: Contact) => Number(c.companyId) === Number(companyId));
+    if (filtered.length > 0) return filtered;
   } catch {
     // Ignore and fallback
   }

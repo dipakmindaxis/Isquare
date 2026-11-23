@@ -49,6 +49,7 @@ import {
   formatINR,
   calculateItemTotals,
   getEffectiveApprovalStatus,
+  hasQuotationDiscount,
 } from "../utils/quotationCalculations";
 import QuotationStatusBadge from "../components/QuotationStatusBadge";
 import QuotationPreviewModal from "../components/QuotationPreviewModal";
@@ -410,8 +411,9 @@ export const QuotationDetails: React.FC = () => {
   };
 
   const customerDisplayName =
-    quotation.customerName ||
     customer?.companyName ||
+    (customer as any)?.company ||
+    quotation.customerName ||
     customer?.customerName ||
     (customer as any)?.clientName ||
     (quotation.customerId ? `Customer #${quotation.customerId}` : "Valued Customer");
@@ -500,7 +502,10 @@ export const QuotationDetails: React.FC = () => {
                   return;
                 }
               }
-              exportQuotationToCustomerExcel(fullQuoteForPreview, true);
+              exportQuotationToCustomerExcel(
+                fullQuoteForPreview,
+                hasQuotationDiscount(fullQuoteForPreview)
+              );
               toast.success("Excel exported successfully");
             }}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl transition shadow-xs cursor-pointer"
@@ -521,7 +526,12 @@ export const QuotationDetails: React.FC = () => {
                 }
               }
               try {
-                await exportQuotationToPdf(fullQuoteForPreview, companyProfile, customer, true);
+                await exportQuotationToPdf(
+                  fullQuoteForPreview,
+                  companyProfile,
+                  customer,
+                  hasQuotationDiscount(fullQuoteForPreview)
+                );
                 toast.success("PDF exported successfully");
               } catch (error) {
                 console.error("PDF export failed:", error);

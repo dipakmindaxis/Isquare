@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Printer,
   FileText,
@@ -9,19 +9,16 @@ import {
   FileSpreadsheet,
   Download,
   Calendar,
-  User,
-  Truck,
-  Phone,
-  Mail,
-  MapPin,
-  Calculator,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { Quotation, CompanyProfile, Product } from "../models/quotationModels";
 import type { Customer } from "../../RSM/Pages/Customer/Types/CustomerTypes";
-import { formatINR, calculateItemTotals } from "../utils/quotationCalculations";
+import type { Contact } from "../../RSM/Pages/Master/Contact/Types/ContactTypes";
+import { getContactById, getContactsByCompanyId } from "../../RSM/Pages/Master/Contact/Services/ContactService";
+import { formatINR, calculateItemTotals, hasQuotationDiscount } from "../utils/quotationCalculations";
 import { exportQuotationToPdf, loadImageAsDataUrl } from "../utils/quotationExportPdf";
 import { exportQuotationToCustomerExcel } from "../utils/quotationExportExcel";
+import { ISQUARE_SEAL_BASE64 } from "../utils/isquareSealBase64";
 import {
   isCustomerFormatQuotation,
   getCustomerQuotationFile,
@@ -164,7 +161,7 @@ export function getItemImageSource(item: any, products: Product[]): string | nul
         }
       }
     }
-  } catch {}
+  } catch { }
 
   return null;
 }
@@ -180,9 +177,73 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
   onConvertToOrder,
   isConvertingToOrder = false,
 }) => {
-  const [showDiscount, setShowDiscount] = useState<boolean>(true);
+  const hasDiscount = useMemo(() => hasQuotationDiscount(quotation), [quotation]);
+  const [showDiscount, setShowDiscount] = useState<boolean>(hasDiscount);
   const [masterProducts, setMasterProducts] = useState<Product[]>([]);
   const [resolvedImages, setResolvedImages] = useState<Record<string, string>>({});
+  const [contactRecord, setContactRecord] = useState<Contact | null>(null);
+
+  useEffect(() => {
+    setShowDiscount(hasDiscount);
+  }, [hasDiscount, isOpen]);
+
+  // Resolve Contact Record using ContactService to ensure real contact data
+  useEffect(() => {
+    let isMounted = true;
+    if (!isOpen) return;
+
+    const resolveContact = async () => {
+      const contactId = (quotation as any).contactPersonId || (quotation as any).contactId;
+      const compId = quotation.customerId || customer?.companyId || (customer as any)?.customerId;
+
+      if (contactId && Number(contactId) > 0) {
+        try {
+          const c = await getContactById(Number(contactId));
+          if (isMounted && c) {
+            setContactRecord(c);
+            return;
+          }
+        } catch {
+          // ignore
+        }
+      }
+
+      if (compId && Number(compId) > 0) {
+        try {
+          const contacts = await getContactsByCompanyId(Number(compId));
+          if (isMounted && contacts.length > 0) {
+            const targetName = (quotation as any).contactPerson || "";
+            const matched = targetName
+              ? contacts.find(
+                (c) => (c.fullName || "").trim().toLowerCase() === targetName.trim().toLowerCase()
+              ) || contacts[0]
+              : contacts[0];
+            setContactRecord(matched || null);
+            return;
+          }
+        } catch {
+          // ignore
+        }
+      }
+
+      if (isMounted) {
+        setContactRecord(null);
+      }
+    };
+
+    resolveContact();
+    return () => {
+      isMounted = false;
+    };
+  }, [
+    isOpen,
+    (quotation as any).contactPersonId,
+    (quotation as any).contactId,
+    quotation.customerId,
+    customer?.companyId,
+    (customer as any)?.customerId,
+    (quotation as any).contactPerson,
+  ]);
 
   // Pre-load Product Master and convert all images into base64 Data URLs
   useEffect(() => {
@@ -272,7 +333,7 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
     }
   };
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     try {
       if (isUploadedCustomerFormat) {
         const ok = downloadOriginalCustomerQuotation(quotation.quotationId);
@@ -281,7 +342,13 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
           return;
         }
       }
-      exportQuotationToCustomerExcel(quotation, showDiscount);
+      await exportQuotationToCustomerExcel(
+        quotation,
+        showDiscount,
+        companyProfile,
+        customer,
+        masterProducts
+      );
       toast.success("Excel exported successfully");
     } catch (e) {
       console.error("Excel export failed:", e);
@@ -294,12 +361,21 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
     quotation.quotationNumber ||
     `QT-2026-${String(quotation.quotationId || 1).padStart(3, "0")}`;
 
+  // Company details resolution
+  const companyName = companyProfile?.companyName || "iSQUARE Safety Equipments Pvt. Ltd.";
+  const companyAddress = "GOYAL RESIDENCY B, SR NO. 434/4A, OFFICE, B1/13, Kasarwadi, Maharashtra 411034";
+  const companyPhone = companyProfile?.phone || "+91 9028815632";
+  const companyEmail = companyProfile?.email || "sales@isquaresafety.com";
+  const companyGstin = companyProfile?.gstin || "27AARCP3435C1ZD";
+  const companyPan = companyProfile?.pan || "AARCP3435C";
+
   // Customer Name & Address resolution
   const customerName =
-    quotation.customerName ||
     customer?.companyName ||
+    (customer as any)?.company ||
+    quotation.customerName ||
     customer?.customerName ||
-    "Samadhan";
+    "Valued Client";
 
   const customerAddress = (() => {
     if ((quotation as any).customerAddress) {
@@ -318,57 +394,33 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
     if ((customer as any)?.address) {
       return ((customer as any).address as string).replace(/Mumbai/gi, "Pune");
     }
-    return "123 Industrial Area, Andheri (E), Pune - 400093, Maharashtra, India";
+    return "";
   })();
+
+  const contactPerson =
+    (quotation as any).contactPerson ||
+    contactRecord?.fullName ||
+    customer?.contactPerson ||
+    (customer as any)?.contactPersonName ||
+    (customer as any)?.contactName ||
+    "";
 
   const contactPhone =
     (quotation as any).contactPhone ||
     (quotation as any).contactMobile ||
+    contactRecord?.mobileNo ||
+    contactRecord?.altMobileNo ||
     customer?.phone ||
     customer?.mobile ||
-    "+91 98765 43210";
+    "";
 
   const contactEmail =
     (quotation as any).contactEmail ||
+    contactRecord?.emailAddress ||
+    contactRecord?.altEmailAddress ||
     customer?.email ||
     customer?.emailAddress ||
-    "samadhan@abc.com";
-
-  const contactPerson =
-    (quotation as any).contactPerson ||
-    customer?.contactPerson ||
-    (customer as any)?.contactPersonName ||
-    (customer as any)?.contactName ||
-    "Amit Joshi";
-
-  // Commercial & freight terms formatting
-  const freightType = (quotation as any).freightType;
-  const freightDisplay =
-    freightType && freightType !== "Custom value"
-      ? freightType
-      : quotation.freightCharges > 0
-      ? `INR ${formatINR(quotation.freightCharges).replace("₹", "").trim()}`
-      : "Inclusive";
-
-  const installationType = (quotation as any).installationType;
-  const installationDisplay =
-    installationType && installationType !== "Custom value"
-      ? installationType
-      : quotation.installationCharges > 0
-      ? `INR ${formatINR(quotation.installationCharges).replace("₹", "").trim()}`
-      : "At your scope";
-
-  const deliveryPeriodDisplay = quotation.deliveryPeriod || "2-3 Weeks";
-  const otherDesc =
-    (quotation as any).otherChargesDescription || "Standard Packaging & Handling";
-
-  // Default validity date if none provided (30 days from quotationDate)
-  const defaultValidUntil = (() => {
-    const base = quotation.quotationDate ? new Date(quotation.quotationDate) : new Date();
-    const d = new Date(base);
-    d.setDate(d.getDate() + 30);
-    return d.toISOString();
-  })();
+    "";
 
   // Commercial Terms list matching Reference Screenshot
   let termsList: string[] = [];
@@ -387,7 +439,27 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
     ];
   }
 
-  const primaryGstRate = quotation.items?.[0]?.gstRate ?? 18;
+  // Single-row calculated final amount matching Excel format (e.g. ₹699.74 for sample)
+  const calculatedSubTotal = (() => {
+    const itemsSum = (quotation.items || []).reduce((acc, item) => {
+      const itemTot = calculateItemTotals(
+        item.quantity,
+        item.rate,
+        item.discountPercentage,
+        item.gstRate
+      ).lineTotal;
+      const accTot = (item.accessories || []).reduce((aAcc, acc) => {
+        return aAcc + calculateItemTotals(
+          acc.quantity,
+          acc.rate,
+          acc.discountPercentage,
+          acc.gstRate
+        ).lineTotal;
+      }, 0);
+      return acc + itemTot + accTot;
+    }, 0);
+    return itemsSum > 0 ? itemsSum : (quotation.grandTotal || quotation.taxableAmount || 0);
+  })();
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm overflow-y-auto print:p-0 print:bg-white print:static print:inset-auto print:overflow-visible">
@@ -488,13 +560,13 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
             </div>
           )}
 
-          {/* 1. Header Section: Corporate Branding & Slanted Navy Polygon */}
-          <div className="relative flex justify-between items-start pb-1">
-            {/* Top Left: iSQUARE Corporate Logo */}
-            <div className="z-10 pt-1">
+          {/* 1. Corporate Letterhead Header matching Reference */}
+          <div className="border-b-2 border-[#FF7900] pb-3">
+            <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+              {/* Left: iSQUARE Corporate Logo & Title */}
               <div className="flex items-center gap-3">
                 {/* Flame Shield SVG Logo */}
-                <div className="w-12 h-12 shrink-0 flex items-center justify-center">
+                <div className="w-14 h-14 shrink-0 flex items-center justify-center">
                   <svg viewBox="0 0 100 120" className="w-full h-full drop-shadow-xs">
                     {/* Shield outline */}
                     <path
@@ -528,7 +600,7 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
                     </span>
                     <span className="text-xs font-bold text-[#FF5500]">®</span>
                   </div>
-                  <p className="text-[9px] font-extrabold tracking-wider text-[#00234a] uppercase -mt-0.5">
+                  <p className="text-[10px] font-extrabold tracking-wider text-[#00234a] uppercase -mt-0.5">
                     SAFETY EQUIPMENTS PVT. LTD.
                   </p>
                   <p className="text-[10px] text-[#FF5500] italic font-serif mt-0.5">
@@ -536,147 +608,113 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
                   </p>
                 </div>
               </div>
-            </div>
 
-            {/* Top Right: Angular Navy Polygon with Quotation Details matching Reference Screenshot */}
-            <div className="relative shrink-0 w-72 sm:w-80">
-              {/* Slanted orange accent stripe behind navy block */}
-              <div
-                className="absolute -top-6 -right-6 sm:-top-8 sm:-right-8 w-full h-32 bg-[#FF7900]"
-                style={{ clipPath: "polygon(22% 0%, 100% 0%, 100% 100%, 0% 100%)" }}
-              />
-              {/* Navy block with angular slant */}
-              <div
-                className="relative -top-6 -right-6 sm:-top-8 sm:-right-8 w-full h-30 bg-[#00234a] text-white pt-3 pb-3 pr-6 pl-14 sm:pl-16 flex flex-col justify-center items-start text-left"
-                style={{ clipPath: "polygon(24% 0%, 100% 0%, 100% 100%, 0% 100%)" }}
-              >
-                <div className="flex items-center gap-1.5">
-                  <div className="w-1.5 h-3.5 bg-[#FF7900] rounded-sm shrink-0" />
-                  <span className="text-[11px] text-blue-200 tracking-wide font-semibold">
-                    Quotation No.
-                  </span>
-                </div>
-                <span className="text-lg sm:text-xl font-black tracking-tight text-white mt-0.5">
-                  {quotationNumber}
-                </span>
-                <div className="mt-2 space-y-1 text-[11px] text-blue-100 font-medium">
-                  <div className="flex items-center gap-2">
-                    <Calendar size={13} className="text-white shrink-0" />
-                    <span className="text-blue-200 w-16">Date</span>
-                    <span>:</span>
-                    <span className="font-semibold text-white">{formatProposalDate(quotation.quotationDate)}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Calendar size={13} className="text-white shrink-0" />
-                    <span className="text-blue-200 w-16">Valid Until</span>
-                    <span>:</span>
-                    <span className="font-semibold text-white">{formatProposalDate(quotation.validUntil || defaultValidUntil)}</span>
-                  </div>
+              {/* Right: Company Registered Address */}
+              <div className="flex items-center gap-3 sm:gap-4 self-stretch sm:self-center justify-between sm:justify-end">
+                <div className="text-right text-[10px] sm:text-[11px] text-[#64748B] space-y-0.5 max-w-xs sm:max-w-sm">
+                  <p className="font-semibold text-[#102A50] leading-snug">
+                    {companyAddress}
+                  </p>
+                  <p className="text-[#64748B]">
+                    <span className="font-medium text-[#102A50]">Contact:</span> {companyPhone}
+                    <span className="mx-1.5 text-slate-300">|</span>
+                    <span className="font-medium text-[#102A50]">Email:</span> {companyEmail}
+                  </p>
+                  <p className="text-[#64748B] font-mono text-[10px]">
+                    <span className="font-medium text-[#102A50]">GSTIN:</span> {companyGstin}
+                    <span className="mx-1.5 text-slate-300">|</span>
+                    <span className="font-medium text-[#102A50]">PAN:</span> {companyPan}
+                  </p>
                 </div>
               </div>
+            </div>
+
+            {/* Thin Orange Horizontal Separator below Header */}
+            <div className="w-full border-b-2 border-[#FF7900] mt-3 mb-1"></div>
+          </div>
+
+          {/* Quotation Reference & Date Strip */}
+          <div className="bg-[#F5F8FC] border border-[#D6E0EC] rounded-lg px-4 py-2 flex flex-wrap justify-between items-center text-xs shadow-2xs">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-[#002B55]">Ref.:</span>
+              <span className="font-black text-[#FF7900] tracking-wide text-sm">{quotationNumber}</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-[#102A50] font-medium">
+              <Calendar size={13} className="text-[#FF7900] shrink-0" />
+              <span className="text-[#64748B]">Date:</span>
+              <span className="font-bold text-[#002B55]">{formatProposalDate(quotation.quotationDate)}</span>
             </div>
           </div>
 
-          {/* Title & Orange Accent Bar matching Reference Screenshot */}
-          <div className="mt-1 mb-2">
-            <div className="text-2xl sm:text-3xl font-black tracking-tight leading-none">
-              <span className="text-[#00234a]">Sales &amp; Commercial </span>
-              <br className="sm:hidden" />
-              <span className="text-[#FF7900]">Quotation Proposal</span>
-            </div>
-            <div className="h-1 bg-[#FF7900] w-64 sm:w-72 mt-2 rounded-full" />
-          </div>
-
-          {/* 2. Side-by-Side Information Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Left Card: Customer / Bill To (Peach/Cream Card) */}
-            <div className="bg-[#FFF7ED] border border-[#FED7AA] rounded-xl p-3.5 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center gap-2 mb-1.5">
-                  <div className="w-6 h-6 rounded-full bg-[#FF7900] text-white flex items-center justify-center shrink-0">
-                    <User size={13} className="text-white" />
-                  </div>
-                  <span className="text-[10px] font-black tracking-wider uppercase text-[#00234a]">
-                    CUSTOMER / BILL TO
-                  </span>
+          {/* 2. Customer Information Block */}
+          <div className="bg-[#F5F8FC] border border-[#D6E0EC] rounded-xl p-4 text-xs text-[#102A50] space-y-1.5 shadow-2xs">
+            <div className="font-bold text-[#64748B]">To,</div>
+            <h4 className="font-black text-sm text-[#002B55] uppercase tracking-tight">
+              {customerName}
+            </h4>
+            {customerAddress && (
+              <p className="text-[11px] text-[#64748B] leading-snug">
+                {customerAddress}
+              </p>
+            )}
+            <div className="pt-1 space-y-1 text-[11px] text-[#102A50]">
+              {contactPerson && (
+                <div>
+                  <span className="font-semibold text-[#002B55]">Kind Attn: </span>
+                  <span className="font-medium text-[#102A50]">{contactPerson}</span>
                 </div>
-                <h4 className="font-black text-sm text-[#00234a] uppercase tracking-tight">
-                  {customerName}
-                </h4>
-                <p className="text-[11px] text-slate-600 mt-1 leading-snug">
-                  {customerAddress}
-                </p>
-              </div>
-              <div className="mt-2 pt-2 border-t border-[#FED7AA]/60 space-y-0.5 text-[11px] text-slate-700">
-                {contactPhone && (
-                  <div className="flex items-center gap-1.5 font-medium">
-                    <Phone size={11} className="text-[#00234a] shrink-0" />
-                    <span>{contactPhone}</span>
-                  </div>
-                )}
-                {contactEmail && (
-                  <div className="flex items-center gap-1.5 font-medium">
-                    <Mail size={11} className="text-[#00234a] shrink-0" />
-                    <span>{contactEmail}</span>
-                  </div>
-                )}
-                {contactPerson && (
-                  <div className="font-semibold text-slate-800 pt-0.5">
-                    Attn: {contactPerson}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Right Card: Commercial & Freight Terms (Ice Blue Card) */}
-            <div className="bg-[#F0F7FF] border border-[#BAE6FD] rounded-xl p-3.5 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center gap-2 mb-1.5">
-                  <div className="w-6 h-6 rounded-full bg-[#00234a] text-white flex items-center justify-center shrink-0">
-                    <Truck size={13} className="text-white" />
-                  </div>
-                  <span className="text-[10px] font-black tracking-wider uppercase text-[#00234a]">
-                    COMMERCIAL &amp; FREIGHT TERMS
-                  </span>
+              )}
+              {contactPhone && (
+                <div>
+                  <span className="font-semibold text-[#002B55]">Mob. No.: </span>
+                  <span className="text-[#102A50]">{contactPhone}</span>
                 </div>
-                <div className="space-y-2 text-xs mt-2.5">
-                  <div className="flex items-center gap-2">
-                    <span className="text-slate-600 font-medium w-36">Freight Charges</span>
-                    <span className="font-bold text-slate-800">:</span>
-                    <span className="font-bold text-[#00234a]">{freightDisplay}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-slate-600 font-medium w-36">Installation Charges</span>
-                    <span className="font-bold text-slate-800">:</span>
-                    <span className="font-bold text-[#00234a]">{installationDisplay}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-slate-600 font-medium w-36">Delivery Period</span>
-                    <span className="font-bold text-slate-800">:</span>
-                    <span className="font-bold text-[#00234a]">{deliveryPeriodDisplay}</span>
-                  </div>
+              )}
+              {contactEmail && (
+                <div>
+                  <span className="font-semibold text-[#002B55]">Email id: </span>
+                  <span className="text-[#102A50]">{contactEmail}</span>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 
-          {/* 3. Product Table with Orange Header & Bullet Points */}
-          <div className="border border-slate-300 rounded-lg overflow-hidden shadow-2xs">
+          {/* 3. Subject Section: Highlighted Bar with Navy-Blue Label & Light Orange Background */}
+          <div className="my-1">
+            <div className="inline-flex items-center rounded-lg overflow-hidden border border-orange-200 bg-orange-50/80 shadow-2xs">
+              <span className="bg-[#002B55] text-white font-extrabold px-3 py-1 text-xs tracking-wider uppercase">
+                Sub:
+              </span>
+              <span className="px-3.5 py-1 font-bold text-[#002B55] text-xs sm:text-[13px] tracking-wide">
+                Offer for PPP
+              </span>
+            </div>
+          </div>
+
+          <div className="space-y-1 text-xs text-[#102A50]">
+            <div className="font-semibold text-[#002B55]">Dear Sir/Madam,</div>
+            <p className="text-[#64748B] pl-4 text-[11px] leading-relaxed">
+              We take pleasure in submitting our competitive offer for your requirement.
+            </p>
+          </div>
+
+          {/* 4. Product Table with Orange Header & Enterprise Theme */}
+          <div className="border border-[#D6E0EC] rounded-lg overflow-hidden shadow-2xs">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-[#FF7900] text-white text-[10px] font-bold uppercase tracking-wider">
-                  <th className="p-2 w-8 text-center border-r border-orange-400/50">#</th>
-                  <th className="p-2 text-left border-r border-orange-400/50">Product Name &amp; Specification</th>
-                  <th className="p-2 w-24 text-center border-r border-orange-400/50">Image</th>
-                  <th className="p-2 w-20 text-center border-r border-orange-400/50">HSN Code</th>
-                  <th className="p-2 w-12 text-center border-r border-orange-400/50">Qty</th>
-                  <th className="p-2 w-12 text-center border-r border-orange-400/50">UOM</th>
-                  <th className="p-2 w-20 text-center border-r border-orange-400/50">Rate (INR)</th>
-                  {showDiscount && (
-                    <th className="p-2 w-16 text-center border-r border-orange-400/50">Discount (%)</th>
-                  )}
+                  <th className="p-2 w-8 text-center border-r border-orange-400/50">SR. NO.</th>
+                  <th className="p-2 text-left border-r border-orange-400/50">DESCRIPTION</th>
+                  <th className="p-2 w-20 text-center border-r border-orange-400/50">IMAGE</th>
+                  <th className="p-2 w-20 text-center border-r border-orange-400/50">HSN CODE</th>
                   <th className="p-2 w-14 text-center border-r border-orange-400/50">GST (%)</th>
-                  <th className="p-2 w-24 text-right pr-3">Total (INR)</th>
+                  <th className="p-2 w-12 text-center border-r border-orange-400/50">QTY</th>
+                  <th className="p-2 w-12 text-center border-r border-orange-400/50">UOM</th>
+                  <th className="p-2 w-20 text-center border-r border-orange-400/50">UNIT RATE (INR)</th>
+                  {showDiscount && (
+                    <th className="p-2 w-16 text-center border-r border-orange-400/50">DISCOUNT (%)</th>
+                  )}
+                  <th className="p-2 w-24 text-right pr-3">TOTAL AMOUNT (INR)</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 bg-white text-xs">
@@ -769,34 +807,34 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
                             {hsnCode}
                           </td>
 
-                          {/* 5. Qty */}
+                          {/* 5. GST (%) */}
+                          <td className="p-2.5 align-middle text-center font-semibold text-blue-600 border-r border-slate-300">
+                            {item.gstRate}%
+                          </td>
+
+                          {/* 6. Qty */}
                           <td className="p-2.5 align-middle text-center font-semibold text-slate-800 border-r border-slate-300">
                             {item.quantity}
                           </td>
 
-                          {/* 6. UOM */}
+                          {/* 7. UOM */}
                           <td className="p-2.5 align-middle text-center font-medium text-slate-600 border-r border-slate-300">
                             {item.unitName || "Nos"}
                           </td>
 
-                          {/* 7. Rate (INR) */}
+                          {/* 8. Rate (INR) */}
                           <td className="p-2.5 align-middle text-center font-medium text-slate-800 border-r border-slate-300">
                             {formatINR(item.rate)}
                           </td>
 
-                          {/* 8. Discount (%) */}
+                          {/* Discount (%) */}
                           {showDiscount && (
                             <td className="p-2.5 align-middle text-center text-slate-700 border-r border-slate-300">
                               {item.discountPercentage}%
                             </td>
                           )}
 
-                          {/* 9. GST (%) */}
-                          <td className="p-2.5 align-middle text-center font-semibold text-blue-600 border-r border-slate-300">
-                            {item.gstRate}%
-                          </td>
-
-                          {/* 10. Total (INR) */}
+                          {/* Total (INR) */}
                           <td className="p-2.5 align-middle text-right pr-3 font-bold text-slate-900">
                             {formatINR(calc.lineTotal)}
                           </td>
@@ -857,6 +895,9 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
                                 <td className="p-2 align-middle text-center text-[10px] text-slate-600 border-r border-slate-300">
                                   {accHsn}
                                 </td>
+                                <td className="p-2 align-middle text-center font-bold text-blue-600 border-r border-slate-300">
+                                  {acc.gstRate}%
+                                </td>
                                 <td className="p-2 align-middle text-center font-semibold text-slate-800 border-r border-slate-300">
                                   {acc.quantity}
                                 </td>
@@ -871,9 +912,6 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
                                     {acc.discountPercentage}%
                                   </td>
                                 )}
-                                <td className="p-2 align-middle text-center font-bold text-blue-600 border-r border-slate-300">
-                                  {acc.gstRate}%
-                                </td>
                                 <td className="p-2 align-middle text-right pr-3 font-bold text-slate-800">
                                   {formatINR(aCalc.lineTotal)}
                                 </td>
@@ -884,134 +922,78 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
                     );
                   })
                 )}
+
+                {/* Sub Total row inside product table matching Excel-style client format */}
+                {(quotation.items || []).length > 0 && (
+                  <tr className="bg-[#F5F8FC] font-black border-t-2 border-[#D6E0EC]">
+                    <td
+                      colSpan={showDiscount ? 9 : 8}
+                      className="p-2.5 text-right font-extrabold text-[#002B55] border-r border-[#D6E0EC] uppercase tracking-wider text-xs"
+                    >
+                      SUB TOTAL
+                    </td>
+                    <td className="p-2.5 text-right pr-3 font-black text-sm text-[#FF7900]">
+                      {formatINR(calculatedSubTotal)}
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
 
-          {/* 4. Bottom Section: Commercial Terms & Price Summary (Side-by-Side) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-            {/* Left Column: Commercial Terms with Numbered Badges */}
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-6 h-6 rounded-md bg-[#FF7900] text-white flex items-center justify-center shrink-0">
-                  <FileText size={14} className="text-white" />
-                </div>
-                <span className="text-xs font-black tracking-wider uppercase text-[#00234a]">
-                  COMMERCIAL TERMS
-                </span>
+          {/* 4. Bottom Section: Commercial Terms */}
+          <div className="pt-2">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-6 h-6 rounded-md bg-[#FF7900] text-white flex items-center justify-center shrink-0">
+                <FileText size={14} className="text-white" />
               </div>
-              <div className="space-y-1.5 text-xs text-slate-700">
-                {termsList.map((term, tIdx) => (
-                  <div key={tIdx} className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-full border-2 border-[#FF7900] text-[#FF7900] font-bold text-[10px] flex items-center justify-center shrink-0">
-                      {tIdx + 1}
-                    </div>
-                    <span className="text-[11px] leading-snug">{term}</span>
-                  </div>
-                ))}
-              </div>
+              <span className="text-xs font-black tracking-wider uppercase text-[#002B55]">
+                COMMERCIAL TERMS
+              </span>
             </div>
-
-            {/* Right Column: Price Summary Card & Two-Tone Grand Total Bar */}
-            <div className="bg-[#F8FAFC] border border-slate-200 rounded-xl p-3.5 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-6 h-6 rounded-md bg-[#FF7900] text-white flex items-center justify-center shrink-0">
-                    <Calculator size={14} className="text-white" />
+            <div className="space-y-1.5 text-xs text-[#102A50]">
+              {termsList.map((term, tIdx) => (
+                <div key={tIdx} className="flex items-center gap-2">
+                  <div className="w-5 h-5 rounded-full border-2 border-[#FF7900] text-[#FF7900] font-bold text-[10px] flex items-center justify-center shrink-0">
+                    {tIdx + 1}
                   </div>
-                  <span className="text-xs font-black tracking-wider uppercase text-[#00234a]">
-                    PRICE SUMMARY
-                  </span>
+                  <span className="text-[11px] leading-snug">{term}</span>
                 </div>
-                <div className="space-y-1.5 text-xs text-slate-700">
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-600">Subtotal:</span>
-                    <span className="font-bold text-slate-900">
-                      {formatINR(quotation.taxableAmount || quotation.subtotal)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-600">
-                      Total GST {primaryGstRate ? `(${primaryGstRate}%)` : ""}:
-                    </span>
-                    <span className="font-bold text-slate-900">
-                      {formatINR(quotation.taxAmount)}
-                    </span>
-                  </div>
-                  {quotation.freightCharges > 0 && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-600">Freight Charges:</span>
-                      <span className="font-bold text-slate-900">
-                        {formatINR(quotation.freightCharges)}
-                      </span>
-                    </div>
-                  )}
-                  {quotation.installationCharges > 0 && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-600">Installation Charges:</span>
-                      <span className="font-bold text-slate-900">
-                        {formatINR(quotation.installationCharges)}
-                      </span>
-                    </div>
-                  )}
-                  {quotation.otherCharges > 0 && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-600">{otherDesc}:</span>
-                      <span className="font-bold text-slate-900">
-                        {formatINR(quotation.otherCharges)}
-                      </span>
-                    </div>
-                  )}
-                  {(quotation.charges || []).map((ch, cIdx) => (
-                    <div key={cIdx} className="flex justify-between items-center">
-                      <span className="text-slate-600">{ch.chargeName}:</span>
-                      <span className="font-bold text-slate-900">
-                        {formatINR(ch.totalAmount || ch.chargeAmount)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Two-Tone Grand Total Bar (Navy Left + Orange Right) */}
-              <div className="mt-3 rounded-lg overflow-hidden flex shadow-xs">
-                <div className="bg-[#00234a] text-white py-2 px-3.5 flex items-center w-1/2">
-                  <span className="text-sm font-black tracking-tight">Grand Total:</span>
-                </div>
-                <div className="bg-[#FF7900] text-white py-2 px-3.5 flex items-center justify-end w-1/2">
-                  <span className="text-base sm:text-lg font-black tracking-tight">
-                    {formatINR(quotation.grandTotal)}
-                  </span>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
 
-          {/* 5. Corporate Navy Footer Strip & Computer Disclaimer */}
-          <div className="pt-2">
-            <div className="bg-[#00234a] text-white rounded-md py-2 px-4 flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-[10px] sm:text-[11px] font-medium shadow-xs">
-              <div className="flex items-center gap-1.5">
-                <Phone size={12} className="text-[#FF7900]" />
-                <span>+91 9028815632</span>
-              </div>
-              <span className="text-blue-300/40">|</span>
-              <div className="flex items-center gap-1.5">
-                <Mail size={12} className="text-[#FF7900]" />
-                <span>sales@isquaresafety.com</span>
-              </div>
-              <span className="text-blue-300/40">|</span>
-              <div className="flex items-center gap-1.5">
-                <MapPin size={12} className="text-[#FF7900]" />
-                <span>iSQUARE Safety Equipments Pvt. Ltd. Pune, Maharashtra, India</span>
+          {/* 5. Closing Section matching Client Reference */}
+          <div className="pt-2 text-xs text-[#102A50] space-y-1">
+            <div className="font-semibold">Thanking you,</div>
+            <div className="font-semibold">Yours faithfully,</div>
+            <div className="font-bold text-[#002B55]">For {companyName}</div>
+
+            {/* Circular Blue Company Stamp replacing Authorized Signatory */}
+            <div className="pt-2 pb-1">
+              <div className="w-24 h-24 shrink-0 flex items-center justify-start">
+                <img
+                  src={ISQUARE_SEAL_BASE64}
+                  alt="iSQUARE Company Stamp"
+                  className="w-full h-full object-contain"
+                />
               </div>
             </div>
 
-            <div className="flex justify-between items-center text-[10px] text-slate-400 mt-1.5 px-1">
-              <span>
-                This is a computer-generated quotation from ISQUARE CRM and does not require a physical signature.
-              </span>
-              <span className="font-medium text-slate-500">Page 1 of 1</span>
+            {/* Center-Aligned Contact Note */}
+            <div className="text-center pt-3 pb-1 border-t border-[#D6E0EC] space-y-0.5">
+              <p className="text-[11px] text-[#64748B]">
+                Note: If you need any clarification or further assistance please feel free to contact
+              </p>
+              <p className="text-xs font-bold text-[#002B55]">
+                Mr. Irfan Attar
+              </p>
             </div>
+          </div>
+
+          {/* Page Counter (Clean and minimal) */}
+          <div className="flex justify-end items-center text-[10px] text-[#64748B] pt-1 px-1">
+            <span className="font-medium text-[#64748B]">Page 1 of 1</span>
           </div>
         </div>
 

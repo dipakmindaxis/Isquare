@@ -3,21 +3,16 @@ import autoTable from "jspdf-autotable";
 import html2canvas from "html2canvas";
 import type { Quotation, CompanyProfile, Product } from "../models/quotationModels";
 import type { Customer } from "../../RSM/Pages/Customer/Types/CustomerTypes";
-import { calculateItemTotals } from "./quotationCalculations";
+import { calculateItemTotals, hasQuotationDiscount } from "./quotationCalculations";
 import {
   isCustomerFormatQuotation,
   downloadOriginalCustomerQuotation,
 } from "./customerQuotationStorage";
 import { resolveImageUrl, getProductImageCache, productService } from "../services/quotationService";
+import { ISQUARE_SEAL_BASE64 } from "./isquareSealBase64";
 
 const PAGE_MARGIN = 14;
 const FOOTER_SPACE = 14;
-
-type QuotationPdfDetails = Quotation & {
-  freightType?: string | null;
-  installationType?: string | null;
-  otherChargesDescription?: string | null;
-};
 
 type CustomerPdfDetails = Customer & {
   contactPerson?: string | null;
@@ -73,7 +68,7 @@ function drawCurrencyMark(
   doc.text("INR", x, baselineY);
 }
 
-function findProductFromMaster(item: any, products: Product[]): Product | null {
+export function findProductFromMaster(item: any, products: Product[]): Product | null {
   if (!products || products.length === 0) return null;
   const itemPid = item.productId ?? item.ProductId;
   const itemCode = (item.itemCode ?? item.ItemCode ?? "").trim().toLowerCase();
@@ -106,7 +101,7 @@ function findProductFromMaster(item: any, products: Product[]): Product | null {
   return null;
 }
 
-function getItemImageSource(item: any, products: Product[]): string | null {
+export function getItemImageSource(item: any, products: Product[]): string | null {
   const direct =
     item.customImageUrl ||
     item.imageUrl ||
@@ -159,7 +154,7 @@ function getItemImageSource(item: any, products: Product[]): string | null {
         }
       }
     }
-  } catch {}
+  } catch { }
 
   return null;
 }
@@ -248,8 +243,11 @@ export async function exportQuotationToPdf(
   quotation: Quotation,
   companyProfile?: CompanyProfile | null,
   customer?: Customer | null,
-  showDiscount: boolean = true
+  showDiscount?: boolean
 ) {
+  const effectiveShowDiscount =
+    showDiscount !== undefined ? showDiscount : hasQuotationDiscount(quotation);
+
   if (isCustomerFormatQuotation(quotation.quotationId, quotation)) {
     const downloaded = downloadOriginalCustomerQuotation(quotation.quotationId);
     if (downloaded) return;
@@ -332,7 +330,7 @@ export async function exportQuotationToPdf(
   }
 
   // Programmatic Fallback
-  await generateProgrammaticPdf(quotation, companyProfile, customer, showDiscount);
+  await generateProgrammaticPdf(quotation, companyProfile, customer, effectiveShowDiscount);
 }
 
 /**
@@ -342,7 +340,7 @@ export async function exportQuotationToPdf(
  */
 async function generateProgrammaticPdf(
   quotation: Quotation,
-  companyProfile?: CompanyProfile | null,
+  _companyProfile?: CompanyProfile | null,
   customer?: Customer | null,
   showDiscount: boolean = true
 ) {
@@ -363,187 +361,174 @@ async function generateProgrammaticPdf(
     quotation.quotationNumber ||
     `QT-2026-${String(quotation.quotationId || 1).padStart(3, "0")}`;
   const customerName =
+    customer?.companyName ||
+    (customer as any)?.company ||
     quotation.customerName ||
     customer?.customerName ||
     customer?.companyName ||
     "Valued Customer";
-  const quotationDetails = quotation as QuotationPdfDetails;
-  const freightType = quotationDetails.freightType;
-  const freightDisplay =
-    freightType && freightType !== "Custom value"
-      ? freightType
-      : quotation.freightCharges > 0
-      ? `INR ${formatPdfNumber(quotation.freightCharges)}`
-      : "Inclusive";
-  const installationType = quotationDetails.installationType;
-  const installationDisplay =
-    installationType && installationType !== "Custom value"
-      ? installationType
-      : quotation.installationCharges > 0
-      ? `INR ${formatPdfNumber(quotation.installationCharges)}`
-      : "At your scope";
-  const otherChargesDescription =
-    quotationDetails.otherChargesDescription || "Standard Packaging & Handling";
 
   doc.setProperties({ title: `${quotationNumber} Customer Quotation` });
 
   // 1. Company Branding (Left)
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(16);
+  doc.setFontSize(14);
   doc.setTextColor(0, 35, 74); // Corporate Navy #00234a
-  doc.text(
-    doc.splitTextToSize(
-      companyProfile?.companyName || "ISQUARE SAFETY EQUIPMENTS PVT. LTD.",
-      contentWidth * 0.55
-    ),
-    PAGE_MARGIN,
-    18
-  );
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(10);
-  doc.setTextColor(255, 121, 0); // Corporate Orange #FF7900
-  doc.text("Sales & Commercial Quotation Proposal", PAGE_MARGIN, 24);
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(100, 116, 139);
-  if (companyProfile?.gstin) {
-    doc.text(
-      `GSTIN: ${companyProfile.gstin}${companyProfile.pan ? ` | PAN: ${companyProfile.pan}` : ""}`,
-      PAGE_MARGIN,
-      29
-    );
-  }
-
-  // 2. Quotation Info (Right side with Navy styling)
-  doc.setFillColor(0, 35, 74); // Navy polygon simulation
-  doc.roundedRect(pageWidth - PAGE_MARGIN - 65, 11, 65, 23, 2, 2, "F");
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(8);
-  doc.setTextColor(191, 219, 254);
-  doc.text("Quotation No.", pageWidth - PAGE_MARGIN - 5, 16, { align: "right" });
-
-  doc.setFontSize(11);
-  doc.setTextColor(255, 255, 255);
-  doc.text(quotationNumber, pageWidth - PAGE_MARGIN - 5, 21, { align: "right" });
+  doc.text("iSQUARE SAFETY EQUIPMENTS PVT. LTD.", PAGE_MARGIN, 16);
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7.5);
-  doc.setTextColor(239, 246, 255);
-  const quotationDate = quotation.quotationDate
-    ? new Date(quotation.quotationDate).toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
-    : new Date().toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      });
-  const validUntilDate = quotation.validUntil
-    ? new Date(quotation.validUntil).toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
-    : new Date(Date.now() + 30 * 86400000).toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      });
-  doc.text(`Date : ${quotationDate}`, pageWidth - PAGE_MARGIN - 5, 26, { align: "right" });
-  doc.text(`Valid Until : ${validUntilDate}`, pageWidth - PAGE_MARGIN - 5, 30, { align: "right" });
+  doc.setTextColor(71, 85, 105);
+  const companyAddress = "GOYAL RESIDENCY B, SR NO. 434/4A, OFFICE, B1/13, Kasarwadi, Maharashtra 411034";
+  doc.text(doc.splitTextToSize(companyAddress, contentWidth * 0.55), PAGE_MARGIN, 21);
+  doc.text("Contact: +91 9028815632   |   Email: sales@isquaresafety.com", PAGE_MARGIN, 28);
+  doc.text("GSTIN: 27AARCP3435C1ZD   |   PAN: AARCP3435C", PAGE_MARGIN, 32);
 
-  // Orange divider line
+  // Quotation Reference & Date Strip
   doc.setDrawColor(255, 121, 0);
   doc.setLineWidth(0.8);
   doc.line(PAGE_MARGIN, 36, pageWidth - PAGE_MARGIN, 36);
 
-  // 3. Info Cards (Side by Side)
-  const infoTop = 40;
-  const cardWidth = contentWidth / 2 - 3;
-  const cardHeight = 28;
+  const quotationDate = quotation.quotationDate
+    ? new Date(quotation.quotationDate).toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })
+    : new Date().toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
 
-  // Left Card: Customer / Bill To (Peach #FFF7ED)
-  doc.setFillColor(255, 247, 237);
-  doc.setDrawColor(254, 215, 170);
+  doc.setFillColor(245, 248, 252);
+  doc.setDrawColor(214, 224, 236);
+  doc.setLineWidth(0.2);
+  doc.roundedRect(PAGE_MARGIN, 38, contentWidth, 7.5, 1, 1, "FD");
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8);
+  doc.setTextColor(0, 43, 85);
+  doc.text(`Ref.: ${quotationNumber}`, PAGE_MARGIN + 3, 43);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7.5);
+  doc.setTextColor(100, 116, 139);
+  doc.text(`Date : ${quotationDate}`, pageWidth - PAGE_MARGIN - 3, 43, { align: "right" });
+
+  // 3. Customer Information Card (Full Width)
+  const infoTop = 48;
+  const cardWidth = contentWidth;
+  const cardHeight = 24;
+
+  // Customer Card
+  doc.setFillColor(245, 248, 252);
+  doc.setDrawColor(214, 224, 236);
   doc.setLineWidth(0.3);
   doc.roundedRect(PAGE_MARGIN, infoTop, cardWidth, cardHeight, 2, 2, "FD");
 
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(7.5);
-  doc.setTextColor(0, 35, 74);
-  doc.text("CUSTOMER / BILL TO", PAGE_MARGIN + 4, infoTop + 5);
+  doc.setFontSize(7);
+  doc.setTextColor(100, 116, 139);
+  doc.text("To,", PAGE_MARGIN + 4, infoTop + 4.5);
 
-  doc.setFontSize(9);
-  doc.setTextColor(0, 35, 74);
-  doc.text(doc.splitTextToSize(customerName, cardWidth - 8), PAGE_MARGIN + 4, infoTop + 10);
+  doc.setFontSize(8.5);
+  doc.setTextColor(0, 43, 85);
+  doc.text(doc.splitTextToSize(customerName, cardWidth - 8), PAGE_MARGIN + 4, infoTop + 8.5);
 
   const customerDetails = customer as CustomerPdfDetails | null | undefined;
   const contactPerson =
     quotation.contactPerson ||
     customerDetails?.contactPerson ||
-    customerDetails?.contactPersonName;
+    customerDetails?.contactPersonName ||
+    "";
   const contactPhone =
     (quotation as any).contactPhone ||
     (quotation as any).contactMobile ||
     customerDetails?.phone ||
-    customer?.mobile;
+    customer?.mobile ||
+    "";
   const contactEmail =
     (quotation as any).contactEmail ||
-    customerDetails?.email;
+    customerDetails?.email ||
+    "";
 
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(7.5);
-  doc.setTextColor(71, 85, 105);
-  let cY = infoTop + 15;
+  doc.setFontSize(7);
+  doc.setTextColor(16, 42, 80);
+  let cY = infoTop + 12.5;
   if (contactPerson) {
-    doc.text(`Attn: ${contactPerson}`, PAGE_MARGIN + 4, cY);
-    cY += 4;
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0, 43, 85);
+    doc.text("Kind Attn:", PAGE_MARGIN + 4, cY);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(16, 42, 80);
+    doc.text(contactPerson, PAGE_MARGIN + 18, cY);
+    cY += 3.5;
   }
-  if (contactPhone || contactEmail) {
-    const contactLine = [contactPhone, contactEmail].filter(Boolean).join(" | ");
-    doc.text(doc.splitTextToSize(contactLine, cardWidth - 8), PAGE_MARGIN + 4, cY);
+  if (contactPhone) {
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0, 43, 85);
+    doc.text("Mob. No.:", PAGE_MARGIN + 4, cY);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(16, 42, 80);
+    doc.text(contactPhone, PAGE_MARGIN + 18, cY);
+    cY += 3.5;
+  }
+  if (contactEmail) {
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0, 43, 85);
+    doc.text("Email id:", PAGE_MARGIN + 4, cY);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(16, 42, 80);
+    doc.text(contactEmail, PAGE_MARGIN + 18, cY);
+    cY += 3.5;
   }
 
-  // Right Card: Commercial & Freight Terms (Ice Blue #F0F7FF)
-  const rightCardX = PAGE_MARGIN + cardWidth + 6;
-  doc.setFillColor(240, 247, 255);
-  doc.setDrawColor(186, 230, 253);
-  doc.roundedRect(rightCardX, infoTop, cardWidth, cardHeight, 2, 2, "FD");
+  // 4. Subject Section: Highlighted Bar with Navy-Blue "Sub:" label and Light Orange background
+  const subY = infoTop + cardHeight + 4;
+  const barH = 6;
+  const badgeW = 13;
+
+  doc.setFillColor(255, 247, 237); // #FFF7ED
+  doc.setDrawColor(254, 215, 170); // #FED7AA
+  doc.setLineWidth(0.2);
+  doc.roundedRect(PAGE_MARGIN, subY, contentWidth * 0.45, barH, 1.2, 1.2, "FD");
+
+  doc.setFillColor(0, 43, 85); // Navy #002B55
+  doc.roundedRect(PAGE_MARGIN, subY, badgeW, barH, 1.2, 1.2, "F");
+  doc.rect(PAGE_MARGIN + badgeW - 2, subY, 2, barH, "F");
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7.5);
-  doc.setTextColor(0, 35, 74);
-  doc.text("COMMERCIAL & FREIGHT TERMS", rightCardX + 4, infoTop + 5);
+  doc.setTextColor(255, 255, 255);
+  doc.text("Sub:", PAGE_MARGIN + 2.5, subY + 4.2);
+
+  doc.setTextColor(0, 43, 85);
+  doc.setFont("helvetica", "bold");
+  doc.text("Offer for PPP", PAGE_MARGIN + badgeW + 3, subY + 4.2);
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(7.5);
+  doc.setTextColor(0, 43, 85);
+  doc.text("Dear Sir/Madam,", PAGE_MARGIN, subY + barH + 4);
 
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(7.5);
-  doc.setTextColor(51, 65, 85);
-  doc.text(`Freight Charges     : ${freightDisplay}`, rightCardX + 4, infoTop + 11);
-  doc.text(`Installation Charges: ${installationDisplay}`, rightCardX + 4, infoTop + 16);
-  doc.text(
-    `Delivery Period     : ${quotation.deliveryPeriod || "2-3 Weeks"}`,
-    rightCardX + 4,
-    infoTop + 21
-  );
+  doc.setFontSize(7);
+  doc.setTextColor(100, 116, 139);
+  doc.text("We take pleasure in submitting our competitive offer for your requirement.", PAGE_MARGIN + 4, subY + barH + 7.5);
 
-  // 4. Product Table with Orange Header
-  const tableStartY = infoTop + cardHeight + 5;
+  // 5. Product Table with Orange Header & Enterprise Theme
+  const tableStartY = subY + barH + 10.5;
   const headers = [
-    "#",
-    "Product Name & Specification",
-    "Image",
-    "HSN Code",
-    "Qty",
-    "UOM",
-    "Rate (INR)",
-    ...(showDiscount ? ["Discount (%)"] : []),
+    "SR. NO.",
+    "DESCRIPTION",
+    "IMAGE",
+    "HSN CODE",
     "GST (%)",
-    "Total (INR)",
+    "QTY",
+    "UOM",
+    "UNIT RATE (INR)",
+    ...(showDiscount ? ["DISCOUNT (%)"] : []),
+    "TOTAL AMOUNT (INR)",
   ];
 
   const rows: string[][] = [];
@@ -577,11 +562,11 @@ async function generateProgrammaticPdf(
       description,
       "", // Clean empty string - NO "Image unavailable"
       hsnCode,
+      `${item.gstRate}%`,
       String(item.quantity),
       item.unitName || "Nos",
       formatPdfNumber(item.rate),
       ...(showDiscount ? [`${item.discountPercentage}%`] : []),
-      `${item.gstRate}%`,
       formatPdfNumber(totals.lineTotal),
     ]);
     imageSources.push(itemImage || null);
@@ -607,11 +592,11 @@ async function generateProgrammaticPdf(
         `↳ [Accessory] ${accessory.itemName}${accessory.specification ? `\n${accessory.specification}` : ""}`,
         "",
         accHsn,
+        `${accessory.gstRate}%`,
         String(accessory.quantity),
         accessory.unitName || "Nos",
         formatPdfNumber(accessory.rate),
         ...(showDiscount ? [`${accessory.discountPercentage}%`] : []),
-        `${accessory.gstRate}%`,
         formatPdfNumber(accessoryTotals.lineTotal),
       ]);
       imageSources.push(accessoryImage || null);
@@ -620,12 +605,54 @@ async function generateProgrammaticPdf(
 
   const embeddedImages = await Promise.all(imageSources.map(loadImageAsDataUrl));
 
+  const calculatedSubTotal = (quotation.items || []).reduce((acc, item) => {
+    const itemTot = calculateItemTotals(
+      item.quantity,
+      item.rate,
+      item.discountPercentage,
+      item.gstRate
+    ).lineTotal;
+    const accTot = (item.accessories || []).reduce((aAcc, acc) => {
+      return aAcc + calculateItemTotals(
+        acc.quantity,
+        acc.rate,
+        acc.discountPercentage,
+        acc.gstRate
+      ).lineTotal;
+    }, 0);
+    return acc + itemTot + accTot;
+  }, 0) || quotation.grandTotal || 0;
+
+  if (rows.length > 0) {
+    rows.push([
+      {
+        content: "SUB TOTAL",
+        colSpan: showDiscount ? 9 : 8,
+        styles: {
+          halign: "right",
+          fontStyle: "bold",
+          textColor: [0, 43, 85],
+          fillColor: [245, 248, 252],
+        },
+      },
+      {
+        content: formatPdfNumber(calculatedSubTotal),
+        styles: {
+          halign: "right",
+          fontStyle: "bold",
+          textColor: [255, 121, 0],
+          fillColor: [245, 248, 252],
+        },
+      },
+    ] as any);
+  }
+
   const fixedWidths = showDiscount
-    ? [6, 18, 16, 10, 12, 20, 14, 12, 24]
-    : [6, 18, 16, 10, 12, 22, 12, 26];
+    ? [6, 18, 16, 12, 10, 12, 20, 14, 24]
+    : [6, 18, 16, 12, 10, 12, 22, 26];
   const productColumnWidth = contentWidth - fixedWidths.reduce((sum, width) => sum + width, 0);
   const columnWidths = [fixedWidths[0], productColumnWidth, ...fixedWidths.slice(1)];
-  const rateColumnIndex = 6;
+  const rateColumnIndex = 7;
   const totalColumnIndex = headers.length - 1;
 
   autoTable(doc, {
@@ -634,7 +661,7 @@ async function generateProgrammaticPdf(
     head: [headers],
     body: rows.length
       ? rows
-      : [["1", "No products added to this quotation.", "", "", "", "", "", ...(showDiscount ? [""] : []), "", ""]],
+      : [["1", "No products added to this quotation.", "", "", "", "", "", "", ...(showDiscount ? [""] : []), ""]],
     theme: "grid",
     showHead: "everyPage",
     headStyles: {
@@ -653,29 +680,28 @@ async function generateProgrammaticPdf(
       cellPadding: 2,
       overflow: "linebreak",
       valign: "middle",
-      textColor: [51, 65, 85],
-      lineColor: [226, 232, 240],
+      textColor: [16, 42, 80],
+      lineColor: [214, 224, 236],
       lineWidth: 0.15,
     },
     alternateRowStyles: { fillColor: [255, 255, 255] },
     columnStyles: {
       0: { cellWidth: columnWidths[0], halign: "center" },
-      1: { cellWidth: columnWidths[1], valign: "top", fontStyle: "bold", textColor: [0, 35, 74] },
+      1: { cellWidth: columnWidths[1], valign: "top", fontStyle: "bold", textColor: [0, 43, 85] },
       2: { cellWidth: columnWidths[2], halign: "center" },
       3: { cellWidth: columnWidths[3], halign: "center" },
-      4: { cellWidth: columnWidths[4], halign: "center" },
-      5: { cellWidth: columnWidths[5], halign: "center" },
-      [rateColumnIndex]: { cellWidth: columnWidths[rateColumnIndex], halign: "right" },
+      4: { cellWidth: columnWidths[4], halign: "center" }, // GST (%)
+      5: { cellWidth: columnWidths[5], halign: "center" }, // Qty
+      6: { cellWidth: columnWidths[6], halign: "center" }, // UOM
+      7: { cellWidth: columnWidths[7], halign: "right" },  // Rate (INR)
       ...(showDiscount
         ? {
-            7: { cellWidth: columnWidths[7], halign: "center" as const },
-            8: { cellWidth: columnWidths[8], halign: "center" as const },
-            9: { cellWidth: columnWidths[9], halign: "right" as const },
-          }
+          8: { cellWidth: columnWidths[8], halign: "center" as const }, // Discount (%)
+          9: { cellWidth: columnWidths[9], halign: "right" as const },  // Total (INR)
+        }
         : {
-            7: { cellWidth: columnWidths[7], halign: "center" as const },
-            8: { cellWidth: columnWidths[8], halign: "right" as const },
-          }),
+          8: { cellWidth: columnWidths[8], halign: "right" as const },  // Total (INR)
+        }),
     },
     didDrawCell: (data) => {
       if (data.section === "body" && data.column.index === 2) {
@@ -715,12 +741,7 @@ async function generateProgrammaticPdf(
     (doc as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY;
   let y = (finalTableY || tableStartY) + 6;
 
-  // 5. Bottom Section: Side-by-Side Commercial Terms & Price Summary
-  const summaryBoxWidth = contentWidth * 0.48;
-  const summaryX = pageWidth - PAGE_MARGIN - summaryBoxWidth;
-
-
-
+  // 5. Bottom Section: Commercial Terms
   let defaultTerms: string[] = [];
   if (quotation.termsAndConditions && quotation.termsAndConditions.trim()) {
     const customLines = quotation.termsAndConditions
@@ -737,15 +758,15 @@ async function generateProgrammaticPdf(
     ];
   }
 
-  // Draw Commercial Terms (Left side)
+  // Draw Commercial Terms
   doc.setFont("helvetica", "bold");
   doc.setFontSize(8);
-  doc.setTextColor(0, 35, 74);
+  doc.setTextColor(0, 43, 85);
   doc.text("COMMERCIAL TERMS", PAGE_MARGIN, y + 2);
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7.5);
-  doc.setTextColor(71, 85, 105);
+  doc.setTextColor(100, 116, 139);
   let termY = y + 7;
   defaultTerms.forEach((term, idx) => {
     doc.setDrawColor(255, 121, 0);
@@ -758,94 +779,60 @@ async function generateProgrammaticPdf(
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7.5);
-    doc.setTextColor(71, 85, 105);
+    doc.setTextColor(16, 42, 80);
     doc.text(term, PAGE_MARGIN + 6, termY);
     termY += 4.5;
   });
 
-  // Draw Price Summary Card (Right side)
-  doc.setFillColor(248, 250, 252);
-  doc.setDrawColor(226, 232, 240);
-  doc.setLineWidth(0.3);
-  doc.roundedRect(summaryX, y - 2, summaryBoxWidth, 34, 2, 2, "FD");
+  // Closing Section & Irfan Attar Note
+  let closingY = termY + 6;
+  if (closingY + 36 > pageHeight - 15) {
+    doc.addPage();
+    closingY = PAGE_MARGIN + 5;
+  }
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7.5);
+  doc.setTextColor(16, 42, 80);
+  doc.text("Thanking you,", PAGE_MARGIN, closingY);
+  doc.text("Yours faithfully,", PAGE_MARGIN, closingY + 4);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(0, 43, 85);
+  doc.text("For iSQUARE Safety Equipments Pvt. Ltd.", PAGE_MARGIN, closingY + 8);
 
+  // Circular Blue Company Stamp replacing Authorized Signatory
+  try {
+    doc.addImage(ISQUARE_SEAL_BASE64, "PNG", PAGE_MARGIN, closingY + 10, 20, 20);
+  } catch (err) {
+    console.warn("Could not embed stamp in signatory area:", err);
+  }
+
+  // Center-Aligned Contact Note
+  const noteY = closingY + 32;
+  doc.setDrawColor(214, 224, 236);
+  doc.setLineWidth(0.3);
+  doc.line(PAGE_MARGIN + 20, noteY - 3, pageWidth - PAGE_MARGIN - 20, noteY - 3);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7.5);
+  doc.setTextColor(100, 116, 139);
+  doc.text(
+    "Note: If you need any clarification or further assistance please feel free to contact",
+    pageWidth / 2,
+    noteY,
+    { align: "center" }
+  );
   doc.setFont("helvetica", "bold");
   doc.setFontSize(8);
-  doc.setTextColor(0, 35, 74);
-  doc.text("PRICE SUMMARY", summaryX + 4, y + 3);
+  doc.setTextColor(0, 43, 85);
+  doc.text("Mr. Irfan Attar", pageWidth / 2, noteY + 4.5, { align: "center" });
 
-  const primaryGst = quotation.items?.[0]?.gstRate ?? 18;
-  const summaryRows: Array<[string, number]> = [
-    ["Subtotal:", quotation.taxableAmount || quotation.subtotal],
-    [`Total GST (${primaryGst}%):`, quotation.taxAmount],
-    ...(quotation.freightCharges > 0 ? [["Freight Charges:", quotation.freightCharges] as [string, number]] : []),
-    ...(quotation.installationCharges > 0
-      ? [["Installation Charges:", quotation.installationCharges] as [string, number]]
-      : []),
-    ...(quotation.otherCharges > 0
-      ? [[`${otherChargesDescription}:`, quotation.otherCharges] as [string, number]]
-      : []),
-  ];
-
-  let sumRowY = y + 8;
-  summaryRows.forEach(([lbl, val]) => {
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7.5);
-    doc.setTextColor(71, 85, 105);
-    doc.text(lbl, summaryX + 4, sumRowY);
-    const amountStr = `INR ${formatPdfNumber(val)}`;
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(15, 23, 42);
-    doc.text(amountStr, summaryX + summaryBoxWidth - 4, sumRowY, { align: "right" });
-    sumRowY += 4.2;
-  });
-
-  // Two-Tone Grand Total Bar
-  const totalBarY = y + 24;
-  const barHalfWidth = summaryBoxWidth / 2;
-  doc.setFillColor(0, 35, 74); // Navy left
-  doc.rect(summaryX, totalBarY, barHalfWidth, 8, "F");
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(8.5);
-  doc.setTextColor(255, 255, 255);
-  doc.text("Grand Total:", summaryX + 3, totalBarY + 5.2);
-
-  doc.setFillColor(255, 121, 0); // Orange right
-  doc.rect(summaryX + barHalfWidth, totalBarY, barHalfWidth, 8, "F");
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(9.5);
-  doc.setTextColor(255, 255, 255);
-  doc.text(
-    `INR ${formatPdfNumber(quotation.grandTotal)}`,
-    summaryX + summaryBoxWidth - 3,
-    totalBarY + 5.2,
-    { align: "right" }
-  );
-
-  // 6. Corporate Navy Footer Strip
+  // Clean Page Numbering
   for (let page = 1; page <= doc.getNumberOfPages(); page += 1) {
     doc.setPage(page);
-    const footerBarY = pageHeight - 14;
-
-    doc.setFillColor(0, 35, 74); // Navy Footer Bar #00234a
-    doc.roundedRect(PAGE_MARGIN, footerBarY, contentWidth, 6.5, 1, 1, "F");
-
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(6.5);
-    doc.setTextColor(255, 255, 255);
-    const footerText =
-      "+91 9028815632   |   sales@isquaresafety.com   |   iSQUARE Safety Equipments Pvt. Ltd. Pune, Maharashtra, India";
-    doc.text(footerText, pageWidth / 2, footerBarY + 4.2, { align: "center" });
-
-    // Sub-footer text
-    doc.setFontSize(6.5);
-    doc.setTextColor(148, 163, 184);
-    doc.text(
-      "This is a computer-generated quotation from ISQUARE CRM and does not require a physical signature.",
-      PAGE_MARGIN,
-      pageHeight - 4
-    );
-    doc.text(`Page ${page} of ${doc.getNumberOfPages()}`, pageWidth - PAGE_MARGIN, pageHeight - 4, {
+    doc.setFontSize(7);
+    doc.setTextColor(100, 116, 139);
+    doc.text(`Page ${page} of ${doc.getNumberOfPages()}`, pageWidth - PAGE_MARGIN, pageHeight - 5, {
       align: "right",
     });
   }
