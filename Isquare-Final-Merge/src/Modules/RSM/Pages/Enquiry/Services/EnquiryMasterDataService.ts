@@ -79,7 +79,7 @@ export const getEnquirySources = () => fetchMaster(API_ENDPOINTS.EnquirySources,
 export const getProductCategories = () => fetchMaster(API_ENDPOINTS.ProductCategory || `${API_ENDPOINTS.BaseUrl}/ProductCategory`, 'productCategoryId', 'productCategoryName');
 export const getUOMs = () => fetchMaster(API_ENDPOINTS.UnitOfMeasures, 'unitOfMeasureId', 'unitOfMeasureName');
 export const getPlacesOfSupply = () => fetchMaster(API_ENDPOINTS.PlaceOfSupplies, 'placeOfSupplyId', 'placeOfSupplyName');
-export const getCurrencies = () => fetchMaster(API_ENDPOINTS.Currencies, 'currencyId', 'currencyCode');
+export const getCurrencies = () => fetchMaster(API_ENDPOINTS.Currencies, 'currencyId', 'currencyName');
 export const getEnquiryStatuses = () => fetchMaster(API_ENDPOINTS.EnquiryStatuses, 'enquiryStatusId', 'enquiryStatusName');
 export const getEnquiryStages = () => fetchMaster(API_ENDPOINTS.EnquiryStages, 'enquiryStageId', 'enquiryStageName');
 export const getEnquiryPriorities = async (): Promise<MasterItem[]> => {

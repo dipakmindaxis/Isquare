@@ -7,11 +7,14 @@ import {
   getCurrencies, getEnquiryStatuses, getEnquiryStages, getEnquiryPriorities, getTerritories,
   getLostReasons, getDepartments, getActivityTypes, getSalesManagers, getBdeUsers
 } from "../Services/EnquiryMasterDataService";
-import { getCustomers } from "../../Customer/Services/CustomerService";
+import { getCustomers, getCustomerById } from "../../Customer/Services/CustomerService";
+import { getIndustries, getCustomerAreas, getPaymentTerms, getDirectors, getBdeUsers as getCustomerBdeUsers, getEmployees } from "../../Customer/Services/CustomerMasterDataService";
+import { getDepartments as getHrmsDepartments, getDesignations as getHrmsDesignations } from "../../../../HRMS/Services/MasterDataService";
 import { getAllPaymentTerms } from "../../Master/PaymentTerm/Services/PaymentTermService";
-import { getAllContacts } from "../../Master/Contact/Services/ContactService";
+import { getAllContacts, getContactsByCompanyId } from "../../Master/Contact/Services/ContactService";
 import type { MasterItem } from "../Types/EnquiryTypes";
 import { buttonStyles } from "../../../../../Components/Common/buttonStyles";
+import { SearchableSelect } from "../../../../../Components/Common/SearchableSelect";
 
 interface AddEnquiryModalProps {
   isOpen: boolean;
@@ -34,7 +37,14 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
   const [customers, setCustomers] = useState<any[]>([]);
   const [contacts, setContacts] = useState<any[]>([]);
   const [filteredContacts, setFilteredContacts] = useState<any[]>([]);
+  const [isLoadingContacts, setIsLoadingContacts] = useState(false);
   const [bdeUsersList, setBdeUsersList] = useState<MasterItem[]>([]);
+  const [industriesList, setIndustriesList] = useState<any[]>([]);
+  const [areasList, setAreasList] = useState<any[]>([]);
+  const [paymentTermsList, setPaymentTermsList] = useState<any[]>([]);
+  const [directorsList, setDirectorsList] = useState<any[]>([]);
+  const [contactDepartments, setContactDepartments] = useState<MasterItem[]>([]);
+  const [contactDesignations, setContactDesignations] = useState<MasterItem[]>([]);
 
   const [masters, setMasters] = useState<{
     types: MasterItem[], sources: MasterItem[], categories: MasterItem[], uoms: MasterItem[],
@@ -59,32 +69,118 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
     setIsLoading(true);
     try {
       const [
-        nextNumber, custRes, contRes, termsRes,
+        nextNumber, custRes, contRes, termsRes, customerPaymentTermsRes,
         types, sources, categories, uoms, places, currencies,
         statuses, stages, priorities, territories, lostReasons, departments, activities,
-        salesManagersRes, bdeUsersRes
+        salesManagersRes, bdeUsersRes, customerBdeRes, employeesRes, industriesRes, areasRes, directorsRes,
+        hrmsDepartmentsRes, hrmsDesignationsRes
       ] = await Promise.all([
         getNextEnquiryNumber().catch(() => ""),
         getCustomers().catch(() => []),
         getAllContacts().catch(() => []),
         getAllPaymentTerms().catch(() => []),
+        getPaymentTerms().catch(() => []),
         getEnquiryTypes(), getEnquirySources(), getProductCategories(), getUOMs(), getPlacesOfSupply(), getCurrencies(),
         getEnquiryStatuses(), getEnquiryStages(), getEnquiryPriorities(), getTerritories(), getLostReasons(), getDepartments(), getActivityTypes().catch(() => []),
         getSalesManagers().catch(() => []),
-        getBdeUsers().catch(() => [])
+        getBdeUsers().catch(() => []),
+        getCustomerBdeUsers().catch(() => []),
+        getEmployees().catch(() => []),
+        getIndustries().catch(() => []),
+        getCustomerAreas().catch(() => []),
+        getDirectors().catch(() => []),
+        getHrmsDepartments().catch(() => []),
+        getHrmsDesignations().catch(() => [])
       ]);
 
       setFormData({ enquiryDate: new Date().toISOString().split("T")[0], enquiryNumber: nextNumber });
       setCustomers(custRes);
       setContacts(contRes);
-      setBdeUsersList(bdeUsersRes);
+
+      // Consolidate BDE Users & Sales Executive Employees
+      const combinedBdes: any[] = [];
+      const seenBdeIds = new Set<number>();
+      const addBde = (id: number, name: string, code?: string) => {
+        if (id > 0 && name && !seenBdeIds.has(id)) {
+          seenBdeIds.add(id);
+          combinedBdes.push({ id, name, code: code || "" });
+        }
+      };
+
+      (bdeUsersRes || []).forEach((b: any) => {
+        const id = Number(b.id || b.bdeUserId || 0);
+        const name = String(b.name || b.value || b.fullName || b.userName || "").trim();
+        addBde(id, name, b.code);
+      });
+
+      (customerBdeRes || []).forEach((b: any) => {
+        const id = Number(b.id || b.bdeUserId || 0);
+        const name = String(b.name || b.value || b.fullName || b.userName || "").trim();
+        addBde(id, name, b.code);
+      });
+
+      (employeesRes || []).forEach((e: any) => {
+        const id = Number(e.id || 0);
+        const name = String(e.fullName || e.name || `${e.firstName || ""} ${e.lastName || ""}`).trim();
+        const designation = String(e.designation || e.role || "").toLowerCase();
+        if (designation.includes("bde") || designation.includes("sales") || designation.includes("exec") || combinedBdes.length === 0) {
+          addBde(id, name, e.employeeCode || e.code);
+        }
+      });
+
+      setBdeUsersList(combinedBdes);
+      setIndustriesList(industriesRes || []);
+      setAreasList(areasRes || []);
+
+      const combinedPaymentTerms = [
+        ...(Array.isArray(termsRes) ? termsRes : []),
+        ...(Array.isArray(customerPaymentTermsRes) ? customerPaymentTermsRes : [])
+      ];
+      setPaymentTermsList(combinedPaymentTerms);
+      setDirectorsList(directorsRes || []);
+
+      const ptMap = new Map<number, string>();
+      combinedPaymentTerms.forEach((pt: any) => {
+        const id = Number(pt.paymentTermId ?? pt.PaymentTermId ?? pt.id ?? 0);
+        const name = String(pt.paymentTermName ?? pt.PaymentTermName ?? pt.name ?? "").trim();
+        if (id && name && !ptMap.has(id)) {
+          ptMap.set(id, name);
+        }
+      });
+      const normalizedPaymentTerms = Array.from(ptMap.entries()).map(([id, name]) => ({ id, name }));
 
       setMasters({
         types, sources, categories, uoms, places, currencies, statuses, stages,
         priorities, territories, lostReasons, departments, activities,
-        paymentTerms: termsRes.map((pt: any) => ({ id: pt.paymentTermId, name: pt.paymentTermName })),
+        paymentTerms: normalizedPaymentTerms,
         salesManagers: salesManagersRes
       });
+
+      // Consolidate HRMS & Enquiry Departments for Section 2 Contact
+      const deptMap = new Map<string, { id: number; name: string }>();
+      (departments || []).forEach((d: any) => {
+        const name = String(d.name || d.departmentName || "").trim();
+        if (name && !deptMap.has(name.toLowerCase())) {
+          deptMap.set(name.toLowerCase(), { id: Number(d.id || d.departmentId || 0), name });
+        }
+      });
+      (hrmsDepartmentsRes || []).forEach((d: any) => {
+        const name = String(d.name || d.departmentName || "").trim();
+        if (name && !deptMap.has(name.toLowerCase())) {
+          deptMap.set(name.toLowerCase(), { id: Number(d.id || d.departmentId || 0), name });
+        }
+      });
+      setContactDepartments(Array.from(deptMap.values()));
+
+      // Consolidate HRMS Designations for Section 2 Contact
+      const desigMap = new Map<string, { id: number; name: string }>();
+      (hrmsDesignationsRes || []).forEach((d: any) => {
+        const name = String(d.name || d.designationName || "").trim();
+        if (name && !desigMap.has(name.toLowerCase())) {
+          desigMap.set(name.toLowerCase(), { id: Number(d.id || d.designationId || 0), name });
+        }
+      });
+      setContactDesignations(Array.from(desigMap.values()));
 
     } catch (error) {
       toast.error("Failed to load initial data.");
@@ -98,8 +194,8 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
     setFormData((prev: any) => ({ ...prev, [name]: value }));
   };
 
-  const handleCustomerChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const custId = e.target.value ? Number(e.target.value) : "";
+  const handleCustomerChange = async (selectedVal: any) => {
+    const custId = selectedVal ? Number(selectedVal) : "";
     setFormData((prev: any) => ({
       ...prev,
       customerId: custId,
@@ -112,53 +208,156 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
     }));
 
     if (custId) {
-      const cust = customers.find(c => c.customerId === custId);
-      setSelectedCustomerInfo(cust);
-      setFilteredContacts(contacts.filter(c => c.companyId === custId));
+      let cust = customers.find(c => c.customerId === custId);
+      try {
+        const fullCust = await getCustomerById(custId);
+        if (fullCust) {
+          cust = { ...cust, ...fullCust };
+        }
+      } catch { }
 
-      // Auto-populate BDE from Customer Master
-      let bdeId: number | "" = cust?.bdeUserId || cust?.bdeId || cust?.assignedBdeId || "";
-      let bdeName: string = cust?.bdeUserName || cust?.bdeName || cust?.assignedBdeName || "";
+      // Resolve Industry Name
+      const indId = Number(cust?.industryId ?? (cust as any)?.IndustryId ?? 0);
+      const matchedInd = indId ? industriesList.find((i: any) => Number(i.industryId ?? i.IndustryId ?? i.id) === indId) : null;
+      const industryName = cust?.industryName || (cust as any)?.IndustryName || matchedInd?.industryName || matchedInd?.IndustryName || matchedInd?.name || "-";
 
-      if (bdeId && !bdeName && bdeUsersList.length > 0) {
-        const matchedBde = bdeUsersList.find(b => b.id === Number(bdeId));
-        if (matchedBde) bdeName = matchedBde.name;
-      } else if (!bdeId && bdeName && bdeUsersList.length > 0) {
-        const matchedBde = bdeUsersList.find(b => b.name.toLowerCase() === bdeName.toLowerCase());
-        if (matchedBde) bdeId = matchedBde.id;
+      // Resolve Area Name
+      const arId = Number(cust?.customerAreaId ?? (cust as any)?.CustomerAreaId ?? 0);
+      const matchedAr = arId ? areasList.find((a: any) => Number(a.customerAreaId ?? a.CustomerAreaId ?? a.areaId ?? a.id) === arId) : null;
+      const customerAreaName = cust?.customerAreaName || (cust as any)?.CustomerAreaName || matchedAr?.areaName || matchedAr?.AreaName || matchedAr?.name || "-";
+
+      // Resolve Payment Term Name
+      const ptId = Number(cust?.paymentTermsId ?? (cust as any)?.PaymentTermsId ?? cust?.paymentTermId ?? (cust as any)?.PaymentTermId ?? 0);
+      const matchedPt = ptId ? (paymentTermsList.find((p: any) => Number(p.paymentTermId ?? p.PaymentTermId ?? p.id) === ptId) || masters.paymentTerms.find((p: any) => Number(p.id) === ptId)) : null;
+      const paymentTermName = cust?.paymentTermName || (cust as any)?.PaymentTermName || matchedPt?.paymentTermName || matchedPt?.PaymentTermName || matchedPt?.name || "-";
+
+      // Resolve Sales Manager / Director Name
+      const smId = Number(cust?.salesManagerId ?? (cust as any)?.SalesManagerId ?? cust?.directorId ?? (cust as any)?.DirectorId ?? 0);
+      let smName = cust?.salesManagerName || (cust as any)?.SalesManagerName || cust?.directorName || (cust as any)?.DirectorName || "";
+      if (!smName && smId) {
+        const matchedDir = directorsList.find((d: any) => Number(d.directorId ?? d.DirectorId ?? d.id) === smId);
+        if (matchedDir) {
+          smName = matchedDir.directorName || matchedDir.fullName || matchedDir.name || "";
+        }
+      }
+      if (!smName && smId) {
+        const matchedSm = masters.salesManagers.find((m: any) => Number(m.id ?? m.salesManagerId) === smId);
+        if (matchedSm) {
+          smName = matchedSm.name || (matchedSm as any)?.userName || "";
+        }
       }
 
-      // Auto-populate Sales Manager if assigned to customer, else preserve or allow selection
-      let smId: number | "" = cust?.salesManagerId || "";
-      let smName: string = cust?.salesManagerName || "";
-
-      if (!smId && cust?.directorId) {
-        const matchedSm = masters.salesManagers.find(m => m.id === cust.directorId || (cust.directorName && m.name.toLowerCase() === cust.directorName.toLowerCase()));
-        if (matchedSm) {
-          smId = matchedSm.id;
-          smName = matchedSm.name;
+      // Resolve BDE
+      const bdeId = Number(cust?.bdeUserId ?? (cust as any)?.BDEUserId ?? (cust as any)?.bdeId ?? (cust as any)?.BdeId ?? 0);
+      let bdeName = cust?.bdeUserName || (cust as any)?.BDEUserName || (cust as any)?.bdeName || "";
+      if (!bdeName && bdeId) {
+        const matchedBde = bdeUsersList.find((b: any) => Number(b.id ?? b.bdeUserId) === bdeId);
+        if (matchedBde) {
+          bdeName = matchedBde.name || (matchedBde as any)?.value || (matchedBde as any)?.userName || "";
         }
-      } else if (!smId && cust?.salesManagerName) {
-        const matchedSm = masters.salesManagers.find(m => m.name.toLowerCase() === cust.salesManagerName.toLowerCase());
-        if (matchedSm) {
-          smId = matchedSm.id;
-          smName = matchedSm.name;
-        }
-      } else if (smId && !smName) {
-        const matchedSm = masters.salesManagers.find(m => m.id === Number(smId));
-        if (matchedSm) smName = matchedSm.name;
       }
+      if (bdeId && bdeName) {
+        setBdeUsersList(prev => {
+          if (!prev.some(b => Number(b.id || (b as any).bdeUserId) === bdeId)) {
+            return [{ id: bdeId, name: bdeName, code: "" } as any, ...prev];
+          }
+          return prev;
+        });
+      }
+
+      const enrichedCust = {
+        ...cust,
+        industryName: industryName !== "-" ? industryName : (cust?.industryName || "-"),
+        customerAreaName: customerAreaName !== "-" ? customerAreaName : (cust?.customerAreaName || "-"),
+        paymentTermName: paymentTermName !== "-" ? paymentTermName : (cust?.paymentTermName || "-"),
+        salesManagerName: smName || "-",
+        salesManagerId: smId,
+        bdeUserName: bdeName || "-",
+        bdeUserId: bdeId
+      };
+      setSelectedCustomerInfo(enrichedCust);
 
       // Auto-fill commercial & assignment details from customer master
       setFormData((prev: any) => ({
         ...prev,
-        paymentTermId: cust?.paymentTermsId || cust?.paymentTermId || "",
-        customerCreditLimit: cust?.creditLimit || "",
-        salesManagerId: smId,
-        salesManagerName: smName,
-        bdeUserId: bdeId,
-        bdeUserName: bdeName
+        paymentTermId: ptId || "",
+        salesTerritoryId: arId || prev.salesTerritoryId,
+        directorId: smId || prev.directorId,
+        directorName: smName || prev.directorName,
+        salesManagerId: smId || prev.salesManagerId,
+        salesManagerName: smName || prev.salesManagerName,
+        bdeUserId: bdeId || prev.bdeUserId,
+        bdeUserName: bdeName || prev.bdeUserName
       }));
+
+      // Extract primary contact details from Customer Master
+      const custName = cust?.customerName || cust?.companyName || "";
+      const custMobile = cust?.mobile || cust?.phone || cust?.mobileNumber || cust?.alternateMobile || "";
+      const custEmail = cust?.email || cust?.emailAddress || cust?.alternateEmail || "";
+      const custDept = cust?.department || (cust as any)?.departmentName || "";
+      const custDesig = cust?.designation || (cust as any)?.designationName || "";
+
+      const primaryContact: any = {
+        contactId: 0,
+        companyId: custId,
+        fullName: custName,
+        department: custDept,
+        designation: custDesig || "Primary Contact",
+        mobileNo: custMobile,
+        emailAddress: custEmail,
+        isPrimary: true
+      };
+
+      // Auto-fill Section 2 immediately from customer basic details
+      setFormData((prev: any) => ({
+        ...prev,
+        contactId: 0,
+        contactName: custName,
+        departmentName: custDept,
+        designation: custDesig,
+        contactMobile: custMobile,
+        contactEmail: custEmail
+      }));
+
+      // Fetch contacts for selected customer using existing API
+      setIsLoadingContacts(true);
+      try {
+        let customerContacts = await getContactsByCompanyId(custId);
+        if (!customerContacts || customerContacts.length === 0) {
+          customerContacts = contacts.filter((c: any) => Number(c.companyId) === Number(custId));
+        }
+
+        const activeContacts = (customerContacts || []).filter((c: any) => c.isActive !== false && !c.isDeleted);
+        const combinedContacts = [
+          primaryContact,
+          ...activeContacts.filter((c: any) => c.contactId > 0 && c.fullName?.toLowerCase() !== custName.toLowerCase())
+        ];
+        setFilteredContacts(combinedContacts);
+
+        setFormData((prev: any) => ({
+          ...prev,
+          contactId: 0,
+          contactName: custName,
+          departmentName: custDept,
+          designation: custDesig,
+          contactMobile: custMobile,
+          contactEmail: custEmail
+        }));
+      } catch (err) {
+        console.error("Error loading customer contacts:", err);
+        setFilteredContacts([primaryContact]);
+        setFormData((prev: any) => ({
+          ...prev,
+          contactId: 0,
+          contactName: custName,
+          departmentName: custDept,
+          designation: custDesig,
+          contactMobile: custMobile,
+          contactEmail: custEmail
+        }));
+      } finally {
+        setIsLoadingContacts(false);
+      }
     } else {
       setSelectedCustomerInfo(null);
       setFilteredContacts([]);
@@ -174,23 +373,33 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
     }
   };
 
-  const handleContactChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const contId = e.target.value ? Number(e.target.value) : "";
-    if (contId) {
-      const contact = filteredContacts.find(c => c.contactId === contId);
+  const handleContactChange = (selectedVal: any) => {
+    if (selectedVal === "" || selectedVal === null || selectedVal === undefined) {
+      setFormData((prev: any) => ({
+        ...prev,
+        contactId: "",
+        contactName: "",
+        departmentName: "",
+        designation: "",
+        contactMobile: "",
+        contactEmail: ""
+      }));
+      return;
+    }
+
+    const contId = Number(selectedVal);
+    const contact = filteredContacts.find(c => Number(c.contactId) === contId);
+    if (contact) {
+      const dept = contact.department || (contact as any).departmentName || "";
+      const desig = (contact.isPrimary && !contact.designation) ? "" : (contact.designation || (contact as any).designationName || "");
       setFormData((prev: any) => ({
         ...prev,
         contactId: contId,
-        contactName: contact?.fullName || "", // Fixed property name
-        departmentName: contact?.department || "", // Fixed property name
-        designation: contact?.designation || "", // Fixed property name
-        contactMobile: contact?.mobileNo || "", // Fixed property name
-        contactEmail: contact?.emailAddress || ""
-      }));
-    } else {
-      setFormData((prev: any) => ({
-        ...prev,
-        contactId: "", contactName: "", departmentName: "", designation: "", contactMobile: "", contactEmail: ""
+        contactName: contact.fullName || "",
+        departmentName: dept,
+        designation: desig,
+        contactMobile: contact.mobileNo || "",
+        contactEmail: contact.emailAddress || ""
       }));
     }
   };
@@ -213,6 +422,11 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!formData.customerId) {
+      toast.error("Please select a Customer.");
+      return;
+    }
+
     const selectedStatus = masters.statuses.find(s => s.id === Number(formData.enquiryStatusId));
     if (selectedStatus?.name.toLowerCase() === "lost" && !formData.lostReasonId) {
       toast.error("Lost Reason is mandatory when Status is 'Lost'.");
@@ -232,8 +446,15 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
       ];
 
       numericFields.forEach(field => {
-        if (payload[field] === "") payload[field] = null;
-        else if (payload[field] !== undefined && payload[field] !== null) payload[field] = Number(payload[field]);
+        let val = payload[field];
+        if (typeof val === 'string') {
+          val = val.replace(/%/g, '').trim();
+        }
+        if (val === "" || val === null || val === undefined || (field === 'contactId' && Number(val) === 0)) {
+          payload[field] = null;
+        } else {
+          payload[field] = Number(val);
+        }
       });
 
       await createEnquiry(payload);
@@ -246,6 +467,37 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
       setIsSubmitting(false);
     }
   };
+
+  const customerOptions = customers.map((c: any) => ({
+    value: c.customerId,
+    label: `${c.customerCode ? `${c.customerCode} — ` : ""}${c.customerName || ""}${c.gstin ? ` — ${c.gstin}` : ""}`
+  }));
+
+  const contactOptions = filteredContacts.map((c: any) => {
+    const isCustPrimary = c.isPrimary || Number(c.contactId) === 0;
+    const tag = isCustPrimary ? "(Primary Contact)" : c.designation ? `(${c.designation})` : "";
+    const dept = c.department ? `Dept: ${c.department}` : "";
+    const mob = c.mobileNo ? `Mob: ${c.mobileNo}` : "";
+    const email = c.emailAddress ? `Email: ${c.emailAddress}` : "";
+
+    const extraParts = [tag, dept, mob, email].filter(Boolean).join(" — ");
+    const label = extraParts ? `${c.fullName || "Unnamed"} — ${extraParts}` : (c.fullName || "Unnamed");
+
+    return {
+      value: Number(c.contactId),
+      label
+    };
+  });
+
+  const departmentOptions = contactDepartments.map((d: any) => ({
+    value: d.name,
+    label: d.name
+  }));
+
+  const designationOptions = contactDesignations.map((d: any) => ({
+    value: d.name,
+    label: d.name
+  }));
 
   if (!isOpen) return null;
 
@@ -315,23 +567,24 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
                   </div>
                   <div className="md:col-span-4">
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Customer <span className="text-red-500">*</span></label>
-                    <select required name="customerId" value={formData.customerId || ""} onChange={handleCustomerChange} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800 font-medium">
-                      <option value="">Select Customer</option>
-                      {customers.map((c: any) => (
-                        <option key={c.customerId} value={c.customerId}>
-                          {c.customerCode} — {c.customerName} {c.gstin ? `— ${c.gstin}` : ''}
-                        </option>
-                      ))}
-                    </select>
+                    <SearchableSelect
+                      name="customerId"
+                      value={formData.customerId || ""}
+                      onChange={handleCustomerChange}
+                      options={customerOptions}
+                      placeholder="Select Customer"
+                      isClearable={false}
+                      className="text-sm font-medium"
+                    />
                   </div>
                 </div>
 
                 {/* Inherited Customer Details Box */}
                 {selectedCustomerInfo && (
                   <div className="mt-4 bg-blue-50/50 border border-blue-100 rounded-lg p-4 animate-in fade-in duration-300">
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-y-3 gap-x-4 text-xs">
-                      <div><span className="text-gray-400 block uppercase text-[9px] font-bold tracking-wider">Code</span><span className="font-semibold text-gray-800">{selectedCustomerInfo.customerCode}</span></div>
-                      <div><span className="text-gray-400 block uppercase text-[9px] font-bold tracking-wider">Name</span><span className="font-semibold text-gray-800">{selectedCustomerInfo.customerName}</span></div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-y-3 gap-x-4 text-xs">
+                      <div><span className="text-gray-400 block uppercase text-[9px] font-bold tracking-wider">Code</span><span className="font-semibold text-gray-800">{selectedCustomerInfo.customerCode || "-"}</span></div>
+                      <div><span className="text-gray-400 block uppercase text-[9px] font-bold tracking-wider">Name</span><span className="font-semibold text-gray-800">{selectedCustomerInfo.customerName || "-"}</span></div>
                       <div><span className="text-gray-400 block uppercase text-[9px] font-bold tracking-wider">GSTIN</span><span className="font-semibold text-gray-800">{selectedCustomerInfo.gstin || "-"}</span></div>
                       <div><span className="text-gray-400 block uppercase text-[9px] font-bold tracking-wider">PAN</span><span className="font-semibold text-gray-800">{selectedCustomerInfo.pan || "-"}</span></div>
                       <div><span className="text-gray-400 block uppercase text-[9px] font-bold tracking-wider">Industry</span><span className="font-semibold text-gray-800">{selectedCustomerInfo.industryName || "-"}</span></div>
@@ -339,8 +592,7 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
                       <div><span className="text-gray-400 block uppercase text-[9px] font-bold tracking-wider">Area</span><span className="font-semibold text-gray-800">{selectedCustomerInfo.customerAreaName || "-"}</span></div>
                       <div><span className="text-gray-400 block uppercase text-[9px] font-bold tracking-wider">Sales Manager</span><span className="font-semibold text-gray-800">{selectedCustomerInfo.salesManagerName || "-"}</span></div>
                       <div><span className="text-gray-400 block uppercase text-[9px] font-bold tracking-wider">BDE</span><span className="font-semibold text-gray-800">{selectedCustomerInfo.bdeUserName || "-"}</span></div>
-                      <div><span className="text-gray-400 block uppercase text-[9px] font-bold tracking-wider">Payment Terms</span><span className="font-semibold text-gray-800">{selectedCustomerInfo.paymentTermName || "-"}</span></div>
-                      <div><span className="text-gray-400 block uppercase text-[9px] font-bold tracking-wider">Credit Limit</span><span className="font-semibold text-gray-800">{selectedCustomerInfo.creditLimit || "-"}</span></div>
+                      <div className="sm:col-span-2 md:col-span-2"><span className="text-gray-400 block uppercase text-[9px] font-bold tracking-wider">Payment Terms</span><span className="font-semibold text-gray-800">{selectedCustomerInfo.paymentTermName || "-"}</span></div>
                     </div>
                     <p className="text-[10px] text-gray-400 italic mt-3 border-t border-blue-100 pt-2">Automatically inherited from Customer Master.</p>
                   </div>
@@ -356,41 +608,70 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-x-8 gap-y-6">
                   <div>
-                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Customer Contact <span className="text-red-500">*</span></label>
-                    <select
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Customer Contact</label>
+                    <SearchableSelect
                       name="contactId"
-                      value={formData.contactId || ""}
+                      value={formData.contactId !== undefined && formData.contactId !== null && formData.contactId !== "" ? Number(formData.contactId) : ""}
                       onChange={handleContactChange}
-                      disabled={!formData.customerId}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                    >
-                      <option value="">Select Contact</option>
-                      {filteredContacts.map((c: any) => (
-                        <option key={c.contactId} value={c.contactId}>
-                          {c.fullName} — {c.department || "N/A"} — {c.mobileNo || "N/A"}
-                        </option>
-                      ))}
-                    </select>
+                      options={contactOptions}
+                      placeholder={
+                        !formData.customerId
+                          ? "Select Customer first"
+                          : isLoadingContacts
+                            ? "Loading contacts..."
+                            : filteredContacts.length === 0
+                              ? "No contacts found"
+                              : "Select Contact"
+                      }
+                      isDisabled={!formData.customerId || isLoadingContacts}
+                      isLoading={isLoadingContacts}
+                      isClearable={true}
+                      className="text-sm"
+                    />
                   </div>
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Contact Name</label>
-                    <input type="text" name="contactName" value={formData.contactName || ""} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm" />
+                    <input type="text" name="contactName" value={formData.contactName || ""} onChange={handleInputChange} placeholder="Contact Person Name" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm" />
                   </div>
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Department</label>
-                    <input type="text" name="departmentName" value={formData.departmentName || ""} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm" />
+                    <SearchableSelect
+                      name="departmentName"
+                      value={formData.departmentName || ""}
+                      onChange={(val) => {
+                        setFormData((prev: any) => ({ ...prev, departmentName: val || "" }));
+                      }}
+                      options={departmentOptions}
+                      placeholder="Select or type department..."
+                      isCreatable={true}
+                      isClearable={true}
+                      isSearchable={true}
+                      className="text-sm font-medium"
+                    />
                   </div>
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Designation</label>
-                    <input type="text" name="designation" value={formData.designation || ""} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm" />
+                    <SearchableSelect
+                      name="designation"
+                      value={formData.designation || ""}
+                      onChange={(val) => {
+                        setFormData((prev: any) => ({ ...prev, designation: val || "" }));
+                      }}
+                      options={designationOptions}
+                      placeholder="Select or type designation..."
+                      isCreatable={true}
+                      isClearable={true}
+                      isSearchable={true}
+                      className="text-sm font-medium"
+                    />
                   </div>
                   <div className="md:col-span-2">
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Mobile</label>
-                    <input type="text" name="contactMobile" value={formData.contactMobile || ""} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm" />
+                    <input type="text" name="contactMobile" value={formData.contactMobile || ""} onChange={handleInputChange} placeholder="Contact Number / Mobile" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm" />
                   </div>
                   <div className="md:col-span-2">
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Email</label>
-                    <input type="email" name="contactEmail" value={formData.contactEmail || ""} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm" />
+                    <input type="email" name="contactEmail" value={formData.contactEmail || ""} onChange={handleInputChange} placeholder="Email ID" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm" />
                   </div>
                 </div>
               </div>
@@ -419,7 +700,7 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
                   {/* Row 2 – Four Columns */}
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Required Quantity</label>
-                    <input type="number" name="requiredQuantity" value={formData.requiredQuantity || ""} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm" />
+                    <input type="number" name="requiredQuantity" value={formData.requiredQuantity ?? ""} onChange={handleInputChange} onWheel={(e) => (e.target as HTMLElement).blur()} placeholder="0" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm no-spin [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                   </div>
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">UOM</label>
@@ -464,7 +745,7 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-x-8 gap-y-6">
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Expected Order Value</label>
-                    <input type="number" name="expectedOrderValue" value={formData.expectedOrderValue || ""} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm" />
+                    <input type="number" name="expectedOrderValue" value={formData.expectedOrderValue ?? ""} onChange={handleInputChange} onWheel={(e) => (e.target as HTMLElement).blur()} placeholder="0" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm no-spin [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                   </div>
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Currency</label>
@@ -475,7 +756,7 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
                   </div>
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Customer Budget</label>
-                    <input type="number" name="customerBudget" value={formData.customerBudget || ""} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm" />
+                    <input type="number" name="customerBudget" value={formData.customerBudget ?? ""} onChange={handleInputChange} onWheel={(e) => (e.target as HTMLElement).blur()} placeholder="0" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm no-spin [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                   </div>
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Expected Closing Date</label>
@@ -484,18 +765,28 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
 
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Probability %</label>
-                    <input type="number" name="probabilityPercentage" value={formData.probabilityPercentage || ""} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm" />
+                    <input
+                      type="text"
+                      name="probabilityPercentage"
+                      value={formData.probabilityPercentage !== undefined && formData.probabilityPercentage !== null ? formData.probabilityPercentage : ""}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9.%]/g, '');
+                        setFormData((prev: any) => ({ ...prev, probabilityPercentage: val }));
+                      }}
+                      placeholder="e.g. 50%"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm"
+                    />
                   </div>
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Payment Terms</label>
                     <select name="paymentTermId" value={formData.paymentTermId || ""} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800">
-                      <option value="">30 Days</option>
+                      <option value="">Select Payment Terms</option>
                       {masters.paymentTerms.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                     </select>
                   </div>
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Customer Credit Limit</label>
-                    <input type="number" name="customerCreditLimit" value={formData.customerCreditLimit || ""} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm bg-gray-50" />
+                    <input type="number" name="customerCreditLimit" value={formData.customerCreditLimit ?? ""} onChange={handleInputChange} onWheel={(e) => (e.target as HTMLElement).blur()} placeholder="0" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm no-spin [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                   </div>
                   {/* <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Estimated Tax %</label>
@@ -534,39 +825,64 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
                     </select>
                   </div>
                   <div>
-                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Assigned Sales Manager</label>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Assigned Director</label>
                     <select
-                      name="salesManagerId"
-                      value={formData.salesManagerId || ""}
+                      name="directorId"
+                      value={formData.directorId || formData.salesManagerId || ""}
                       onChange={(e) => {
-                        const smId = e.target.value ? Number(e.target.value) : "";
-                        const sm = masters.salesManagers.find(m => m.id === smId);
+                        const dId = e.target.value ? Number(e.target.value) : "";
+                        const d = directorsList.find((dir: any) => Number(dir.directorId ?? dir.DirectorId ?? dir.id) === dId);
+                        const dirName = d ? (d.directorName || d.fullName || d.name || "") : "";
                         setFormData((prev: any) => ({
                           ...prev,
-                          salesManagerId: smId,
-                          salesManagerName: sm ? sm.name : "",
+                          directorId: dId,
+                          directorName: dirName,
+                          salesManagerId: dId,
+                          salesManagerName: dirName,
                         }));
                       }}
                       className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800"
                     >
-                      <option value="">Select Sales Manager</option>
-                      {masters.salesManagers.map((sm) => (
-                        <option key={sm.id} value={sm.id}>
-                          {sm.name} {sm.code ? `(${sm.code})` : ""}
-                        </option>
-                      ))}
+                      <option value="">Select Director</option>
+                      {directorsList.map((d: any) => {
+                        const id = d.directorId ?? d.DirectorId ?? d.id;
+                        const name = d.directorName || d.fullName || d.name;
+                        return (
+                          <option key={id} value={id}>
+                            {name} {d.directorCode ? `(${d.directorCode})` : ""}
+                          </option>
+                        );
+                      })}
                     </select>
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Assigned BDE / Employee</label>
-                    <input
-                      type="text"
-                      readOnly
-                      value={formData.bdeUserName || ""}
-                      className="w-full border border-gray-200 rounded-lg px-4 py-2.5 bg-gray-100 text-gray-700 text-sm cursor-not-allowed font-medium select-none"
-                      placeholder="Inherited from Customer"
-                    />
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Assigned Sales Executive</label>
+                    <select
+                      name="bdeUserId"
+                      value={formData.bdeUserId || ""}
+                      onChange={(e) => {
+                        const bId = e.target.value ? Number(e.target.value) : "";
+                        const bde = bdeUsersList.find((b: any) => Number(b.id ?? b.bdeUserId) === bId);
+                        setFormData((prev: any) => ({
+                          ...prev,
+                          bdeUserId: bId,
+                          bdeUserName: bde ? (bde.name || (bde as any).value || (bde as any).fullName || "") : "",
+                        }));
+                      }}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800"
+                    >
+                      <option value="">Select Sales Executive</option>
+                      {bdeUsersList.map((b: any) => {
+                        const id = b.id || (b as any).bdeUserId;
+                        const name = b.name || (b as any).value || (b as any).fullName || (b as any).userName;
+                        return (
+                          <option key={id} value={id}>
+                            {name} {(b as any).code ? `(${(b as any).code})` : ""}
+                          </option>
+                        );
+                      })}
+                    </select>
                   </div>
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Department</label>
@@ -594,9 +910,28 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
                   </div>
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Territory</label>
-                    <select name="salesTerritoryId" value={formData.salesTerritoryId || ""} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800">
+                    <select
+                      name="salesTerritoryId"
+                      value={formData.salesTerritoryId || ""}
+                      onChange={handleInputChange}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm text-gray-800"
+                    >
                       <option value="">Select Territory</option>
-                      {masters.territories.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                      {areasList && areasList.length > 0 ? (
+                        areasList.map((a: any) => {
+                          const id = a.customerAreaId ?? a.CustomerAreaId ?? a.areaId ?? a.id;
+                          const name = a.areaName ?? a.AreaName ?? a.name;
+                          return (
+                            <option key={id} value={id}>
+                              {name}
+                            </option>
+                          );
+                        })
+                      ) : (
+                        masters.territories.map(t => (
+                          <option key={t.id} value={t.id}>{t.name}</option>
+                        ))
+                      )}
                     </select>
                   </div>
                   <div>
@@ -604,7 +939,7 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
                     <input type="text" name="responsiblePerson" value={formData.responsiblePerson || ""} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm" />
                   </div>
                 </div>
-                <p className="text-[10px] text-gray-400 mt-2 italic">BDE is inherited from Customer Master. Sales Manager defaults from Customer Master and can be selected manually.</p>
+                <p className="text-[10px] text-gray-400 mt-2 italic">Assigned Director and Assigned Sales Executive default from Customer Master and can be selected manually.</p>
               </div>
 
               {/* 07. Follow-up / Sales Activity */}
@@ -625,10 +960,6 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
                       <option value="">Select Next Activity Type</option>
                       {masters.activities.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                     </select>
-                  </div>
-                  <div>
-                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Next Action</label>
-                    <input type="text" name="nextAction" value={formData.nextAction || ""} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm" />
                   </div>
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Reminder</label>
@@ -687,10 +1018,6 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
                       <input type="file" onChange={handleFileUpload} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 bg-white text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
                       {isUploading && <Loader2 className="animate-spin text-blue-500" size={24} />}
                     </div>
-                  </div>
-                  <div className="md:col-span-4">
-                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Terms & Conditions</label>
-                    <textarea name="termsAndConditions" rows={3} value={formData.termsAndConditions || ""} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm" />
                   </div>
                 </div>
               </div>

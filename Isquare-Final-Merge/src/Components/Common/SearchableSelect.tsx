@@ -1,5 +1,6 @@
 import React from "react";
 import Select, { type StylesConfig, type SingleValue } from "react-select";
+import CreatableSelect from "react-select/creatable";
 
 export interface SearchableOption {
   value: string | number;
@@ -17,6 +18,8 @@ export interface SearchableSelectProps {
   isLoading?: boolean;
   isClearable?: boolean;
   isSearchable?: boolean;
+  isCreatable?: boolean;
+  formatCreateLabel?: (inputValue: string) => React.ReactNode;
   hasError?: boolean;
   className?: string;
   minHeight?: string;
@@ -109,14 +112,26 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
   isLoading = false,
   isClearable = true,
   isSearchable = true,
+  isCreatable = false,
+  formatCreateLabel,
   hasError = false,
   className = "",
   minHeight = "40px",
   portal = true,
   autoFocus = false,
 }) => {
+  const valStr =
+    value !== undefined && value !== null && value !== "" ? String(value) : "";
+
   const selectedOption =
-    options.find((opt) => String(opt.value) === String(value)) || null;
+    (valStr !== ""
+      ? options.find(
+          (opt) => String(opt.value).toLowerCase() === valStr.toLowerCase()
+        )
+      : null) ||
+    (isCreatable && valStr !== ""
+      ? { value: valStr, label: valStr }
+      : null);
 
   const handleChange = (selected: SingleValue<SearchableOption>) => {
     if (!selected) {
@@ -126,8 +141,10 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
     }
   };
 
+  const Component: any = isCreatable ? CreatableSelect : Select;
+
   return (
-    <Select<SearchableOption, false>
+    <Component
       id={id}
       name={name}
       value={selectedOption}
@@ -138,6 +155,9 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
       isLoading={isLoading}
       isClearable={isClearable}
       isSearchable={isSearchable}
+      formatCreateLabel={
+        formatCreateLabel || ((inputValue: string) => `Add "${inputValue}"`)
+      }
       autoFocus={autoFocus}
       styles={customStyles(hasError, isDisabled, minHeight)}
       menuPortalTarget={

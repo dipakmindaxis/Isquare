@@ -11,7 +11,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { getEnquiryById } from "../Services/EnquiryService";
-import type { EnquiryDto } from "../Types/EnquiryTypes";
+import { getEnquiryPriorities } from "../Services/EnquiryMasterDataService";
+import type { EnquiryDto, MasterItem } from "../Types/EnquiryTypes";
 //
 
 interface ViewEnquiryModalProps {
@@ -40,7 +41,16 @@ const SectionHeader: React.FC<{ icon: React.ElementType; title: string }> = ({ i
 
 const ViewEnquiryModal: React.FC<ViewEnquiryModalProps> = ({ isOpen, enquiryId, onClose }) => {
   const [enquiry, setEnquiry] = useState<EnquiryDto | null>(null);
+  const [priorities, setPriorities] = useState<MasterItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      getEnquiryPriorities()
+        .then((data) => setPriorities(data || []))
+        .catch(() => {});
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen && enquiryId) {
@@ -65,7 +75,7 @@ const ViewEnquiryModal: React.FC<ViewEnquiryModalProps> = ({ isOpen, enquiryId, 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-2 sm:p-4">
       <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-5xl h-[calc(100dvh-16px)] sm:h-auto sm:max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in duration-200 border border-gray-200">
-        
+
         {/* Header */}
         <div className="bg-[#FF7900] p-4 sm:p-6 text-white flex justify-between items-start sm:items-center gap-3 shrink-0">
           <div className="flex items-center gap-3 sm:gap-4 min-w-0">
@@ -113,8 +123,8 @@ const ViewEnquiryModal: React.FC<ViewEnquiryModalProps> = ({ isOpen, enquiryId, 
               </div>
 
               <div>
-                <SectionHeader icon={Phone} title="Contact Details" />
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+                <SectionHeader icon={Phone} title="Section 2 - Enquiry Contact Details" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5 sm:gap-3">
                   <DetailItem label="Contact Name" value={enquiry.contactName} />
                   <DetailItem label="Department" value={enquiry.departmentName} />
                   <DetailItem label="Designation" value={enquiry.designation} />
@@ -159,11 +169,18 @@ const ViewEnquiryModal: React.FC<ViewEnquiryModalProps> = ({ isOpen, enquiryId, 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
                   <DetailItem label="Status" value={enquiry.enquiryStatusName} />
                   <DetailItem label="Stage" value={enquiry.enquiryStageName} />
-                  <DetailItem label="Priority" value={enquiry.enquiryPriorityName} />
-                  <DetailItem label="Sales Manager" value={enquiry.salesManagerName} />
-                  <DetailItem label="BDE / Employee" value={enquiry.bdeUserName} />
+                  <DetailItem
+                    label="Priority"
+                    value={
+                      (enquiry.enquiryPriorityName && enquiry.enquiryPriorityName.trim() !== "" ? enquiry.enquiryPriorityName : "") ||
+                      (enquiry as any)?.priorityName ||
+                      (enquiry as any)?.priority ||
+                      priorities.find((p) => Number(p.id) === Number(enquiry.enquiryPriorityId || (enquiry as any)?.priorityId))?.name
+                    }
+                  />
+                  <DetailItem label="Assigned Director" value={(enquiry as any)?.directorName || enquiry.salesManagerName} />
+                  <DetailItem label="Assigned Sales Executive" value={enquiry.bdeUserName} />
                   <DetailItem label="Department" value={enquiry.departmentMasterName} />
-                  <DetailItem label="Territory" value={enquiry.salesTerritoryName} />
                   <DetailItem label="Responsible Person" value={enquiry.responsiblePerson} />
                 </div>
               </div>
@@ -172,7 +189,6 @@ const ViewEnquiryModal: React.FC<ViewEnquiryModalProps> = ({ isOpen, enquiryId, 
                 <SectionHeader icon={Calendar} title="Follow-up & Outcome" />
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
                   <DetailItem label="Next Follow-up" value={enquiry.nextFollowUpDate?.substring(0, 10)} />
-                  <DetailItem label="Next Activity" value={enquiry.activityTypeName} />
                   <DetailItem label="Lost Reason" value={enquiry.lostReasonName} />
                   <div className="col-span-1 sm:col-span-2 lg:col-span-3">
                     <DetailItem label="Outcome / Internal Remarks" value={enquiry.outcomeInternalRemarks} />
