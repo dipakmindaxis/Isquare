@@ -234,7 +234,7 @@ export const QuotationPricing: React.FC<QuotationPricingProps> = ({
                     onChange={(e) => handleFreightAmountChange(e.target.value)}
                     disabled={disabled}
                     placeholder="1500"
-                    className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-8 pr-3 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
+                    className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-8 pr-3 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs no-spin [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
               </div>
@@ -284,7 +284,7 @@ export const QuotationPricing: React.FC<QuotationPricingProps> = ({
                     }
                     disabled={disabled}
                     placeholder="2500"
-                    className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-8 pr-3 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
+                    className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-8 pr-3 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs no-spin [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
               </div>
@@ -330,7 +330,7 @@ export const QuotationPricing: React.FC<QuotationPricingProps> = ({
                   onChange={(e) => handleOtherAmountChange(e.target.value)}
                   disabled={disabled}
                   placeholder="800"
-                  className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-8 pr-3 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
+                  className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-8 pr-3 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs no-spin [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
               </div>
             </div>
@@ -458,7 +458,7 @@ export const QuotationPricing: React.FC<QuotationPricingProps> = ({
                             })
                           }
                           disabled={disabled}
-                          className="w-full text-sm py-1.5 px-2 border border-gray-300 rounded-lg text-right font-medium focus:outline-none focus:border-[#FF7900]"
+                          className="w-full text-sm py-1.5 px-2 border border-gray-300 rounded-lg text-right font-medium focus:outline-none focus:border-[#FF7900] no-spin [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
                       </td>
                       <td className="p-2.5 text-center">
@@ -489,7 +489,7 @@ export const QuotationPricing: React.FC<QuotationPricingProps> = ({
                             })
                           }
                           disabled={disabled || !ch.isTaxable}
-                          className="w-full text-xs py-1.5 px-2 border border-gray-300 rounded-lg text-center focus:outline-none focus:border-[#FF7900] disabled:bg-gray-100"
+                          className="w-full text-xs py-1.5 px-2 border border-gray-300 rounded-lg text-center focus:outline-none focus:border-[#FF7900] disabled:bg-gray-100 no-spin [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
                       </td>
                       <td className="p-2.5 text-right font-bold text-gray-900">

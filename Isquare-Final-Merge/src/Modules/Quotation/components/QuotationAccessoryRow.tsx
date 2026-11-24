@@ -170,7 +170,7 @@ export const QuotationAccessoryRow: React.FC<QuotationAccessoryRowProps> = ({
             })
           }
           disabled={disabled}
-          className="w-full text-sm py-1.5 px-2 text-center bg-white border border-gray-300 rounded font-medium focus:ring-1 focus:ring-blue-500 focus:outline-none"
+          className="w-full text-sm py-1.5 px-2 text-center bg-white border border-gray-300 rounded font-medium focus:ring-1 focus:ring-blue-500 focus:outline-none no-spin [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
         />
       </td>
 
@@ -212,7 +212,7 @@ export const QuotationAccessoryRow: React.FC<QuotationAccessoryRowProps> = ({
             })
           }
           disabled={disabled}
-          className="w-full text-sm py-1.5 px-2 bg-white border border-gray-300 rounded font-medium text-right focus:ring-1 focus:ring-blue-500 focus:outline-none"
+          className="w-full text-sm py-1.5 px-2 bg-white border border-gray-300 rounded font-medium text-right focus:ring-1 focus:ring-blue-500 focus:outline-none no-spin [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
         />
       </td>
 
@@ -234,7 +234,7 @@ export const QuotationAccessoryRow: React.FC<QuotationAccessoryRowProps> = ({
             })
           }
           disabled={disabled}
-          className="w-full text-sm py-1.5 px-2 text-center bg-white border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none"
+          className="w-full text-sm py-1.5 px-2 text-center bg-white border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none no-spin [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
         />
       </td>
 
@@ -253,7 +253,7 @@ export const QuotationAccessoryRow: React.FC<QuotationAccessoryRowProps> = ({
             })
           }
           disabled={disabled}
-          className="w-full text-sm py-1.5 px-2 text-center bg-white border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none"
+          className="w-full text-sm py-1.5 px-2 text-center bg-white border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none no-spin [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
         />
       </td>
 
