@@ -1,6 +1,6 @@
 //const BASE_URL = "https://localhost:7296/api";
-const BASE_URL = "https://sama9890-001-site1.jtempurl.com/api";
-//const BASE_URL = "https://localhost:44363/api";
+//const BASE_URL = "https://sama9890-001-site1.jtempurl.com/api";
+const BASE_URL = "https://localhost:44363/api";
 //const BASE_URL = "https://localhost:7296/api";
 //const BASE_URL = "https://vishalkakde-001-site1.etempurl.com/api";
 
@@ -176,6 +176,8 @@ export const API_ENDPOINTS: ApiEndpoints = {
   TaskAttachments: `${BASE_URL}/TaskAttachment`,
   TaskAssignment: `${BASE_URL}/TaskAssignment`,
   TaskAssignments: `${BASE_URL}/TaskAssignment`,
+  TaskHistory: `${BASE_URL}/TaskHistory`,
+  TaskHistories: `${BASE_URL}/TaskHistory`,
   EnquiryPriorities: `${BASE_URL}/EnquiryPriority`,
   Currencies: `${BASE_URL}/Currency`,
   SalesTerritories: `${BASE_URL}/SalesTerritory`,

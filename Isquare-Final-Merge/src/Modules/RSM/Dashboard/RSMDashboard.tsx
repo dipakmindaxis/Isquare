@@ -38,7 +38,7 @@ import { getEnquiries } from "../Pages/Enquiry/Services/EnquiryService";
 import type { EnquiryDto } from "../Pages/Enquiry/Types/EnquiryTypes";
 import { quotationService, salesOrderService } from "../../Quotation/services/quotationService";
 import type { Quotation, SalesOrder } from "../../Quotation/models/quotationModels";
-import { getAllTasks } from "../Pages/SalesActivities/Services/TaskService";
+import { getAllTasks, isTaskCompletedStatus } from "../Pages/SalesActivities/Services/TaskService";
 import type { TaskItem } from "../Pages/SalesActivities/Types/TaskTypes";
 
 // Register Chart.js components
@@ -398,9 +398,7 @@ const RSMDashboard: React.FC = () => {
     const dataset = selectedRange === "all" ? tasks : filteredTasks;
     return dataset.filter((t) => {
       if (completedTaskIds.has(t.taskId)) return false;
-      if (t.isCompleted) return false;
-      const status = (t.taskStatusName || "").toLowerCase();
-      return status !== "completed" && status !== "closed" && status !== "done";
+      return !isTaskCompletedStatus(t.taskStatusName, t.taskStatusId, t.isCompleted);
     });
   }, [tasks, filteredTasks, selectedRange, completedTaskIds]);
 
