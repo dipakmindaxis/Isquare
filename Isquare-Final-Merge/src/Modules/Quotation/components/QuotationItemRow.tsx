@@ -892,7 +892,7 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
             value={item.quantity ?? 1}
             onChange={(e) => handleFieldChange("quantity", e.target.value)}
             disabled={disabled}
-            className="w-full text-sm h-9 py-1.5 px-2 text-center bg-white border border-gray-200 rounded-lg font-medium text-gray-900 focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none shadow-2xs"
+            className="w-full text-sm h-9 py-1.5 px-2 text-center bg-white border border-gray-200 rounded-lg font-medium text-gray-900 focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none shadow-2xs no-spin [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           />
         </td>
 
@@ -912,7 +912,7 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
             value={item.rate ?? 0}
             onChange={(e) => handleFieldChange("rate", e.target.value)}
             disabled={disabled}
-            className="w-full text-sm h-9 py-1.5 px-2 bg-white border border-gray-200 rounded-lg font-medium text-right focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none shadow-2xs"
+            className="w-full text-sm h-9 py-1.5 px-2 bg-white border border-gray-200 rounded-lg font-medium text-right focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none shadow-2xs no-spin [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           />
         </td>
 
@@ -926,7 +926,7 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
             value={item.discountPercentage ?? 0}
             onChange={(e) => handleFieldChange("discountPercentage", e.target.value)}
             disabled={disabled}
-            className="w-full text-sm h-9 py-1.5 px-2 text-center bg-white border border-gray-200 rounded-lg focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none shadow-2xs"
+            className="w-full text-sm h-9 py-1.5 px-2 text-center bg-white border border-gray-200 rounded-lg focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none shadow-2xs no-spin [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           />
           {item.discountPercentage > 15 && (
             <div className="text-[9px] text-amber-600 font-bold mt-0.5 text-center" title="Requires Approval">
@@ -945,7 +945,7 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
             value={item.gstRate ?? 18}
             onChange={(e) => handleFieldChange("gstRate", e.target.value)}
             disabled={disabled}
-            className="w-full text-sm h-9 py-1.5 px-2 text-center bg-white border border-gray-200 rounded-lg focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none shadow-2xs"
+            className="w-full text-sm h-9 py-1.5 px-2 text-center bg-white border border-gray-200 rounded-lg focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none shadow-2xs no-spin [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           />
         </td>
 
@@ -979,7 +979,7 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
             onChange={(e) => handlePurchaseRateChange(e.target.value)}
             disabled={disabled}
             placeholder=""
-            className="w-full text-sm h-9 py-1.5 px-2 bg-white border border-gray-200 rounded-lg font-medium text-right focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none shadow-2xs"
+            className="w-full text-sm h-9 py-1.5 px-2 bg-white border border-gray-200 rounded-lg font-medium text-right focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none shadow-2xs no-spin [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           />
         </td>
 
@@ -992,7 +992,7 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
             onChange={(e) => handleProfitPercentageChange(e.target.value)}
             disabled={disabled}
             placeholder=""
-            className="w-full text-sm h-9 py-1.5 px-2 text-center bg-white border border-gray-200 rounded-lg font-medium focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none shadow-2xs"
+            className="w-full text-sm h-9 py-1.5 px-2 text-center bg-white border border-gray-200 rounded-lg font-medium focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none shadow-2xs no-spin [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           />
         </td>
 
@@ -1006,7 +1006,7 @@ export const QuotationItemRow: React.FC<QuotationItemRowProps> = ({
             onChange={(e) => handleStockChange(e.target.value)}
             disabled={disabled}
             placeholder=""
-            className="w-full text-sm h-9 py-1.5 px-2 text-center bg-white border border-gray-200 rounded-lg font-medium focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none shadow-2xs"
+            className="w-full text-sm h-9 py-1.5 px-2 text-center bg-white border border-gray-200 rounded-lg font-medium focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900]/20 focus:outline-none shadow-2xs no-spin [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           />
         </td>
 
