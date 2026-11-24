@@ -23,6 +23,7 @@ import {
   getAllTaskStatuses,
   getTaskSummaryStats,
   getTaskActivities,
+  isTaskCompletedStatus,
 } from "../Services/TaskService";
 import {
   getPrioritiesWithFallback,
@@ -182,16 +183,12 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
       if (statusFilter && statusFilter !== "All") {
         const taskStatus = (t.taskStatusName || "").toLowerCase().trim();
         const filter = statusFilter.toLowerCase().trim();
-        const isDone =
-          t.isCompleted ||
-          t.taskStatusId === 4 ||
-          taskStatus.includes("completed") ||
-          taskStatus.includes("approved");
+        const isDone = isTaskCompletedStatus(t.taskStatusName, t.taskStatusId, t.isCompleted);
 
-        if (filter === "completed") return isDone;
+        if (filter === "completed" || filter.includes("complat") || filter.includes("complet")) return isDone;
         if (filter === "pending") return !isDone && !taskStatus.includes("progress");
         if (filter === "in progress") return !isDone && taskStatus.includes("progress");
-        return taskStatus === filter;
+        return taskStatus === filter || (isDone && (filter.includes("complat") || filter.includes("complet")));
       }
 
       return true;
@@ -214,7 +211,7 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
       "Due Date": t.dueDate || "-",
       "Priority": t.priorityName || "Medium",
       "Status":
-        t.isCompleted || t.taskStatusId === 4
+        isTaskCompletedStatus(t.taskStatusName, t.taskStatusId, t.isCompleted)
           ? "Completed"
           : t.taskStatusName || "Pending",
     }));
@@ -335,7 +332,7 @@ export const TasksMaster: React.FC<TasksMasterProps> = ({
 
         const sLower = statusName.toLowerCase();
         let badgeStyle = "bg-amber-50 text-amber-700 border-amber-200";
-        if (sLower.includes("complat") || sLower.includes("complet") || sLower.includes("approv")) {
+        if (isTaskCompletedStatus(statusName, row.taskStatusId, row.isCompleted)) {
           badgeStyle = "bg-emerald-50 text-emerald-700 border-emerald-200";
         } else if (sLower.includes("progress")) {
           badgeStyle = "bg-blue-50 text-blue-700 border-blue-200";

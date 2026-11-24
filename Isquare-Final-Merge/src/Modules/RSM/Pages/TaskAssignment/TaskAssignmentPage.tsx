@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { CheckSquare, CheckCircle2, Paperclip, Flag } from "lucide-react";
+import { CheckSquare, CheckCircle2, Paperclip, Flag, History } from "lucide-react";
 import { TasksMaster } from "../SalesActivities/Components/TasksMaster";
 import { TaskStatusMaster } from "../Master/TaskStatus/TaskStatusMaster";
 import { TaskAttachmentMaster } from "../Master/TaskAttachment/TaskAttachmentMaster";
 import { PriorityMaster } from "../Master/Priority/PriorityMaster";
+import { TaskHistoryMaster } from "../Master/TaskHistory/TaskHistoryMaster";
 
-export type TaskAssignmentTab = "tasks" | "status" | "attachments" | "priority";
+export type TaskAssignmentTab = "tasks" | "status" | "attachments" | "priority" | "history";
 
 interface TabConfig {
   id: TaskAssignmentTab;
@@ -35,6 +36,11 @@ const TABS: TabConfig[] = [
     label: "Priority Master",
     icon: <Flag className="w-4 h-4" />,
   },
+  {
+    id: "history",
+    label: "Task History",
+    icon: <History className="w-4 h-4" />,
+  },
 ];
 
 export const TaskAssignmentPage: React.FC = () => {
@@ -48,6 +54,7 @@ export const TaskAssignmentPage: React.FC = () => {
     "status",
     "attachments",
     "priority",
+    "history",
   ];
   const initialTab: TaskAssignmentTab =
     queryTab && validTabs.includes(queryTab) ? queryTab : "tasks";
@@ -107,6 +114,7 @@ export const TaskAssignmentPage: React.FC = () => {
         {activeTab === "status" && <TaskStatusMaster isTab={true} />}
         {activeTab === "attachments" && <TaskAttachmentMaster isTab={true} />}
         {activeTab === "priority" && <PriorityMaster isTab={true} />}
+        {activeTab === "history" && <TaskHistoryMaster isTab={true} />}
       </div>
     </div>
   );

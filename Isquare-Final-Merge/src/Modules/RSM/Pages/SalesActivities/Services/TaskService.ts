@@ -19,6 +19,26 @@ const getAllDirectors = getDirectorEmployees;
 
 const TASKS_STORAGE_KEY = "isquare_tasks_cache_v1";
 
+export const isTaskCompletedStatus = (
+  statusName?: string,
+  taskStatusId?: number | string,
+  isCompleted?: boolean
+): boolean => {
+  if (isCompleted) return true;
+  if (Number(taskStatusId) === 4) return true;
+  const s = String(statusName || "").toLowerCase().trim();
+  if (!s) return false;
+  return (
+    s.includes("complet") ||
+    s.includes("complat") ||
+    s.includes("done") ||
+    s.includes("finish") ||
+    s.includes("closed") ||
+    s.includes("resolved") ||
+    s.includes("approved")
+  );
+};
+
 const isPlaceholder = (val?: string): boolean => {
   if (!val) return true;
   const trimmed = val.trim();
@@ -107,6 +127,7 @@ export const markTaskAsDeletedLocally = (taskId: number, taskTitle?: string): vo
 };
 
 import { getAllTaskStatuses as getAllMasterTaskStatuses } from "../../Master/TaskStatus/Services/TaskStatusService";
+import { createTaskHistory } from "../../Master/TaskHistory/Services/TaskHistoryService";
 
 // ==========================================
 // Task Statuses (Dedicated TaskStatus Master API)
@@ -165,6 +186,7 @@ export const getAllTasks = async (filters?: TaskFilterParams): Promise<TaskItem[
             assignedByName: t.assignedByName || t.assignedByEmployeeName || t.assignerName || undefined,
             priorityId: Number(t.priorityId ?? 1),
             taskStatusId: Number(t.taskStatusId ?? 1),
+            taskStatusName: t.taskStatusName || t.statusName || undefined,
             startDate: t.startDate ? String(t.startDate).split("T")[0] : new Date().toISOString().split("T")[0],
             dueDate: t.dueDate ? String(t.dueDate).split("T")[0] : new Date().toISOString().split("T")[0],
             completionDate: t.completionDate ? String(t.completionDate).split("T")[0] : undefined,
@@ -172,7 +194,7 @@ export const getAllTasks = async (filters?: TaskFilterParams): Promise<TaskItem[
             remarks: t.remarks || "",
             createdBy: Number(t.createdBy ?? 0),
             createdDate: t.createdDate ? String(t.createdDate).split("T")[0] : undefined,
-            isCompleted: Boolean(t.isCompleted || t.taskStatusId === 4),
+            isCompleted: isTaskCompletedStatus(t.taskStatusName || t.statusName, t.taskStatusId, t.isCompleted),
             isDeleted: Boolean(t.isDeleted),
           };
         })
@@ -357,11 +379,7 @@ export const getAllTasks = async (filters?: TaskFilterParams): Promise<TaskItem[
         priorityName,
         priorityColor,
         taskStatusName,
-        isCompleted:
-          task.isCompleted ||
-          task.taskStatusId === 4 ||
-          taskStatusName.toLowerCase().includes("completed") ||
-          taskStatusName.toLowerCase().includes("approved"),
+        isCompleted: isTaskCompletedStatus(taskStatusName, task.taskStatusId, task.isCompleted),
       };
     });
   } catch { }
@@ -543,7 +561,7 @@ export const createTask = async (payload: TaskCreatePayload): Promise<TaskItem> 
         reminderTime: payload.reminderTime,
         remarks: payload.remarks,
         createdBy: validCreatedBy,
-        isCompleted: false,
+        isCompleted: isTaskCompletedStatus(data.taskStatusName || payload.taskStatusName, data.taskStatusId ?? payload.taskStatusId),
       };
     }
   } catch (apiError: any) {
@@ -577,7 +595,7 @@ export const createTask = async (payload: TaskCreatePayload): Promise<TaskItem> 
           dueDate: payload.dueDate,
           remarks: payload.remarks,
           createdBy: 1,
-          isCompleted: false,
+          isCompleted: isTaskCompletedStatus(payload.taskStatusName, payload.taskStatusId),
         };
       }
     } catch (retryErr) {
@@ -607,13 +625,22 @@ export const createTask = async (payload: TaskCreatePayload): Promise<TaskItem> 
       reminderTime: payload.reminderTime,
       remarks: payload.remarks,
       createdBy: validCreatedBy,
-      isCompleted: false,
+      isCompleted: isTaskCompletedStatus(payload.taskStatusName, payload.taskStatusId),
     };
   }
 
   // Update local cache
   const local = safeGetTasks().filter((t) => t.taskId !== savedTask!.taskId);
   safeSetTasks([savedTask, ...local]);
+
+  if (savedTask) {
+    createTaskHistory({
+      taskId: savedTask.taskId,
+      activity: "Task Created & Assigned",
+      remarks: payload.remarks ? `Assigned to ${payload.assignedToName || "Employee"}. ${payload.remarks}` : `Assigned to ${payload.assignedToName || "Employee"}`,
+      performedBy: payload.assignedBy || payload.createdBy || 1,
+    }).catch(() => {});
+  }
 
   return savedTask;
 };
@@ -664,6 +691,11 @@ export const updateTask = async (
         priorityName: payload.priorityName ?? t.priorityName,
         taskStatusId: payload.taskStatusId ?? t.taskStatusId,
         taskStatusName: payload.taskStatusName ?? t.taskStatusName,
+        isCompleted: isTaskCompletedStatus(
+          payload.taskStatusName ?? t.taskStatusName,
+          payload.taskStatusId ?? t.taskStatusId,
+          t.isCompleted
+        ),
         dueDate: payload.dueDate ?? t.dueDate,
         reminderDate: payload.reminderDate !== undefined ? payload.reminderDate : t.reminderDate,
         reminderTime: payload.reminderTime !== undefined ? payload.reminderTime : t.reminderTime,
@@ -682,12 +714,19 @@ export const updateTask = async (
       text: `Updated task: ${(updatedTask as TaskItem).taskTitle}`,
       customer: (updatedTask as TaskItem).companyName,
     });
+
+    createTaskHistory({
+      taskId,
+      activity: payload.taskStatusName ? `Status: ${payload.taskStatusName}` : "Task Details Updated",
+      remarks: payload.remarks || undefined,
+      performedBy: payload.assignedBy || 1,
+    }).catch(() => {});
   }
 
   return updatedTask;
 };
 
-export const completeTask = async (taskId: number): Promise<boolean> => {
+export const completeTask = async (taskId: number, remarks?: string): Promise<boolean> => {
   try {
     const existing = await getTaskById(taskId);
     const url = `${API_ENDPOINTS.Task || `${API_ENDPOINTS.BaseUrl}/Task`}/${taskId}`;
@@ -699,11 +738,11 @@ export const completeTask = async (taskId: number): Promise<boolean> => {
       assignedTo: existing?.assignedTo || 1,
       assignedBy: existing?.assignedBy || 1,
       priorityId: existing?.priorityId || 1,
-      taskStatusId: existing?.taskStatusId || 2,
+      taskStatusId: 4,
       startDate: existing?.startDate ? new Date(existing.startDate).toISOString() : new Date().toISOString(),
       dueDate: existing?.dueDate ? new Date(existing.dueDate).toISOString() : new Date().toISOString(),
       completionDate: new Date().toISOString(),
-      remarks: existing?.remarks || "",
+      remarks: remarks || existing?.remarks || "",
       createdBy: existing?.createdBy || 1,
     };
     await apiClient.put(url, updateBody);
@@ -723,6 +762,70 @@ export const completeTask = async (taskId: number): Promise<boolean> => {
       : t
   );
   safeSetTasks(updated);
+
+  createTaskHistory({
+    taskId,
+    activity: "Task Completed & Approved",
+    remarks: remarks || "Task marked as completed and approved",
+    performedBy: 1,
+  }).catch(() => {});
+
+  return true;
+};
+
+export const updateTaskStatusFlow = async (
+  taskId: number,
+  statusId: number,
+  statusName: string,
+  remarks?: string,
+  performedBy?: number
+): Promise<boolean> => {
+  const isDone = isTaskCompletedStatus(statusName, statusId);
+  try {
+    const existing = await getTaskById(taskId);
+    const url = `${API_ENDPOINTS.Task || `${API_ENDPOINTS.BaseUrl}/Task`}/${taskId}`;
+    const updateBody = {
+      taskId: taskId,
+      companyId: existing?.companyId || 1,
+      taskTitle: existing?.taskTitle || "Task",
+      description: existing?.description || "",
+      assignedTo: existing?.assignedTo || 1,
+      assignedBy: existing?.assignedBy || 1,
+      priorityId: existing?.priorityId || 1,
+      taskStatusId: statusId,
+      startDate: existing?.startDate ? new Date(existing.startDate).toISOString() : new Date().toISOString(),
+      dueDate: existing?.dueDate ? new Date(existing.dueDate).toISOString() : new Date().toISOString(),
+      completionDate: isDone ? new Date().toISOString() : undefined,
+      remarks: remarks || existing?.remarks || "",
+      createdBy: existing?.createdBy || 1,
+    };
+    await apiClient.put(url, updateBody);
+  } catch (err) {
+    console.warn("updateTaskStatusFlow API error:", err);
+  }
+
+  const local = safeGetTasks();
+  const updated = local.map((t) =>
+    t.taskId === taskId
+      ? {
+        ...t,
+        taskStatusId: statusId,
+        taskStatusName: statusName,
+        isCompleted: isDone,
+        completionDate: isDone ? new Date().toISOString().split("T")[0] : t.completionDate,
+        remarks: remarks || t.remarks,
+      }
+      : t
+  );
+  safeSetTasks(updated);
+
+  createTaskHistory({
+    taskId,
+    activity: `Status Changed: ${statusName}`,
+    remarks: remarks || `Status changed to ${statusName}`,
+    performedBy: performedBy || 1,
+  }).catch(() => {});
+
   return true;
 };
 
@@ -792,11 +895,12 @@ export const deleteTask = async (taskId: number, taskTitle?: string): Promise<bo
 export const getTaskSummaryStats = (tasks?: TaskItem[]): TaskSummaryStats => {
   const list = tasks || safeGetTasks();
   const today = new Date().toISOString().split("T")[0];
-  const completed = list.filter((t) => t.isCompleted || (t.taskStatusName || "").toLowerCase().includes("completed") || (t.taskStatusName || "").toLowerCase().includes("approved")).length;
-  const inProgress = list.filter((t) => !t.isCompleted && (t.taskStatusName || "").toLowerCase().includes("progress")).length;
-  const pending = list.filter((t) => !t.isCompleted && !(t.taskStatusName || "").toLowerCase().includes("progress")).length;
+  const isDone = (t: TaskItem) => isTaskCompletedStatus(t.taskStatusName, t.taskStatusId, t.isCompleted);
+  const completed = list.filter((t) => isDone(t)).length;
+  const inProgress = list.filter((t) => !isDone(t) && (t.taskStatusName || "").toLowerCase().includes("progress")).length;
+  const pending = list.filter((t) => !isDone(t) && !(t.taskStatusName || "").toLowerCase().includes("progress")).length;
   const dueToday = list.filter((t) => t.dueDate === today).length;
-  const overdue = list.filter((t) => !t.isCompleted && t.dueDate < today).length;
+  const overdue = list.filter((t) => !isDone(t) && t.dueDate < today).length;
   return {
     total: list.length,
     pending,
@@ -805,7 +909,6 @@ export const getTaskSummaryStats = (tasks?: TaskItem[]): TaskSummaryStats => {
     dueToday,
     overdue,
   };
-
 };
 
 const ACTIVITIES_STORAGE_KEY = "isquare_task_activities_v1";
