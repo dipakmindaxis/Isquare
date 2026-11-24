@@ -541,10 +541,7 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-x-8 gap-y-6">
                   <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block">Enquiry Number</label>
-                      <span className="text-[10px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded font-medium">Auto-generated</span>
-                    </div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Enquiry Number</label>
                     <input type="text" readOnly value={formData.enquiryNumber} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 bg-gray-100 text-gray-600 text-sm cursor-not-allowed select-none font-medium" />
                   </div>
                   <div>

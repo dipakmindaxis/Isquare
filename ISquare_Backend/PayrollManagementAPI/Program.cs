@@ -275,7 +275,7 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<INotificationQueueService, NotificationQueueService>();
 builder.Services.AddScoped<INotificationLogsService, NotificationLogsService>();
 
-//Deepak 
+ 
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 #pragma warning disable CS0618
 #pragma warning restore CS0618
@@ -301,7 +301,6 @@ builder.Services.AddScoped<ICompanyPhoneService, CompanyPhoneService>();
 builder.Services.AddScoped<ICompanyTimelineService, CompanyTimelineService>();
 builder.Services.AddScoped<ICompanyVisitService, CompanyVisitService>();
 
-//vi
 builder.Services.AddScoped<ISalesCoordinatorService,SalesCoordinatorService>();
 builder.Services.AddScoped<ICRMEmployeeService, CRMEmployeeService>();
 builder.Services.AddScoped<ILevelMasterService, LevelMasterService>();
@@ -325,7 +324,7 @@ builder.Services.AddScoped<IHistoryService, HistoryService>();
 builder.Services.AddScoped<IEmailTemplateService, EmailTemplateService>();
 builder.Services.AddScoped<IDocumentTypeService, DocumentTypeService>();
 builder.Services.AddScoped<IPriorityService, PriorityService>();
-//pa
+
 builder.Services.AddScoped<IInvoiceService, InvoiceService>();
 builder.Services.AddScoped<IInvoiceItemService, InvoiceItemService>();
 builder.Services.AddScoped<IInvoicePaymentService, InvoicePaymentService>();

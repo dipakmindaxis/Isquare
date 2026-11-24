@@ -160,7 +160,7 @@ export const QuotationDefaults: React.FC = () => {
               </h3>
             </div>
 
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
               <div>
                 <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
                   Default Delivery Period <span className="text-rose-500">*</span>
@@ -191,20 +191,6 @@ export const QuotationDefaults: React.FC = () => {
                     </option>
                   ))}
                 </select>
-              </div>
-
-              <div>
-                <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
-                  Standard Warranty <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={standardWarranty}
-                  onChange={(e) => setStandardWarranty(e.target.value)}
-                  placeholder="e.g. 1 Year Standard"
-                  className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 transition focus:border-[#FF7900] focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 shadow-xs"
-                />
               </div>
 
               <div>

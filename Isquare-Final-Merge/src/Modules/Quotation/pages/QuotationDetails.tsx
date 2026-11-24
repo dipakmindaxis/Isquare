@@ -518,13 +518,6 @@ export const QuotationDetails: React.FC = () => {
           <button
             type="button"
             onClick={async () => {
-              if (isCustomerFormatQuotation(quotation.quotationId, quotation)) {
-                const ok = downloadOriginalCustomerQuotation(quotation.quotationId);
-                if (ok) {
-                  toast.success("Downloaded original customer quotation file");
-                  return;
-                }
-              }
               try {
                 await exportQuotationToPdf(
                   fullQuoteForPreview,

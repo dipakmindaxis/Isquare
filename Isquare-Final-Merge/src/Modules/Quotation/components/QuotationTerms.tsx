@@ -46,9 +46,6 @@ export const QuotationTerms: React.FC<QuotationTermsProps> = ({
             <h4 className="text-sm font-bold text-gray-900 tracking-tight">
               Delivery &amp; Commercial Terms
             </h4>
-            <p className="text-xs text-gray-500">
-              Commercial conditions, payment schedule and proposal validity
-            </p>
           </div>
 
           {onLoadDefaults && !disabled && (
@@ -134,15 +131,12 @@ export const QuotationTerms: React.FC<QuotationTermsProps> = ({
 
       {/* Terms & Conditions (Section 5) */}
       <div className="pt-2 border-t border-gray-100">
-        <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-center gap-2 mb-3">
           <FileText size={16} className="text-[#FF7900]" />
           <h4 className="text-sm font-bold text-gray-900 tracking-tight">
             Commercial Terms &amp; Conditions
           </h4>
         </div>
-        <p className="text-xs text-gray-500 mb-2">
-          Legally binding commercial conditions included in the generated quotation document
-        </p>
 
         <textarea
           rows={5}

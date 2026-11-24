@@ -669,19 +669,11 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
             <ClipboardList className="w-6 h-6" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">
-                {isEditMode
-                  ? `Edit Quotation — ${quotationNumber || `QT-${initialQuotation?.quotationId}`}`
-                  : "Create Professional Quotation"}
-              </h2>
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-orange-50 text-[#FF7900] border border-[#FF7900]/20">
-                Commercial Proposal Engine
-              </span>
-            </div>
-            <p className="text-gray-500 mt-1 text-xs md:text-sm">
-              Itemized equipment proposal with GST computation, accessories &amp; legal terms
-            </p>
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">
+              {isEditMode
+                ? `Edit Quotation — ${quotationNumber || `QT-${initialQuotation?.quotationId}`}`
+                : "Create Professional Quotation"}
+            </h2>
           </div>
         </div>
 

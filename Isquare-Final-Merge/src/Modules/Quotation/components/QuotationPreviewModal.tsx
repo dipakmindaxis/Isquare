@@ -312,50 +312,6 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
   );
   const uploadedFileRecord = getCustomerQuotationFile(quotation.quotationId);
 
-  const handlePrint = () => {
-    window.print();
-  };
-
-  const handleExportPDF = async () => {
-    try {
-      if (isUploadedCustomerFormat) {
-        const ok = downloadOriginalCustomerQuotation(quotation.quotationId);
-        if (ok) {
-          toast.success("Downloaded original customer quotation file");
-          return;
-        }
-      }
-      await exportQuotationToPdf(quotation, companyProfile, customer, showDiscount);
-      toast.success("PDF exported successfully");
-    } catch (e) {
-      console.error("PDF export failed:", e);
-      toast.error("Failed to generate PDF");
-    }
-  };
-
-  const handleExportExcel = async () => {
-    try {
-      if (isUploadedCustomerFormat) {
-        const ok = downloadOriginalCustomerQuotation(quotation.quotationId);
-        if (ok) {
-          toast.success("Downloaded original customer quotation file");
-          return;
-        }
-      }
-      await exportQuotationToCustomerExcel(
-        quotation,
-        showDiscount,
-        companyProfile,
-        customer,
-        masterProducts
-      );
-      toast.success("Excel exported successfully");
-    } catch (e) {
-      console.error("Excel export failed:", e);
-      toast.error("Failed to generate Excel file");
-    }
-  };
-
   // Quotation Number
   const quotationNumber =
     quotation.quotationNumber ||
@@ -421,6 +377,198 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
     customer?.email ||
     customer?.emailAddress ||
     "";
+
+  const handlePrint = async () => {
+    const printableElement = document.getElementById("printableDocument");
+    if (!printableElement) {
+      window.print();
+      return;
+    }
+
+    try {
+      // 1. Wait for images inside printable document to fully load
+      const images = Array.from(printableElement.querySelectorAll("img"));
+      await Promise.all(
+        images.map((img) => {
+          if (img.complete && img.naturalHeight !== 0) return Promise.resolve(true);
+          return new Promise((resolve) => {
+            img.onload = () => resolve(true);
+            img.onerror = () => resolve(true);
+            setTimeout(() => resolve(true), 2500);
+          });
+        })
+      );
+
+      // 2. Remove any previous print iframe
+      const oldFrame = document.getElementById("quotationPrintFrame");
+      if (oldFrame) {
+        oldFrame.remove();
+      }
+
+      // 3. Create isolated iframe for clean native printing without UI/layout interference
+      const printFrame = document.createElement("iframe");
+      printFrame.id = "quotationPrintFrame";
+      printFrame.style.position = "fixed";
+      printFrame.style.right = "0";
+      printFrame.style.bottom = "0";
+      printFrame.style.width = "0";
+      printFrame.style.height = "0";
+      printFrame.style.border = "0";
+      printFrame.style.zIndex = "-9999";
+      document.body.appendChild(printFrame);
+
+      const frameDoc = printFrame.contentWindow?.document || printFrame.contentDocument;
+      if (!frameDoc || !printFrame.contentWindow) {
+        window.print();
+        return;
+      }
+
+      // 4. Collect stylesheets from parent document (Tailwind, fonts, etc.)
+      let stylesHtml = "";
+      document.querySelectorAll("style, link[rel='stylesheet']").forEach((node) => {
+        stylesHtml += node.outerHTML;
+      });
+
+      // 5. Dedicated A4 print styling for exact colors, borders, and multi-page pagination
+      const printSpecificCss = `
+        <style>
+          @page {
+            size: A4 portrait;
+            margin: 8mm 8mm 10mm 8mm;
+          }
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+            box-sizing: border-box;
+          }
+          html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #ffffff !important;
+            color: #0f172a !important;
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+            font-size: 12px;
+            width: 100% !important;
+            height: auto !important;
+            overflow: visible !important;
+          }
+          #printableDocument {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #ffffff !important;
+            border: none !important;
+            box-shadow: none !important;
+            overflow: visible !important;
+          }
+          .print\\:hidden {
+            display: none !important;
+          }
+          table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            page-break-inside: auto !important;
+          }
+          thead {
+            display: table-header-group !important;
+          }
+          tr {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+          img {
+            max-width: 100% !important;
+            height: auto;
+          }
+        </style>
+      `;
+
+      frameDoc.open();
+      frameDoc.write(`<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>${quotationNumber}_CustomerQuotation</title>
+    ${stylesHtml}
+    ${printSpecificCss}
+  </head>
+  <body class="bg-white text-slate-800 p-0 m-0">
+    <div id="printableDocument" class="space-y-4 text-xs text-slate-800 bg-white">
+      ${printableElement.innerHTML}
+    </div>
+  </body>
+</html>`);
+      frameDoc.close();
+
+      // 6. Wait for all images inside iframe to be ready
+      const frameImages = Array.from(frameDoc.querySelectorAll("img"));
+      await Promise.all(
+        frameImages.map((img) => {
+          if (img.complete && img.naturalHeight !== 0) return Promise.resolve(true);
+          return new Promise((resolve) => {
+            img.onload = () => resolve(true);
+            img.onerror = () => resolve(true);
+            setTimeout(() => resolve(true), 2500);
+          });
+        })
+      );
+
+      // 7. Trigger native browser Print dialog
+      setTimeout(() => {
+        try {
+          printFrame.contentWindow?.focus();
+          printFrame.contentWindow?.print();
+        } catch (e) {
+          console.warn("Iframe print error, falling back to window.print():", e);
+          window.print();
+        }
+      }, 300);
+    } catch (err) {
+      console.warn("Print preparation failed, falling back to window.print():", err);
+      window.print();
+    }
+  };
+
+  const handleExportPDF = async () => {
+    try {
+      await exportQuotationToPdf(quotation, companyProfile, customer, showDiscount, {
+        contactPerson,
+        contactPhone,
+        contactEmail,
+        customerAddress,
+        masterProducts,
+      });
+      toast.success("PDF exported successfully");
+    } catch (e) {
+      console.error("PDF export failed:", e);
+      toast.error("Failed to generate PDF");
+    }
+  };
+
+  const handleExportExcel = async () => {
+    try {
+      if (isUploadedCustomerFormat) {
+        const ok = downloadOriginalCustomerQuotation(quotation.quotationId);
+        if (ok) {
+          toast.success("Downloaded original customer quotation file");
+          return;
+        }
+      }
+      await exportQuotationToCustomerExcel(
+        quotation,
+        showDiscount,
+        companyProfile,
+        customer,
+        masterProducts
+      );
+      toast.success("Excel exported successfully");
+    } catch (e) {
+      console.error("Excel export failed:", e);
+      toast.error("Failed to generate Excel file");
+    }
+  };
 
   // Commercial Terms list matching Reference Screenshot
   let termsList: string[] = [];
@@ -1056,21 +1204,45 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
             size: A4 portrait;
             margin: 8mm;
           }
-          body {
+          html, body {
             background: white !important;
+            height: auto !important;
+            overflow: visible !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
+            color-adjust: exact !important;
           }
-          body * {
-            visibility: hidden !important;
+          #root,
+          #root > div,
+          .h-screen,
+          [class*="h-screen"],
+          [class*="overflow-hidden"],
+          [class*="overflow-y-auto"],
+          main,
+          .fixed,
+          [class*="max-w-4xl"] {
+            height: auto !important;
+            max-height: none !important;
+            min-height: auto !important;
+            overflow: visible !important;
+            position: static !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: none !important;
+            box-shadow: none !important;
+            background: white !important;
           }
-          #printableDocument, #printableDocument * {
-            visibility: visible !important;
+          aside,
+          nav,
+          header,
+          .print\\:hidden,
+          [class*="Sidebar"],
+          [class*="Navbar"] {
+            display: none !important;
           }
           #printableDocument {
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
+            display: block !important;
+            position: static !important;
             width: 100% !important;
             padding: 0 !important;
             margin: 0 !important;
@@ -1078,9 +1250,17 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
             color: #0f172a !important;
             border: none !important;
             box-shadow: none !important;
+            overflow: visible !important;
           }
-          .print\\:hidden {
-            display: none !important;
+          table {
+            page-break-inside: auto;
+          }
+          thead {
+            display: table-header-group;
+          }
+          tr {
+            page-break-inside: avoid;
+            break-inside: avoid;
           }
         }
       `}</style>
