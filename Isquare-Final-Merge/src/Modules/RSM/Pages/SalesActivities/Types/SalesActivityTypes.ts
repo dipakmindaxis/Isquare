@@ -67,6 +67,7 @@ export interface SalesActivity {
   relatedRecordId?: string;
   relatedRecordCode?: string; // e.g. ENQ-2026-042 or QUO-2026-108
   relatedRecordTitle?: string;
+  enquiryId?: string;
 
   // Conditional Fields
   location?: string; // For Customer Visit / Site Survey
@@ -100,6 +101,7 @@ export interface SalesActivity {
 }
 
 export interface SalesActivityCreatePayload {
+  activityCode?: string;
   activityType: ActivityType;
   subject: string;
   customerId: string;
@@ -136,6 +138,7 @@ export interface SalesActivityCreatePayload {
   relatedRecordId?: string;
   relatedRecordCode?: string;
   relatedRecordTitle?: string;
+  enquiryId?: string;
   location?: string;
   workLocationId?: number | string;
   meetingLink?: string;

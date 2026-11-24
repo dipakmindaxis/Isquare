@@ -121,6 +121,8 @@ export const API_ENDPOINTS: ApiEndpoints = {
   DocumentTypes: `${BASE_URL}/documenttype`,
   ActivityType: `${BASE_URL}/ActivityType`,
   ActivityTypes: `${BASE_URL}/ActivityType`,
+  SalesActivity: `${BASE_URL}/SalesActivity`,
+  SalesActivities: `${BASE_URL}/SalesActivity`,
   MeetingType: `${BASE_URL}/meetingtypes`,
   MeetingTypes: `${BASE_URL}/meetingtypes`,
   CallType: `${BASE_URL}/CallType`,

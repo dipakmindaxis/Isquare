@@ -196,6 +196,8 @@ namespace CompanyPlatform.Core.Data
             ActivityLogs
         { get; set; }
 
+        public DbSet<SalesActivity> SalesActivities { get; set; }
+
         // Task Module and Related Entities
         //public DbSet<CompanyPlatform.Core.Models.CRM.Company> Companies { get; set; }
         public DbSet<Priority> Priorities { get; set; }

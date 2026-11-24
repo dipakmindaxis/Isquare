@@ -258,17 +258,24 @@ export const SalesActivities: React.FC<SalesActivitiesProps> = ({ defaultTab }) 
   const handleConfirmDelete = async () => {
     if (!selectedActivity) return;
     try {
-      const success = await deleteSalesActivity(selectedActivity.id);
+      const { id, activityCode } = selectedActivity;
+      // Optimistically remove from state so it immediately disappears
+      setActivities((prev) =>
+        prev.filter((a) => a.id !== id && (!activityCode || a.activityCode !== activityCode))
+      );
+      const success = await deleteSalesActivity(id, activityCode);
       if (success) {
         toast.success(
-          `Activity ${selectedActivity.activityCode} deleted successfully.`
+          `Activity ${activityCode || id} deleted successfully.`
         );
-        loadData();
+        await loadData();
       } else {
         toast.error("Failed to delete sales activity.");
+        await loadData();
       }
     } catch {
       toast.error("An error occurred while deleting.");
+      await loadData();
     } finally {
       setIsDeleteOpen(false);
       setSelectedActivity(null);

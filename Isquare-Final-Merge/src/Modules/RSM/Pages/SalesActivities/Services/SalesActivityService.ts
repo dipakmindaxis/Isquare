@@ -22,7 +22,6 @@ import {
   getAllCustomerStatuses,
   type CustomerStatus,
 } from "../../Master/CustomerStatus/Services/CustomerStatusService";
-import { getAllReminders } from "../../Master/Reminder/Services/ReminderService";
 import { getAllFollowUps } from "../../Master/FollowUp/Services/FollowUpService";
 // Director master removed - directors fetched via employee service
 import { getDepartments } from "../../../../HRMS/Services/MasterDataService";
@@ -54,11 +53,32 @@ export type { MasterActivityType, CustomerStatus, Contact };
 
 // Storage Keys
 const ACTIVITIES_STORAGE_KEY = "isquare_sales_activities_v3";
+const DELETED_ACTIVITIES_KEY = "isquare_sales_activities_deleted_ids_v1";
 const CALLS_STORAGE_KEY = "isquare_sales_calls_v3";
 const MEETINGS_STORAGE_KEY = "isquare_sales_meetings_v3";
 const FOLLOWUPS_STORAGE_KEY = "isquare_sales_followups_v3";
 const ATTACHMENTS_STORAGE_KEY = "isquare_sales_attachments_v3";
 const INTERVALS_STORAGE_KEY = "isquare_sales_fu_intervals_v2";
+
+export const getDeletedActivityIds = (): Set<string> => {
+  const raw = safeGet(DELETED_ACTIVITIES_KEY);
+  if (raw) {
+    try {
+      const arr = JSON.parse(raw);
+      if (Array.isArray(arr)) {
+        return new Set(arr.map((x) => String(x).toLowerCase().trim()));
+      }
+    } catch {}
+  }
+  return new Set();
+};
+
+export const markActivityDeleted = (id?: string, code?: string) => {
+  const set = getDeletedActivityIds();
+  if (id) set.add(String(id).toLowerCase().trim());
+  if (code) set.add(String(code).toLowerCase().trim());
+  safeSet(DELETED_ACTIVITIES_KEY, JSON.stringify(Array.from(set)));
+};
 
 // Storage Helpers
 const safeGet = (key: string): string | null => {
@@ -202,6 +222,7 @@ const isMockOrStaticItem = (p: any): boolean => {
   if (!p) return true;
   if (p.isMock === true) return true;
   const id = String(p.id || "");
+  const code = String(p.activityCode || "");
   if (
     id === "ACT-001" ||
     id === "ACT-002" ||
@@ -212,7 +233,11 @@ const isMockOrStaticItem = (p: any): boolean => {
     id === "FU-301" ||
     id === "FU-302" ||
     id === "ATT-001" ||
-    id === "ATT-002"
+    id === "ATT-002" ||
+    id.startsWith("REM-") ||
+    id.startsWith("FU-") ||
+    code.startsWith("REM-") ||
+    code.startsWith("FU-")
   ) {
     return true;
   }
@@ -225,7 +250,14 @@ export const getStoredActivities = (): SalesActivity[] => {
     try {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {
-        const cleaned = parsed.filter((p: any) => !isMockOrStaticItem(p));
+        const deletedSet = getDeletedActivityIds();
+        const cleaned = parsed.filter((p: any) => {
+          if (isMockOrStaticItem(p)) return false;
+          const idKey = String(p.id || "").toLowerCase().trim();
+          const codeKey = String(p.activityCode || "").toLowerCase().trim();
+          if (deletedSet.has(idKey) || deletedSet.has(codeKey)) return false;
+          return true;
+        });
         // Strictly deduplicate by id or activityCode
         const seen = new Set<string>();
         const deduplicated: SalesActivity[] = [];
@@ -250,110 +282,182 @@ export const saveActivities = (activities: SalesActivity[]): void => {
   safeSet(ACTIVITIES_STORAGE_KEY, JSON.stringify(activities));
 };
 
+export const mapApiToSalesActivity = (apiItem: any): SalesActivity => {
+  let photographs: any[] = [];
+  let documents: any[] = [];
+  if (apiItem.attachmentsJson) {
+    try {
+      const parsed = JSON.parse(apiItem.attachmentsJson);
+      if (parsed) {
+        photographs = Array.isArray(parsed.photographs) ? parsed.photographs : [];
+        documents = Array.isArray(parsed.documents) ? parsed.documents : [];
+      }
+    } catch {}
+  }
+
+  const actDate = apiItem.activityDate ? String(apiItem.activityDate).split("T")[0] : "";
+  const fuDate = apiItem.followUpDate ? String(apiItem.followUpDate).split("T")[0] : "";
+  const naDate = apiItem.nextActionDate ? String(apiItem.nextActionDate).split("T")[0] : "";
+  const remDate = apiItem.reminderDate ? String(apiItem.reminderDate).split("T")[0] : "";
+
+  return {
+    id: String(apiItem.activityId),
+    activityCode: apiItem.activityCode || `ACT-${String(apiItem.activityId).padStart(4, "0")}`,
+    activityType: apiItem.activityType || "Phone Call",
+    subject: apiItem.subject || "",
+    customerId: apiItem.companyId ? String(apiItem.companyId) : "",
+    customerName: apiItem.customerName || "",
+    contactPerson: apiItem.contactPerson || "",
+    contactPhone: apiItem.contactPhone || "",
+    contactEmail: apiItem.contactEmail || "",
+    assignedEmployeeId: apiItem.assignedEmployeeId ? String(apiItem.assignedEmployeeId) : "",
+    assignedEmployeeName: apiItem.assignedEmployeeName || "",
+    assignedType: apiItem.assignedType,
+    assignedTeamId: apiItem.assignedTeamId,
+    assignedTeamName: apiItem.assignedTeamName,
+    activityDate: actDate,
+    activityTime: apiItem.activityTime || "",
+    durationMinutes: apiItem.durationMinutes,
+    status: apiItem.status || "Scheduled",
+    statusDescription: apiItem.statusDescription,
+    discussionNotes: apiItem.discussionNotes || "",
+    outcome: apiItem.outcome,
+    location: apiItem.location,
+    workLocationId: apiItem.workLocationId,
+    meetingLink: apiItem.meetingLink,
+    meetingType: apiItem.meetingType,
+    callOutcome: apiItem.callOutcome,
+    callType: apiItem.callType,
+    productName: apiItem.productName,
+    sampleQuantity: apiItem.sampleQuantity,
+    activitySubType: apiItem.activitySubType,
+    priority: apiItem.priority,
+    priorityId: apiItem.priorityId,
+    followUpPriorityId: apiItem.followUpPriorityId,
+    followUpStatusId: apiItem.followUpStatusId,
+    relatedRecordType: apiItem.relatedRecordType || "None",
+    relatedRecordId: apiItem.relatedRecordId,
+    relatedRecordCode: apiItem.relatedRecordCode,
+    relatedRecordTitle: apiItem.relatedRecordTitle,
+    enquiryId: apiItem.enquiryId,
+    documentCategory: apiItem.documentCategory,
+    followUpDate: fuDate,
+    dueTime: apiItem.dueTime,
+    nextActionDate: naDate,
+    nextActionDetails: apiItem.nextActionDetails,
+    followUpStatus: apiItem.followUpStatus,
+    reminderTitle: apiItem.reminderTitle,
+    reminderDate: remDate,
+    reminderTime: apiItem.reminderTime,
+    reminderRemarks: apiItem.reminderRemarks,
+    reminderAssignedTo: apiItem.reminderAssignedTo,
+    reminderPriorityId: apiItem.reminderPriorityId,
+    reminderStatusId: apiItem.reminderStatusId,
+    photographs,
+    documents,
+    createdAt: apiItem.createdDate || new Date().toISOString(),
+    updatedAt: apiItem.updatedDate || apiItem.createdDate || new Date().toISOString(),
+  };
+};
+
+export const mapSalesActivityToCreateDto = (payload: SalesActivityCreatePayload) => {
+  const companyId = payload.customerId && !isNaN(Number(payload.customerId)) ? Number(payload.customerId) : undefined;
+  const assignedEmployeeId = payload.assignedEmployeeId && !isNaN(Number(payload.assignedEmployeeId)) ? Number(payload.assignedEmployeeId) : undefined;
+
+  const attachments = {
+    photographs: payload.photographs || [],
+    documents: payload.documents || [],
+  };
+
+  return {
+    activityCode: payload.activityCode,
+    companyId,
+    customerName: payload.customerName,
+    contactPerson: payload.contactPerson,
+    contactPhone: payload.contactPhone,
+    contactEmail: payload.contactEmail,
+    assignedEmployeeId,
+    assignedEmployeeName: payload.assignedEmployeeName,
+    assignedType: payload.assignedType,
+    assignedTeamId: payload.assignedTeamId ? Number(payload.assignedTeamId) : undefined,
+    assignedTeamName: payload.assignedTeamName,
+    activityType: payload.activityType,
+    activitySubType: payload.activitySubType,
+    activityDate: payload.activityDate ? new Date(payload.activityDate).toISOString() : undefined,
+    activityTime: payload.activityTime,
+    durationMinutes: payload.durationMinutes,
+    status: payload.status || "Scheduled",
+    statusDescription: payload.statusDescription,
+    priority: payload.priority,
+    priorityId: payload.priorityId,
+    subject: payload.subject,
+    discussionNotes: payload.discussionNotes,
+    outcome: payload.outcome,
+    location: payload.location,
+    workLocationId: payload.workLocationId ? Number(payload.workLocationId) : undefined,
+    meetingLink: payload.meetingLink,
+    meetingType: payload.meetingType,
+    callOutcome: payload.callOutcome,
+    callType: payload.callType,
+    productName: payload.productName,
+    sampleQuantity: payload.sampleQuantity,
+    relatedRecordType: payload.relatedRecordType,
+    relatedRecordId: payload.relatedRecordId,
+    relatedRecordCode: payload.relatedRecordCode,
+    relatedRecordTitle: payload.relatedRecordTitle,
+    enquiryId: payload.enquiryId,
+    documentCategory: payload.documentCategory,
+    followUpDate: payload.followUpDate ? new Date(payload.followUpDate).toISOString() : undefined,
+    dueTime: payload.dueTime,
+    nextActionDate: payload.nextActionDate ? new Date(payload.nextActionDate).toISOString() : undefined,
+    nextActionDetails: payload.nextActionDetails,
+    followUpStatus: payload.followUpStatus,
+    followUpStatusId: payload.followUpStatusId,
+    followUpPriorityId: payload.followUpPriorityId,
+    reminderTitle: payload.reminderTitle,
+    reminderDate: payload.reminderDate ? new Date(payload.reminderDate).toISOString() : undefined,
+    reminderTime: payload.reminderTime,
+    reminderRemarks: payload.reminderRemarks,
+    reminderAssignedTo: payload.reminderAssignedTo ? Number(payload.reminderAssignedTo) : undefined,
+    reminderPriorityId: payload.reminderPriorityId,
+    reminderStatusId: payload.reminderStatusId,
+    attachmentsJson: JSON.stringify(attachments),
+    isActive: true,
+  };
+};
+
 export const getSalesActivities = async (
   filters?: SalesActivityFilterParams
 ): Promise<SalesActivity[]> => {
   let items = getStoredActivities();
+  const deletedSet = getDeletedActivityIds();
 
-  // Gracefully merge backend reminders if available (max 400ms timeout)
+  // Fetch from backend tbl_SalesActivity
   try {
-    const fetchWithTimeout = Promise.race([
-      getAllReminders(),
-      new Promise<any[]>((_, reject) => setTimeout(() => reject(new Error("timeout")), 400)),
-    ]);
-    const backendReminders = await fetchWithTimeout;
-    if (Array.isArray(backendReminders) && backendReminders.length > 0) {
-      const custOptions = await getCustomerOptions().catch(() => []);
-      const empOptions = await getEmployeeOptions().catch(() => []);
-      for (const r of backendReminders) {
-        if (!r.reminderId) continue;
-        const idStr = `REM-${r.reminderId}`;
-        const alreadyInList = items.some((it) => it.id === idStr || it.activityCode === idStr);
-        if (!alreadyInList) {
-          const matchedCust = custOptions.find((c) => String(c.id) === String(r.companyId));
-          const matchedEmp = empOptions.find((e) => String(e.id) === String(r.assignedTo));
-          const rDate = r.reminderDate ? r.reminderDate.split("T")[0] : "";
-          const resolvedCustName = matchedCust ? (matchedCust.companyName || matchedCust.name) : "";
-          if (!resolvedCustName) continue;
-          items.push({
-            id: idStr,
-            activityCode: `REM-${String(r.reminderId).padStart(3, "0")}`,
-            activityType: "Phone Call",
-            subject: r.title || `Follow-up: ${resolvedCustName}`,
-            customerId: String(r.companyId || ""),
-            customerName: resolvedCustName,
-            contactPerson: matchedCust?.contactPerson || "",
-            contactPhone: matchedCust?.phone || "",
-            contactEmail: matchedCust?.email || "",
-            assignedEmployeeId: String(r.assignedTo || ""),
-            assignedEmployeeName: matchedEmp ? matchedEmp.name : "-",
-            activityDate: rDate || new Date().toISOString().split("T")[0],
-            activityTime: "10:00 AM",
-            durationMinutes: 15,
-            status: r.isActive ? "Scheduled" : "Completed",
-            discussionNotes: r.remarks || "",
-            nextActionDate: rDate,
-            nextActionDetails: r.remarks,
-            relatedRecordType: "None",
-            photographs: [],
-            documents: [],
-            createdAt: r.createdDate || new Date().toISOString(),
-            updatedAt: r.createdDate || new Date().toISOString(),
-          });
-        }
-      }
-    }
-  } catch {}
+    const endpoint = API_ENDPOINTS.SalesActivity || `${API_ENDPOINTS.BaseUrl}/SalesActivity`;
+    const response = await apiClient.get<any[]>(endpoint);
+    if (response && response.data && Array.isArray(response.data)) {
+      const backendItems = response.data
+        .map(mapApiToSalesActivity)
+        .filter((b) => {
+          if (isMockOrStaticItem(b)) return false;
+          const idKey = String(b.id || "").toLowerCase().trim();
+          const codeKey = String(b.activityCode || "").toLowerCase().trim();
+          return !deletedSet.has(idKey) && !deletedSet.has(codeKey);
+        });
 
-  // Gracefully merge backend follow-ups (max 400ms timeout) for complete activity visibility
-  try {
-    const fetchFollowUps = Promise.race([
-      getAllFollowUps(),
-      new Promise<any[]>((_, reject) => setTimeout(() => reject(new Error("timeout")), 400)),
-    ]);
-    const backendFollowUps = await fetchFollowUps;
-    if (Array.isArray(backendFollowUps) && backendFollowUps.length > 0) {
-      const custOptions = await getCustomerOptions().catch(() => []);
-      const empOptions = await getEmployeeOptions().catch(() => []);
-      for (const f of backendFollowUps) {
-        if (!f.followUpId) continue;
-        const idStr = `FU-${f.followUpId}`;
-        const alreadyInList = items.some((it) => it.id === idStr || it.activityCode === idStr);
-        if (!alreadyInList) {
-          const matchedCust = custOptions.find((c) => String(c.id) === String(f.companyId));
-          const matchedEmp = empOptions.find((e) => String(e.id) === String(f.userId));
-          const fDate = f.followUpDate ? f.followUpDate.split("T")[0] : "";
-          const resolvedCustName = matchedCust ? (matchedCust.companyName || matchedCust.name) : "";
-          if (!resolvedCustName) continue;
-          items.push({
-            id: idStr,
-            activityCode: `FU-${String(f.followUpId).padStart(3, "0")}`,
-            activityType: "Discussion Notes",
-            subject: f.remarks ? `Follow-up: ${f.remarks.slice(0, 45)}` : `Follow-up: ${resolvedCustName}`,
-            customerId: String(f.companyId || ""),
-            customerName: resolvedCustName,
-            contactPerson: matchedCust?.contactPerson || "",
-            contactPhone: matchedCust?.phone || "",
-            contactEmail: matchedCust?.email || "",
-            assignedEmployeeId: String(f.userId || ""),
-            assignedEmployeeName: matchedEmp ? matchedEmp.name : "Sales Team",
-            activityDate: fDate || new Date().toISOString().split("T")[0],
-            activityTime: "10:30 AM",
-            durationMinutes: 20,
-            status: f.isActive ? "Scheduled" : "Completed",
-            discussionNotes: f.remarks || "",
-            nextActionDate: f.nextFollowUpDate ? f.nextFollowUpDate.split("T")[0] : fDate,
-            nextActionDetails: f.remarks,
-            relatedRecordType: "None",
-            photographs: [],
-            documents: [],
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          });
-        }
-      }
+      items = backendItems;
+      saveActivities(items);
     }
-  } catch {}
+  } catch (err) {
+    console.warn("Could not fetch sales activities from backend, using local store:", err);
+    items = items.filter((a) => {
+      if (isMockOrStaticItem(a)) return false;
+      const idKey = String(a.id || "").toLowerCase().trim();
+      const codeKey = String(a.activityCode || "").toLowerCase().trim();
+      return !deletedSet.has(idKey) && !deletedSet.has(codeKey);
+    });
+  }
 
   // Strictly deduplicate by unique activityCode or id
   const seenActKeys = new Set<string>();
@@ -469,39 +573,68 @@ export const getActivitySummaryStats = async (): Promise<ActivitySummaryStats> =
 };
 
 export const getActivityById = async (id: string): Promise<SalesActivity | null> => {
+  if (/^\d+$/.test(String(id).trim())) {
+    try {
+      const endpoint = `${API_ENDPOINTS.SalesActivity || `${API_ENDPOINTS.BaseUrl}/SalesActivity`}/${id}`;
+      const response = await apiClient.get<any>(endpoint);
+      if (response && response.data) {
+        return mapApiToSalesActivity(response.data);
+      }
+    } catch {}
+  }
   const items = getStoredActivities();
-  return items.find((a) => a.id === id) || null;
+  return items.find((a) => a.id === id || a.activityCode === id) || null;
 };
 
 export const createSalesActivity = async (
   payload: SalesActivityCreatePayload
 ): Promise<SalesActivity> => {
+  let createdActivity: SalesActivity | null = null;
+
+  // 1. Try persisting to backend API (tbl_SalesActivity)
+  try {
+    const endpoint = API_ENDPOINTS.SalesActivity || `${API_ENDPOINTS.BaseUrl}/SalesActivity`;
+    const dto = mapSalesActivityToCreateDto(payload);
+    const response = await apiClient.post<any>(endpoint, dto);
+    if (response && response.data) {
+      createdActivity = mapApiToSalesActivity(response.data);
+    }
+  } catch (err) {
+    console.warn("Backend createSalesActivity call failed, falling back to local:", err);
+  }
+
+  // 2. Fallback to local ID/activityCode generation if backend was unreachable
+  if (!createdActivity) {
+    const items = getStoredActivities();
+    const timestamp = Date.now();
+    const newId = `ACT-${timestamp}`;
+    const existingNums = items
+      .map((a) => {
+        const m = (a.activityCode || "").match(/ACT-\d{4}-(\d+)/i);
+        return m ? parseInt(m[1], 10) : 0;
+      })
+      .filter((n) => !isNaN(n));
+    const nextNum = existingNums.length > 0 ? Math.max(...existingNums) + 1 : items.length + 1;
+    const activityCode = `ACT-${new Date().getFullYear()}-${String(nextNum).padStart(3, "0")}`;
+
+    createdActivity = {
+      ...payload,
+      id: newId,
+      activityCode,
+      photographs: payload.photographs || [],
+      documents: payload.documents || [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+  }
+
+  // Save to cache
   const items = getStoredActivities();
-  const timestamp = Date.now();
-  const newId = `ACT-${timestamp}`;
-  const existingNums = items
-    .map((a) => {
-      const m = (a.activityCode || "").match(/ACT-\d{4}-(\d+)/i);
-      return m ? parseInt(m[1], 10) : 0;
-    })
-    .filter((n) => !isNaN(n));
-  const nextNum = existingNums.length > 0 ? Math.max(...existingNums) + 1 : items.length + 1;
-  const activityCode = `ACT-${new Date().getFullYear()}-${String(nextNum).padStart(3, "0")}`;
-
-  const newActivity: SalesActivity = {
-    ...payload,
-    id: newId,
-    activityCode,
-    photographs: payload.photographs || [],
-    documents: payload.documents || [],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-
-  const updated = [newActivity, ...items];
+  const updated = [createdActivity, ...items.filter((x) => x.id !== createdActivity!.id)];
   saveActivities(updated);
 
   // Auto-sync into calls
+  const timestamp = Date.now();
   if (payload.activityType === "Phone Call") {
     const calls = getStoredCalls();
     const existingCallNums = calls
@@ -596,12 +729,35 @@ export const createSalesActivity = async (
     saveFollowUps([fuItem, ...followUps]);
   }
 
-  return newActivity;
+  return createdActivity;
 };
 
 export const updateSalesActivity = async (
   payload: SalesActivityUpdatePayload
 ): Promise<SalesActivity> => {
+  const numId = Number(payload.id);
+  if (!isNaN(numId) && numId > 0) {
+    try {
+      const endpoint = `${API_ENDPOINTS.SalesActivity || `${API_ENDPOINTS.BaseUrl}/SalesActivity`}/${numId}`;
+      const dto = mapSalesActivityToCreateDto(payload as any);
+      const response = await apiClient.put<any>(endpoint, dto);
+      if (response && response.data) {
+        const updated = mapApiToSalesActivity(response.data);
+        const items = getStoredActivities();
+        const idx = items.findIndex((a) => a.id === payload.id);
+        if (idx !== -1) {
+          items[idx] = updated;
+        } else {
+          items.unshift(updated);
+        }
+        saveActivities(items);
+        return updated;
+      }
+    } catch (err) {
+      console.warn("Backend updateSalesActivity call failed, falling back to local:", err);
+    }
+  }
+
   const items = getStoredActivities();
   const index = items.findIndex((a) => a.id === payload.id);
   if (index === -1) {
@@ -619,9 +775,30 @@ export const updateSalesActivity = async (
   return updatedItem;
 };
 
-export const deleteSalesActivity = async (id: string): Promise<boolean> => {
+export const deleteSalesActivity = async (id: string, activityCode?: string): Promise<boolean> => {
+  markActivityDeleted(id, activityCode);
+
+  const numId = Number(id);
+  if (!isNaN(numId) && numId > 0) {
+    try {
+      const endpoint = `${API_ENDPOINTS.SalesActivity || `${API_ENDPOINTS.BaseUrl}/SalesActivity`}/${numId}`;
+      await apiClient.delete(endpoint);
+    } catch (err) {
+      console.warn("Backend deleteSalesActivity call failed, falling back to local deletion:", err);
+    }
+  }
+
   const items = getStoredActivities();
-  saveActivities(items.filter((a) => a.id !== id));
+  const idLower = String(id).toLowerCase().trim();
+  const codeLower = activityCode ? String(activityCode).toLowerCase().trim() : "";
+  const filtered = items.filter((a) => {
+    const aId = String(a.id || "").toLowerCase().trim();
+    const aCode = String(a.activityCode || "").toLowerCase().trim();
+    if (aId === idLower || aId === codeLower) return false;
+    if (codeLower && (aCode === idLower || aCode === codeLower)) return false;
+    return true;
+  });
+  saveActivities(filtered);
   return true;
 };
 

@@ -92,11 +92,10 @@ export const TaskAssignmentPage: React.FC = () => {
                 key={tab.id}
                 type="button"
                 onClick={() => handleSelectTab(tab.id)}
-                className={`flex items-center gap-2.5 px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-all cursor-pointer ${
-                  isActive
+                className={`flex items-center gap-2.5 px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-all cursor-pointer ${isActive
                     ? "border-[#FF7900] text-[#FF7900] font-bold bg-orange-50/50 rounded-t-lg"
                     : "border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300"
-                }`}
+                  }`}
               >
                 <span className={isActive ? "text-[#FF7900]" : "text-gray-400"}>
                   {tab.icon}
