@@ -72,7 +72,7 @@ const pageDetails: Record<
 > = {
   country: {
     title: "Country Master",
-    description: "Manage countries and their identification codes.",
+    description: "",
     addLabel: "Add Country",
     icon: <Globe className="w-5 h-5" />,
   },
@@ -341,9 +341,11 @@ const LocationMaster: React.FC<{ kind: MasterKind }> = ({ kind }) => {
           </div>
           <div>
             <h1 className="text-xl font-bold tracking-tight text-gray-900">{details.title}</h1>
-            <p className="mt-0.5 text-xs text-gray-500">
-              {details.description}
-            </p>
+            {details.description ? (
+              <p className="mt-0.5 text-xs text-gray-500">
+                {details.description}
+              </p>
+            ) : null}
           </div>
         </div>
         <button

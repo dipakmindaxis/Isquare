@@ -825,14 +825,9 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                   <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block">
-                        Customer Code
-                      </label>
-                      <span className="text-[10px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded font-medium">
-                        Auto-generated
-                      </span>
-                    </div>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
+                      Customer Code
+                    </label>
                     <div className="relative">
                       <input
                         type="text"

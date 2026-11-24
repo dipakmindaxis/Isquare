@@ -81,10 +81,6 @@ const ContactTypes: React.FC = () => {
                     <h1 className="text-2xl font-semibold text-[#154068]">
                         Contact Types
                     </h1>
-
-                    <p className="mt-1 text-sm text-gray-500">
-                        Defines the role / department of a customer contact.
-                    </p>
                 </div>
 
                 <div className="flex items-center gap-3">

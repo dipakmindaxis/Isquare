@@ -191,9 +191,6 @@ export const QuotationPricing: React.FC<QuotationPricingProps> = ({
           <h4 className="text-sm font-bold text-gray-900 tracking-tight">
             Pricing &amp; Charges
           </h4>
-          <p className="text-xs text-gray-500">
-            Configure freight, installation and custom charges
-          </p>
         </div>
       </div>
 
@@ -352,9 +349,6 @@ export const QuotationPricing: React.FC<QuotationPricingProps> = ({
             <h4 className="text-sm font-bold text-gray-900 tracking-tight">
               Additional Named Charges
             </h4>
-            <p className="text-xs text-gray-500">
-              Optional itemized charges with custom tax rates (Packaging, Calibration, Inspection fees)
-            </p>
           </div>
 
           {!disabled && (
@@ -369,11 +363,7 @@ export const QuotationPricing: React.FC<QuotationPricingProps> = ({
           )}
         </div>
 
-        {charges.length === 0 ? (
-          <div className="p-4 bg-gray-50/80 border border-dashed border-gray-200 rounded-xl text-center text-xs text-gray-500">
-            No additional named charges specified. Standard freight, installation, and other charges will be applied.
-          </div>
-        ) : (
+        {charges.length > 0 && (
           <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs">
             <table className="w-full text-left border-collapse text-xs">
               <thead>

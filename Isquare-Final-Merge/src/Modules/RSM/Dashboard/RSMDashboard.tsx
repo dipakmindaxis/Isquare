@@ -832,16 +832,13 @@ const RSMDashboard: React.FC = () => {
       {/* 1. DASHBOARD HEADER & DATE RANGE SELECTOR                  */}
       {/* ========================================================= */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        {/* Left: Heading & Subtitle with orange vertical accent */}
-        <div className="flex items-start gap-3">
-          <div className="w-1.5 h-10 bg-[#FF7900] rounded-full flex-shrink-0 mt-0.5" />
+        {/* Left: Heading with orange vertical accent */}
+        <div className="flex items-center gap-3">
+          <div className="w-1.5 h-8 bg-[#FF7900] rounded-full flex-shrink-0" />
           <div>
             <h1 className="text-2xl font-bold text-[#00234a] tracking-tight">
               CRM Dashboard
             </h1>
-            <p className="text-xs text-gray-500 mt-1">
-              Real-time overview of your customers, enquiries, quotations and tasks.
-            </p>
           </div>
         </div>
 

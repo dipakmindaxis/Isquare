@@ -27,9 +27,6 @@ export const QuotationItemsTable: React.FC<QuotationItemsTableProps> = ({
           <h4 className="text-base font-bold text-gray-900 tracking-tight">
             Line Items &amp; Products
           </h4>
-          <p className="text-sm text-gray-500">
-            Add equipment, sensors, machines, and attach related accessories
-          </p>
         </div>
 
         {!disabled && (
