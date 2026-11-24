@@ -205,6 +205,7 @@ export const ViewSalesActivityModal: React.FC<ViewSalesActivityModalProps> = ({
             <SectionHeader icon={Calendar} title="Activity Information" />
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
               <DetailItem label="Activity Type" value={activity.activityType} />
+              <DetailItem label="Sub Activity" value={activity.activitySubType} />
               <DetailItem label="Activity Status" value={activity.status} />
               <DetailItem label="Activity Date" value={activity.activityDate} />
               <DetailItem label="Activity Time" value={activity.activityTime} />

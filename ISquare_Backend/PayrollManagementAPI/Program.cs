@@ -48,6 +48,7 @@ using CompanyPlatform.CRM.Services.CustomerArea;
 using CompanyPlatform.CRM.Services.CustomerCategory;
 using CompanyPlatform.CRM.Services.CustomerSource;
 using CompanyPlatform.CRM.Services.CustomerStatus;
+using CompanyPlatform.CRM.Services.SalesActivity;
 using CompanyPlatform.CRM.Services.CustomerType;
 using CompanyPlatform.CRM.Services.DocumentType;
 using CompanyPlatform.CRM.Services.Employee;
@@ -256,6 +257,7 @@ builder.Services.AddScoped<IAccessControlService, AccessControlService>();
 //builder.Services.AddScoped<INotificationQueueService, NotificationQueueService>();
 builder.Services.AddScoped<IActivityTypeService, ActivityTypeService>();
 builder.Services.AddScoped<IActivityLogService, ActivityLogService>();
+builder.Services.AddScoped<ISalesActivityService, SalesActivityService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 
 

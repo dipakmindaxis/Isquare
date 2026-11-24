@@ -48,7 +48,7 @@ const ViewEnquiryModal: React.FC<ViewEnquiryModalProps> = ({ isOpen, enquiryId, 
     if (isOpen) {
       getEnquiryPriorities()
         .then((data) => setPriorities(data || []))
-        .catch(() => {});
+        .catch(() => { });
     }
   }, [isOpen]);
 

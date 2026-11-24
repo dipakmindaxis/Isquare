@@ -72,12 +72,6 @@ interface AddSalesActivityModalProps {
   isModal?: boolean;
 }
 
-const getRelativeDate = (offset: number): string => {
-  const d = new Date();
-  d.setDate(d.getDate() + offset);
-  return d.toISOString().split("T")[0];
-};
-
 export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
   isOpen,
   onClose,
@@ -85,7 +79,6 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
   defaultActivityType,
   isModal = false,
 }) => {
-  const [activeTab, setActiveTab] = useState(0);
   const { user } = useAuth();
   const userRoleCategory = getUserRoleCategory(user?.role);
 
@@ -99,10 +92,10 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
   const [employees, setEmployees] = useState<EmployeeOption[]>([]);
   const [roleAssignees, setRoleAssignees] = useState<AssigneeOption[]>([]);
   const [companySalesReps, setCompanySalesReps] = useState<CompanySalesRep[]>([]);
-  const [teams, setTeams] = useState<AssigneeOption[]>([]);
+  const [, setTeams] = useState<AssigneeOption[]>([]);
   const [priorityOptions, setPriorityOptions] = useState<PriorityOptionItem[]>([]);
   const [, setOutcomes] = useState<ActivityOutcomeItem[]>([]);
-  const [intervals, setIntervals] = useState<FollowUpIntervalItem[]>([]);
+  const [, setIntervals] = useState<FollowUpIntervalItem[]>([]);
   const [docTypes, setDocTypes] = useState<DocumentTypeItem[]>([]);
   const [masterActivityTypes, setMasterActivityTypes] = useState<MasterActivityType[]>([]);
   const [customerStatuses, setCustomerStatuses] = useState<CustomerStatus[]>([]);
@@ -119,9 +112,9 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
   const [contactEmail, setContactEmail] = useState<string>("");
   const [assignedEmployeeId, setAssignedEmployeeId] = useState<string>("");
   const [assignedEmployeeName, setAssignedEmployeeName] = useState<string>("");
-  const [assignedType, setAssignedType] = useState<"Employee" | "Team">("Employee");
-  const [assignedTeamId, setAssignedTeamId] = useState<string>("");
-  const [assignedTeamName, setAssignedTeamName] = useState<string>("");
+  const [assignedType] = useState<"Employee" | "Team">("Employee");
+  const [assignedTeamId] = useState<string>("");
+  const [assignedTeamName] = useState<string>("");
   const [activityType, setActivityType] = useState<ActivityType | "">(
     defaultActivityType || ""
   );
@@ -146,7 +139,7 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
   // Tab 3: Follow-Up & Reminders Fields
   const [nextActionDate, setNextActionDate] = useState<string>("");
   const [nextActionDetails, setNextActionDetails] = useState<string>("");
-  const [priority, setPriority] = useState<"Urgent" | "High" | "Medium" | "Low" | string>("Medium");
+  const [priority, setPriority] = useState<string>("");
   const [followUpDate, setFollowUpDate] = useState<string>("");
   const [followUpStatus, setFollowUpStatus] = useState<string>("");
   const [followUpPriorityId, setFollowUpPriorityId] = useState<number | string>("");
@@ -164,7 +157,6 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
   // Reset form when opened or closed
   useEffect(() => {
     if (isOpen) {
-      setActiveTab(0);
       setIsSubmitted(false);
       setCustomerId("");
       setCustomerName("");
@@ -178,9 +170,8 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
       setAssignedEmployeeId("");
       setAssignedEmployeeName("");
       setActivityType(defaultActivityType || "");
-      const todayStr = new Date().toISOString().split("T")[0];
-      setActivityDate(todayStr);
-      setActivityTime("10:00 AM");
+      setActivityDate("");
+      setActivityTime("");
       setStatus("");
       setSubType("");
       setOutcome("");
@@ -247,18 +238,7 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
           setDocTypes(dTypes.filter((d: any) => d.isActive));
           setRelatedOptions(enqList);
 
-          if (actTypes.length > 0) {
-            const firstType = defaultActivityType || actTypes[0].activityName;
-            setActivityType(firstType as ActivityType);
-          }
-          if (custStatuses.length > 0) {
-            setStatus(custStatuses[0].statusName as ActivityStatus);
-            if (custStatuses[0].description) {
-              setStatusDescription(custStatuses[0].description);
-            }
-          }
-
-          // Role-based assignee initial setup
+          // Role-based assignee initial setup for Director only
           if (userRoleCategory === "Director") {
             const dirName =
               user?.name ||
@@ -266,23 +246,6 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
               "Director";
             setAssignedEmployeeId(String(user?.employeeId || "director"));
             setAssignedEmployeeName(dirName);
-          } /* Company-specific sales reps will auto-populate when company is selected */
-          if (false) {
-            setAssignedEmployeeId(String(roleList[0].id));
-            setAssignedEmployeeName(roleList[0].name);
-          } else if (eData.length > 0) {
-            setAssignedEmployeeId(String(eData[0].id));
-            setAssignedEmployeeName(eData[0].name);
-          }
-
-          // Default priority setup (Medium / Urgent / High / Low)
-          if (prioWithFb.length > 0) {
-            const med =
-              prioWithFb.find((p: any) => p.name.toLowerCase() === "medium") ||
-              prioWithFb[0];
-            setPriority(med.name as any);
-            setFollowUpPriorityId(med.id);
-            setReminderPriorityId(med.id);
           }
         } catch {
           toast.error("Failed to load options.");
@@ -312,7 +275,7 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
 
   const handleCustomerChange = async (selectedId: string) => {
     setCustomerId(selectedId);
-    getRelatedRecordOptions(selectedId).then(setRelatedOptions).catch(() => {});
+    getRelatedRecordOptions(selectedId).then(setRelatedOptions).catch(() => { });
     const matched = customers.find((c) => String(c.id) === String(selectedId));
     if (matched) {
       const cName = matched.companyName || matched.name;
@@ -403,16 +366,94 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
       setIsLoadingContacts(true);
       try {
         const contactList = await getContactsForCustomer(selectedId);
-        setCompanyContacts(contactList);
-        if (contactList && contactList.length > 0) {
-          const first = contactList.find((c) => c.isPrimary) || contactList[0];
-          setContactPerson(first.fullName);
-          setContactPhone(first.mobileNo || first.altMobileNo || "");
-          setContactEmail(first.emailAddress || first.altEmailAddress || "");
-        } else if (matched.contactPerson) {
-          setContactPerson(matched.contactPerson);
-          setContactPhone(matched.phone || "");
-          setContactEmail(matched.email || "");
+
+        // Build a unified contact map combining:
+        // 1. Primary contact from Customer Master (c.contactPerson / c.customerName, phone, email)
+        // 2. Extra contacts array attached to customer record
+        // 3. Contacts from Contact Master API (tbl_Contact)
+        const contactsMap = new Map<string, Contact>();
+
+        // (A) Primary contact from customer record
+        const primaryPersonName = (
+          custData.contactPerson ||
+          matched.contactPerson ||
+          (matched.name && matched.name !== matched.companyName ? matched.name : "")
+        )?.trim();
+
+        if (primaryPersonName) {
+          contactsMap.set(primaryPersonName.toLowerCase(), {
+            contactId: 0,
+            companyId: Number(selectedId),
+            fullName: primaryPersonName,
+            designation: custData.designation || (custData as any).contactDesignation || "Primary Contact",
+            department: custData.department || (custData as any).contactDepartment || null,
+            mobileNo: (matched.phone || custData.phone || custData.mobile || "")?.trim() || null,
+            altMobileNo: (custData.altMobile || (custData as any).alternateMobile || "")?.trim() || null,
+            emailAddress: (matched.email || custData.email || custData.emailAddress || "")?.trim() || null,
+            altEmailAddress: (custData.altEmail || (custData as any).alternateEmail || "")?.trim() || null,
+            isPrimary: true,
+            isActive: true,
+          });
+        }
+
+        // (B) Additional contacts on customer object (if any)
+        const rawCustomerContacts: any[] = Array.isArray(custData.contactPersons)
+          ? custData.contactPersons
+          : Array.isArray((custData as any).contacts)
+            ? (custData as any).contacts
+            : [];
+
+        rawCustomerContacts.forEach((rc: any) => {
+          const fName = (rc.fullName || rc.name || rc.contactPerson || "").trim();
+          if (fName) {
+            const key = fName.toLowerCase();
+            if (!contactsMap.has(key)) {
+              contactsMap.set(key, {
+                contactId: Number(rc.contactId || rc.id || 0),
+                companyId: Number(selectedId),
+                fullName: fName,
+                designation: rc.designation || null,
+                department: rc.department || null,
+                mobileNo: rc.mobileNo || rc.phone || rc.mobile || null,
+                altMobileNo: rc.altMobileNo || null,
+                emailAddress: rc.emailAddress || rc.email || null,
+                altEmailAddress: rc.altEmailAddress || null,
+                isPrimary: Boolean(rc.isPrimary),
+                isActive: rc.isActive !== false,
+              });
+            }
+          }
+        });
+
+        // (C) Contacts from Contact Master API (tbl_Contact)
+        (contactList || []).forEach((c: Contact) => {
+          const fName = (c.fullName || "").trim();
+          if (fName) {
+            const key = fName.toLowerCase();
+            const existing = contactsMap.get(key);
+            if (existing) {
+              contactsMap.set(key, {
+                ...existing,
+                ...c,
+                contactId: c.contactId || existing.contactId,
+                mobileNo: c.mobileNo || existing.mobileNo,
+                emailAddress: c.emailAddress || existing.emailAddress,
+                designation: c.designation || existing.designation,
+              });
+            } else {
+              contactsMap.set(key, c);
+            }
+          }
+        });
+
+        const unifiedContacts = Array.from(contactsMap.values());
+        setCompanyContacts(unifiedContacts);
+
+        if (unifiedContacts.length > 0) {
+          const selected = unifiedContacts.find((c) => c.isPrimary) || unifiedContacts[0];
+          setContactPerson(selected.fullName);
+          setContactPhone(selected.mobileNo || selected.altMobileNo || "");
+          setContactEmail(selected.emailAddress || selected.altEmailAddress || "");
         } else {
           setContactPerson("");
           setContactPhone(matched.phone || "");
@@ -470,22 +511,6 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
     }
   };
 
-  const applyIntervalPreset = (intervalValue: string) => {
-    const v = intervalValue.toLowerCase();
-    let days = 1;
-    if (v.includes("same day")) days = 0;
-    else if (v.includes("next day") || v.includes("1 day")) days = 1;
-    else if (v.includes("3 day")) days = 3;
-    else if (v.includes("1 week") || v.includes("7 day")) days = 7;
-    else if (v.includes("15 day")) days = 15;
-    else if (v.includes("1 month") || v.includes("30 day")) days = 30;
-    else {
-      const m = v.match(/\d+/);
-      if (m) days = parseInt(m[0], 10);
-    }
-    setNextActionDate(getRelativeDate(days));
-  };
-
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -515,24 +540,19 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
     setAttachments((prev) => prev.filter((d) => d.id !== id));
   };
 
-  const validateTab0 = (): boolean => {
+  const validateForm = (): boolean => {
     if (!customerId && !customerName.trim()) {
       toast.error("Please select a Customer Account.");
-      setActiveTab(0);
       return false;
     }
     return true;
-  };
-
-  const handleTabChange = (index: number) => {
-    setActiveTab(index);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitted(true);
 
-    if (!validateTab0()) {
+    if (!validateForm()) {
       return;
     }
 
@@ -636,14 +656,14 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
       if (reminderDate || reminderTitle) {
         try {
           await createReminder({
-            companyId: Number(customerId) || 0,
-            assignedTo: Number(reminderAssignedTo) || (assignedEmployeeId ? Number(assignedEmployeeId) : undefined),
-            reminderStatusId: reminderStatusId ? Number(reminderStatusId) : undefined,
+            companyId: Number(customerId) || 1,
+            assignedTo: Number(reminderAssignedTo) || (assignedEmployeeId ? Number(assignedEmployeeId) : 1),
+            reminderStatusId: reminderStatusId ? Number(reminderStatusId) : 1,
             title: reminderTitle.trim() || `Reminder: ${customerName.trim() || finalSubject}`,
             reminderDate: reminderDate || activityDate || new Date().toISOString(),
             reminderTime: reminderTime || "10:00:00",
             remarks: reminderRemarks.trim() || nextActionDetails.trim() || finalSubject,
-            priorityId: reminderPriorityId ? Number(reminderPriorityId) : undefined,
+            priorityId: reminderPriorityId ? Number(reminderPriorityId) : 1,
             createdBy: 1,
             isActive: true,
             isDeleted: false,
@@ -702,28 +722,6 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
     }
   };
 
-  const hasErrorsInTab = (tabIdx: number): boolean => {
-    if (tabIdx === 0 && isSubmitted) {
-      if (userRoleCategory === "Director") {
-        return !customerId || !activityType || !activityDate || !activityTime || !status;
-      }
-      return (
-        !customerId ||
-        !assignedEmployeeId ||
-        !activityType ||
-        !activityDate ||
-        !activityTime ||
-        !status
-      );
-    }
-    return false;
-  };
-
-  const tabs = [
-    { label: "Activity Details", icon: <Building size={16} /> },
-    { label: "Sales Attachments", icon: <Paperclip size={16} /> },
-    { label: "Follow-Up & Reminders", icon: <Clock size={16} /> },
-  ];
 
   const labelStyle =
     "text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block";
@@ -750,37 +748,17 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
             <X size={20} />
           </button>
         </div>
-
-        {/* Tab Navigation Bar */}
-        <div className="flex bg-[#e06800] p-1.5 gap-1 items-center shrink-0 border-b border-[#c85c00]">
-          <div className="flex flex-1 gap-1 overflow-x-auto">
-            {tabs.map((tab, index) => (
-              <button
-                key={tab.label}
-                type="button"
-                onClick={() => handleTabChange(index)}
-                className={`flex-1 py-3 text-[11px] font-extrabold uppercase tracking-widest rounded-md transition-all duration-300 flex items-center justify-center gap-2 relative cursor-pointer ${
-                  activeTab === index
-                    ? "bg-white text-[#FF7900] shadow-lg scale-[1.02]"
-                    : "text-white hover:bg-white/10"
-                }`}
-              >
-                {tab.icon} {tab.label}
-                {hasErrorsInTab(index) && activeTab !== index && (
-                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Form Body matching Customer Module spacing & dimensions */}
-        <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0 bg-white">
-          <div className="p-5 sm:p-6">
-            {/* TAB 0: ACTIVITY DETAILS */}
-            {activeTab === 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 animate-in fade-in duration-200">
-                {/* Company Name */}
+        {/* Unified Customer Module Style Form Body */}
+        <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0 bg-gray-50/60">
+          <div className="p-5 sm:p-6 md:p-8 space-y-6 max-h-[80vh] overflow-y-auto">
+            {/* SECTION 1: ACTIVITY DETAILS */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
+              <div className="flex items-center gap-2.5 text-[#FF7900] font-bold text-base border-b border-orange-100 pb-3">
+                <Building size={16} />
+                <span>Section 1 - Activity Details</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-5">
+                {/* 1. Company Name */}
                 <div className="relative">
                   <label className={labelStyle}>
                     Company Name <RequiredAst />
@@ -798,20 +776,20 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
                         label: displayTitle || c.name || "Customer",
                       };
                     })}
-                    placeholder="Select Company / Customer Account..."
+                    placeholder="Select Company..."
                     hasError={Boolean(isSubmitted && !customerId)}
                   />
                 </div>
 
-                {/* Assigned Sales Rep / Director - Role Based Visibility */}
+                {/* 2. Assigned Sales Rep / Director */}
                 {userRoleCategory !== "Director" ? (
                   <div className="relative">
                     <label className={labelStyle}>
                       {userRoleCategory === "BDE"
                         ? "Assigned Director"
                         : userRoleCategory === "SalesPerson"
-                        ? "Assigned BDE User"
-                        : "Assigned Sales Rep"} <RequiredAst />
+                          ? "Assigned BDE User"
+                          : "Assigned Sales Rep"} <RequiredAst />
                     </label>
                     <SearchableSelect
                       value={assignedEmployeeId}
@@ -821,11 +799,11 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
                         companySalesReps.length > 0
                           ? companySalesReps.map((e) => ({ value: e.id, label: e.name }))
                           : roleAssignees.map((e) => ({
-                              value: e.id,
-                              label: `${cleanName(e.name)}${e.role ? ` (${e.role})` : ""}`,
-                            }))
+                            value: e.id,
+                            label: `${cleanName(e.name)}${e.role ? ` (${e.role})` : ""}`,
+                          }))
                       }
-                      placeholder={!customerId ? "Select a company first..." : "Select Sales Representative..."}
+                      placeholder={!customerId ? "Select a company first..." : "Select Sales Rep..."}
                       hasError={Boolean(isSubmitted && !assignedEmployeeId)}
                     />
                   </div>
@@ -841,7 +819,7 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
                   </div>
                 )}
 
-                {/* Contact Person */}
+                {/* 3. Contact Person */}
                 <div className="relative">
                   <div className="flex items-center justify-between mb-1">
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block">
@@ -862,29 +840,27 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
                       <span>+ Add Contact</span>
                     </button>
                   </div>
-                  <div className="relative">
-                    <SearchableSelect
-                      value={contactPerson}
-                      onChange={(val) => handleContactPersonChange(String(val))}
-                      isDisabled={isLoadingContacts || !customerId}
-                      options={companyContacts.map((c) => ({
-                        value: c.fullName,
-                        label: `${c.fullName}${c.designation ? ` (${c.designation})` : ""}`,
-                      }))}
-                      placeholder={
-                        !customerId
-                          ? "Select a company first..."
-                          : isLoadingContacts
+                  <SearchableSelect
+                    value={contactPerson}
+                    onChange={(val) => handleContactPersonChange(String(val))}
+                    isDisabled={isLoadingContacts || !customerId}
+                    options={companyContacts.map((c) => ({
+                      value: c.fullName,
+                      label: `${c.fullName}${c.designation ? ` (${c.designation})` : ""}`,
+                    }))}
+                    placeholder={
+                      !customerId
+                        ? "Select a company first..."
+                        : isLoadingContacts
                           ? "Loading contact persons..."
                           : companyContacts.length === 0
-                          ? "No contacts found - click + Add Contact"
-                          : "Select Contact Person..."
-                      }
-                    />
-                  </div>
+                            ? "No contacts found - click + Add Contact"
+                            : "Select Contact Person..."
+                    }
+                  />
                 </div>
 
-                {/* Contact Phone */}
+                {/* 5. Contact Phone */}
                 <div className="relative">
                   <label className={labelStyle}>Contact Phone</label>
                   <div className="relative">
@@ -892,14 +868,14 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
                       type="text"
                       value={contactPhone}
                       onChange={(e) => setContactPhone(e.target.value)}
-                      placeholder="Enter Contact Phone"
+                      placeholder=""
                       className={baseInputStyle}
                     />
                     <Phone size={15} className="absolute right-3.5 top-3.5 text-gray-400 pointer-events-none" />
                   </div>
                 </div>
 
-                {/* Contact Email */}
+                {/* 6. Contact Email */}
                 <div className="relative">
                   <label className={labelStyle}>Contact Email</label>
                   <div className="relative">
@@ -907,14 +883,14 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
                       type="email"
                       value={contactEmail}
                       onChange={(e) => setContactEmail(e.target.value)}
-                      placeholder="Enter Contact Email ID"
+                      placeholder=""
                       className={baseInputStyle}
                     />
                     <Mail size={15} className="absolute right-3.5 top-3.5 text-gray-400 pointer-events-none" />
                   </div>
                 </div>
 
-                {/* Activity Type */}
+                {/* 7. Activity Type */}
                 <div className="relative">
                   <label className={labelStyle}>
                     Activity Type <RequiredAst />
@@ -928,7 +904,6 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
                         (a) => a.activityName === newType
                       );
                       if (matchedAct) {
-                        if (matchedAct.activitySubType) setSubType(matchedAct.activitySubType);
                         if (matchedAct.subjectPurpose) setSubject(matchedAct.subjectPurpose);
                         if (matchedAct.discussionNotesMOM) setDiscussionNotes(matchedAct.discussionNotesMOM);
                       }
@@ -942,7 +917,36 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
                   />
                 </div>
 
-                {/* Status */}
+                {/* 8. Activity Date */}
+                <div className="relative">
+                  <label className={labelStyle}>
+                    Activity Date <RequiredAst />
+                  </label>
+                  <input
+                    type="date"
+                    value={activityDate}
+                    onChange={(e) => setActivityDate(e.target.value)}
+                    className={`${baseInputStyle} ${isSubmitted && !activityDate ? "border-red-500" : ""
+                      }`}
+                    required
+                  />
+                </div>
+
+                {/* 9. Activity Time */}
+                <div className="relative">
+                  <label className={labelStyle}>
+                    Activity Time <RequiredAst />
+                  </label>
+                  <input
+                    type="text"
+                    value={activityTime}
+                    onChange={(e) => setActivityTime(e.target.value)}
+                    placeholder=""
+                    className={baseInputStyle}
+                  />
+                </div>
+
+                {/* 10. Status */}
                 <div className="relative">
                   <label className={labelStyle}>
                     Status <RequiredAst />
@@ -968,223 +972,162 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
                   />
                 </div>
 
-                {/* Activity Date */}
+                {/* 11. Sub Activity */}
                 <div className="relative">
-                  <label className={labelStyle}>
-                    Activity Date <RequiredAst />
-                  </label>
-                  <input
-                    type="date"
-                    value={activityDate}
-                    onChange={(e) => setActivityDate(e.target.value)}
-                    className={`${baseInputStyle} ${
-                      isSubmitted && !activityDate ? "border-red-500" : ""
-                    }`}
-                    required
-                  />
-                </div>
-
-                {/* Activity Time */}
-                <div className="relative">
-                  <label className={labelStyle}>
-                    Activity Time <RequiredAst />
-                  </label>
-                  <input
-                    type="text"
-                    value={activityTime}
-                    onChange={(e) => setActivityTime(e.target.value)}
-                    placeholder="Enter Activity Time (e.g. 10:30 AM)"
-                    className={baseInputStyle}
-                  />
-                </div>
-
-                {/* Sub-Type (Call or Meeting) - Text Field */}
-                <div className="relative">
-                  <label className={labelStyle}>
-                    {activityType === "Phone Call" || activityType.toLowerCase().includes("call")
-                      ? "Call Sub-Type / Details"
-                      : "Meeting / Activity Sub-Type"}
-                  </label>
+                  <label className={labelStyle}>Sub Activity</label>
                   <input
                     type="text"
                     value={subType}
                     onChange={(e) => setSubType(e.target.value)}
-                    placeholder={
-                      activityType === "Phone Call" || activityType.toLowerCase().includes("call")
-                        ? "Enter call sub-type (e.g. Discovery, Cold Call, Follow-up)..."
-                        : "Enter meeting / activity sub-type (e.g. Demo, Site Audit, Tech Review)..."
-                    }
+                    placeholder="Enter Sub Activity..."
                     className={baseInputStyle}
                   />
                 </div>
+              </div>
+            </div>
 
-                {/* Status Description */}
-                <div className="relative">
-                  <label className={labelStyle}>Status Description</label>
-                  <input
-                    type="text"
-                    value={statusDescription}
-                    onChange={(e) => setStatusDescription(e.target.value)}
-                    placeholder="Status description or notes"
-                    className={baseInputStyle}
-                  />
-                </div>
-
-
-                {/* Location / Mode */}
-                <div className="relative">
-                  <label className={labelStyle}>Location / Mode</label>
-                  <input
-                    type="text"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    placeholder="Enter Location / Mode (e.g. Client Office, On-site, Zoom, Plant)"
-                    className={baseInputStyle}
-                  />
-                </div>
-
+            {/* SECTION 2: DISCUSSION & NOTES */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
+              <div className="flex items-center gap-2.5 text-[#FF7900] font-bold text-base border-b border-orange-100 pb-3">
+                <Clock size={16} />
+                <span>Section 2 - Discussion & Notes</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Subject / Purpose */}
                 <div className="relative">
                   <label className={labelStyle}>Subject / Purpose</label>
-                  <input
-                    type="text"
+                  <textarea
+                    rows={4}
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
-                    placeholder="Enter Subject / Purpose"
-                    className={baseInputStyle}
+                    placeholder=""
+                    className={`${baseInputStyle} resize-y min-h-[110px]`}
                   />
                 </div>
 
                 {/* Discussion Notes & MOM */}
-                <div className="relative md:col-span-2">
+                <div className="relative">
                   <label className={labelStyle}>Discussion Notes & MOM</label>
                   <textarea
                     rows={4}
                     value={discussionNotes}
                     onChange={(e) => setDiscussionNotes(e.target.value)}
-                    placeholder="Enter Discussion Notes..."
+                    placeholder=""
                     className={`${baseInputStyle} resize-y min-h-[110px]`}
                   />
                 </div>
               </div>
-            )}
+            </div>
 
-            {/* ══════════════ TAB 1: SALES ATTACHMENTS ══════════════ */}
-            {activeTab === 1 && (
-              <div className="space-y-6 animate-in fade-in duration-200">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                  {/* Document Type from Master */}
-                  <div className="relative">
-                    <label className={labelStyle}>
-                      Document Type
-                    </label>
-                    <SearchableSelect
-                      value={documentType}
-                      onChange={(val) => setDocumentType(String(val))}
-                      options={docTypes.map((d) => ({
-                        value: d.value,
-                        label: d.label || d.value,
-                      }))}
-                      placeholder="Select Document Type..."
-                    />
-                  </div>
+            {/* SECTION 3: SALES ATTACHMENTS (INLINE, ONE UNDER THE OTHER) */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
+              <div className="flex items-center gap-2.5 text-[#FF7900] font-bold text-base border-b border-orange-100 pb-3">
+                <Paperclip size={16} />
+                <span>Section 3 - Sales Attachments</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-5">
+                {/* Document Type */}
+                <div className="relative">
+                  <label className={labelStyle}>Document Type</label>
+                  <SearchableSelect
+                    value={documentType}
+                    onChange={(val) => setDocumentType(String(val))}
+                    options={docTypes.map((d) => ({
+                      value: d.value,
+                      label: d.label || d.value,
+                    }))}
+                    placeholder="Select Document Type..."
+                  />
+                </div>
 
-                  {/* Docs Attachments Browse */}
-                  <div className="relative">
-                    <label className={labelStyle}>
-                      Docs Attachments
-                    </label>
-                    <div className="flex border border-gray-300 rounded-lg overflow-hidden bg-white min-h-[42px]">
-                      <div
-                        className="grow px-4 py-2.5 text-gray-500 text-xs italic truncate"
-                        title={attachments.map((f) => f.name).join(", ")}
-                      >
-                        {attachments.length > 0
-                          ? `${attachments.length} file(s) selected: ${attachments.map((f) => f.name).join(", ")}`
-                          : "Choose files..."}
-                      </div>
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        multiple
-                        className="hidden"
-                        onChange={handleFileUpload}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="bg-[#154068] text-white px-5 font-bold text-xs hover:bg-[#0d3357] transition-colors cursor-pointer flex items-center gap-2 shrink-0"
-                      >
-                        <Paperclip size={14} />
-                        Browse
-                      </button>
+                {/* Docs Attachments Browse */}
+                <div className="relative">
+                  <label className={labelStyle}>Docs Attachments</label>
+                  <div className="flex border border-gray-300 rounded-lg overflow-hidden bg-white min-h-[42px]">
+                    <div
+                      className="grow px-4 py-2.5 text-gray-500 text-xs italic truncate"
+                      title={attachments.map((f) => f.name).join(", ")}
+                    >
+                      {attachments.length > 0
+                        ? `${attachments.length} file(s) selected: ${attachments.map((f) => f.name).join(", ")}`
+                        : "Choose files..."}
                     </div>
-                  </div>
-
-                  {/* Master Linked Enquiry ID */}
-                  <div className="relative">
-                    <label className={labelStyle}>Enquiry ID</label>
-                    <SearchableSelect
-                      value={enquiryRef}
-                      onChange={(val) => setEnquiryRef(String(val))}
-                      options={relatedOptions.map((opt) => ({
-                        value: opt.code,
-                        label: opt.title || opt.code,
-                      }))}
-                      placeholder="Select Enquiry ID..."
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      multiple
+                      className="hidden"
+                      onChange={handleFileUpload}
                     />
-                  </div>
-
-                  {/* Supported File Formats */}
-                  <div className="relative">
-                    <label className={labelStyle}>Supported File Types</label>
-                    <div className="w-full rounded-lg px-4 py-2.5 border border-dashed border-gray-300 bg-gray-50 text-xs text-gray-600 flex items-center justify-between min-h-[42px]">
-                      <span>PDF, Word, Excel, Images (Max 10MB)</span>
-                      <span className="text-[10px] text-gray-400 font-medium">Multiple files allowed</span>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="bg-[#154068] text-white px-5 font-bold text-xs hover:bg-[#0d3357] transition-colors cursor-pointer flex items-center gap-2 shrink-0"
+                    >
+                      <Paperclip size={14} />
+                      Browse
+                    </button>
                   </div>
                 </div>
 
-                {/* Selected / Attached Files List */}
-                {attachments.length > 0 && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                    {attachments.map((att) => (
-                      <div
-                        key={att.id}
-                        className="p-3 border border-gray-200 rounded-xl bg-slate-50 flex items-center justify-between gap-2 shadow-xs"
-                      >
-                        <div className="flex items-center gap-2.5 truncate">
-                          <div className="w-8 h-8 rounded-lg bg-white border border-gray-200 flex items-center justify-center shrink-0 text-[#154068]">
-                            {att.isImage ? "🖼️" : "📄"}
-                          </div>
-                          <div className="truncate text-left">
-                            <p className="text-xs font-semibold text-gray-800 truncate" title={att.name}>
-                              {att.name}
-                            </p>
-                            <p className="text-[10px] text-gray-400">
-                              {(att.size / 1024).toFixed(0)} KB • {att.documentType || documentType || "Document"}
-                            </p>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeAttachment(att.id)}
-                          className="text-gray-400 hover:text-red-500 p-1 rounded-md hover:bg-white transition cursor-pointer shrink-0"
-                          title="Remove"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                {/* Linked Enquiry ID */}
+                <div className="relative">
+                  <label className={labelStyle}>Enquiry ID</label>
+                  <SearchableSelect
+                    value={enquiryRef}
+                    onChange={(val) => setEnquiryRef(String(val))}
+                    options={relatedOptions.map((opt) => ({
+                      value: opt.code,
+                      label: opt.title || opt.code,
+                    }))}
+                    placeholder="Select Enquiry ID..."
+                  />
+                </div>
               </div>
-            )}
 
-            {/* TAB 2: FOLLOW-UP & REMINDERS */}
-            {activeTab === 2 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 animate-in fade-in duration-200">
-                {/* Follow-Up Date */}
+              {/* Selected / Attached Files List */}
+              {attachments.length > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-2">
+                  {attachments.map((att) => (
+                    <div
+                      key={att.id}
+                      className="p-3 border border-gray-200 rounded-xl bg-slate-50 flex items-center justify-between gap-2 shadow-xs"
+                    >
+                      <div className="flex items-center gap-2.5 truncate">
+                        <div className="w-8 h-8 rounded-lg bg-white border border-gray-200 flex items-center justify-center shrink-0 text-[#154068]">
+                          {att.isImage ? "🖼️" : "📄"}
+                        </div>
+                        <div className="truncate text-left">
+                          <p className="text-xs font-semibold text-gray-800 truncate" title={att.name}>
+                            {att.name}
+                          </p>
+                          <p className="text-[10px] text-gray-400">
+                            {(att.size / 1024).toFixed(0)} KB • {att.documentType || documentType || "Document"}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeAttachment(att.id)}
+                        className="text-gray-400 hover:text-red-500 p-1 rounded-md hover:bg-white transition cursor-pointer shrink-0"
+                        title="Remove"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* SECTION 4: FOLLOW-UP & REMINDERS */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-xs space-y-5">
+              <div className="flex items-center gap-2.5 text-[#FF7900] font-bold text-base border-b border-orange-100 pb-3">
+                <Bell size={16} />
+                <span>Section 4 - Follow-Up & Reminders</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-5">
+                {/* 1. Follow-Up Date */}
                 <div className="relative">
                   <label className={labelStyle}>Follow-Up Date</label>
                   <input
@@ -1195,7 +1138,7 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
                   />
                 </div>
 
-                {/* Next Follow-Up Date */}
+                {/* 2. Next Follow-Up Date */}
                 <div className="relative">
                   <label className={labelStyle}>Next Follow-Up Date</label>
                   <input
@@ -1204,46 +1147,9 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
                     onChange={(e) => setNextActionDate(e.target.value)}
                     className={baseInputStyle}
                   />
-                  {/* Preset Chips */}
-                  <div className="flex flex-wrap gap-1.5 mt-2.5">
-                    {intervals.slice(0, 5).map((item) => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => applyIntervalPreset(item.value)}
-                        className="text-[11px] font-bold px-2.5 py-1 bg-[#154068]/5 text-[#154068] border border-[#154068]/20 rounded-md hover:bg-[#154068]/10 transition cursor-pointer"
-                      >
-                        +{item.label}
-                      </button>
-                    ))}
-                  </div>
                 </div>
 
-                {/* Priority Level with Urgent, High, Medium, Low */}
-                <div className="relative">
-                  <label className={labelStyle}>Priority Level</label>
-                  <SearchableSelect
-                    value={priority}
-                    onChange={(val) => {
-                      const selVal = String(val);
-                      setPriority(selVal);
-                      const matched = priorityOptions.find(
-                        (p) => p.name.toLowerCase() === selVal.toLowerCase()
-                      );
-                      if (matched) {
-                        setFollowUpPriorityId(matched.id);
-                        setReminderPriorityId(matched.id);
-                      }
-                    }}
-                    options={priorityOptions.map((prio) => ({
-                      value: prio.name,
-                      label: prio.name,
-                    }))}
-                    placeholder="Select Priority Level..."
-                  />
-                </div>
-
-                {/* Follow-Up Status */}
+                {/* 3. Follow-Up Status */}
                 <div className="relative">
                   <label className={labelStyle}>Follow-Up Status</label>
                   <SearchableSelect
@@ -1264,58 +1170,43 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
                   />
                 </div>
 
-                {/* Remarks / Next Action Details */}
-                <div className="relative md:col-span-2">
-                  <label className={labelStyle}>Remarks / Next Action Details</label>
-                  <textarea
-                    rows={3}
-                    value={nextActionDetails}
-                    onChange={(e) => setNextActionDetails(e.target.value)}
-                    placeholder="Enter follow-up remarks or next action details..."
-                    className={`${baseInputStyle} resize-y`}
-                  />
-                </div>
-
-                {/* REMINDER SECTION */}
-                <div className="md:col-span-2 pt-4 border-t border-gray-200 mt-2">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-7 h-7 rounded-lg bg-[#154068]/10 text-[#154068] flex items-center justify-center">
-                      <Bell size={16} />
-                    </div>
-                    <div>
-                      <h3 className="text-xs font-bold text-[#154068] uppercase tracking-wider">
-                        Reminder Configuration
-                      </h3>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Reminder Title & Priority (2 columns) */}
+                {/* 4. Priority Level */}
                 <div className="relative">
-                  <label className={labelStyle}>Reminder Title / Subject</label>
-                  <input
-                    type="text"
-                    value={reminderTitle}
-                    onChange={(e) => setReminderTitle(e.target.value)}
-                    placeholder="Enter reminder title or subject..."
-                    className={baseInputStyle}
-                  />
-                </div>
-
-                <div className="relative">
-                  <label className={labelStyle}>Reminder Priority</label>
+                  <label className={labelStyle}>Priority Level</label>
                   <SearchableSelect
-                    value={reminderPriorityId}
-                    onChange={(val) => setReminderPriorityId(String(val))}
+                    value={priority}
+                    onChange={(val) => {
+                      const selVal = String(val);
+                      setPriority(selVal);
+                      const matched = priorityOptions.find(
+                        (p) => p.name.toLowerCase() === selVal.toLowerCase()
+                      );
+                      if (matched) {
+                        setFollowUpPriorityId(matched.id);
+                        setReminderPriorityId(matched.id);
+                      }
+                    }}
                     options={priorityOptions.map((prio) => ({
-                      value: prio.id,
+                      value: prio.name,
                       label: prio.name,
                     }))}
                     placeholder="Select Priority..."
                   />
                 </div>
 
-                {/* Reminder Date & Time (2 columns) */}
+                {/* 4. Reminder Title */}
+                <div className="relative">
+                  <label className={labelStyle}>Reminder Title / Subject</label>
+                  <input
+                    type="text"
+                    value={reminderTitle}
+                    onChange={(e) => setReminderTitle(e.target.value)}
+                    placeholder=""
+                    className={baseInputStyle}
+                  />
+                </div>
+
+                {/* 5. Reminder Date */}
                 <div className="relative">
                   <label className={labelStyle}>Reminder Date</label>
                   <input
@@ -1326,6 +1217,7 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
                   />
                 </div>
 
+                {/* 6. Reminder Time */}
                 <div className="relative">
                   <label className={labelStyle}>Reminder Time</label>
                   <input
@@ -1336,143 +1228,38 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
                   />
                 </div>
 
-                {/* Work Assignment removed - managed in Task Assignment module */}
-                {false && (
-                <div className="relative md:col-span-2 p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3.5">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/80 pb-2.5">
-                    <label className="text-xs font-bold text-[#154068] uppercase tracking-wider block">
-                      Work Assignment
-                    </label>
-                    {/* Toggle between Employee and Team */}
-                    <div className="inline-flex rounded-lg border border-slate-300 p-0.5 bg-white shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setAssignedType("Employee");
-                          setAssignedTeamId("");
-                          setAssignedTeamName("");
-                        }}
-                        className={`px-3 py-1 text-xs font-bold rounded-md transition cursor-pointer ${
-                          assignedType === "Employee"
-                            ? "bg-[#154068] text-white shadow-xs"
-                            : "text-slate-600 hover:text-slate-900"
-                        }`}
-                      >
-                        Employee
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setAssignedType("Team");
-                          setReminderAssignedTo("");
-                        }}
-                        className={`px-3 py-1 text-xs font-bold rounded-md transition cursor-pointer ${
-                          assignedType === "Team"
-                            ? "bg-[#FF7900] text-white shadow-xs"
-                            : "text-slate-600 hover:text-slate-900"
-                        }`}
-                      >
-                        Team (Coordinator / Accounts / Service / Store)
-                      </button>
-                    </div>
+                {/* Remarks Row: Follow-Up Remarks (Left) & Reminder Remarks (Right) */}
+                <div className="col-span-1 md:col-span-2 lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Follow-Up Remarks / Next Action Details */}
+                  <div className="relative">
+                    <label className={labelStyle}>Follow-Up Remarks / Next Action Details</label>
+                    <textarea
+                      rows={3}
+                      value={nextActionDetails}
+                      onChange={(e) => setNextActionDetails(e.target.value)}
+                      placeholder=""
+                      className={`${baseInputStyle} resize-y min-h-[90px]`}
+                    />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {assignedType === "Employee" ? (
-                      <div>
-                        <label className={labelStyle}>Assigned Employee</label>
-                        <select
-                          value={reminderAssignedTo}
-                          onChange={(e) => {
-                            setReminderAssignedTo(e.target.value);
-                            setAssignedTeamId("");
-                            setAssignedTeamName("");
-                          }}
-                          className={baseInputStyle}
-                        >
-                          <option value="">Select Employee</option>
-                          {roleAssignees.map((emp) => (
-                            <option key={emp.id} value={emp.id}>
-                              {emp.name} {emp.role ? `(${emp.role})` : ""}
-                            </option>
-                          ))}
-                          {employees.map((emp) => (
-                            <option key={`emp-${emp.id}`} value={emp.id}>
-                              {emp.name} (Sales Rep)
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    ) : (
-                      <div>
-                        <label className={labelStyle}>Assigned Team</label>
-                        <select
-                          value={assignedTeamId}
-                          onChange={(e) => {
-                            const selId = e.target.value;
-                            setAssignedTeamId(selId);
-                            const matchedTeam = teams.find((t) => t.id === selId);
-                            if (matchedTeam) {
-                              setAssignedTeamName(matchedTeam.name);
-                            } else {
-                              setAssignedTeamName("");
-                            }
-                            setReminderAssignedTo("");
-                          }}
-                          className={baseInputStyle}
-                        >
-                          <option value="">Select Team</option>
-                          {teams.map((t) => (
-                            <option key={t.id} value={t.id}>
-                              {t.name}
-                            </option>
-                          ))}
-                        </select>
-                        {assignedTeamName && (
-                          <p className="text-[11px] text-green-700 font-medium mt-1">
-                            ✓ Assigned to: <span className="font-bold">{assignedTeamName}</span>
-                          </p>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Reminder Status */}
-                    <div>
-                      <label className={labelStyle}>Reminder Status</label>
-                      <select
-                        value={reminderStatusId}
-                        onChange={(e) => setReminderStatusId(e.target.value)}
-                        className={baseInputStyle}
-                      >
-                        <option value="">Select Reminder Status</option>
-                        {customerStatuses.map((cs) => (
-                          <option key={cs.customerStatusId} value={cs.customerStatusId}>
-                            {cs.statusName}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                  {/* Reminder Remarks / Notes */}
+                  <div className="relative">
+                    <label className={labelStyle}>Reminder Remarks / Details</label>
+                    <textarea
+                      rows={3}
+                      value={reminderRemarks}
+                      onChange={(e) => setReminderRemarks(e.target.value)}
+                      placeholder=""
+                      className={`${baseInputStyle} resize-y min-h-[90px]`}
+                    />
                   </div>
-                </div>
-
-                )}
-                {/* Reminder Remarks */}
-                <div className="relative md:col-span-2">
-                  <label className={labelStyle}>Reminder Remarks / Details</label>
-                  <textarea
-                    rows={2}
-                    value={reminderRemarks}
-                    onChange={(e) => setReminderRemarks(e.target.value)}
-                    placeholder="Enter reminder instructions or specific notes..."
-                    className={`${baseInputStyle} resize-y`}
-                  />
                 </div>
               </div>
-            )}
+            </div>
           </div>
 
-          {/* Footer Actions Matching Employee / Customer Module */}
-          <div className="p-5 bg-gray-50 flex justify-end gap-3 border-t shrink-0">
+          {/* Sticky Footer matching Customer Module */}
+          <div className="p-4 sm:p-5 bg-white flex justify-end gap-3 border-t border-gray-200 sticky bottom-0 z-10 shadow-xs">
             <button
               type="button"
               onClick={onClose}
@@ -1481,26 +1268,6 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
             >
               Cancel
             </button>
-
-            {activeTab > 0 && (
-              <button
-                type="button"
-                onClick={() => setActiveTab(activeTab - 1)}
-                className={buttonStyles.back}
-              >
-                Back
-              </button>
-            )}
-
-            {activeTab < tabs.length - 1 && (
-              <button
-                type="button"
-                onClick={() => handleTabChange(activeTab + 1)}
-                className={buttonStyles.next}
-              >
-                Next
-              </button>
-            )}
 
             <button
               type="submit"
@@ -1524,10 +1291,15 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
         isOpen={isAddContactModalOpen}
         onClose={() => setIsAddContactModalOpen(false)}
         onSuccess={(newContact) => {
-          setCompanyContacts((prev) => [newContact, ...prev]);
+          setCompanyContacts((prev) => {
+            const filtered = prev.filter(
+              (c) => c.fullName.toLowerCase() !== newContact.fullName.toLowerCase()
+            );
+            return [newContact, ...filtered];
+          });
           setContactPerson(newContact.fullName);
-          setContactPhone(newContact.mobileNo || "");
-          setContactEmail(newContact.emailAddress || "");
+          setContactPhone(newContact.mobileNo || newContact.altMobileNo || "");
+          setContactEmail(newContact.emailAddress || newContact.altEmailAddress || "");
         }}
         companyId={customerId}
         companyName={customerName}

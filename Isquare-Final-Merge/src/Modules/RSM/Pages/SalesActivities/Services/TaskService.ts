@@ -653,6 +653,30 @@ export const updateTask = async (
   const local = safeGetTasks();
   const existingTask = local.find((t) => t.taskId === taskId);
 
+  let linkedReminderId = payload.reminderId ?? existingTask?.reminderId;
+  if (!linkedReminderId && (payload.reminderDate || payload.reminderTime)) {
+    try {
+      const rem = await createReminder({
+        companyId: payload.companyId ?? existingTask?.companyId ?? 1,
+        assignedTo: payload.assignedTo ?? existingTask?.assignedTo ?? 1,
+        reminderStatusId: 1,
+        title: `Task Reminder: ${payload.taskTitle ?? existingTask?.taskTitle ?? "Task"}`,
+        reminderDate: payload.reminderDate || payload.dueDate || new Date().toISOString(),
+        reminderTime: payload.reminderTime || "10:00:00",
+        remarks: payload.reminderRemarks || payload.remarks || payload.description || payload.taskTitle,
+        priorityId: Number(payload.priorityId ?? existingTask?.priorityId ?? 1),
+        createdBy: Number(payload.createdBy ?? existingTask?.createdBy ?? 1),
+        isActive: true,
+        isDeleted: false,
+      });
+      if (rem && (rem.reminderId || rem.id) && Number(rem.reminderId || rem.id) < 1000000000) {
+        linkedReminderId = Number(rem.reminderId || rem.id);
+      }
+    } catch (remErr) {
+      console.warn("updateTask: linked reminder error handled:", remErr);
+    }
+  }
+
   try {
     const url = `${API_ENDPOINTS.Task || `${API_ENDPOINTS.BaseUrl}/Task`}/${taskId}`;
     const body = {
@@ -666,6 +690,7 @@ export const updateTask = async (
       taskStatusId: payload.taskStatusId ?? existingTask?.taskStatusId ?? 1,
       startDate: payload.startDate ?? existingTask?.startDate ?? new Date().toISOString(),
       dueDate: payload.dueDate ?? existingTask?.dueDate ?? new Date().toISOString(),
+      reminderId: linkedReminderId || null,
       remarks: payload.remarks ?? existingTask?.remarks ?? "",
       createdBy: existingTask?.createdBy ?? 1,
       updatedBy: 1,
