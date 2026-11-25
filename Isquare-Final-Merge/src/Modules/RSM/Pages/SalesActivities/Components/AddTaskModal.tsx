@@ -221,13 +221,18 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
             setPriorityId(Number(highOrMed.id));
           }
 
-          if (statusList.length > 0) {
-            setTaskStatusId((prev) => {
-              const exists = statusList.some(
-                (s) => Number(s.taskStatusId || s.id) === prev
-              );
-              return exists ? prev : Number(statusList[0].taskStatusId || statusList[0].id || 1);
-            });
+          if (statusList.length > 0 && !taskToEdit) {
+            const pendingStatus =
+              statusList.find((s) =>
+                (s.statusName || "").toLowerCase().includes("pending")
+              ) ||
+              statusList.find(
+                (s) =>
+                  !(s.statusName || "").toLowerCase().includes("complet") &&
+                  !(s.statusName || "").toLowerCase().includes("complat")
+              ) ||
+              statusList[0];
+            setTaskStatusId(Number(pendingStatus.taskStatusId || pendingStatus.id || 1));
           }
 
           // Pre-populate if editing an existing task

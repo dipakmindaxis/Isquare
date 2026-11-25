@@ -25,9 +25,8 @@ export const isTaskCompletedStatus = (
   isCompleted?: boolean
 ): boolean => {
   if (isCompleted) return true;
-  if (Number(taskStatusId) === 4) return true;
   const s = String(statusName || "").toLowerCase().trim();
-  if (!s) return false;
+  if (!s) return Number(taskStatusId) === 4;
   return (
     s.includes("complet") ||
     s.includes("complat") ||
@@ -158,10 +157,12 @@ export const getAllTaskStatuses = async (): Promise<TaskStatusItem[]> => {
 // ==========================================
 export const getAllTasks = async (filters?: TaskFilterParams): Promise<TaskItem[]> => {
   let backendTasks: TaskItem[] = [];
+  let backendFetchSucceeded = false;
 
   try {
     const url = API_ENDPOINTS.Task || `${API_ENDPOINTS.BaseUrl}/Task`;
     const response = await apiClient.get<any>(url);
+    backendFetchSucceeded = true;
     const data = response.data;
     const rawList: any[] = Array.isArray(data)
       ? data
@@ -206,11 +207,11 @@ export const getAllTasks = async (filters?: TaskFilterParams): Promise<TaskItem[
 
   let items: TaskItem[] = [];
 
-  if (backendTasks.length > 0) {
+  if (backendFetchSucceeded) {
     items = backendTasks;
     safeSetTasks(backendTasks);
   } else {
-    // If backend returned empty list, show empty list (or fallback if backend was unreachable)
+    // Fallback to cached tasks only when backend is unreachable
     const localTasks = safeGetTasks().filter((t) => !t.isDeleted);
     items = localTasks;
   }
@@ -604,29 +605,7 @@ export const createTask = async (payload: TaskCreatePayload): Promise<TaskItem> 
   }
 
   if (!savedTask) {
-    const fallbackId = Date.now();
-    savedTask = {
-      taskId: fallbackId,
-      companyId: validCompanyId,
-      taskTitle: payload.taskTitle.trim(),
-      description: payload.description?.trim() || "",
-      assignedTo: validAssignedTo,
-      assignedToName: payload.assignedToName || undefined,
-      assignedBy: validAssignedBy,
-      assignedByName: payload.assignedByName || undefined,
-      companyName: payload.companyName,
-      priorityId: Number(payload.priorityId || 1),
-      taskStatusId: Number(payload.taskStatusId || 1),
-      taskStatusName: payload.taskStatusName || undefined,
-      startDate: payload.startDate,
-      dueDate: payload.dueDate,
-      reminderId: linkedReminderId,
-      reminderDate: payload.reminderDate,
-      reminderTime: payload.reminderTime,
-      remarks: payload.remarks,
-      createdBy: validCreatedBy,
-      isCompleted: isTaskCompletedStatus(payload.taskStatusName, payload.taskStatusId),
-    };
+    throw new Error("Failed to save task to the server. Please check your connection and try again.");
   }
 
   // Update local cache
@@ -753,7 +732,14 @@ export const updateTask = async (
 
 export const completeTask = async (taskId: number, remarks?: string): Promise<boolean> => {
   try {
-    const existing = await getTaskById(taskId);
+    const [existing, statusList] = await Promise.all([
+      getTaskById(taskId),
+      getAllTaskStatuses().catch(() => []),
+    ]);
+    const completedStatus = statusList.find((s) =>
+      isTaskCompletedStatus(s.statusName, s.taskStatusId)
+    );
+    const completedStatusId = Number(completedStatus?.taskStatusId || completedStatus?.id || 1);
     const url = `${API_ENDPOINTS.Task || `${API_ENDPOINTS.BaseUrl}/Task`}/${taskId}`;
     const updateBody = {
       taskId: taskId,
@@ -763,7 +749,7 @@ export const completeTask = async (taskId: number, remarks?: string): Promise<bo
       assignedTo: existing?.assignedTo || 1,
       assignedBy: existing?.assignedBy || 1,
       priorityId: existing?.priorityId || 1,
-      taskStatusId: 4,
+      taskStatusId: completedStatusId,
       startDate: existing?.startDate ? new Date(existing.startDate).toISOString() : new Date().toISOString(),
       dueDate: existing?.dueDate ? new Date(existing.dueDate).toISOString() : new Date().toISOString(),
       completionDate: new Date().toISOString(),
