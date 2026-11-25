@@ -534,8 +534,12 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
         loadedEmps.forEach((e) => {
           const r = (e.role || "").toLowerCase();
           const c = (e.code || "").toLowerCase();
+          const isSalesUser =
+            !r.includes("director") &&
+            !r.replace(/[\s-]+/g, "").includes("coordinator") &&
+            (r.includes("sales user") || r.includes("bde") || c.includes("bde"));
           if (
-            (r.includes("bde") || c.includes("bde")) &&
+            isSalesUser &&
             !loadedBdes.some((b) => b.id === e.id)
           ) {
             loadedBdes.push({
@@ -570,9 +574,13 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
         }
         loadedEmps.forEach((e) => {
           const r = (e.role || "").toLowerCase();
-          const c = (e.code || "").toLowerCase();
+          const isCoordinator =
+            !r.includes("director") &&
+            !r.includes("bde") &&
+            !r.includes("sales user") &&
+            (r.replace(/[\s-]+/g, "").includes("coordinator") || r.includes("sales person"));
           if (
-            (r.includes("sales") || r.includes("coord") || c.includes("sc")) &&
+            isCoordinator &&
             !loadedScs.some((s) => s.salesCoordinatorId === e.id)
           ) {
             loadedScs.push({
@@ -795,8 +803,8 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
     const bde = selectedBdeObj;
     const sp = spId
       ? allSalesCoordinators.find((s) => s.salesCoordinatorId === spId) ||
-        filteredSalesPersons.find((s) => s.salesCoordinatorId === spId) ||
-        null
+      filteredSalesPersons.find((s) => s.salesCoordinatorId === spId) ||
+      null
       : null;
 
     const currentOwnerOpt =
@@ -819,18 +827,18 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
       bde,
       sp
         ? {
-            id: sp.salesCoordinatorId,
-            name: (sp as any).salesCoordinatorName || (sp as any).name,
-            code: (sp as any).salesCoordinatorCode || (sp as any).code,
-          }
+          id: sp.salesCoordinatorId,
+          name: (sp as any).salesCoordinatorName || (sp as any).name,
+          code: (sp as any).salesCoordinatorCode || (sp as any).code,
+        }
         : null,
       currentOwnerOpt
         ? {
-            id: currentOwnerOpt.id,
-            name: currentOwnerOpt.name,
-            type: currentOwnerOpt.type,
-            value: currentOwnerOpt.value,
-          }
+          id: currentOwnerOpt.id,
+          name: currentOwnerOpt.name,
+          type: currentOwnerOpt.type,
+          value: currentOwnerOpt.value,
+        }
         : null
     );
   };
@@ -1162,8 +1170,8 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
 
     const dir = dirId
       ? directors.find((d) => d.id === dirId) ||
-        employees.find((e) => e.id === dirId) ||
-        null
+      employees.find((e) => e.id === dirId) ||
+      null
       : null;
 
     syncCascadingToParent(dir, null, getPreservedSalesCoordinator(), null);
@@ -1189,19 +1197,19 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
     const dir = selectedDirectorObj;
     const bde = bdeId
       ? filteredBdes.find((b) => b.id === bdeId) ||
-        bdeUsers.find((b) => b.id === bdeId) ||
-        employees.find((e) => e.id === bdeId) ||
-        null
+      bdeUsers.find((b) => b.id === bdeId) ||
+      employees.find((e) => e.id === bdeId) ||
+      null
       : null;
 
     const preservedOwner =
       selectedOwnerValue && dir && selectedOwnerValue === `Director:${dir.id}`
         ? {
-            id: dir.id,
-            name: dir.name,
-            type: "Director" as const,
-            value: selectedOwnerValue,
-          }
+          id: dir.id,
+          name: dir.name,
+          type: "Director" as const,
+          value: selectedOwnerValue,
+        }
         : null;
     if (!preservedOwner) {
       setSelectedOwnerValue("");

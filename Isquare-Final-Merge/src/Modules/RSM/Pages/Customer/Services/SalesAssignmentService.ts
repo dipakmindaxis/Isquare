@@ -348,8 +348,9 @@ export const getBdeUsersByDirectorId = async (
     const empList = ensureArray<RawEmployeeApiRecord>(empRes.data);
     const matches = empList
       .filter((e) => {
-        const d = (e.DesignationName || e.designationName || "").toLowerCase();
-        return d.includes("bde") || (e as any).designationId === 2 || (e as any).DesignationId === 2;
+        const d = (e.DesignationName || e.designationName || e.Role || e.role || "").toLowerCase();
+        if (d.includes("director") || d.replace(/[\s-]+/g, "").includes("coordinator")) return false;
+        return d.includes("sales user") || d.includes("bde");
       })
       .map((e) => ({
         id: Number(e.ID ?? e.id ?? 0),
@@ -391,15 +392,19 @@ export const getBdeUsersByDirectorId = async (
     console.error(`Failed to fetch BDE users for Director ${directorId}:`, error);
   }
 
-  // Also query active employees with DesignationId = 2 (BDE User) reporting to directorId
+  // Also query active employees with Sales User / BDE User designation reporting to directorId
   try {
     const empRes = await apiClient.get<ApiDataResponse<RawEmployeeApiRecord>>(
-      `${API_ENDPOINTS.CRMEmployee || `${API_ENDPOINTS.BaseUrl}/employee`}/active`,
-      { params: { designationId: 2 } }
+      `${API_ENDPOINTS.CRMEmployee || `${API_ENDPOINTS.BaseUrl}/employee`}/active`
     );
     const empList = ensureArray<RawEmployeeApiRecord>(empRes.data);
     const matches = empList
-      .filter((e) => Number(e.ReportingTo ?? e.reportingTo ?? 0) === directorId)
+      .filter((e) => {
+        if (Number(e.ReportingTo ?? e.reportingTo ?? 0) !== directorId) return false;
+        const d = (e.DesignationName || e.designationName || e.Role || e.role || "").toLowerCase();
+        if (d.includes("director") || d.replace(/[\s-]+/g, "").includes("coordinator")) return false;
+        return d.includes("sales user") || d.includes("bde");
+      })
       .map((e) => ({
         id: Number(e.ID ?? e.id ?? 0),
         value: (e.FullName ?? e.fullName ?? `${e.FirstName || ""} ${e.LastName || ""}`).trim(),
