@@ -288,8 +288,8 @@ const RSMDashboard: React.FC = () => {
     };
   }, [handleManualRefresh]);
 
-  // Fetch Dashboard Data directly from existing APIs with auth readiness and auto-heal
-  const fetchDashboardData = useCallback(async (retryCount = 0) => {
+  // Fetch Dashboard Data directly from existing APIs
+  const fetchDashboardData = useCallback(async () => {
     const currentToken = token || sessionStorage.getItem("token") || localStorage.getItem("token");
     if (!currentToken && !isAuthenticated) {
       setLoading(false);
@@ -307,19 +307,14 @@ const RSMDashboard: React.FC = () => {
         getAllTasks(),
       ]);
 
-      let loadedCustCount = 0;
-      let loadedQuoteCount = 0;
-
       if (custRes.status === "fulfilled" && Array.isArray(custRes.value)) {
         setCustomers(custRes.value);
-        loadedCustCount = custRes.value.length;
       }
       if (enqRes.status === "fulfilled" && Array.isArray(enqRes.value)) {
         setEnquiries(enqRes.value);
       }
       if (quoteRes.status === "fulfilled" && Array.isArray(quoteRes.value)) {
         setQuotations(quoteRes.value);
-        loadedQuoteCount = quoteRes.value.length;
       }
       if (orderRes.status === "fulfilled" && Array.isArray(orderRes.value)) {
         setSalesOrders(orderRes.value);
@@ -327,22 +322,8 @@ const RSMDashboard: React.FC = () => {
       if (taskRes.status === "fulfilled" && Array.isArray(taskRes.value)) {
         setTasks(taskRes.value);
       }
-
-      // Auto-heal cold-start latency:
-      // If on initial load (retryCount === 0), core authenticated entities (customers or quotations)
-      // returned 0 while user is logged in, perform one automatic transparent re-check after 1.2s.
-      if (retryCount === 0 && currentToken && (loadedCustCount === 0 || loadedQuoteCount === 0)) {
-        setTimeout(() => {
-          fetchDashboardData(1);
-        }, 1200);
-      }
     } catch (err: any) {
       console.error("CRM Dashboard API fetch error:", err);
-      if (retryCount === 0 && currentToken) {
-        setTimeout(() => {
-          fetchDashboardData(1);
-        }, 1200);
-      }
     } finally {
       setLoading(false);
     }
@@ -350,7 +331,7 @@ const RSMDashboard: React.FC = () => {
 
   useEffect(() => {
     fetchDashboardData();
-  }, [fetchDashboardData, isAuthenticated, token]);
+  }, [fetchDashboardData]);
 
   // Close date range dropdown when clicking outside
   useEffect(() => {

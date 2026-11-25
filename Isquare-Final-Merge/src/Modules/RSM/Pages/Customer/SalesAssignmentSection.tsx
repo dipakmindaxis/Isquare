@@ -269,7 +269,6 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
   const [filteredBdes, setFilteredBdes] = useState<BdeUserOption[]>([]);
   const [filteredSalesPersons, setFilteredSalesPersons] = useState<SalesCoordinatorOption[]>([]);
   const [isLoadingBdes, setIsLoadingBdes] = useState<boolean>(false);
-  const [isLoadingSalesPersons, setIsLoadingSalesPersons] = useState<boolean>(false);
 
   // Validation errors
   const [validationErrors, setValidationErrors] = useState<{
@@ -398,7 +397,6 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
       setFilteredSalesPersons([]);
       return;
     }
-    setIsLoadingSalesPersons(true);
     try {
       // 1. Fetch from real backend API (/api/sales-coordinator/by-bde/{bdeId})
       const apiScs = await getSalesCoordinatorsByBdeId(bdeId);
@@ -433,8 +431,6 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
           isActive: item.isActive !== false,
         }))
       );
-    } finally {
-      setIsLoadingSalesPersons(false);
     }
   };
 
@@ -697,8 +693,10 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
           loadSalesPersonsForBde(bdeId, allSalesCoordinators, employees);
         }
       }
-      if (propValues.salesCoordinatorId) {
-        setSelectedSalesPersonId(Number(propValues.salesCoordinatorId));
+      if (propValues.salesCoordinatorId !== undefined) {
+        setSelectedSalesPersonId(
+          propValues.salesCoordinatorId ? Number(propValues.salesCoordinatorId) : ""
+        );
       }
       if (propValues.customerOwnerValue) {
         setSelectedOwnerValue(propValues.customerOwnerValue);
@@ -792,32 +790,48 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
   const handleSalesPersonChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const spId = e.target.value ? Number(e.target.value) : "";
     setSelectedSalesPersonId(spId);
-    setSelectedOwnerValue("");
+
+    const dir = selectedDirectorObj;
+    const bde = selectedBdeObj;
+    const sp = spId
+      ? allSalesCoordinators.find((s) => s.salesCoordinatorId === spId) ||
+        filteredSalesPersons.find((s) => s.salesCoordinatorId === spId) ||
+        null
+      : null;
+
+    const currentOwnerOpt =
+      spId && selectedOwnerValue
+        ? customerOwnerOptions.find((o) => o.value === selectedOwnerValue) || null
+        : null;
+
+    if (!currentOwnerOpt) {
+      setSelectedOwnerValue("");
+    }
+
     setValidationErrors((prev) => ({
       ...prev,
       salesCoordinatorId: undefined,
       customerOwnerId: undefined,
     }));
 
-    const dir = selectedDirectorObj;
-    const bde = selectedBdeObj;
-    const sp = spId
-      ? filteredSalesPersons.find((s) => s.salesCoordinatorId === spId) ||
-      allSalesCoordinators.find((s) => s.salesCoordinatorId === spId) ||
-      null
-      : null;
-
     syncCascadingToParent(
       dir,
       bde,
       sp
         ? {
-          id: sp.salesCoordinatorId,
-          name: (sp as any).salesCoordinatorName || (sp as any).name,
-          code: (sp as any).salesCoordinatorCode || (sp as any).code,
-        }
+            id: sp.salesCoordinatorId,
+            name: (sp as any).salesCoordinatorName || (sp as any).name,
+            code: (sp as any).salesCoordinatorCode || (sp as any).code,
+          }
         : null,
-      null
+      currentOwnerOpt
+        ? {
+            id: currentOwnerOpt.id,
+            name: currentOwnerOpt.name,
+            type: currentOwnerOpt.type,
+            value: currentOwnerOpt.value,
+          }
+        : null
     );
   };
 
@@ -1039,67 +1053,48 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
     return bdeUsers.filter((b) => b.directorId === Number(selectedDirectorId));
   }, [standalone, selectedDirectorId, filteredBdes, bdeUsers]);
 
-  // Options for Sales Person dropdown:
-  // Strictly filter by selected BDE User in customer form mode
+  // Options for Sales Co-ordinator dropdown:
+  // Independent of Director and Sales User — always displays all active Sales Co-ordinators
   const salesPersonDisplayOptions = useMemo(() => {
-    if (standalone) {
-      if (selectedBdeId) {
-        if (filteredSalesPersons.length > 0) {
-          return filteredSalesPersons;
-        }
-        const matched = allSalesCoordinators.filter(
-          (s) => s.bdeUserId === Number(selectedBdeId)
-        );
-        if (matched.length > 0) {
-          return matched.map((s) => ({
-            salesCoordinatorId: s.salesCoordinatorId,
-            salesCoordinatorName: s.salesCoordinatorName,
-            salesCoordinatorCode: s.salesCoordinatorCode || "",
-            bdeUserId: s.bdeUserId || Number(selectedBdeId),
-            isActive: s.isActive !== false,
-          }));
-        }
-      }
-      return allSalesCoordinators.map((s) => ({
+    return allSalesCoordinators
+      .filter((s) => s.isActive !== false)
+      .map((s) => ({
         salesCoordinatorId: s.salesCoordinatorId,
         salesCoordinatorName: s.salesCoordinatorName,
         salesCoordinatorCode: s.salesCoordinatorCode || "",
         bdeUserId: s.bdeUserId || 0,
         isActive: s.isActive !== false,
       }));
-    }
+  }, [allSalesCoordinators]);
 
-    // In Customer Form: strict cascade (only show Sales Persons belonging to selected BDE)
-    if (!selectedBdeId) return [];
-    if (filteredSalesPersons.length > 0) return filteredSalesPersons;
-    const matched = allSalesCoordinators.filter(
-      (s) => s.bdeUserId === Number(selectedBdeId)
-    );
-    return matched.map((s) => ({
-      salesCoordinatorId: s.salesCoordinatorId,
-      salesCoordinatorName: s.salesCoordinatorName,
-      salesCoordinatorCode: s.salesCoordinatorCode || "",
-      bdeUserId: s.bdeUserId || Number(selectedBdeId),
-      isActive: s.isActive !== false,
-    }));
-  }, [standalone, selectedBdeId, filteredSalesPersons, allSalesCoordinators]);
-
-  // Helper label for Sales Person option: shows BDE hint when not already filtered
   const getSalesPersonOptionLabel = (sp: {
     salesCoordinatorId: number;
     salesCoordinatorName: string;
     salesCoordinatorCode?: string;
     bdeUserId?: number | null;
   }) => {
-    const base = formatEmployeeDisplay(sp.salesCoordinatorName, sp.salesCoordinatorCode);
-    if (!selectedBdeId && sp.bdeUserId) {
-      const bde = bdeUsers.find((b) => b.id === sp.bdeUserId) || employees.find((e) => e.id === sp.bdeUserId);
-      if (bde) {
-        return `${base} (BDE: ${bde.name})`;
-      }
-    }
-    return base;
+    return formatEmployeeDisplay(sp.salesCoordinatorName, sp.salesCoordinatorCode);
   };
+
+  const selectedSalesPersonOpt = useMemo(() => {
+    if (!selectedSalesPersonId) return null;
+    const matched = salesPersonDisplayOptions.find(
+      (sp) => String(sp.salesCoordinatorId) === String(selectedSalesPersonId)
+    );
+    if (matched) {
+      return {
+        value: matched.salesCoordinatorId,
+        label: getSalesPersonOptionLabel(matched),
+      };
+    }
+    if (values.salesCoordinatorName) {
+      return {
+        value: Number(selectedSalesPersonId),
+        label: values.salesCoordinatorName,
+      };
+    }
+    return null;
+  }, [selectedSalesPersonId, salesPersonDisplayOptions, values.salesCoordinatorName]);
 
   // Searchable Select Options for Required Fields
   const directorSelectOptions = useMemo(() => {
@@ -1125,11 +1120,36 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
 
   const selectedOwnerOpt = customerOwnerOptions.find((o) => o.value === selectedOwnerValue) || null;
 
+  const getPreservedSalesCoordinator = () => {
+    if (!selectedSalesPersonId) return null;
+    const matched =
+      allSalesCoordinators.find(
+        (s) => s.salesCoordinatorId === Number(selectedSalesPersonId)
+      ) ||
+      filteredSalesPersons.find(
+        (s) => s.salesCoordinatorId === Number(selectedSalesPersonId)
+      );
+    if (matched) {
+      return {
+        id: matched.salesCoordinatorId,
+        name: (matched as any).salesCoordinatorName || (matched as any).name,
+        code: (matched as any).salesCoordinatorCode || (matched as any).code,
+      };
+    }
+    if (values.salesCoordinatorName) {
+      return {
+        id: Number(selectedSalesPersonId),
+        name: values.salesCoordinatorName,
+        code: "",
+      };
+    }
+    return null;
+  };
+
   const onDirectorSelect = (opt: { value: number; label: string } | null) => {
     const dirId = opt?.value ? Number(opt.value) : "";
     setSelectedDirectorId(dirId);
     setSelectedBdeId("");
-    setSelectedSalesPersonId("");
     setSelectedOwnerValue("");
 
     setValidationErrors((prev) => ({
@@ -1142,25 +1162,22 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
 
     const dir = dirId
       ? directors.find((d) => d.id === dirId) ||
-      employees.find((e) => e.id === dirId) ||
-      null
+        employees.find((e) => e.id === dirId) ||
+        null
       : null;
 
-    syncCascadingToParent(dir, null, null, null);
+    syncCascadingToParent(dir, null, getPreservedSalesCoordinator(), null);
 
     if (dirId) {
       loadBdesForDirector(dirId, bdeUsers, employees);
     } else {
       setFilteredBdes([]);
-      setFilteredSalesPersons([]);
     }
   };
 
   const onBdeSelect = (opt: { value: number; label: string } | null) => {
     const bdeId = opt?.value ? Number(opt.value) : "";
     setSelectedBdeId(bdeId);
-    setSelectedSalesPersonId("");
-    setSelectedOwnerValue("");
 
     setValidationErrors((prev) => ({
       ...prev,
@@ -1172,18 +1189,25 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
     const dir = selectedDirectorObj;
     const bde = bdeId
       ? filteredBdes.find((b) => b.id === bdeId) ||
-      bdeUsers.find((b) => b.id === bdeId) ||
-      employees.find((e) => e.id === bdeId) ||
-      null
+        bdeUsers.find((b) => b.id === bdeId) ||
+        employees.find((e) => e.id === bdeId) ||
+        null
       : null;
 
-    syncCascadingToParent(dir, bde, null, null);
-
-    if (bdeId) {
-      loadSalesPersonsForBde(bdeId, allSalesCoordinators, employees);
-    } else {
-      setFilteredSalesPersons([]);
+    const preservedOwner =
+      selectedOwnerValue && dir && selectedOwnerValue === `Director:${dir.id}`
+        ? {
+            id: dir.id,
+            name: dir.name,
+            type: "Director" as const,
+            value: selectedOwnerValue,
+          }
+        : null;
+    if (!preservedOwner) {
+      setSelectedOwnerValue("");
     }
+
+    syncCascadingToParent(dir, bde, getPreservedSalesCoordinator(), preservedOwner);
   };
 
   const onCustomerOwnerSelect = (opt: { value: string; label: string } | null) => {
@@ -1472,7 +1496,7 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
                 )}
               </div>
 
-              {/* FIELD 3: Select Sales Person (Cascade from BDE User) */}
+              {/* FIELD 3: Select Sales Co-ordinator (Independent of Sales User) */}
               <div>
                 <label
                   htmlFor="role_assignment_sales_person_select"
@@ -1482,16 +1506,7 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
                 </label>
                 <Select
                   id="role_assignment_sales_person_select"
-                  value={
-                    salesPersonDisplayOptions.find((sp) => String(sp.salesCoordinatorId) === String(selectedSalesPersonId))
-                      ? {
-                        value: selectedSalesPersonId,
-                        label: getSalesPersonOptionLabel(
-                          salesPersonDisplayOptions.find((sp) => String(sp.salesCoordinatorId) === String(selectedSalesPersonId))!
-                        ),
-                      }
-                      : null
-                  }
+                  value={selectedSalesPersonOpt}
                   onChange={(opt: any) => {
                     handleSalesPersonChange({
                       target: { value: opt ? String(opt.value) : "" },
@@ -1501,23 +1516,19 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
                     value: sp.salesCoordinatorId,
                     label: getSalesPersonOptionLabel(sp),
                   }))}
-                  isDisabled={disabled || isLoadingDynamicData || isLoadingSalesPersons || (!standalone && !selectedBdeId)}
+                  isDisabled={disabled || isLoadingDynamicData}
                   isSearchable
                   isClearable
                   placeholder={
-                    isLoadingSalesPersons
+                    isLoadingDynamicData
                       ? "Loading Sales Co-ordinators..."
-                      : !selectedBdeId && !standalone
-                        ? "-- Select Sales User first --"
-                        : standalone
-                          ? "-- Search & Select Sales Co-ordinator --"
-                          : salesPersonDisplayOptions.length === 0
-                            ? "-- No Sales Co-ordinators available --"
-                            : "-- Search & Select Sales Co-ordinator --"
+                      : salesPersonDisplayOptions.length === 0
+                        ? "-- No Sales Co-ordinators available --"
+                        : "-- Search & Select Sales Co-ordinator --"
                   }
                   styles={customSelectStyles(
                     Boolean(validationErrors.salesCoordinatorId || propErrors.salesCoordinatorId),
-                    disabled || isLoadingDynamicData || isLoadingSalesPersons || (!standalone && !selectedBdeId)
+                    disabled || isLoadingDynamicData
                   )}
                   menuPortalTarget={typeof document !== "undefined" ? document.body : undefined}
                   menuPosition="fixed"
@@ -1525,11 +1536,6 @@ const SalesAssignmentSection: React.FC<SalesAssignmentSectionProps> = ({
                 {validationErrors.salesCoordinatorId && (
                   <p className="text-xs text-red-500 mt-1 flex items-center gap-1 font-medium">
                     <AlertCircle size={12} /> {validationErrors.salesCoordinatorId}
-                  </p>
-                )}
-                {!standalone && selectedBdeId && !isLoadingSalesPersons && filteredSalesPersons.length === 0 && (
-                  <p className="text-xs text-amber-600 mt-1 font-medium">
-                    No Sales Co-ordinators assigned under this Sales User.
                   </p>
                 )}
               </div>

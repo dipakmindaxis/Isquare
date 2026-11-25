@@ -528,10 +528,11 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
         directorName: formData.directorName?.trim() || null,
         bdeUserId: formData.bdeUserId ? Number(formData.bdeUserId) : null,
         bdeUserName: formData.bdeUserName?.trim() || null,
-        salesCoordinatorId:
-          selectedCoordinatorIds.length > 0
+        salesCoordinatorId: formData.salesCoordinatorId
+          ? Number(formData.salesCoordinatorId)
+          : selectedCoordinatorIds.length > 0
             ? Number(selectedCoordinatorIds[0])
-            : (formData.salesCoordinatorId ? Number(formData.salesCoordinatorId) : null),
+            : null,
         salesCoordinatorName:
           formData.salesCoordinatorName?.trim() ||
           (selectedCoordinatorIds.length > 0
@@ -981,6 +982,11 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
                   onChange={(updates) => {
                     if (updates.customerOwnerValue !== undefined) {
                       setCustomerOwnerValue(updates.customerOwnerValue);
+                    }
+                    if (updates.salesCoordinatorId !== undefined) {
+                      setSelectedCoordinatorIds(
+                        updates.salesCoordinatorId ? [Number(updates.salesCoordinatorId)] : []
+                      );
                     }
                     setFormData((prev) => ({
                       ...prev,
