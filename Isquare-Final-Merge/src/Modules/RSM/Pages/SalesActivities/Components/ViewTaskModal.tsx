@@ -3,7 +3,6 @@ import {
   X,
   Building2,
   AlertCircle,
-  Bell,
   FileText,
   Loader2,
   Trash2,
@@ -240,8 +239,6 @@ export const ViewTaskModal: React.FC<ViewTaskModalProps> = ({
     !isCompleted &&
     task.dueDate === new Date().toISOString().split("T")[0];
 
-  const hasReminder = Boolean(task.reminderDate || task.reminderTime);
-
   const getStatusBadge = (status?: string) => {
     const s = (status || "").toLowerCase();
     if (isCompleted || s.includes("complete")) return "bg-emerald-500 text-white";
@@ -357,30 +354,6 @@ export const ViewTaskModal: React.FC<ViewTaskModalProps> = ({
                   <DetailItem label="Remarks / Instructions" value={task.remarks} />
                 </div>
               )}
-            </div>
-          </div>
-
-          {/* SECTION 3 - REMINDER */}
-          <div>
-            <SectionHeader
-              icon={Bell}
-              title="Reminder"
-              badge={
-                hasReminder ? (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    Reminder Active
-                  </span>
-                ) : (
-                  <span className="text-[10px] text-gray-400">
-                    No active reminder
-                  </span>
-                )
-              }
-            />
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
-              <DetailItem label="Reminder Date" value={task.reminderDate} />
-              <DetailItem label="Reminder Time" value={task.reminderTime} />
             </div>
           </div>
 

@@ -527,17 +527,6 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
               />
             </div>
 
-            {/* Reminder Date & Time */}
-            <div>
-              <label className={labelStyle}>Reminder Date & Time</label>
-              <input
-                type="datetime-local"
-                value={reminderDateTime}
-                onChange={(e) => setReminderDateTime(e.target.value)}
-                className={baseInputStyle}
-              />
-            </div>
-
             {/* Priority */}
             <div>
               <label className={labelStyle}>
