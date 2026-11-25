@@ -560,12 +560,12 @@ const EmployeeWizard: React.FC<EmployeeWizardProps> = ({
 
   return (
     <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden mb-8 animate-in slide-in-from-top-4 duration-300">
-      {/* Orange Header - Only Employee Details */}
+      {/* Orange Header - Create Employee */}
       <div className="flex items-center justify-between bg-[#FF7900] px-6 py-4 rounded-t-2xl shadow-md text-white">
         <div className="flex items-center gap-2.5">
           <Building className="w-5 h-5 text-white" />
           <h2 className="text-sm sm:text-base font-extrabold tracking-widest uppercase text-white">
-            Employee Details
+            Create Employee
           </h2>
         </div>
       </div>

@@ -22,11 +22,14 @@ import {
   Eye,
   EyeOff,
   Lock,
+  X,
 } from "lucide-react";
 import axios from "axios";
 
 // Service Imports
 import { getEmployeeFullDetails } from "../Employee/Services/EmployeeSerivce";
+import { updateStatutoryDetails } from "./Services/EmployeeStatutoryService";
+import { upsertPFDetails } from "./Services/EmployeePFSerivce";
 import {
   getDesignationsList,
   getRoles,
@@ -159,6 +162,36 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
   const docInputRef = useRef<HTMLInputElement>(null);
   const FILE_BASE_URL = API_ENDPOINTS.BaseUrl.replace("/api", "");
 
+  const formatDateForInput = (dateVal?: any): string => {
+    if (!dateVal) return "";
+    const str = String(dateVal).trim();
+    if (!str || str.startsWith("0001-01-01") || str.startsWith("1900-01-01")) return "";
+
+    // If already in YYYY-MM-DD format
+    if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+      return str.substring(0, 10);
+    }
+
+    // Handle DD-MM-YYYY or DD/MM/YYYY
+    const dmyMatch = str.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
+    if (dmyMatch) {
+      const day = dmyMatch[1].padStart(2, "0");
+      const month = dmyMatch[2].padStart(2, "0");
+      const year = dmyMatch[3];
+      return `${year}-${month}-${day}`;
+    }
+
+    // Parse Date object
+    const d = new Date(str);
+    if (!isNaN(d.getTime()) && d.getFullYear() >= 1920) {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+    return "";
+  };
+
   const fetchAllData = useCallback(async () => {
     if (!employeeId) {
       setIsLoading(false);
@@ -181,7 +214,6 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
         countries,
         states,
         companies,
-       
       ] = await Promise.all([
         getEmployeeFullDetails(employeeId),
         getWorkLocations().catch(() => []),
@@ -203,25 +235,145 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
         countries,
         states,
         companies,
-      
       });
 
       const fullName = [full.firstName, full.middleName, full.lastName]
         .filter((part) => part && part !== "null" && part.trim() !== "")
         .join(" ");
+
+      // 1. Resolve Company
+      const rawCompanyId = (full as any).companyId || (full as any).CompanyId;
+      let resolvedCompanyId = rawCompanyId;
+      let resolvedCompanyName = full.companyName || (full as any).CompanyName || "";
+      if (!resolvedCompanyId && resolvedCompanyName) {
+        const match = companies.find(
+          (c) => c.companyName?.trim().toLowerCase() === resolvedCompanyName.trim().toLowerCase()
+        );
+        if (match) resolvedCompanyId = match.companyId;
+      }
+      if (!resolvedCompanyId && companies.length > 0) {
+        resolvedCompanyId = companies[0].companyId;
+        if (!resolvedCompanyName) resolvedCompanyName = companies[0].companyName;
+      }
+
+      // 2. Resolve Department
+      const rawDeptId = (full as any).departmentID || (full as any).DepartmentID;
+      let resolvedDeptId = rawDeptId;
+      let resolvedDeptName = full.departmentName || (full as any).DepartmentName || "";
+      if (!resolvedDeptId && resolvedDeptName) {
+        const match = depts.find(
+          (d: any) =>
+            (d.departmentName || d.name || "").trim().toLowerCase() ===
+            resolvedDeptName.trim().toLowerCase()
+        );
+        if (match) resolvedDeptId = match.id || (match as any).departmentID;
+      }
+
+      // 3. Resolve Designation
+      const rawDesigId = (full as any).designationID || (full as any).DesignationID;
+      let resolvedDesigId = rawDesigId;
+      let resolvedDesigName = full.designationName || (full as any).DesignationName || "";
+      if (!resolvedDesigId && resolvedDesigName) {
+        const match = desigs.find(
+          (d: any) =>
+            (d.designationName || d.name || "").trim().toLowerCase() ===
+            resolvedDesigName.trim().toLowerCase()
+        );
+        if (match) resolvedDesigId = match.id || (match as any).designationID;
+      }
+
+      // 4. Resolve Role
+      let resolvedRole = full.role || (full as any).Role || (full as any).roleName || "";
+      let resolvedRoleId = (full as any).roleId || (full as any).RoleId || "";
+      if (!resolvedRole && !resolvedRoleId) {
+        const desigLower = (resolvedDesigName || "").toLowerCase();
+        const matchedRole = roles.find((r) => {
+          const rLower = (r.name || "").toLowerCase();
+          return (
+            rLower === desigLower ||
+            (desigLower.includes("bde") && rLower.includes("bde")) ||
+            (desigLower.includes("director") && rLower.includes("director"))
+          );
+        });
+        if (matchedRole) {
+          resolvedRole = matchedRole.name;
+          resolvedRoleId = String(matchedRole.id);
+        } else if (roles.length > 0) {
+          resolvedRole = roles[0].name;
+          resolvedRoleId = String(roles[0].id);
+        }
+      }
+
+      // 5. Resolve Gender
+      const rawGender = full.gender || (full as any).Gender || "";
+      let resolvedGender = String(rawGender).trim();
+      const gLower = resolvedGender.toLowerCase();
+      if (gLower === "male" || gLower === "m") resolvedGender = "Male";
+      else if (gLower === "female" || gLower === "f") resolvedGender = "Female";
+      else if (gLower === "other" || gLower === "o") resolvedGender = "Other";
+
+      // 6. Resolve Dates (Formatted YYYY-MM-DD for input)
+      const resolvedDob = formatDateForInput(
+        full.dateOfBirth || (full as any).DateOfBirth || (full as any).dob
+      );
+      const resolvedDoj = formatDateForInput(
+        full.dateOfJoining || (full as any).DateOfJoining || (full as any).doj
+      );
+
+      // 7. Resolve Statutory Details
+      const pan =
+        full.statutoryDetails?.panNumber ||
+        full.panNumber ||
+        (full as any).PANNumber ||
+        (full as any).panNo ||
+        (full as any).PANNo ||
+        "";
+      const aadhaar =
+        full.statutoryDetails?.aadhaarNumber ||
+        full.aadhaarNumber ||
+        (full as any).AadhaarNumber ||
+        (full as any).aadharNumber ||
+        (full as any).AadharNumber ||
+        (full as any).aadhaarNo ||
+        (full as any).AadhaarNo ||
+        "";
+      const passport =
+        full.statutoryDetails?.passportNumber ||
+        full.passportNumber ||
+        (full as any).PassportNumber ||
+        "";
+
       setFormData({
         ...full,
         firstName: fullName,
-        role: full.role ?? "",
-         googleCalendarId: full.googleCalendarId || "",
-        // 1. Flatten Statutory Details
+        middleName: full.middleName || "",
+        lastName: full.lastName || "",
+        companyId: resolvedCompanyId || "",
+        companyName: resolvedCompanyName || "",
+        departmentID: resolvedDeptId || "",
+        departmentName: resolvedDeptName || "",
+        designationID: resolvedDesigId || "",
+        designationName: resolvedDesigName || "",
+        role: resolvedRole,
+        roleId: resolvedRoleId ? String(resolvedRoleId) : "",
+        gender: resolvedGender,
+        dateOfBirth: resolvedDob,
+        dateOfJoining: resolvedDoj,
+        googleCalendarId:
+          full.googleCalendarId || (full as any).GoogleCalendarId || "",
+
+        // Flatten Mobile and Email
         curMobileNo: full.curMobileNo || full.mobileNumber || "",
         curEmail: full.curEmail || full.emailAddress || "",
-        panNumber: full.statutoryDetails?.panNumber || "",
-        aadhaarNumber: full.statutoryDetails?.aadhaarNumber || "",
-        passportNumber: full.statutoryDetails?.passportNumber || "",
+        mobileNumber: full.mobileNumber || full.curMobileNo || "",
+        emailAddress: full.emailAddress || full.curEmail || "",
 
-        // 2. Flatten Bank Details
+        // Statutory Details
+        panNumber: pan,
+        aadhaarNumber: aadhaar,
+        passportNumber: passport,
+
+        // Bank Details
         bankName: full.bankDetails?.bankName || "",
         accountNumber: full.bankDetails?.accountNumber || "",
         ifscCode: full.bankDetails?.ifscCode || "",
@@ -231,16 +383,12 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
         bankAddress: full.bankDetails?.bankAddress || "",
         sortCode: full.bankDetails?.sortCode || "",
 
-        // 3. Format dates for HTML date inputs (YYYY-MM-DD)
-        dateOfBirth: full.dateOfBirth?.substring(0, 10) || "",
-        dateOfJoining: full.dateOfJoining?.substring(0, 10) || "",
-
-        // 4. Map Qualifications and Experience
+        // Qualifications and Experiences
         qualifications: full.qualifications || [],
         experiences: (full.experiences || []).map((ex) => ({
           ...ex,
-          fromDate: ex.fromDate?.substring(0, 10) || "", // Ensure dates work in inputs
-          toDate: ex.toDate?.substring(0, 10) || "",
+          fromDate: formatDateForInput(ex.fromDate),
+          toDate: formatDateForInput(ex.toDate),
         })),
 
         pfDeductionPercentage: full.pfDetails?.pfDeductionPercentage ?? 12,
@@ -251,9 +399,13 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
         (full.documents || []).map((doc) => ({
           ...doc,
           employeeID: employeeId,
-        })),
+        }))
       );
-      if (full.photoPath) setPhotoPreview(`${FILE_BASE_URL}${full.photoPath}`);
+      if (full.photoPath) {
+        setPhotoPreview(`${FILE_BASE_URL}${full.photoPath}`);
+      } else {
+        setPhotoPreview(null);
+      }
     } catch {
       toast.error("Failed to load employee data.");
       onClose();
@@ -362,13 +514,21 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
 
     const nameStr = (formData.firstName || "").trim();
     const nameParts = nameStr.split(/\s+/).filter(Boolean);
-    const firstName = nameParts[0] || (nameStr || "Employee");
-    const lastName =
-      nameParts.length > 1
-        ? nameParts.slice(1).join(" ")
-        : formData.lastName
-        ? String(formData.lastName).trim()
-        : ".";
+    let firstName = "Employee";
+    let middleName: string | undefined = undefined;
+    let lastName = ".";
+
+    if (nameParts.length === 1) {
+      firstName = nameParts[0];
+      lastName = formData.lastName ? String(formData.lastName).trim() : ".";
+    } else if (nameParts.length === 2) {
+      firstName = nameParts[0];
+      lastName = nameParts[1];
+    } else if (nameParts.length >= 3) {
+      firstName = nameParts[0];
+      middleName = nameParts.slice(1, -1).join(" ");
+      lastName = nameParts[nameParts.length - 1];
+    }
 
     if (photoFile) {
       console.log("Photo file selected:", photoFile.name);
@@ -378,8 +538,13 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
       formData.emailAddress ||
       formData.email ||
       formData.curEmail ||
+      (formData as any).EmailAddress ||
       ""
     ).trim();
+
+    const emailToSend =
+      emailAddress ||
+      `${(formData.employeeCode || `emp${employeeId}`).toLowerCase().replace(/[^a-z0-9]/g, "")}@isquare.com`;
 
     const mobileNumber = String(
       formData.mobileNumber ||
@@ -415,14 +580,12 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
         ? String(formData.employeeCode).trim()
         : undefined,
       firstName,
-      middleName: formData.middleName
-        ? String(formData.middleName).trim()
-        : undefined,
+      middleName: middleName || (formData.middleName ? String(formData.middleName).trim() : undefined),
       lastName,
       dateOfBirth: parseDate(formData.dateOfBirth),
       gender: formData.gender ? String(formData.gender) : undefined,
       mobileNumber: mobileNumber || undefined,
-      emailAddress: emailAddress || "employee@isquare.com",
+      emailAddress: emailToSend,
       presentAddress: presentAddress || undefined,
       dateOfJoining: parseDate(formData.dateOfJoining),
       workLocationID: parseNum(formData.workLocationID),
@@ -457,6 +620,43 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       });
+
+      // Update Statutory Details (PAN, Aadhaar, Passport)
+      const pan = String(formData.panNumber || "").trim();
+      const aadhaar = String(formData.aadhaarNumber || "").trim();
+      if (pan || aadhaar) {
+        try {
+          await updateStatutoryDetails(employeeId, {
+            panNumber: pan,
+            aadhaarNumber: aadhaar,
+          });
+        } catch (statErr: any) {
+          // If not found (404), create it
+          try {
+            await apiClient.post(API_ENDPOINTS.EmployeeStatutoryDetails, {
+              employeeID: employeeId,
+              panNumber: pan,
+              aadhaarNumber: aadhaar,
+            });
+          } catch (createErr) {
+            console.warn("Could not upsert statutory details:", createErr);
+          }
+        }
+      }
+
+      // Update PF Details if available
+      if (formData.pfDeductionPercentage !== undefined) {
+        try {
+          await upsertPFDetails({
+            employeeID: employeeId,
+            pfDeductionPercentage: Number(formData.pfDeductionPercentage) || 12,
+            isCappedAt15k: Boolean(formData.isCappedAt15k),
+          });
+        } catch (pfErr) {
+          console.warn("Could not save PF details:", pfErr);
+        }
+      }
+
       toast.success(response.data?.message || "Employee updated successfully");
       setChangePassword(false);
       setNewPassword("");
@@ -574,6 +774,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
       master.roles.map((r) => ({
         value: r.name,
         label: r.name,
+        id: r.id,
       })),
     [master.roles],
   );
@@ -594,23 +795,64 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
       }));
   };
 
-  const selectedCompanyValue =
-    companyOptions.find(
-      (c) => String(c.value) === String(formData.companyId),
-    ) || null;
+  const selectedCompanyValue = useMemo(() => {
+    return (
+      companyOptions.find(
+        (c) =>
+          String(c.value) === String(formData.companyId) ||
+          (formData.companyName &&
+            c.label?.trim().toLowerCase() === String(formData.companyName).trim().toLowerCase())
+      ) || (companyOptions.length > 0 ? companyOptions[0] : null)
+    );
+  }, [companyOptions, formData.companyId, formData.companyName]);
 
-  const selectedDepartmentValue =
-    departmentOptions.find(
-      (d: any) => String(d.value) === String(formData.departmentID),
-    ) || null;
+  const selectedDepartmentValue = useMemo(() => {
+    return (
+      departmentOptions.find(
+        (d: any) =>
+          String(d.value) === String(formData.departmentID) ||
+          (formData.departmentName &&
+            (d.label || "").trim().toLowerCase() === String(formData.departmentName).trim().toLowerCase())
+      ) || null
+    );
+  }, [departmentOptions, formData.departmentID, formData.departmentName]);
 
-  const selectedDesignationValue =
-    designationOptions.find(
-      (d: any) => String(d.value) === String(formData.designationID),
-    ) || null;
+  const selectedDesignationValue = useMemo(() => {
+    return (
+      designationOptions.find(
+        (d: any) =>
+          String(d.value) === String(formData.designationID) ||
+          (formData.designationName &&
+            (d.label || "").trim().toLowerCase() === String(formData.designationName).trim().toLowerCase())
+      ) || null
+    );
+  }, [designationOptions, formData.designationID, formData.designationName]);
 
-  const selectedRoleValue =
-    roleOptions.find((r) => r.value === formData.role) || null;
+  const selectedRoleValue = useMemo(() => {
+    const rVal = String(formData.role || "").trim().toLowerCase();
+    const rId = String(formData.roleId || "").trim();
+    return (
+      roleOptions.find(
+        (r) =>
+          (rVal && r.value.toLowerCase() === rVal) ||
+          (rVal && r.label.toLowerCase() === rVal) ||
+          (rId && String(r.id) === rId)
+      ) || null
+    );
+  }, [roleOptions, formData.role, formData.roleId]);
+
+  const selectedGenderValue = useMemo(() => {
+    const gVal = String(formData.gender || "").trim().toLowerCase();
+    if (!gVal) return null;
+    return (
+      genderOptions.find(
+        (g) =>
+          g.value.toLowerCase() === gVal ||
+          (gVal === "m" && g.value === "Male") ||
+          (gVal === "f" && g.value === "Female")
+      ) || null
+    );
+  }, [genderOptions, formData.gender]);
 
  
 
@@ -655,7 +897,9 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
                   {photoPreview ? (
                     <img
                       src={photoPreview}
+                      alt="Employee Photo"
                       className="w-full h-full object-cover"
+                      onError={() => setPhotoPreview(null)}
                     />
                   ) : (
                     <User size={48} className="text-gray-300" />
@@ -708,6 +952,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
                       setFormData((prev) => ({
                         ...prev,
                         companyId: opt?.value || "",
+                        companyName: opt?.label || "",
                       }))
                     }
                     isClearable
@@ -731,6 +976,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
                       setFormData((prev) => ({
                         ...prev,
                         departmentID: opt?.value || "",
+                        departmentName: opt?.label || "",
                       }))
                     }
                     isClearable
@@ -756,6 +1002,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
                       setFormData((prev) => ({
                         ...prev,
                         role: opt?.value || "",
+                        roleId: (opt as any)?.id ? String((opt as any).id) : (opt?.value || ""),
                       }))
                     }
                     isClearable
@@ -784,6 +1031,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
                     setFormData((prev) => ({
                       ...prev,
                       designationID: opt?.value || "",
+                      designationName: opt?.label || "",
                     }))
                   }
                   isClearable
@@ -923,11 +1171,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
                 <label className={labelStyle}>Gender</label>
                 <Select
                   options={genderOptions}
-                  value={
-                    genderOptions.find(
-                      (g) => String(g.value) === String(formData.gender),
-                    ) || null
-                  }
+                  value={selectedGenderValue}
                   onChange={(opt) =>
                     setFormData((prev) => ({
                       ...prev,
@@ -1486,8 +1730,26 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
 
   return (
     <div className="bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden mb-8 animate-in slide-in-from-top-4 duration-500">
-      {/* --- TAB HEADER BAR (Matching Company/Create Design) --- */}
-      <div className="flex bg-[#FF7900] p-1.5 gap-1">
+      {/* --- TOP ORANGE HEADER BANNER (Create/Edit Separation) --- */}
+      <div className="flex items-center justify-between bg-[#FF7900] px-6 py-4 rounded-t-xl shadow-md text-white">
+        <div className="flex items-center gap-2.5">
+          <Building className="w-5 h-5 text-white" />
+          <h2 className="text-sm sm:text-base font-extrabold tracking-widest uppercase text-white">
+            Edit Employee {formData.employeeCode ? `(${formData.employeeCode})` : ""}
+          </h2>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="text-white hover:text-gray-200 transition p-1 rounded-lg hover:bg-white/10 cursor-pointer"
+          title="Close"
+        >
+          <X size={20} />
+        </button>
+      </div>
+
+      {/* --- TAB HEADER BAR --- */}
+      <div className="flex bg-[#e86a00] p-1.5 gap-1 border-t border-orange-400">
         {tabs.map((tab, i) => (
           <button
             key={i}
@@ -1513,67 +1775,74 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
               <p className="text-gray-400 font-bold">Loading Data...</p>
             </div>
           ) : (
-            // Replace with your switch statement here
             renderTabContent()
           )}
         </div>
       </div>
 
-      {/* --- FOOTER ACTIONS (Matching Company/Create Design) --- */}
-      <div className="p-5 bg-gray-50 flex justify-end gap-3 border-t">
+      {/* --- FOOTER ACTIONS --- */}
+      <div className="p-5 bg-gray-50 flex items-center justify-between border-t border-gray-200">
         <button type="button" onClick={onClose} className={buttonStyles.cancel}>
           Cancel
         </button>
 
-        {activeTab > 0 && (
-          <button
-            type="button"
-            onClick={() => setActiveTab((prev) => (prev - 1) as TabIndex)}
-            className={buttonStyles.back}
-          >
-            Back
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          {activeTab > 0 && (
+            <button
+              type="button"
+              onClick={() => setActiveTab((prev) => (prev - 1) as TabIndex)}
+              className={buttonStyles.back}
+            >
+              Back
+            </button>
+          )}
 
-        {activeTab < tabs.length - 1 ? (
-          <button
-            type="button"
-            onClick={() => {
-              if (activeTab === 0 && changePassword) {
-                setPasswordTouched(true);
-                if (!newPassword.trim()) {
-                  toast.error("Please enter a new password");
-                  return;
+          {activeTab < tabs.length - 1 && (
+            <button
+              type="button"
+              onClick={() => {
+                if (activeTab === 0 && changePassword) {
+                  setPasswordTouched(true);
+                  if (!newPassword.trim()) {
+                    toast.error("Please enter a new password");
+                    return;
+                  }
+                  if (newPassword.length < 6) {
+                    toast.error("New password must be at least 6 characters long");
+                    return;
+                  }
+                  if (!confirmNewPassword.trim()) {
+                    toast.error("Please confirm your new password");
+                    return;
+                  }
+                  if (newPassword !== confirmNewPassword) {
+                    toast.error("Passwords do not match");
+                    return;
+                  }
                 }
-                if (newPassword.length < 6) {
-                  toast.error("New password must be at least 6 characters long");
-                  return;
-                }
-                if (!confirmNewPassword.trim()) {
-                  toast.error("Please confirm your new password");
-                  return;
-                }
-                if (newPassword !== confirmNewPassword) {
-                  toast.error("Passwords do not match");
-                  return;
-                }
-              }
-              setActiveTab((prev) => (prev + 1) as TabIndex);
-            }}
-            className="px-8 py-2.5 bg-[#FF7900] text-white rounded-lg font-semibold text-sm hover:bg-[#e66d00] transition"
-          >
-            Next
-          </button>
-        ) : (
+                setActiveTab((prev) => (prev + 1) as TabIndex);
+              }}
+              className="px-6 py-2.5 bg-gray-200 text-gray-700 rounded-lg font-semibold text-sm hover:bg-gray-300 transition"
+            >
+              Next
+            </button>
+          )}
+
           <button
             type="button"
             disabled={isSaving}
             onClick={handleSaveAll}
-            className={buttonStyles.save}
+            className="px-6 py-2.5 rounded-lg bg-[#FF7900] hover:bg-[#e06800] text-white font-semibold text-sm shadow-md shadow-orange-500/20 transition cursor-pointer flex items-center gap-2 disabled:opacity-50"
           >
-            Update
+            {isSaving ? (
+              <>
+                <Loader2 className="animate-spin" size={16} /> Updating...
+              </>
+            ) : (
+              "Update Employee"
+            )}
           </button>
-        )}
+        </div>
       </div>
     </div>
   );
