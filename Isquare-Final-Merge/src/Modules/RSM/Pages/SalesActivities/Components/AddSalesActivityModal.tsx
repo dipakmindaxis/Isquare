@@ -1230,9 +1230,9 @@ export const AddSalesActivityModal: React.FC<AddSalesActivityModalProps> = ({
 
                 {/* Remarks Row: Follow-Up Remarks (Left) & Reminder Remarks (Right) */}
                 <div className="col-span-1 md:col-span-2 lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Follow-Up Remarks / Next Action Details */}
+                  {/* Follow-Up Remarks */}
                   <div className="relative">
-                    <label className={labelStyle}>Follow-Up Remarks / Next Action Details</label>
+                    <label className={labelStyle}>Follow-Up Remarks</label>
                     <textarea
                       rows={3}
                       value={nextActionDetails}
