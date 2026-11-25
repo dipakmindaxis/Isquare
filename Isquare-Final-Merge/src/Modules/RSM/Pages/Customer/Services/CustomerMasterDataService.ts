@@ -163,16 +163,43 @@ export const getBdeUsers = async (): Promise<BdeUserItem[]> => {
           isActive: b.isActive !== false && b.IsActive !== false,
         });
       });
-  } catch {}
+  } catch { }
 
-  // Also supplement from tbl_Employee where DesignationId = 2 (BDE User)
+  // Also supplement from tbl_Employee strictly filtered to Sales User / BDE User
   try {
     const empRes = await apiClient.get<RawEmployeeRecord[]>(
-      `${API_ENDPOINTS.CRMEmployee || `${API_ENDPOINTS.BaseUrl}/employee`}/active`,
-      { params: { designationId: 2 } }
+      `${API_ENDPOINTS.CRMEmployee || `${API_ENDPOINTS.BaseUrl}/employee`}/active`
     );
     const empList = ensureArray<RawEmployeeRecord>(empRes.data);
     empList.forEach((e) => {
+      if (e.IsDeleted === true || e.isDeleted === true) return;
+      if (e.IsActive === false || e.isActive === false) return;
+
+      const roleText = [
+        e.designationName,
+        e.DesignationName,
+        e.designation,
+        e.role,
+        e.Role,
+        e.roleName,
+        e.levelName,
+        e.LevelName,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      if (
+        roleText.includes("director") ||
+        roleText.replace(/[\s-]+/g, "").includes("coordinator")
+      ) {
+        return;
+      }
+
+      if (!roleText.includes("sales user") && !roleText.includes("bde")) {
+        return;
+      }
+
       const id = Number(e.id ?? e.ID ?? 0);
       if (id > 0 && !result.some((r) => r.id === id)) {
         const name = (e.fullName ?? e.FullName ?? `${e.firstName || ""} ${e.lastName || ""}`).trim();
@@ -187,7 +214,7 @@ export const getBdeUsers = async (): Promise<BdeUserItem[]> => {
         });
       }
     });
-  } catch {}
+  } catch { }
 
   return result;
 };
@@ -226,7 +253,7 @@ export const getEmployees = async (): Promise<EmployeeSelectItem[]> => {
         reportingToName: e.reportingToName || e.ReportingToName || undefined,
       }));
     }
-  } catch {}
+  } catch { }
 
   // 2nd priority: GET /api/employee
   try {
@@ -250,7 +277,7 @@ export const getEmployees = async (): Promise<EmployeeSelectItem[]> => {
         reportingToName: e.reportingToName || e.ReportingToName || undefined,
       }));
     }
-  } catch {}
+  } catch { }
 
   return [];
 };
@@ -398,7 +425,7 @@ export const getSalesCoordinators = async (): Promise<SalesCoordinatorItem[]> =>
     if (list.length > 0) {
       result.push(...list.map(normalizeSalesCoordinator));
     }
-  } catch {}
+  } catch { }
 
   if (result.length === 0) {
     try {
@@ -408,17 +435,47 @@ export const getSalesCoordinators = async (): Promise<SalesCoordinatorItem[]> =>
       const response = await apiClient.get<ApiDataResponse<RawSalesCoordinator>>(fallbackUrl);
       const list = ensureArray<RawSalesCoordinator>(response.data);
       result.push(...list.map(normalizeSalesCoordinator));
-    } catch {}
+    } catch { }
   }
 
-  // Also supplement from tbl_Employee where DesignationId = 3 (Sales Coordinator)
+  // Also supplement from tbl_Employee strictly filtered to Sales Co-ordinator designation/role
   try {
     const empRes = await apiClient.get<RawEmployeeRecord[]>(
-      `${API_ENDPOINTS.CRMEmployee || `${API_ENDPOINTS.BaseUrl}/employee`}/active`,
-      { params: { designationId: 3 } }
+      `${API_ENDPOINTS.CRMEmployee || `${API_ENDPOINTS.BaseUrl}/employee`}/active`
     );
     const empList = ensureArray<RawEmployeeRecord>(empRes.data);
     empList.forEach((e) => {
+      if (e.IsDeleted === true || e.isDeleted === true) return;
+      if (e.IsActive === false || e.isActive === false) return;
+
+      const roleText = [
+        e.designationName,
+        e.DesignationName,
+        e.designation,
+        e.role,
+        e.Role,
+        e.roleName,
+        e.levelName,
+        e.LevelName,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      if (
+        roleText.includes("director") ||
+        roleText.includes("bde") ||
+        roleText.includes("sales user")
+      ) {
+        return;
+      }
+
+      const isCoordinator =
+        roleText.replace(/[\s-]+/g, "").includes("coordinator") ||
+        roleText.includes("sales person");
+
+      if (!isCoordinator) return;
+
       const id = Number(e.id ?? e.ID ?? 0);
       if (id > 0 && !result.some((sc) => sc.salesCoordinatorId === id)) {
         const name = (e.fullName ?? e.FullName ?? `${e.firstName || ""} ${e.lastName || ""}`).trim();
@@ -432,7 +489,7 @@ export const getSalesCoordinators = async (): Promise<SalesCoordinatorItem[]> =>
         });
       }
     });
-  } catch {}
+  } catch { }
 
   return result;
 };
@@ -562,7 +619,7 @@ export const getDirectors = async (): Promise<DirectorItem[]> => {
         .filter((d) => d.isActive && d.directorId > 0);
       if (mapped.length > 0) return mapped;
     }
-  } catch {}
+  } catch { }
 
   // 2nd priority: GET /api/employee/by-designation-id/1
   try {
@@ -575,7 +632,7 @@ export const getDirectors = async (): Promise<DirectorItem[]> => {
         .filter((d) => d.isActive && d.directorId > 0);
       if (mapped.length > 0) return mapped;
     }
-  } catch {}
+  } catch { }
 
   // 3rd priority: GET /api/employee/by-designation/director
   try {
@@ -588,7 +645,7 @@ export const getDirectors = async (): Promise<DirectorItem[]> => {
         .filter((d) => d.isActive && d.directorId > 0);
       if (mapped.length > 0) return mapped;
     }
-  } catch {}
+  } catch { }
 
   // 4th priority: GET /api/employee/active filtered by isDirectorEmployee
   try {
@@ -602,7 +659,7 @@ export const getDirectors = async (): Promise<DirectorItem[]> => {
         .filter((d) => d.isActive && d.directorId > 0);
       if (mapped.length > 0) return mapped;
     }
-  } catch {}
+  } catch { }
 
   return [];
 };

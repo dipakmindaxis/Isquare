@@ -99,19 +99,33 @@ const EmployeeDetailsTab = forwardRef<
 
         setIsLoadingManagers(true);
         try {
+          const isSalesUser =
+            desigName.includes("sales user") || desigName.includes("bde");
+          const isSalesCoord =
+            desigName.replace(/[\s-]+/g, "").includes("coordinator") ||
+            desigName.includes("sales person");
+
           let params: { designation?: string; role?: string } = {};
-          if (desigName.includes("bde")) {
+          if (isSalesUser) {
             params = { designation: "Director" };
-          } else if (
-            desigName.includes("sales coordinator") ||
-            desigName.includes("coordinator")
-          ) {
-            params = { designation: "BDE" };
           }
 
           const activeUrl = `${API_ENDPOINTS.CRMEmployee || `${API_ENDPOINTS.BaseUrl}/employee`}/active`;
           const res = await apiClient.get<any[]>(activeUrl, { params });
-          const list = Array.isArray(res.data) ? res.data : [];
+          let list = Array.isArray(res.data) ? res.data : [];
+
+          if (isSalesUser) {
+            list = list.filter((e: any) => {
+              const d = (e.designationName || e.DesignationName || e.role || e.Role || "").toLowerCase();
+              return d.includes("director");
+            });
+          } else if (isSalesCoord) {
+            list = list.filter((e: any) => {
+              const d = (e.designationName || e.DesignationName || e.role || e.Role || "").toLowerCase();
+              return d.includes("sales user") || d.includes("bde");
+            });
+          }
+
           if (isMounted) {
             const opts = list.map((e: any) => {
               const name =
@@ -433,7 +447,11 @@ const EmployeeDetailsTab = forwardRef<
                     (d) => String(d.id) === String(formData.designationID)
                   );
                   const desigName = (selectedDesig?.designationName || "").toLowerCase();
-                  if (desigName.includes("bde") || desigName.includes("coordinator")) {
+                  if (
+                    desigName.includes("sales user") ||
+                    desigName.includes("bde") ||
+                    desigName.replace(/[\s-]+/g, "").includes("coordinator")
+                  ) {
                     return <RequiredAst />;
                   }
                   return null;
