@@ -610,7 +610,7 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
         isDeleted: false,
         items: items,
         charges: charges,
-        contactPersonId: contactId,
+        contactPersonId: contactId && contactId > 0 ? contactId : null,
         contactPerson: contactPerson || null,
         contactPhone: contactPhone || null,
         contactEmail: contactEmail || null,
@@ -654,7 +654,7 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
     isDeleted: false,
     items: items,
     charges: charges,
-    contactPersonId: contactId,
+    contactPersonId: contactId && contactId > 0 ? contactId : null,
     contactPerson: contactPerson || null,
     contactPhone: contactPhone || null,
     contactEmail: contactEmail || null,
@@ -712,6 +712,7 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
               quotationNumber={quotationNumber}
               customerId={customerId}
               contactId={contactId}
+              contactPerson={contactPerson}
               enquiryId={enquiryId}
               enquiryRef={enquiryRef}
               quotationDate={quotationDate}
