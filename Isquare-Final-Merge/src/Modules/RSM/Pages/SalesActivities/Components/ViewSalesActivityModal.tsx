@@ -5,7 +5,6 @@ import {
   Clock,
   Building2,
   FileText,
-  MapPin,
   Edit,
   Download,
   AlertCircle,
@@ -217,16 +216,6 @@ export const ViewSalesActivityModal: React.FC<ViewSalesActivityModalProps> = ({
                     : null
                 }
               />
-              <DetailItem
-                label="Call / Meeting Type"
-                value={activity.callType || activity.meetingType}
-              />
-              <DetailItem label="Call Outcome" value={activity.callOutcome} />
-              <DetailItem
-                label="Status Description"
-                value={activity.statusDescription}
-              />
-              <DetailItem label="Outcome" value={activity.outcome} />
             </div>
           </div>
 
@@ -304,23 +293,6 @@ export const ViewSalesActivityModal: React.FC<ViewSalesActivityModalProps> = ({
               <DetailItem
                 label="Reminder Time"
                 value={activity.reminderTime}
-              />
-            </div>
-          </div>
-
-          {/* SECTION 5 - ACTIVITY SPECIFICS & REFERENCES */}
-          <div>
-            <SectionHeader icon={MapPin} title="Activity Specifics & Details" />
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
-              <DetailItem label="Site / Location" value={activity.location} />
-              <DetailItem label="Meeting Link" value={activity.meetingLink} />
-              <DetailItem
-                label="Product / Sensor"
-                value={activity.productName}
-              />
-              <DetailItem
-                label="Sample Quantity"
-                value={activity.sampleQuantity}
               />
             </div>
           </div>
