@@ -357,6 +357,7 @@ builder.Services.AddScoped<ICompanyProfileService,CompanyProfileService>();
 builder.Services.AddScoped<IQuotationApprovalService,QuotationApprovalService>();
 builder.Services.AddScoped<IQuotationRevisionService,QuotationRevisionService>();
 builder.Services.AddScoped<IQuotationChargeService,QuotationChargeService>();
+builder.Services.AddScoped<IQuotationCustomerResponseService, QuotationCustomerResponseService>();
 
 builder.Services.AddScoped<ISalesOrderService,SalesOrderService>();
 

@@ -340,3 +340,75 @@ export interface ProductImportResult {
   success?: boolean;
   importedCount?: number;
 }
+
+export interface SendQuotationEmailDto {
+  customerEmail?: string;
+  subject?: string;
+  message?: string;
+  expiryDays?: number;
+}
+
+export interface QuotationCustomerDecisionDto {
+  decision: "Accepted" | "Rejected";
+  customerRemarks?: string;
+}
+
+export interface QuotationCustomerResponseDto {
+  quotationCustomerResponseId: number;
+  quotationId: number;
+  customerEmail: string;
+  publicResponseId: string;
+  revisionNumber: number;
+  responseStatus: "Pending" | "Accepted" | "Rejected" | string;
+  createdAt: string;
+  emailSentAt?: string | null;
+  expiresAt: string;
+  respondedAt?: string | null;
+  customerRemarks?: string | null;
+  isRevoked: boolean;
+  publicUrl?: string | null;
+}
+
+export interface PublicQuotationResponseDto {
+  publicResponseId: string;
+  quotationId: number;
+  quotationNumber: string;
+  quotationDate: string;
+  validUntil?: string | null;
+  revisionNumber: number;
+  quotationStatus: string;
+  responseStatus: "Pending" | "Accepted" | "Rejected" | string;
+  customerEmail: string;
+  emailSentAt?: string | null;
+  expiresAt: string;
+  respondedAt?: string | null;
+  customerRemarks?: string | null;
+  isExpired: boolean;
+  isRevoked: boolean;
+  customerId: number;
+  customerName: string;
+  customerPhone?: string | null;
+  customerGstin?: string | null;
+  customerAddress?: string | null;
+  companyName: string;
+  companyLegalName?: string | null;
+  companyAddress?: string | null;
+  companyEmail?: string | null;
+  companyPhone?: string | null;
+  companyGstin?: string | null;
+  companyLogoPath?: string | null;
+  subtotal: number;
+  discountAmount: number;
+  taxableAmount: number;
+  taxAmount: number;
+  freightCharges: number;
+  installationCharges: number;
+  otherCharges: number;
+  grandTotal: number;
+  deliveryPeriod?: string | null;
+  paymentTermsName?: string | null;
+  warranty?: string | null;
+  termsAndConditions?: string | null;
+  items: QuotationItem[];
+  charges: QuotationCharge[];
+}

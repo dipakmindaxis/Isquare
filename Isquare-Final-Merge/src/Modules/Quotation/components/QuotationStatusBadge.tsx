@@ -2,7 +2,7 @@ import React from "react";
 
 interface StatusBadgeProps {
   status?: string | null;
-  type?: "quotation" | "approval" | "order";
+  type?: "quotation" | "approval" | "order" | "emailResponse";
 }
 
 export const QuotationStatusBadge: React.FC<StatusBadgeProps> = ({
@@ -10,6 +10,40 @@ export const QuotationStatusBadge: React.FC<StatusBadgeProps> = ({
   type = "quotation",
 }) => {
   const s = status || "Draft";
+
+  if (type === "emailResponse") {
+    switch (s.toLowerCase()) {
+      case "accepted":
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5" />
+            Accepted
+          </span>
+        );
+      case "rejected":
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-800 border border-rose-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mr-1.5" />
+            Rejected
+          </span>
+        );
+      case "pending":
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5" />
+            Pending
+          </span>
+        );
+      case "not sent":
+      default:
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-300">
+            <span className="w-1.5 h-1.5 rounded-full bg-slate-400 mr-1.5" />
+            Not Sent
+          </span>
+        );
+    }
+  }
 
   if (type === "approval") {
     switch (s.toLowerCase()) {

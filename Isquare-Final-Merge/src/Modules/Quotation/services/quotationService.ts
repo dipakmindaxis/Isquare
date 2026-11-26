@@ -18,6 +18,10 @@ import type {
   SalesOrderItem,
   CreateSalesOrderItemDto,
   Product,
+  SendQuotationEmailDto,
+  QuotationCustomerDecisionDto,
+  QuotationCustomerResponseDto,
+  PublicQuotationResponseDto,
 } from "../models/quotationModels";
 import type { Customer } from "../../RSM/Pages/Customer/Types/CustomerTypes";
 import type { PaymentTerm } from "../../RSM/Pages/Recruitment/PaymentTerm/Services/PaymentTermService";
@@ -264,6 +268,53 @@ export const quotationService = {
 
   delete: async (id: number): Promise<void> => {
     await apiClient.delete(`${API_ENDPOINTS.Quotations}/${id}`);
+  },
+
+  sendEmail: async (
+    quotationId: number,
+    dto?: SendQuotationEmailDto
+  ): Promise<{ message: string; data: QuotationCustomerResponseDto }> => {
+    const response = await apiClient.post(
+      `${API_ENDPOINTS.Quotations}/${quotationId}/send-email`,
+      dto || {}
+    );
+    return response.data;
+  },
+
+  getAllCustomerResponses: async (): Promise<QuotationCustomerResponseDto[]> => {
+    const response = await apiClient.get(
+      `${API_ENDPOINTS.Quotations}/customer-responses`
+    );
+    return normalizeArray<QuotationCustomerResponseDto>(response.data);
+  },
+
+  getCustomerResponses: async (
+    quotationId: number
+  ): Promise<QuotationCustomerResponseDto[]> => {
+    const response = await apiClient.get(
+      `${API_ENDPOINTS.Quotations}/${quotationId}/customer-responses`
+    );
+    return normalizeArray<QuotationCustomerResponseDto>(response.data);
+  },
+
+  getPublicQuotation: async (
+    publicResponseId: string
+  ): Promise<PublicQuotationResponseDto> => {
+    const response = await axios.get<PublicQuotationResponseDto>(
+      `${API_ENDPOINTS.Quotations}/public/${publicResponseId}`
+    );
+    return response.data;
+  },
+
+  submitPublicDecision: async (
+    publicResponseId: string,
+    dto: QuotationCustomerDecisionDto
+  ): Promise<{ message: string; data: QuotationCustomerResponseDto }> => {
+    const response = await axios.post(
+      `${API_ENDPOINTS.Quotations}/public/${publicResponseId}/respond`,
+      dto
+    );
+    return response.data;
   },
 };
 

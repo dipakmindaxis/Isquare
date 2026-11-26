@@ -41,6 +41,7 @@ import RSMDashboard from "./Modules/RSM/Dashboard/RSMDashboard";
 import VMSDashboard from "./Modules/VMS/Pages/Dashboard/VMSDashboard";
 import Home from "./Modules/HRMS/Pages/Dashboard/Home";
 import quotationRoutes from "./Modules/Quotation/routes/quotationRoutes";
+import PublicQuotationResponsePage from "./Modules/Quotation/pages/PublicQuotationResponsePage";
 import EnquiryMaster from "./Modules/RSM/Pages/Master/EnquiryMaster/EnquiryMaster";
 import EnquiriesList from "./Modules/RSM/Pages/Enquiry/EnquiryMaster";
 
@@ -57,6 +58,11 @@ const router = createBrowserRouter([
   {
     path: "/reset-password",
     element: <ResetPassword />,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/quotation-response/:publicResponseId",
+    element: <PublicQuotationResponsePage />,
     errorElement: <ErrorPage />,
   },
   {
