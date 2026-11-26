@@ -44,6 +44,7 @@ import quotationRoutes from "./Modules/Quotation/routes/quotationRoutes";
 import PublicQuotationResponsePage from "./Modules/Quotation/pages/PublicQuotationResponsePage";
 import EnquiryMaster from "./Modules/RSM/Pages/Master/EnquiryMaster/EnquiryMaster";
 import EnquiriesList from "./Modules/RSM/Pages/Enquiry/EnquiryMaster";
+import AuditLogPage from "./Modules/RSM/Pages/AuditLog/AuditLogPage";
 
 const router = createBrowserRouter([
   {
@@ -151,6 +152,32 @@ const router = createBrowserRouter([
         path: "access-control",
         element: <AccessControlManagement />,
       },
+      {
+        path: "audit-log",
+        element: (
+          <ProtectedRoute adminOnly>
+            <AuditLogPage />
+          </ProtectedRoute>
+        ),
+      },
+    ],
+  },
+  {
+    path: "/audit-log",
+    element: (
+      <ProtectedRoute adminOnly>
+        <Dashboard />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        path: "",
+        element: (
+          <ProtectedRoute adminOnly>
+            <AuditLogPage />
+          </ProtectedRoute>
+        ),
+      },
     ],
   },
   {
@@ -193,6 +220,22 @@ const router = createBrowserRouter([
       {
         path: "task-assignment",
         element: <TaskAssignmentPage />,
+      },
+      {
+        path: "audit-log",
+        element: (
+          <ProtectedRoute adminOnly>
+            <AuditLogPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "auditlog",
+        element: (
+          <ProtectedRoute adminOnly>
+            <AuditLogPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "sales/activities",

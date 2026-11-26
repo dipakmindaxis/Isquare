@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Home,
   Users,
@@ -28,10 +28,12 @@ import {
   Contact,
   PhoneCall,
   Users2,
+  History,
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import ISquareLogo, { ISquareIcon } from "./Common/ISquareLogo";
 import { usePermissions } from "../hooks/usePermissions";
+import { useAuth } from "../hooks/useAuth";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -45,6 +47,7 @@ export interface MenuItem {
   color?: string;
   isHeader?: boolean;
   subMenu?: MenuItem[];
+  adminOnly?: boolean;
 }
 
 interface SidebarItemProps {
@@ -55,7 +58,7 @@ interface SidebarItemProps {
   onToggle?: () => void;
 }
 
-const mainMenuLinks = [
+const mainMenuLinks: MenuItem[] = [
   { icon: <Home />, label: "Dashboard", to: "/", formName: "Dashboard" },
   {
     icon: <Users />,
@@ -144,6 +147,12 @@ export const rsmMenuConfig: MenuItem[] = [
     icon: <CheckSquare />,
     label: "TASK ASSIGNMENT",
     to: "/rsm/task-assignment",
+  },
+  {
+    icon: <History />,
+    label: "AUDIT LOG",
+    to: "/rsm/audit-log",
+    adminOnly: true,
   },
 
   {
@@ -456,6 +465,17 @@ export const Sidebar = ({ isOpen }: SidebarProps) => {
   const location = useLocation();
   const isHRMS = location.pathname.startsWith("/hrms");
   const { hasPermission } = usePermissions();
+  const { user } = useAuth();
+
+  const isAdmin = useMemo(() => {
+    const roleNormalized = (user?.role || "").trim().toLowerCase();
+    return (
+      roleNormalized === "admin" ||
+      roleNormalized === "administrator" ||
+      roleNormalized === "superadmin" ||
+      roleNormalized.includes("system admin")
+    );
+  }, [user?.role]);
 
   const [openMenuLabel, setOpenMenuLabel] = useState<string | null>(null);
   const handleToggle = (label: string) => {
@@ -537,6 +557,7 @@ export const Sidebar = ({ isOpen }: SidebarProps) => {
   const getVisibleMenu = (menuItems: MenuItem[]): MenuItem[] => {
     return menuItems
       .map((item) => {
+        if (item.adminOnly && !isAdmin) return null;
         if (item.to === "/rsm/master/follow-up") return null;
         if (item.subMenu && item.subMenu.length > 0) {
           const filteredSubMenu = getVisibleMenu(item.subMenu);
@@ -560,12 +581,12 @@ export const Sidebar = ({ isOpen }: SidebarProps) => {
   const isVMS = location.pathname.startsWith("/vms");
 
   const visibleMainMenu = mainMenuLinks.filter(
-    (l) => !l.formName || hasPermission(l.formName, "CanView"),
+    (l) => (!l.formName || hasPermission(l.formName, "CanView")) && (!l.adminOnly || isAdmin),
   );
   
   const visibleMasterSub =
     masterMenu.subMenu?.filter(
-      (l) => !l.formName || hasPermission(l.formName, "CanView"),
+      (l) => (!l.formName || hasPermission(l.formName, "CanView")) && (!l.adminOnly || isAdmin),
     ) || [];
 
  const visibleVmsMenu = getVisibleMenu(vmsMenuConfig);

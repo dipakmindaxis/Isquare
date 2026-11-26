@@ -1,4 +1,5 @@
 using CompanyPlatform.Core.Data;
+using CompanyPlatform.Core.Data.Interceptors;
 using CompanyPlatform.Core.Models;
 using CompanyPlatform.Core.Models.CRM;
 using Employee = CompanyPlatform.Core.Models.CRM.Employee.Employee;
@@ -147,10 +148,13 @@ builder.Services.AddVMSModule();
 //builder.Services.AddDbContext<ApplicationDBContext>(options =>
 //    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddDbContext<ApplicationDBContext>(options =>
+builder.Services.AddSingleton<AuditSaveChangesInterceptor>();
+
+builder.Services.AddDbContext<ApplicationDBContext>((serviceProvider, options) =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"),
-        sqlOptions => sqlOptions.CommandTimeout(300)));
+        sqlOptions => sqlOptions.CommandTimeout(300))
+        .AddInterceptors(serviceProvider.GetRequiredService<AuditSaveChangesInterceptor>()));
 
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>

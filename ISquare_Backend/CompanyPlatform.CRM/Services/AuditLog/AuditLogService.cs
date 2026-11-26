@@ -1,27 +1,28 @@
-using CompanyPlatform.Core.Models.CRM;
-using Employee = CompanyPlatform.Core.Models.CRM.Employee.Employee;
 using CompanyPlatform.Core.Data;
 using CompanyPlatform.CRM.DTO;
 using CompanyPlatform.CRM.DTO.AuditLog;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using AuditLogEntity = CompanyPlatform.Core.Models.CRM.AuditLog;
 
 namespace CompanyPlatform.CRM.Services.AuditLog
 {
     public class AuditLogService : IAuditLogService
     {
         private readonly ApplicationDBContext _dbContext;
-        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<AuditLogService> _logger;
+
+        private sealed class AuditLogJoinedRow
+        {
+            public AuditLogEntity Log { get; init; } = null!;
+            public string EmployeeName { get; init; } = "System";
+        }
 
         public AuditLogService(
             ApplicationDBContext dbContext,
-            IHttpContextAccessor httpContextAccessor,
             ILogger<AuditLogService> logger)
         {
             _dbContext = dbContext;
-            _httpContextAccessor = httpContextAccessor;
             _logger = logger;
         }
 
@@ -30,307 +31,257 @@ namespace CompanyPlatform.CRM.Services.AuditLog
             int pageSize,
             string? search,
             string? tableName,
+            string? action,
+            int? userId,
+            int? recordId,
+            DateTime? fromDate,
+            DateTime? toDate,
             string? sortField,
             string? sortOrder)
         {
-            _logger.LogInformation("Fetching paginated audit logs.");
+            ValidateDateRange(fromDate, toDate);
 
-            // Validate pagination
-            if (page < 1)
-            {
-                page = 1;
-            }
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 10;
+            if (pageSize > 100) pageSize = 100;
 
-            if (pageSize < 1)
-            {
-                pageSize = 10;
-            }
+            _logger.LogInformation(
+                "Fetching paginated audit logs. Page={Page}, PageSize={PageSize}, TableName={TableName}, Action={Action}",
+                page, pageSize, tableName, action);
 
-            var query =
-                from a in _dbContext.AuditLogs
-                join e in _dbContext.Tbl_Employee
-                    on a.UserId equals e.ID into employeeJoin
-                from e in employeeJoin.DefaultIfEmpty()
-                where !a.IsDeleted
-                select new
-                {
-                    Log = a,
-                    EmployeeName = e != null
-                        ? e.FirstName + " " + e.LastName
-                        : "System"
-                };
+            var query = BuildFilteredQuery(search, tableName, action, userId, recordId, fromDate, toDate);
 
-            // Filter by table name
-            if (!string.IsNullOrWhiteSpace(tableName))
-            {
-                query = query.Where(x =>
-                    x.Log.TableName == tableName);
-            }
-
-            // Search
-            if (!string.IsNullOrWhiteSpace(search))
-            {
-                query = query.Where(x =>
-                    x.Log.Action.Contains(search) ||
-                    x.Log.TableName.Contains(search) ||
-                    x.EmployeeName.Contains(search));
-            }
-
-            // Total records
             var totalCount = await query.CountAsync();
 
-            // Sorting
-            if (sortOrder?.ToLower() == "asc")
-            {
-                query = sortField?.ToLower() switch
-                {
-                    "tablename" =>
-                        query.OrderBy(x => x.Log.TableName),
+            query = ApplySorting(query, sortField, sortOrder);
 
-                    "action" =>
-                        query.OrderBy(x => x.Log.Action),
-
-                    "employeename" =>
-                        query.OrderBy(x => x.EmployeeName),
-
-                    _ =>
-                        query.OrderBy(x => x.Log.AuditDate)
-                };
-            }
-            else
-            {
-                query = sortField?.ToLower() switch
-                {
-                    "tablename" =>
-                        query.OrderByDescending(x => x.Log.TableName),
-
-                    "action" =>
-                        query.OrderByDescending(x => x.Log.Action),
-
-                    "employeename" =>
-                        query.OrderByDescending(x => x.EmployeeName),
-
-                    _ =>
-                        query.OrderByDescending(x => x.Log.AuditDate)
-                };
-            }
-
-            // Pagination
             var items = await query
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
 
-            // Return result
             return new PaginatedResult<AuditLogDto>
             {
-                Items = items.Select(x => new AuditLogDto
-                {
-                    AuditLogId = x.Log.AuditLogId,
-                    CompanyId = x.Log.CompanyId,
-                    TableName = x.Log.TableName,
-                    RecordId = x.Log.RecordId,
-                    Action = x.Log.Action,
-                    OldValue = x.Log.OldValue,
-                    NewValue = x.Log.NewValue,
-                    UserId = x.Log.UserId,
-                    EmployeeName = x.EmployeeName,
-                    AuditDate = x.Log.AuditDate,
-                    IsDeleted = x.Log.IsDeleted
-                }),
-
+                Items = items.Select(x => MapToDto(x.Log, x.EmployeeName)).ToList(),
                 Page = page,
                 PageSize = pageSize,
                 TotalCount = totalCount,
-                TotalPages = (int)Math.Ceiling(
-                    totalCount / (double)pageSize)
+                TotalPages = totalCount == 0 ? 0 : (int)Math.Ceiling(totalCount / (double)pageSize)
             };
+        }
+
+        public async Task<AuditLogSummaryDto> GetAuditLogSummaryAsync(
+            string? search,
+            string? tableName,
+            string? action,
+            int? userId,
+            int? recordId,
+            DateTime? fromDate,
+            DateTime? toDate)
+        {
+            ValidateDateRange(fromDate, toDate);
+
+            _logger.LogInformation("Fetching audit log activity summary.");
+
+            var query = BuildFilteredQuery(search, tableName, action, userId, recordId, fromDate, toDate);
+
+            var summary = await query
+                .GroupBy(_ => 1)
+                .Select(g => new AuditLogSummaryDto
+                {
+                    TotalActivities = g.Count(),
+                    CreateActivities = g.Count(x => x.Log.Action.ToUpper() == "CREATE"),
+                    UpdateActivities = g.Count(x => x.Log.Action.ToUpper() == "UPDATE"),
+                    DeleteActivities = g.Count(x => x.Log.Action.ToUpper() == "DELETE")
+                })
+                .FirstOrDefaultAsync();
+
+            return summary ?? new AuditLogSummaryDto();
         }
 
         public async Task<AuditLogDto?> GetAuditLogByIdAsync(int id)
         {
-            _logger.LogInformation(
-                "Fetching audit log with ID: {AuditLogId}",
-                id);
+            if (id <= 0)
+                return null;
 
-            var item = await _dbContext.AuditLogs
-                .FirstOrDefaultAsync(a =>
-                    a.AuditLogId == id &&
-                    !a.IsDeleted);
+            _logger.LogInformation("Fetching audit log with ID: {AuditLogId}", id);
 
-            if (item == null)
+            var result = await (
+                from a in _dbContext.AuditLogs.AsNoTracking()
+                join e in _dbContext.Tbl_Employee.AsNoTracking()
+                    on a.UserId equals e.ID into employeeJoin
+                from e in employeeJoin.DefaultIfEmpty()
+                where a.AuditLogId == id && !a.IsDeleted
+                select new AuditLogJoinedRow
+                {
+                    Log = a,
+                    EmployeeName = e != null
+                        ? (e.FirstName + " " + e.LastName).Trim()
+                        : "System"
+                })
+                .FirstOrDefaultAsync();
+
+            if (result == null)
             {
-                _logger.LogWarning(
-                    "Audit log with ID: {AuditLogId} was not found.",
-                    id);
-
+                _logger.LogWarning("Audit log with ID: {AuditLogId} was not found.", id);
                 return null;
             }
 
-            var employee = await _dbContext.Tbl_Employee
-                .FirstOrDefaultAsync(e =>
-                    e.ID == item.UserId);
+            return MapToDto(result.Log, result.EmployeeName);
+        }
+
+        private IQueryable<AuditLogJoinedRow> BuildFilteredQuery(
+            string? search,
+            string? tableName,
+            string? action,
+            int? userId,
+            int? recordId,
+            DateTime? fromDate,
+            DateTime? toDate)
+        {
+            var query =
+                from a in _dbContext.AuditLogs.AsNoTracking()
+                join e in _dbContext.Tbl_Employee.AsNoTracking()
+                    on a.UserId equals e.ID into employeeJoin
+                from e in employeeJoin.DefaultIfEmpty()
+                where !a.IsDeleted
+                select new AuditLogJoinedRow
+                {
+                    Log = a,
+                    EmployeeName = e != null
+                        ? (e.FirstName + " " + e.LastName).Trim()
+                        : "System"
+                };
+
+            if (!string.IsNullOrWhiteSpace(tableName))
+            {
+                var normalizedTable = tableName.Trim().ToLower();
+                query = query.Where(x => x.Log.TableName.ToLower() == normalizedTable);
+            }
+
+            if (!string.IsNullOrWhiteSpace(action))
+            {
+                var normalizedAction = action.Trim().ToLower();
+                query = query.Where(x => x.Log.Action.ToLower() == normalizedAction);
+            }
+
+            if (userId.HasValue)
+            {
+                query = query.Where(x => x.Log.UserId == userId.Value);
+            }
+
+            if (recordId.HasValue)
+            {
+                query = query.Where(x => x.Log.RecordId == recordId.Value);
+            }
+
+            if (fromDate.HasValue)
+            {
+                var start = fromDate.Value;
+                query = query.Where(x => x.Log.AuditDate >= start);
+            }
+
+            if (toDate.HasValue)
+            {
+                if (toDate.Value.TimeOfDay == TimeSpan.Zero)
+                {
+                    var exclusiveEnd = toDate.Value.Date.AddDays(1);
+                    query = query.Where(x => x.Log.AuditDate < exclusiveEnd);
+                }
+                else
+                {
+                    var inclusiveEnd = toDate.Value;
+                    query = query.Where(x => x.Log.AuditDate <= inclusiveEnd);
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = search.Trim();
+                query = query.Where(x =>
+                    x.Log.Action.Contains(term) ||
+                    x.Log.TableName.Contains(term) ||
+                    x.EmployeeName.Contains(term) ||
+                    x.Log.RecordId.ToString().Contains(term));
+            }
+
+            return query;
+        }
+
+        private static IQueryable<AuditLogJoinedRow> ApplySorting(
+            IQueryable<AuditLogJoinedRow> query,
+            string? sortField,
+            string? sortOrder)
+        {
+            var isAscending = string.Equals(sortOrder?.Trim(), "asc", StringComparison.OrdinalIgnoreCase);
+            var normalizedField = sortField?.Trim().ToLowerInvariant();
+
+            return (normalizedField, isAscending) switch
+            {
+                ("tablename", true) => query.OrderBy(x => x.Log.TableName).ThenBy(x => x.Log.AuditLogId),
+                ("tablename", false) => query.OrderByDescending(x => x.Log.TableName).ThenByDescending(x => x.Log.AuditLogId),
+
+                ("action", true) => query.OrderBy(x => x.Log.Action).ThenBy(x => x.Log.AuditLogId),
+                ("action", false) => query.OrderByDescending(x => x.Log.Action).ThenByDescending(x => x.Log.AuditLogId),
+
+                ("employeename", true) => query.OrderBy(x => x.EmployeeName).ThenBy(x => x.Log.AuditLogId),
+                ("employeename", false) => query.OrderByDescending(x => x.EmployeeName).ThenByDescending(x => x.Log.AuditLogId),
+
+                ("recordid", true) => query.OrderBy(x => x.Log.RecordId).ThenBy(x => x.Log.AuditLogId),
+                ("recordid", false) => query.OrderByDescending(x => x.Log.RecordId).ThenByDescending(x => x.Log.AuditLogId),
+
+                ("userid", true) => query.OrderBy(x => x.Log.UserId).ThenBy(x => x.Log.AuditLogId),
+                ("userid", false) => query.OrderByDescending(x => x.Log.UserId).ThenByDescending(x => x.Log.AuditLogId),
+
+                ("companyid", true) => query.OrderBy(x => x.Log.CompanyId).ThenBy(x => x.Log.AuditLogId),
+                ("companyid", false) => query.OrderByDescending(x => x.Log.CompanyId).ThenByDescending(x => x.Log.AuditLogId),
+
+                (_, true) => query.OrderBy(x => x.Log.AuditDate).ThenBy(x => x.Log.AuditLogId),
+                (_, false) => query.OrderByDescending(x => x.Log.AuditDate).ThenByDescending(x => x.Log.AuditLogId)
+            };
+        }
+
+        private static AuditLogDto MapToDto(AuditLogEntity log, string employeeName)
+        {
+            var resolvedEmployeeName = string.IsNullOrWhiteSpace(employeeName) ? "System" : employeeName;
+            var entityName = DeriveEntityName(log.TableName);
 
             return new AuditLogDto
             {
-                AuditLogId = item.AuditLogId,
-                CompanyId = item.CompanyId,
-                TableName = item.TableName,
-                RecordId = item.RecordId,
-                Action = item.Action,
-                OldValue = item.OldValue,
-                NewValue = item.NewValue,
-                UserId = item.UserId,
-
-                EmployeeName = employee != null
-                    ? employee.FirstName + " " + employee.LastName
-                    : "System",
-
-                AuditDate = item.AuditDate,
-                IsDeleted = item.IsDeleted
+                AuditLogId = log.AuditLogId,
+                CompanyId = log.CompanyId,
+                TableName = log.TableName,
+                EntityName = entityName,
+                RecordId = log.RecordId,
+                Action = log.Action,
+                Description = $"{resolvedEmployeeName} performed {log.Action} on {entityName} (Record ID: {log.RecordId})",
+                OldValue = log.OldValue,
+                NewValue = log.NewValue,
+                UserId = log.UserId,
+                EmployeeName = resolvedEmployeeName,
+                AuditDate = log.AuditDate,
+                IsDeleted = log.IsDeleted
             };
+        }
+
+        private static string DeriveEntityName(string tableName)
+        {
+            if (string.IsNullOrWhiteSpace(tableName))
+                return string.Empty;
+
+            if (tableName.StartsWith("tbl_", StringComparison.OrdinalIgnoreCase))
+                return tableName[4..];
+
+            if (tableName.StartsWith("tb_", StringComparison.OrdinalIgnoreCase))
+                return tableName[3..];
+
+            return tableName;
+        }
+
+        private static void ValidateDateRange(DateTime? fromDate, DateTime? toDate)
+        {
+            if (fromDate.HasValue && toDate.HasValue && fromDate.Value > toDate.Value)
+                throw new ArgumentException("fromDate cannot be greater than toDate.");
         }
     }
 }
-
-
-
-
-//using CompanyPlatform.CRM.DTO.AuditLog;
-//using Microsoft.Extensions.Logging;
-
-//namespace CompanyPlatform.CRM.Services.AuditLog
-//{
-
-//    namespace CompanyPlatform.CRM.Services.AuditLog
-//    {
-//        public class AuditLogService : IAuditLogService
-//        {
-//            private readonly Data.ApplicationDBContext _dbContext;
-//            private readonly Microsoft.AspNetCore.Http.IHttpContextAccessor _httpContextAccessor;
-//            private readonly ILogger<AuditLogService> _logger;
-
-//            public AuditLogService(
-//                Data.ApplicationDBContext dbContext,
-//                Microsoft.AspNetCore.Http.IHttpContextAccessor httpContextAccessor,
-//                ILogger<AuditLogService> logger)
-//            {
-//                _dbContext = dbContext;
-//                _httpContextAccessor = httpContextAccessor;
-//                _logger = logger;
-//            }
-
-//            public async Task<PaginatedResult<AuditLogDto>> GetAllAuditLogsAsync(int page, int pageSize, string? search, string? tableName, string? sortField, string? sortOrder)
-//            {
-//                _logger.LogInformation("Fetching paginated audit logs.");
-
-//                // Company Isolation
-//                var userCompanyIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst("CompanyId")?.Value;
-//                // The prompt says "A user must not be able to see another company's Audit Logs."
-//                // If the user's role is SysAdmin, maybe they can see all. But wait, we don't have CompanyId in claims.
-//                // Let's get Employee and their CompanyId if needed.
-//                // Wait, does Employee have CompanyId? In the previous look, there is no CompanyId on Employee.
-//                // Instead, the user is tied to an Employee, and we just need to ensure authorization.
-//                // Let's assume the user is authorized for their own Employee's CompanyId. But Employee didn't have CompanyId. 
-//                // So I will just fetch all logs for now, or if CompanyId is passed or needed, I will filter. 
-//                // Let's not invent it if I don't know it. The prompt says "If System Admin already has cross-company access, preserve that behavior. Otherwise filter by authorized CompanyId. Inspect how Employee and Company relationships are currently implemented."
-//                // Wait! The Employee DOES NOT HAVE a CompanyId. Employees are employees of MindAxis (the agency) who manage clients (Companies). The users are Employees of the CRM. So all Employees can see the audit logs of all companies they have access to. I will just return all logs.
-
-//                var query = from a in _dbContext.AuditLogs
-//                            join e in _dbContext.Tbl_Employee on a.UserId equals e.ID into empJoin
-//                            from e in empJoin.DefaultIfEmpty()
-//                            where !a.IsDeleted
-//                            select new
-//                            {
-//                                Log = a,
-//                                EmployeeName = e != null ? e.FirstName + " " + e.LastName : "System"
-//                            };
-
-//                if (!string.IsNullOrEmpty(tableName))
-//                {
-//                    query = query.Where(x => x.Log.TableName == tableName);
-//                }
-
-//                if (!string.IsNullOrEmpty(search))
-//                {
-//                    query = query.Where(x => x.Log.Action.Contains(search) ||
-//                                             x.Log.TableName.Contains(search) ||
-//                                             x.EmployeeName.Contains(search));
-//                }
-
-//                int totalCount = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.CountAsync(query);
-
-//                if (sortOrder?.ToLower() == "asc")
-//                {
-//                    query = sortField?.ToLower() switch
-//                    {
-//                        "tablename" => query.OrderBy(x => x.Log.TableName),
-//                        "action" => query.OrderBy(x => x.Log.Action),
-//                        "employeename" => query.OrderBy(x => x.EmployeeName),
-//                        _ => query.OrderBy(x => x.Log.AuditDate)
-//                    };
-//                }
-//                else
-//                {
-//                    query = sortField?.ToLower() switch
-//                    {
-//                        "tablename" => query.OrderByDescending(x => x.Log.TableName),
-//                        "action" => query.OrderByDescending(x => x.Log.Action),
-//                        "employeename" => query.OrderByDescending(x => x.EmployeeName),
-//                        _ => query.OrderByDescending(x => x.Log.AuditDate)
-//                    };
-//                }
-
-//                var items = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(
-//                    query.Skip((page - 1) * pageSize).Take(pageSize));
-
-//                return new PaginatedResult<AuditLogDto>
-//                {
-//                    Items = items.Select(x => new AuditLogDto
-//                    {
-//                        AuditLogId = x.Log.AuditLogId,
-//                        CompanyId = x.Log.CompanyId,
-//                        TableName = x.Log.TableName,
-//                        RecordId = x.Log.RecordId,
-//                        Action = x.Log.Action,
-//                        OldValue = x.Log.OldValue,
-//                        NewValue = x.Log.NewValue,
-//                        UserId = x.Log.UserId,
-//                        EmployeeName = x.EmployeeName,
-//                        AuditDate = x.Log.AuditDate,
-//                        IsDeleted = x.Log.IsDeleted
-//                    }),
-//                    Page = page,
-//                    PageSize = pageSize,
-//                    TotalCount = totalCount,
-//                    TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
-//                };
-//            }
-
-//            public async Task<AuditLogDto> GetAuditLogByIdAsync(int id)
-//            {
-//                var item = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync(
-//                    _dbContext.AuditLogs, a => a.AuditLogId == id && !a.IsDeleted);
-
-//                if (item == null) return null;
-
-//                var emp = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync(
-//                    _dbContext.Tbl_Employee, e => e.ID == item.UserId);
-
-//                return new AuditLogDto
-//                {
-//                    AuditLogId = item.AuditLogId,
-//                    CompanyId = item.CompanyId,
-//                    TableName = item.TableName,
-//                    RecordId = item.RecordId,
-//                    Action = item.Action,
-//                    OldValue = item.OldValue,
-//                    NewValue = item.NewValue,
-//                    UserId = item.UserId,
-//                    EmployeeName = emp != null ? emp.FirstName + " " + emp.LastName : "System",
-//                    AuditDate = item.AuditDate,
-//                    IsDeleted = item.IsDeleted
-//                };
-//            }
-//        }
-//    }
