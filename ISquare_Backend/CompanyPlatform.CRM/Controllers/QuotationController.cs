@@ -12,13 +12,16 @@ namespace CompanyPlatform.CRM.Controllers
     public class QuotationController : ControllerBase
     {
         private readonly IQuotationService _quotationService;
+        private readonly IQuotationCustomerResponseService _customerResponseService;
         private readonly ILogger<QuotationController> _logger;
 
         public QuotationController(
             IQuotationService quotationService,
+            IQuotationCustomerResponseService customerResponseService,
             ILogger<QuotationController> logger)
         {
             _quotationService = quotationService;
+            _customerResponseService = customerResponseService;
             _logger = logger;
         }
 
@@ -159,6 +162,112 @@ namespace CompanyPlatform.CRM.Controllers
             {
                 Message = "Quotation deleted successfully."
             });
+        }
+
+        // POST: api/quotation/1/send-email
+        [HttpPost("{id:int}/send-email")]
+        public async Task<IActionResult> SendEmail(
+            int id,
+            [FromBody] SendQuotationEmailDto? dto = null)
+        {
+            try
+            {
+                var result = await _customerResponseService.SendQuotationEmailAsync(id, dto);
+                return Ok(new
+                {
+                    Message = $"Quotation email sent successfully to {result.CustomerEmail}.",
+                    Data = result
+                });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { Message = ex.Message });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error sending quotation email for Quotation {Id}", id);
+                return StatusCode(500, new
+                {
+                    Message = "Failed to send quotation email. Please check SMTP configuration and customer email address."
+                });
+            }
+        }
+
+        // GET: api/quotation/customer-responses
+        [HttpGet("customer-responses")]
+        public async Task<IActionResult> GetAllCustomerResponses()
+        {
+            var responses = await _customerResponseService.GetAllResponsesAsync();
+            return Ok(responses);
+        }
+
+        // GET: api/quotation/1/customer-responses
+        [HttpGet("{id:int}/customer-responses")]
+        public async Task<IActionResult> GetCustomerResponses(int id)
+        {
+            var responses = await _customerResponseService.GetResponsesByQuotationIdAsync(id);
+            return Ok(responses);
+        }
+
+        // GET: api/quotation/public/{publicResponseId}
+        [HttpGet("public/{publicResponseId:guid}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetPublicQuotation(Guid publicResponseId)
+        {
+            var result = await _customerResponseService.GetPublicQuotationAsync(publicResponseId);
+            if (result == null)
+            {
+                return NotFound(new { Message = "Invalid or unavailable quotation link." });
+            }
+            return Ok(result);
+        }
+
+        // POST: api/quotation/public/{publicResponseId}/respond
+        [HttpPost("public/{publicResponseId:guid}/respond")]
+        [AllowAnonymous]
+        public async Task<IActionResult> SubmitCustomerDecision(
+            Guid publicResponseId,
+            [FromBody] QuotationCustomerDecisionDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            try
+            {
+                var result = await _customerResponseService.SubmitCustomerDecisionAsync(publicResponseId, dto);
+                var message = result.ResponseStatus.Equals("Accepted", StringComparison.OrdinalIgnoreCase)
+                    ? "Quotation Accepted Successfully"
+                    : "Quotation Rejected";
+                return Ok(new
+                {
+                    Message = message,
+                    Data = result
+                });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { Message = ex.Message });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new { Message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error recording customer response for {PublicResponseId}", publicResponseId);
+                return StatusCode(500, new
+                {
+                    Message = "An error occurred while recording your response."
+                });
+            }
         }
     }
 }

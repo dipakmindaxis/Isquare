@@ -16,6 +16,7 @@ import {
   ShieldAlert,
   FileSpreadsheet,
   Download,
+  Mail,
 } from "lucide-react";
 import { toast } from "sonner";
 import { exportQuotationToPdf } from "../utils/quotationExportPdf";
@@ -53,6 +54,7 @@ import {
 } from "../utils/quotationCalculations";
 import QuotationStatusBadge from "../components/QuotationStatusBadge";
 import QuotationPreviewModal from "../components/QuotationPreviewModal";
+import SendQuotationEmailModal from "../components/SendQuotationEmailModal";
 import ConfirmationModal from "../../../Components/Common/ConfirmationModal";
 
 interface ExtendedCustomer extends Customer {
@@ -77,6 +79,7 @@ export const QuotationDetails: React.FC = () => {
 
   // Modals
   const [isPreviewOpen, setIsPreviewOpen] = useState<boolean>(false);
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState<boolean>(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
   const [revisionModalOpen, setRevisionModalOpen] = useState<boolean>(false);
   const [revisionReason, setRevisionReason] = useState<string>("");
@@ -481,6 +484,16 @@ export const QuotationDetails: React.FC = () => {
               <span>{isMarkingWon ? "Updating..." : "Mark as Won"}</span>
             </button>
           )}
+
+          <button
+            type="button"
+            onClick={() => setIsEmailModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold bg-[#052B50] hover:bg-[#073a6b] text-white rounded-xl transition shadow-xs cursor-pointer"
+            title="Send Quotation to Customer Email"
+          >
+            <Mail size={14} className="text-[#FF7900]" />
+            <span>Send Email</span>
+          </button>
 
           <button
             type="button"
@@ -1144,6 +1157,18 @@ export const QuotationDetails: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Send Quotation Email Modal */}
+      <SendQuotationEmailModal
+        isOpen={isEmailModalOpen}
+        onClose={() => setIsEmailModalOpen(false)}
+        quotation={quotation}
+        defaultEmail={customer?.email || (customer as any)?.alternateEmail || ""}
+        customerName={customerDisplayName}
+        onEmailSent={() => {
+          loadQuotationData();
+        }}
+      />
     </div>
   );
 };

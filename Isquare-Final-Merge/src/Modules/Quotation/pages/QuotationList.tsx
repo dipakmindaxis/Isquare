@@ -16,6 +16,7 @@ import {
   ChevronRight,
   UploadCloud,
   Download,
+  Mail,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -26,11 +27,17 @@ import {
   masterDataService,
   getApiErrorMessage,
 } from "../services/quotationService";
-import type { Quotation, QuotationApproval, SalesOrder } from "../models/quotationModels";
+import type {
+  Quotation,
+  QuotationApproval,
+  QuotationCustomerResponseDto,
+  SalesOrder,
+} from "../models/quotationModels";
 import type { Customer } from "../../RSM/Pages/Customer/Types/CustomerTypes";
 import { formatINR, getEffectiveApprovalStatus } from "../utils/quotationCalculations";
 import QuotationStatusBadge from "../components/QuotationStatusBadge";
 import ConfirmationModal from "../../../Components/Common/ConfirmationModal";
+import SendQuotationEmailModal from "../components/SendQuotationEmailModal";
 import { exportToExcel } from "../../../Utils/exportToExcel";
 import UploadCustomerQuotationModal from "../components/UploadCustomerQuotationModal";
 import {
@@ -42,6 +49,7 @@ export const QuotationList: React.FC = () => {
   const navigate = useNavigate();
   const [quotations, setQuotations] = useState<Quotation[]>([]);
   const [approvals, setApprovals] = useState<QuotationApproval[]>([]);
+  const [customerResponses, setCustomerResponses] = useState<QuotationCustomerResponseDto[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -90,22 +98,44 @@ export const QuotationList: React.FC = () => {
 
   // Revision Modal State
   const [revisionModalOpen, setRevisionModalOpen] = useState<boolean>(false);
+  const [emailModalOpen, setEmailModalOpen] = useState<boolean>(false);
   const [revisionReason, setRevisionReason] = useState<string>("");
   const [isSubmittingRevision, setIsSubmittingRevision] = useState<boolean>(false);
   const [convertingQuotationId, setConvertingQuotationId] = useState<number | null>(null);
   const convertingQuotationIds = useRef(new Set<number>());
 
+  const resolveEmailResponseStatus = (quotationId: number): string => {
+    const matches = customerResponses
+      .filter((r) => Number(r.quotationId) === Number(quotationId))
+      .sort((a, b) => {
+        const ta = new Date(a.createdAt).getTime() || 0;
+        const tb = new Date(b.createdAt).getTime() || 0;
+        if (tb !== ta) return tb - ta;
+        return b.quotationCustomerResponseId - a.quotationCustomerResponseId;
+      });
+
+    if (matches.length === 0) return "Not Sent";
+    const latest = matches[0];
+    const status = (latest.responseStatus || "").trim();
+    if (status === "Accepted" || status === "Rejected" || status === "Pending") {
+      return status;
+    }
+    return "Not Sent";
+  };
+
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const [quotes, allApprovals, custs] = await Promise.all([
+      const [quotes, allApprovals, custs, allResponses] = await Promise.all([
         quotationService.getAll(),
         quotationApprovalService.getAll(),
         masterDataService.getCustomers(),
+        quotationService.getAllCustomerResponses().catch(() => []),
       ]);
       setQuotations(quotes);
       setApprovals(allApprovals);
       setCustomers(custs);
+      setCustomerResponses(allResponses);
     } catch (e) {
       console.error("Failed to load quotations:", e);
       toast.error("Failed to fetch quotations from API");
@@ -397,19 +427,20 @@ export const QuotationList: React.FC = () => {
                 <th className="p-3.5 text-right border-r border-[#e06800]">Grand Total (₹)</th>
                 <th className="p-3.5 text-center border-r border-[#e06800]">Status</th>
                 <th className="p-3.5 text-center border-r border-[#e06800]">Approval</th>
+                <th className="p-3.5 text-center border-r border-[#e06800]">Email Approval</th>
                 <th className="p-3.5 text-right w-44">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {isLoading ? (
                 <tr>
-                  <td colSpan={9} className="p-10 text-center text-gray-400 font-medium">
+                  <td colSpan={10} className="p-10 text-center text-gray-400 font-medium">
                     Loading quotations from server...
                   </td>
                 </tr>
               ) : paginatedQuotations.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="p-10 text-center text-gray-400 font-medium">
+                  <td colSpan={10} className="p-10 text-center text-gray-400 font-medium">
                     No quotations match the filter criteria.
                   </td>
                 </tr>
@@ -463,6 +494,12 @@ export const QuotationList: React.FC = () => {
                         type="approval"
                       />
                     </td>
+                    <td className="p-3.5 text-center border-r border-gray-100">
+                      <QuotationStatusBadge
+                        status={resolveEmailResponseStatus(q.quotationId)}
+                        type="emailResponse"
+                      />
+                    </td>
                     <td className="p-3.5 text-right space-x-1.5 whitespace-nowrap">
                       <button
                         onClick={() => navigate(`/rsm/quotations/${q.quotationId}`)}
@@ -470,6 +507,16 @@ export const QuotationList: React.FC = () => {
                         title="View Details"
                       >
                         <Eye size={14} />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedQuotation(q);
+                          setEmailModalOpen(true);
+                        }}
+                        className="p-2 bg-sky-50 hover:bg-[#052B50] hover:text-white text-[#052B50] rounded-lg transition shadow-xs inline-flex items-center justify-center cursor-pointer"
+                        title="Send Quotation Email"
+                      >
+                        <Mail size={14} />
                       </button>
                       {isCustomerFormatQuotation(q.quotationId, q) && (
                         <button
@@ -645,6 +692,29 @@ export const QuotationList: React.FC = () => {
         isOpen={isUploadModalOpen}
         onClose={() => setIsUploadModalOpen(false)}
         onSuccess={() => {
+          fetchData();
+        }}
+      />
+
+      {/* Send Quotation Email Modal */}
+      <SendQuotationEmailModal
+        isOpen={emailModalOpen}
+        onClose={() => {
+          setEmailModalOpen(false);
+          setSelectedQuotation(null);
+        }}
+        quotation={selectedQuotation}
+        defaultEmail={
+          selectedQuotation
+            ? (customers.find(
+                (c) =>
+                  Number(c.customerId || (c as any).companyId) ===
+                  Number(selectedQuotation.customerId)
+              ) as any)?.email || ""
+            : ""
+        }
+        customerName={selectedQuotation ? resolveCustomerName(selectedQuotation) : ""}
+        onEmailSent={() => {
           fetchData();
         }}
       />

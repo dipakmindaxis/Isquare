@@ -221,6 +221,7 @@ namespace CompanyPlatform.Core.Data
         public DbSet<QuotationRevision> QuotationRevisions { get; set; }
 
         public DbSet<QuotationCharge> QuotationCharges { get; set; }
+        public DbSet<QuotationCustomerResponse> QuotationCustomerResponses { get; set; }
 
         public DbSet<SalesOrder> SalesOrders { get; set; }
         public DbSet<SalesOrderItem> SalesOrderItems { get; set; }
@@ -677,6 +678,13 @@ namespace CompanyPlatform.Core.Data
             // Applies a global query filter so deleted items are ignored by default
             builder.Entity<PlaceOfSupply>()
                 .HasQueryFilter(p => !p.PlaceOfSupplyIsDeleted);
+
+            builder.Entity<QuotationCustomerResponse>()
+                .HasIndex(q => q.PublicResponseId)
+                .IsUnique();
+
+            builder.Entity<QuotationCustomerResponse>()
+                .HasIndex(q => q.QuotationId);
         }
     }
 }
