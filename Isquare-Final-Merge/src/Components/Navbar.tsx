@@ -18,6 +18,7 @@ import {
   Ticket,
   Plus,
   ChevronDown,
+  History,
 } from "lucide-react";
 import ChangePasswordModal from "./ChangePasswordModal";
 import { CreateSupportTicketModal } from "../Modules/HelpDesk/Components/CreateSupportTicketModal";
@@ -168,6 +169,7 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
     const list: SearchMenuItem[] = [];
 
     const isItemAllowed = (item: MenuItem): boolean => {
+      if (item.adminOnly && !isAdmin) return false;
       if (isAdmin) return true;
       if (!item.formName) return true;
       if (hasPermission(item.formName, "CanView")) return true;
@@ -789,6 +791,19 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
                     <Home size={18} className="text-blue-600" />
                     <span className="text-sm font-medium">Switch Module</span>
                   </div>
+
+                  {isAdmin && (
+                    <div
+                      onClick={() => {
+                        setIsDropdownOpen(false);
+                        navigate("/rsm/audit-log");
+                      }}
+                      className="px-4 py-2 flex items-center gap-3 text-[#111c44] hover:bg-blue-50 cursor-pointer transition-colors"
+                    >
+                      <History size={18} className="text-blue-600" />
+                      <span className="text-sm font-medium">Audit Log</span>
+                    </div>
+                  )}
 
                   <div
                     onClick={openChangePasswordModal}

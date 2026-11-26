@@ -12,11 +12,15 @@ namespace CompanyPlatform.CRM.DTO.AuditLog
         [Required(ErrorMessage = "Table Name is required.")]
         public string TableName { get; set; } = string.Empty;
 
+        public string? EntityName { get; set; }
+
         [Required(ErrorMessage = "Record Id is required.")]
         public int RecordId { get; set; }
 
         [Required(ErrorMessage = "Action is required.")]
         public string Action { get; set; } = string.Empty;
+
+        public string? Description { get; set; }
 
         public string? OldValue { get; set; }
 
@@ -24,11 +28,19 @@ namespace CompanyPlatform.CRM.DTO.AuditLog
 
         [Required(ErrorMessage = "User is required.")]
         public int UserId { get; set; }
-        
+
         public string? EmployeeName { get; set; }
 
         public DateTime AuditDate { get; set; }
 
         public bool IsDeleted { get; set; }
+    }
+
+    public class AuditLogSummaryDto
+    {
+        public int TotalActivities { get; set; }
+        public int CreateActivities { get; set; }
+        public int UpdateActivities { get; set; }
+        public int DeleteActivities { get; set; }
     }
 }

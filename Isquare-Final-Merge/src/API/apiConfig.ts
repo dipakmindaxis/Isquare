@@ -56,12 +56,17 @@ export interface ApiEndpoints {
   SalesTerritories: string;
   PlaceOfSupplies: string;
 
+  AuditLog: string;
+  AuditLogSummary: string;
+
   [key: string]: string;
 }
 
 export const API_ENDPOINTS: ApiEndpoints = {
   // ExchangeRate: `https://v6.exchangerate-api.com/v6/c1d2fd789cda1a02192b1c64/latest/INR`,
   BaseUrl: BASE_URL,
+  AuditLog: `${BASE_URL}/auditlog`,
+  AuditLogSummary: `${BASE_URL}/auditlog/summary`,
   Login: `${BASE_URL}/auth/login`,
   Register: `${BASE_URL}/auth/register`,
   ForgotPassword: `${BASE_URL}/auth/forgot-password`,
