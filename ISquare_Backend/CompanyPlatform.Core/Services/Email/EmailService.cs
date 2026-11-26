@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using MimeKit;
 using MailKit.Net.Smtp;
@@ -56,7 +56,10 @@ namespace CompanyPlatform.Core.Services.Email
 
 
 
-        public async Task SendEmailAsync(string toEmail, string subject, string body)
+        public Task SendEmailAsync(string toEmail, string subject, string body)
+            => SendEmailAsync(toEmail, subject, body, null);
+
+        public async Task SendEmailAsync(string toEmail, string subject, string body, IEnumerable<EmailInlineImage>? inlineImages)
         {
             _logger.LogInformation("SendEmailAsync triggered for {Email}", toEmail);
 
@@ -68,10 +71,25 @@ namespace CompanyPlatform.Core.Services.Email
             message.To.Add(MailboxAddress.Parse(toEmail));
             message.Subject = subject;
 
-            message.Body = new TextPart("html")
+            var builder = new BodyBuilder
             {
-                Text = body
+                HtmlBody = body
             };
+
+            if (inlineImages != null)
+            {
+                foreach (var img in inlineImages)
+                {
+                    if (img.Content == null || img.Content.Length == 0) continue;
+                    var linked = builder.LinkedResources.Add(
+                        img.FileName,
+                        img.Content,
+                        ContentType.Parse(img.MimeType));
+                    linked.ContentId = img.ContentId;
+                }
+            }
+
+            message.Body = builder.ToMessageBody();
 
             await SendAsync(message);
         }
