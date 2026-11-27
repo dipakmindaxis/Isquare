@@ -1,7 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Mail, Send, X, Loader2, CheckCircle2, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
-import { quotationService, companyProfileService, getApiErrorMessage } from "../services/quotationService";
+import {
+  quotationService,
+  quotationItemService,
+  quotationChargeService,
+  companyProfileService,
+  productService,
+  getApiErrorMessage,
+} from "../services/quotationService";
 import type { Quotation, QuotationCustomerResponseDto } from "../models/quotationModels";
 import { buildQuotationEmailHtml } from "../utils/quotationEmailTemplate";
 import { generateQuotationPdfBase64 } from "../utils/quotationExportPdf";
@@ -56,22 +63,40 @@ export const SendQuotationEmailModal: React.FC<SendQuotationEmailModalProps> = (
 
     setIsSending(true);
     try {
-      let fullQuotation = quotation;
-      if (!fullQuotation.items || fullQuotation.items.length === 0) {
-        try {
-          const fetched = await quotationService.getById(quotation.quotationId);
-          if (fetched) fullQuotation = fetched;
-        } catch {
-          // fallback to passed quotation
-        }
-      }
-
-      const [profilesRes, customerRes] = await Promise.all([
+      const [
+        latestHeader,
+        fetchedItems,
+        fetchedCharges,
+        profilesRes,
+        customerRes,
+        masterProducts,
+      ] = await Promise.all([
+        quotationService.getById(quotation.quotationId).catch(() => null),
+        quotationItemService.getByQuotation(quotation.quotationId).catch(() => []),
+        quotationChargeService.getByQuotation(quotation.quotationId).catch(() => []),
         companyProfileService.getAll().catch(() => []),
-        fullQuotation.customerId
-          ? getCustomerById(fullQuotation.customerId).catch(() => null)
+        quotation.customerId
+          ? getCustomerById(quotation.customerId).catch(() => null)
           : Promise.resolve(null),
+        productService.getAll().catch(() => []),
       ]);
+
+      const fullQuotation: Quotation = {
+        ...(latestHeader || quotation),
+        items:
+          fetchedItems.length > 0
+            ? fetchedItems
+            : latestHeader?.items && latestHeader.items.length > 0
+              ? latestHeader.items
+              : quotation.items || [],
+        charges:
+          fetchedCharges.length > 0
+            ? fetchedCharges
+            : latestHeader?.charges && latestHeader.charges.length > 0
+              ? latestHeader.charges
+              : quotation.charges || [],
+      };
+
       const companyProfile =
         profilesRes.find((p) => p.isDefault && p.isActive) ||
         profilesRes.find((p) => p.isActive) ||
@@ -82,9 +107,12 @@ export const SendQuotationEmailModal: React.FC<SendQuotationEmailModalProps> = (
         buildQuotationEmailHtml(fullQuotation, {
           companyProfile,
           customer: customerRes,
+          masterProducts,
           customMessage: message.trim() || undefined,
         }),
-        generateQuotationPdfBase64(fullQuotation, companyProfile, customerRes),
+        generateQuotationPdfBase64(fullQuotation, companyProfile, customerRes, undefined, {
+          masterProducts,
+        }),
       ]);
 
       if (!pdfAttachment?.base64) {

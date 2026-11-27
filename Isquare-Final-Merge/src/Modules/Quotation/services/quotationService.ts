@@ -308,7 +308,8 @@ export const quotationService = {
   ): Promise<{ message: string; data: QuotationCustomerResponseDto }> => {
     const response = await apiClient.post(
       `${API_ENDPOINTS.Quotations}/${quotationId}/send-email`,
-      dto || {}
+      dto || {},
+      { timeout: 120000 }
     );
     return response.data;
   },
