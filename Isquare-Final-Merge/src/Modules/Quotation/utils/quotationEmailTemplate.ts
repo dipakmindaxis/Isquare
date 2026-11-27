@@ -3,7 +3,13 @@ import type { Customer } from "../../RSM/Pages/Customer/Types/CustomerTypes";
 import type { Contact } from "../../RSM/Pages/Master/Contact/Types/ContactTypes";
 import { getCustomerById } from "../../RSM/Pages/Customer/Services/CustomerService";
 import { getContactById, getContactsByCompanyId } from "../../RSM/Pages/Master/Contact/Services/ContactService";
-import { quotationService, companyProfileService, productService } from "../services/quotationService";
+import {
+  quotationService,
+  quotationItemService,
+  quotationChargeService,
+  companyProfileService,
+  productService,
+} from "../services/quotationService";
 import { calculateItemTotals, hasQuotationDiscount } from "./quotationCalculations";
 import { loadImageAsDataUrl } from "./quotationExportPdf";
 import { ISQUARE_SEAL_BASE64 } from "./isquareSealBase64";
@@ -63,12 +69,30 @@ export async function buildQuotationEmailHtml(
   inputQuotation: Quotation,
   options: BuildQuotationEmailOptions = {}
 ): Promise<string> {
-  // 1. Ensure full quotation with items is loaded
+  // 1. Ensure full quotation with items and charges is loaded
   let quotation = inputQuotation;
   if (!quotation.items || quotation.items.length === 0) {
     try {
-      const full = await quotationService.getById(quotation.quotationId);
-      if (full) quotation = full;
+      const [full, items, charges] = await Promise.all([
+        quotationService.getById(quotation.quotationId).catch(() => null),
+        quotationItemService.getByQuotation(quotation.quotationId).catch(() => []),
+        quotationChargeService.getByQuotation(quotation.quotationId).catch(() => []),
+      ]);
+      quotation = {
+        ...(full || quotation),
+        items:
+          items.length > 0
+            ? items
+            : full?.items && full.items.length > 0
+              ? full.items
+              : quotation.items || [],
+        charges:
+          charges.length > 0
+            ? charges
+            : full?.charges && full.charges.length > 0
+              ? full.charges
+              : quotation.charges || [],
+      };
     } catch {
       // use inputQuotation as fallback
     }
