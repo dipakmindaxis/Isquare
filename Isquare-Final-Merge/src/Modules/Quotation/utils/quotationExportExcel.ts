@@ -344,33 +344,29 @@ export async function exportQuotationToCustomerExcel(
   // Spacer row 12
   worksheet.getRow(12).height = 6;
 
-  // 5. Subject Highlighted Bar (Row 13)
-  worksheet.getRow(13).height = 22;
+  // 5. Subject Line (Row 13)
+  worksheet.getRow(13).height = 18;
   worksheet.mergeCells(`B13:${lastColLetter}13`);
   const subCell = worksheet.getCell("B13");
-  subCell.value = "Sub: Offer for PPP";
-  subCell.font = { name: "Arial", size: 9.5, bold: true, color: { argb: "FF002B55" } };
-  subCell.alignment = { vertical: "middle", horizontal: "left", indent: 1 };
-  subCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF7ED" } };
-  subCell.border = {
-    top: { style: "thin", color: { argb: "FFFED7AA" } },
-    bottom: { style: "thin", color: { argb: "FFFED7AA" } },
-    left: { style: "thin", color: { argb: "FFFED7AA" } },
-    right: { style: "thin", color: { argb: "FFFED7AA" } },
-  };
+  const subjectVal = (quotation.subject || "").trim() || "Offer for PPP";
+  subCell.value = `SUB: ${subjectVal}`;
+  subCell.font = { name: "Arial", size: 9, bold: true, color: { argb: "FF002B55" } };
+  subCell.alignment = { vertical: "middle", horizontal: "left" };
 
   // 6. Salutation & Intro (Rows 14 & 15)
   worksheet.getRow(14).height = 18;
   worksheet.mergeCells(`B14:${lastColLetter}14`);
   const salutationCell = worksheet.getCell("B14");
-  salutationCell.value = "Dear Sir/Madam,";
+  salutationCell.value = (quotation.greeting || "").trim() || "Dear Sir/Madam,";
   salutationCell.font = { name: "Arial", size: 8.5, bold: true, color: { argb: "FF002B55" } };
   salutationCell.alignment = { vertical: "middle", horizontal: "left" };
 
   worksheet.getRow(15).height = 18;
   worksheet.mergeCells(`B15:${lastColLetter}15`);
   const introCell = worksheet.getCell("B15");
-  introCell.value = "We take pleasure in submitting our competitive offer for your requirement.";
+  introCell.value =
+    (quotation.introduction || "").trim() ||
+    "We take pleasure in submitting our competitive offer for your requirement.";
   introCell.font = { name: "Arial", size: 8.5, color: { argb: "FF64748B" } };
   introCell.alignment = { vertical: "middle", horizontal: "left" };
 

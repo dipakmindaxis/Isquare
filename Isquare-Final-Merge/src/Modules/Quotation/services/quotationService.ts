@@ -73,6 +73,9 @@ export interface QuotationEnrichmentData {
   enquiryRef?: string | null;
   enquiryId?: number | null;
   customerId?: number | null;
+  subject?: string | null;
+  greeting?: string | null;
+  introduction?: string | null;
 }
 
 export function getQuotationEnrichmentCache(): Record<string, QuotationEnrichmentData> {
@@ -113,6 +116,9 @@ export async function enrichQuotations(quotations: Quotation[]): Promise<Quotati
       if (!q.customerName && cached.customerName) q.customerName = cached.customerName;
       if (!q.enquiryRef && cached.enquiryRef) q.enquiryRef = cached.enquiryRef;
       if (!q.enquiryId && cached.enquiryId) q.enquiryId = cached.enquiryId;
+      if (!q.subject && cached.subject) q.subject = cached.subject;
+      if (!q.greeting && cached.greeting) q.greeting = cached.greeting;
+      if (!q.introduction && cached.introduction) q.introduction = cached.introduction;
     }
   }
 
@@ -173,12 +179,15 @@ export async function enrichQuotations(quotations: Quotation[]): Promise<Quotati
     }
 
     // Persist enrichment
-    if (q.quotationId && (q.customerName || q.enquiryRef)) {
+    if (q.quotationId && (q.customerName || q.enquiryRef || q.subject || q.greeting || q.introduction)) {
       saveQuotationEnrichment(q.quotationId, {
         customerName: q.customerName,
         enquiryRef: q.enquiryRef,
         enquiryId: q.enquiryId,
         customerId: q.customerId,
+        subject: q.subject,
+        greeting: q.greeting,
+        introduction: q.introduction,
       });
       if (q.quotationNumber) {
         saveQuotationEnrichment(q.quotationNumber, {
@@ -186,6 +195,9 @@ export async function enrichQuotations(quotations: Quotation[]): Promise<Quotati
           enquiryRef: q.enquiryRef,
           enquiryId: q.enquiryId,
           customerId: q.customerId,
+          subject: q.subject,
+          greeting: q.greeting,
+          introduction: q.introduction,
         });
       }
     }
@@ -236,6 +248,9 @@ export const quotationService = {
         enquiryRef: cleanRef,
         enquiryId: payload.enquiryId,
         customerId: payload.customerId,
+        subject: payload.subject,
+        greeting: payload.greeting,
+        introduction: payload.introduction,
       });
       if (created.quotationNumber) {
         saveQuotationEnrichment(created.quotationNumber, {
@@ -243,6 +258,9 @@ export const quotationService = {
           enquiryRef: cleanRef,
           enquiryId: payload.enquiryId,
           customerId: payload.customerId,
+          subject: payload.subject,
+          greeting: payload.greeting,
+          introduction: payload.introduction,
         });
       }
     }
@@ -261,7 +279,21 @@ export const quotationService = {
         enquiryRef: cleanRef,
         enquiryId: payload.enquiryId,
         customerId: payload.customerId,
+        subject: payload.subject,
+        greeting: payload.greeting,
+        introduction: payload.introduction,
       });
+      if (payload.quotationNumber) {
+        saveQuotationEnrichment(payload.quotationNumber, {
+          customerName: payload.customerName,
+          enquiryRef: cleanRef,
+          enquiryId: payload.enquiryId,
+          customerId: payload.customerId,
+          subject: payload.subject,
+          greeting: payload.greeting,
+          introduction: payload.introduction,
+        });
+      }
     }
     return response.data;
   },

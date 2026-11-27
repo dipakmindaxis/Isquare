@@ -18,6 +18,16 @@ namespace CompanyPlatform.CRM.Services.AuditLog
             public string EmployeeName { get; init; } = "System";
         }
 
+        private sealed class AuditCandidateRow
+        {
+            public int AuditLogId { get; init; }
+            public string TableName { get; init; } = string.Empty;
+            public int RecordId { get; init; }
+            public int CompanyId { get; init; }
+            public DateTime AuditDate { get; init; }
+            public string EmployeeName { get; init; } = "System";
+        }
+
         public AuditLogService(
             ApplicationDBContext dbContext,
             ILogger<AuditLogService> logger)
@@ -60,9 +70,114 @@ namespace CompanyPlatform.CRM.Services.AuditLog
                 .Take(pageSize)
                 .ToListAsync();
 
+            // Determine distinct (TableName, RecordId) pairs for non-CREATE entries to batch-fetch previous and creation audit logs
+            var nonCreateItems = items
+                .Where(x => !string.Equals(x.Log.Action, "CREATE", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            var creatorDict = new Dictionary<(string TableName, int RecordId), string>();
+            var candidateLogs = new List<AuditCandidateRow>();
+
+            if (nonCreateItems.Count > 0)
+            {
+                var targetTableNames = nonCreateItems.Select(x => x.Log.TableName.ToLowerInvariant()).Distinct().ToList();
+                var targetRecordIds = nonCreateItems.Select(x => x.Log.RecordId).Distinct().ToList();
+
+                var auditHistory = await (
+                    from a in _dbContext.AuditLogs.AsNoTracking()
+                    join e in _dbContext.Tbl_Employee.AsNoTracking() on a.UserId equals e.ID into ej
+                    from e in ej.DefaultIfEmpty()
+                    where targetTableNames.Contains(a.TableName.ToLower())
+                       && targetRecordIds.Contains(a.RecordId)
+                       && !a.IsDeleted
+                    orderby a.AuditDate ascending, a.AuditLogId ascending
+                    select new
+                    {
+                        a.AuditLogId,
+                        TableName = a.TableName.ToLower(),
+                        a.RecordId,
+                        a.CompanyId,
+                        a.Action,
+                        a.AuditDate,
+                        EmployeeName = e != null ? (e.FirstName + " " + e.LastName).Trim() : null,
+                        a.UserId
+                    }
+                ).ToListAsync();
+
+                // Group by TableName and RecordId for earliest CREATE entry
+                foreach (var group in auditHistory.Where(x => x.Action.ToUpper() == "CREATE").GroupBy(x => (x.TableName, x.RecordId)))
+                {
+                    var earliest = group.First();
+                    var name = !string.IsNullOrWhiteSpace(earliest.EmployeeName)
+                        ? earliest.EmployeeName
+                        : (earliest.UserId > 0 ? $"User #{earliest.UserId}" : "System");
+                    creatorDict[group.Key] = name;
+                }
+
+                // Preserve candidate entries for chronological previous-action lookups
+                candidateLogs = auditHistory.Select(x => new AuditCandidateRow
+                {
+                    AuditLogId = x.AuditLogId,
+                    TableName = x.TableName,
+                    RecordId = x.RecordId,
+                    CompanyId = x.CompanyId,
+                    AuditDate = x.AuditDate,
+                    EmployeeName = !string.IsNullOrWhiteSpace(x.EmployeeName)
+                        ? x.EmployeeName
+                        : (x.UserId > 0 ? $"User #{x.UserId}" : "System")
+                }).ToList();
+            }
+
+            var dtoList = new List<AuditLogDto>(items.Count);
+            foreach (var item in items)
+            {
+                string creatorName;
+                string previousActionByName;
+
+                if (string.Equals(item.Log.Action, "CREATE", StringComparison.OrdinalIgnoreCase))
+                {
+                    creatorName = item.EmployeeName;
+                    previousActionByName = item.EmployeeName;
+                }
+                else
+                {
+                    var tableKey = item.Log.TableName.ToLowerInvariant();
+                    var targetRecordId = item.Log.RecordId;
+
+                    if (creatorDict.TryGetValue((tableKey, targetRecordId), out var foundCreator))
+                    {
+                        creatorName = foundCreator;
+                    }
+                    else
+                    {
+                        creatorName = "Not Available";
+                    }
+
+                    // Select the latest audit entry that occurred BEFORE the current entry
+                    var prev = candidateLogs
+                        .Where(c => c.TableName == tableKey
+                                 && c.RecordId == targetRecordId
+                                 && (c.AuditDate < item.Log.AuditDate || (c.AuditDate == item.Log.AuditDate && c.AuditLogId < item.Log.AuditLogId)))
+                        .OrderByDescending(c => c.AuditDate)
+                        .ThenByDescending(c => c.AuditLogId)
+                        .FirstOrDefault();
+
+                    if (prev != null)
+                    {
+                        previousActionByName = prev.EmployeeName;
+                    }
+                    else
+                    {
+                        previousActionByName = creatorName != "Not Available" ? creatorName : "Not Available";
+                    }
+                }
+
+                dtoList.Add(MapToDto(item.Log, item.EmployeeName, creatorName, previousActionByName));
+            }
+
             return new PaginatedResult<AuditLogDto>
             {
-                Items = items.Select(x => MapToDto(x.Log, x.EmployeeName)).ToList(),
+                Items = dtoList,
                 Page = page,
                 PageSize = pageSize,
                 TotalCount = totalCount,
@@ -127,7 +242,128 @@ namespace CompanyPlatform.CRM.Services.AuditLog
                 return null;
             }
 
-            return MapToDto(result.Log, result.EmployeeName);
+            var creatorName = await ResolveOriginalCreatorAsync(result.Log, result.EmployeeName);
+            var previousActionByName = await ResolvePreviousActionEmployeeAsync(result.Log, result.EmployeeName);
+
+            return MapToDto(result.Log, result.EmployeeName, creatorName, previousActionByName);
+        }
+
+        private async Task<string> ResolvePreviousActionEmployeeAsync(AuditLogEntity log, string currentEmployeeName)
+        {
+            // If current log is a CREATE action, current employee is the action employee
+            if (string.Equals(log.Action, "CREATE", StringComparison.OrdinalIgnoreCase))
+            {
+                return string.IsNullOrWhiteSpace(currentEmployeeName) ? "System" : currentEmployeeName;
+            }
+
+            // 1. Select the latest audit entry that occurred BEFORE the current audit entry for same record
+            var prevLog = await (
+                from a in _dbContext.AuditLogs.AsNoTracking()
+                join e in _dbContext.Tbl_Employee.AsNoTracking() on a.UserId equals e.ID into ej
+                from e in ej.DefaultIfEmpty()
+                where a.TableName.ToLower() == log.TableName.ToLower()
+                   && a.RecordId == log.RecordId
+                   && (a.CompanyId == log.CompanyId || a.CompanyId == 0 || log.CompanyId == 0)
+                   && !a.IsDeleted
+                   && (a.AuditDate < log.AuditDate || (a.AuditDate == log.AuditDate && a.AuditLogId < log.AuditLogId))
+                orderby a.AuditDate descending, a.AuditLogId descending
+                select new
+                {
+                    EmployeeName = e != null ? (e.FirstName + " " + e.LastName).Trim() : null,
+                    UserId = a.UserId
+                }
+            ).FirstOrDefaultAsync();
+
+            if (prevLog != null)
+            {
+                if (!string.IsNullOrWhiteSpace(prevLog.EmployeeName))
+                    return prevLog.EmployeeName;
+                if (prevLog.UserId > 0)
+                    return $"User #{prevLog.UserId}";
+                return "System";
+            }
+
+            // 2. If no preceding audit log in tbl_AuditLog, fallback to creator if accessible
+            var fallbackCreator = await ResolveOriginalCreatorAsync(log, currentEmployeeName);
+            return fallbackCreator != "Not Available" ? fallbackCreator : "Not Available";
+        }
+
+        private async Task<string> ResolveOriginalCreatorAsync(AuditLogEntity log, string currentEmployeeName)
+        {
+            // If current log is a CREATE action, current employee is the creator
+            if (string.Equals(log.Action, "CREATE", StringComparison.OrdinalIgnoreCase))
+            {
+                return string.IsNullOrWhiteSpace(currentEmployeeName) ? "System" : currentEmployeeName;
+            }
+
+            // 1. Look up earliest CREATE audit log for this table and record
+            var creatorLog = await (
+                from a in _dbContext.AuditLogs.AsNoTracking()
+                join e in _dbContext.Tbl_Employee.AsNoTracking() on a.UserId equals e.ID into ej
+                from e in ej.DefaultIfEmpty()
+                where a.TableName.ToLower() == log.TableName.ToLower()
+                   && a.RecordId == log.RecordId
+                   && (a.CompanyId == log.CompanyId || log.CompanyId == 0 || a.CompanyId == 0)
+                   && a.Action.ToUpper() == "CREATE"
+                   && !a.IsDeleted
+                orderby a.AuditDate ascending, a.AuditLogId ascending
+                select new
+                {
+                    EmployeeName = e != null ? (e.FirstName + " " + e.LastName).Trim() : null,
+                    UserId = a.UserId
+                }
+            ).FirstOrDefaultAsync();
+
+            if (creatorLog != null)
+            {
+                if (!string.IsNullOrWhiteSpace(creatorLog.EmployeeName))
+                    return creatorLog.EmployeeName;
+                if (creatorLog.UserId > 0)
+                    return $"User #{creatorLog.UserId}";
+            }
+
+            // 2. Fallback: check underlying table if accessible
+            var normalizedTable = log.TableName.ToLowerInvariant();
+            try
+            {
+                if (normalizedTable is "tbl_quotation" or "quotation" or "quotations")
+                {
+                    var q = await _dbContext.Quotations.AsNoTracking()
+                        .Where(x => x.QuotationId == log.RecordId)
+                        .Select(x => x.CreatedBy)
+                        .FirstOrDefaultAsync();
+                    if (!string.IsNullOrWhiteSpace(q))
+                    {
+                        if (int.TryParse(q, out var empId))
+                        {
+                            var emp = await _dbContext.Tbl_Employee.AsNoTracking()
+                                .Where(e => e.ID == empId)
+                                .Select(e => (e.FirstName + " " + e.LastName).Trim())
+                                .FirstOrDefaultAsync();
+                            if (!string.IsNullOrWhiteSpace(emp)) return emp;
+                        }
+                        return q;
+                    }
+                }
+                else if (normalizedTable is "tbl_company" or "company" or "companies" or "customer" or "customers")
+                {
+                    var c = await _dbContext.Companies.AsNoTracking()
+                        .Where(x => x.CompanyId == log.RecordId)
+                        .Select(x => x.CreatedByEmployee != null
+                            ? (x.CreatedByEmployee.FirstName + " " + x.CreatedByEmployee.LastName).Trim()
+                            : null)
+                        .FirstOrDefaultAsync();
+                    if (!string.IsNullOrWhiteSpace(c))
+                        return c;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error attempting fallback creator lookup for {TableName} ID {RecordId}", log.TableName, log.RecordId);
+            }
+
+            // 3. Fallback: if not found, return "Not Available"
+            return "Not Available";
         }
 
         private IQueryable<AuditLogJoinedRow> BuildFilteredQuery(
@@ -241,10 +477,30 @@ namespace CompanyPlatform.CRM.Services.AuditLog
             };
         }
 
-        private static AuditLogDto MapToDto(AuditLogEntity log, string employeeName)
+        private static AuditLogDto MapToDto(
+            AuditLogEntity log,
+            string employeeName,
+            string? createdByEmployeeName = null,
+            string? previousActionByEmployeeName = null)
         {
             var resolvedEmployeeName = string.IsNullOrWhiteSpace(employeeName) ? "System" : employeeName;
             var entityName = DeriveEntityName(log.TableName);
+
+            var resolvedCreator = createdByEmployeeName;
+            if (string.IsNullOrWhiteSpace(resolvedCreator))
+            {
+                resolvedCreator = string.Equals(log.Action, "CREATE", StringComparison.OrdinalIgnoreCase)
+                    ? resolvedEmployeeName
+                    : "Not Available";
+            }
+
+            var resolvedPrevious = previousActionByEmployeeName;
+            if (string.IsNullOrWhiteSpace(resolvedPrevious))
+            {
+                resolvedPrevious = string.Equals(log.Action, "CREATE", StringComparison.OrdinalIgnoreCase)
+                    ? resolvedEmployeeName
+                    : "Not Available";
+            }
 
             return new AuditLogDto
             {
@@ -259,6 +515,8 @@ namespace CompanyPlatform.CRM.Services.AuditLog
                 NewValue = log.NewValue,
                 UserId = log.UserId,
                 EmployeeName = resolvedEmployeeName,
+                CreatedByEmployeeName = resolvedCreator,
+                PreviousActionByEmployeeName = resolvedPrevious,
                 AuditDate = log.AuditDate,
                 IsDeleted = log.IsDeleted
             };

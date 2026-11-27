@@ -31,6 +31,10 @@ namespace CompanyPlatform.CRM.DTO.AuditLog
 
         public string? EmployeeName { get; set; }
 
+        public string? CreatedByEmployeeName { get; set; }
+
+        public string? PreviousActionByEmployeeName { get; set; }
+
         public DateTime AuditDate { get; set; }
 
         public bool IsDeleted { get; set; }

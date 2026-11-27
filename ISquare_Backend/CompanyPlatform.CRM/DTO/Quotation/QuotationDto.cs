@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace CompanyPlatform.CRM.DTO.Quotation
 {
@@ -47,6 +47,12 @@ namespace CompanyPlatform.CRM.DTO.Quotation
         public DateTime? ValidUntil { get; set; }
 
         public string? TermsAndConditions { get; set; }
+
+        public string? Subject { get; set; }
+
+        public string? Greeting { get; set; }
+
+        public string? Introduction { get; set; }
 
         public bool IsActive { get; set; }
 

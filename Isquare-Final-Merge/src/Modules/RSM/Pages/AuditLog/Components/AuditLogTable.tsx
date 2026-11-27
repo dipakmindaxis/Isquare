@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { FaHistory } from "react-icons/fa";
 import type { AuditLogItem } from "../Services/auditLogService";
+import { formatAuditDateTime } from "../Utils/auditDateUtils";
 
 interface AuditLogTableProps {
   logs: AuditLogItem[];
@@ -35,7 +36,7 @@ interface AuditLogTableProps {
   onSortChange: (field: string) => void;
   onPageChange: (newPage: number) => void;
   onPageSizeChange: (newPageSize: number) => void;
-  onViewDetails: (item: AuditLogItem) => void;
+  onViewDetails: (item: AuditLogItem, srNo?: number) => void;
 }
 
 const actionButtonStyles = {
@@ -106,21 +107,7 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({
   };
 
   const formatDate = (dateStr?: string) => {
-    if (!dateStr) return "-";
-    try {
-      const d = new Date(dateStr);
-      if (isNaN(d.getTime())) return dateStr;
-      return new Intl.DateTimeFormat("en-IN", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      }).format(d);
-    } catch {
-      return dateStr;
-    }
+    return formatAuditDateTime(dateStr);
   };
 
   // Compute pagination range display (e.g. 1 to 10 of 42)
@@ -320,7 +307,7 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({
                     <tr
                       key={item.auditLogId}
                       className="min-h-[52px] border-b border-[#d9dde5] hover:bg-[#f0f7ff] transition-all duration-200 cursor-pointer"
-                      onClick={() => onViewDetails(item)}
+                      onClick={() => onViewDetails(item, rowIndex)}
                     >
                       {/* Sr. No. */}
                       <td className="py-2.5 px-3 text-center text-[13px] font-semibold text-gray-500 border-r border-[#d9dde5]">
@@ -382,7 +369,7 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({
                         <div className="flex justify-center items-center w-full">
                           <button
                             type="button"
-                            onClick={() => onViewDetails(item)}
+                            onClick={() => onViewDetails(item, rowIndex)}
                             className={`${actionButtonStyles.base} ${actionButtonStyles.view}`}
                             title="View Details"
                           >

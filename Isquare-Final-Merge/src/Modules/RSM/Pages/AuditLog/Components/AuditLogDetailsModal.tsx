@@ -10,11 +10,13 @@ import {
   FileText,
 } from "lucide-react";
 import type { AuditLogItem } from "../Services/auditLogService";
+import { formatAuditDateTime } from "../Utils/auditDateUtils";
 
 interface AuditLogDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   auditLog: AuditLogItem | null;
+  srNo?: number | null;
   isLoading?: boolean;
 }
 
@@ -136,29 +138,16 @@ export const AuditLogDetailsModal: React.FC<AuditLogDetailsModalProps> = ({
   isOpen,
   onClose,
   auditLog,
+  srNo,
   isLoading,
 }) => {
   if (!isOpen) return null;
 
   const actionUpper = auditLog?.action ? auditLog.action.toUpperCase() : "ACTIVITY";
+  const displayId = srNo != null ? srNo : auditLog?.auditLogId;
 
   const formatDate = (dateStr?: string) => {
-    if (!dateStr) return "-";
-    try {
-      const d = new Date(dateStr);
-      if (isNaN(d.getTime())) return dateStr;
-      return new Intl.DateTimeFormat("en-IN", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: true,
-      }).format(d);
-    } catch {
-      return dateStr;
-    }
+    return formatAuditDateTime(dateStr);
   };
 
   const getActionBadgeColor = (act: string) => {
@@ -207,9 +196,9 @@ export const AuditLogDetailsModal: React.FC<AuditLogDetailsModalProps> = ({
                 >
                   {actionUpper}
                 </span>
-                {auditLog && (
+                {displayId != null && (
                   <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider shrink-0 bg-white/20 text-white">
-                    #{auditLog.auditLogId}
+                    #{displayId}
                   </span>
                 )}
               </div>
@@ -217,8 +206,23 @@ export const AuditLogDetailsModal: React.FC<AuditLogDetailsModalProps> = ({
                 <span>Record ID: #{auditLog?.recordId ?? "-"}</span>
                 <span className="hidden sm:inline opacity-60">•</span>
                 <span className="truncate">
-                  Employee: {auditLog?.employeeName || `User #${auditLog?.userId ?? "-"}`}
+                  {actionUpper === "CREATE"
+                    ? `Created By: ${auditLog?.createdByEmployeeName || auditLog?.previousActionByEmployeeName || auditLog?.employeeName || "Not Available"}`
+                    : `Previous Action By: ${auditLog?.previousActionByEmployeeName || "Not Available"}`}
                 </span>
+                {actionUpper !== "CREATE" && (
+                  <>
+                    <span className="hidden sm:inline opacity-60">•</span>
+                    <span className="truncate">
+                      {actionUpper === "UPDATE"
+                        ? "Modified By"
+                        : actionUpper === "DELETE"
+                        ? "Deleted By"
+                        : "Action By"}
+                      : {auditLog?.employeeName || `User #${auditLog?.userId ?? "-"}`}
+                    </span>
+                  </>
+                )}
                 <span className="hidden sm:inline opacity-60">•</span>
                 <span>Date: {formatDate(auditLog?.auditDate)}</span>
               </p>
@@ -252,10 +256,27 @@ export const AuditLogDetailsModal: React.FC<AuditLogDetailsModalProps> = ({
               {/* Activity Details Section */}
               <div>
                 <SectionHeader icon={Info} title="Activity Information" />
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                  <DetailItem label="Audit Log ID" value={`#${auditLog.auditLogId}`} />
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                  <DetailItem label="Audit Log ID" value={`#${displayId}`} />
                   <DetailItem
-                    label="Employee Name"
+                    label={actionUpper === "CREATE" ? "Created By" : "Previous Action By"}
+                    value={
+                      actionUpper === "CREATE"
+                        ? auditLog.createdByEmployeeName ||
+                          auditLog.previousActionByEmployeeName ||
+                          auditLog.employeeName ||
+                          "Not Available"
+                        : auditLog.previousActionByEmployeeName || "Not Available"
+                    }
+                  />
+                  <DetailItem
+                    label={
+                      actionUpper === "UPDATE"
+                        ? "Employee Name (Modified By)"
+                        : actionUpper === "DELETE"
+                        ? "Employee Name (Deleted By)"
+                        : "Employee Name"
+                    }
                     value={auditLog.employeeName || `User #${auditLog.userId}`}
                   />
                   <DetailItem label="User ID" value={auditLog.userId} />
