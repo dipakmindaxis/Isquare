@@ -36,6 +36,7 @@ interface QuotationPreviewModalProps {
   onCreateRevision?: () => void;
   onConvertToOrder?: () => void;
   isConvertingToOrder?: boolean;
+  onUpdateFields?: (fields: { subject?: string; greeting?: string; introduction?: string }) => void;
 }
 
 function formatProposalDate(dateString?: string | null): string {
@@ -176,12 +177,41 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
   onCreateRevision,
   onConvertToOrder,
   isConvertingToOrder = false,
+  onUpdateFields,
 }) => {
   const hasDiscount = useMemo(() => hasQuotationDiscount(quotation), [quotation]);
   const [showDiscount, setShowDiscount] = useState<boolean>(hasDiscount);
   const [masterProducts, setMasterProducts] = useState<Product[]>([]);
   const [resolvedImages, setResolvedImages] = useState<Record<string, string>>({});
   const [contactRecord, setContactRecord] = useState<Contact | null>(null);
+
+  const [editableSubject, setEditableSubject] = useState<string>(
+    quotation.subject !== undefined && quotation.subject !== null
+      ? quotation.subject
+      : "Offer for PPP"
+  );
+  const [editableGreeting, setEditableGreeting] = useState<string>(
+    quotation.greeting !== undefined && quotation.greeting !== null
+      ? quotation.greeting
+      : "Dear Sir/Madam,"
+  );
+  const [editableIntroduction, setEditableIntroduction] = useState<string>(
+    quotation.introduction !== undefined && quotation.introduction !== null
+      ? quotation.introduction
+      : "We take pleasure in submitting our competitive offer for your requirement."
+  );
+
+  useEffect(() => {
+    if (quotation.subject !== undefined && quotation.subject !== null) {
+      setEditableSubject(quotation.subject);
+    }
+    if (quotation.greeting !== undefined && quotation.greeting !== null) {
+      setEditableGreeting(quotation.greeting);
+    }
+    if (quotation.introduction !== undefined && quotation.introduction !== null) {
+      setEditableIntroduction(quotation.introduction);
+    }
+  }, [quotation.subject, quotation.greeting, quotation.introduction, isOpen]);
 
   useEffect(() => {
     setShowDiscount(hasDiscount);
@@ -399,6 +429,14 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
         })
       );
 
+      // 1b. Synchronize live inputs and textareas to attributes so cloned DOM prints exact values
+      printableElement.querySelectorAll("input").forEach((inp) => {
+        inp.setAttribute("value", (inp as HTMLInputElement).value);
+      });
+      printableElement.querySelectorAll("textarea").forEach((txt) => {
+        (txt as HTMLTextAreaElement).textContent = (txt as HTMLTextAreaElement).value;
+      });
+
       // 2. Remove any previous print iframe
       const oldFrame = document.getElementById("quotationPrintFrame");
       if (oldFrame) {
@@ -533,7 +571,13 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
 
   const handleExportPDF = async () => {
     try {
-      await exportQuotationToPdf(quotation, companyProfile, customer, showDiscount, {
+      const pdfQuote: Quotation = {
+        ...quotation,
+        subject: editableSubject,
+        greeting: editableGreeting,
+        introduction: editableIntroduction,
+      };
+      await exportQuotationToPdf(pdfQuote, companyProfile, customer, showDiscount, {
         contactPerson,
         contactPhone,
         contactEmail,
@@ -556,8 +600,14 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
           return;
         }
       }
+      const excelQuote: Quotation = {
+        ...quotation,
+        subject: editableSubject,
+        greeting: editableGreeting,
+        introduction: editableIntroduction,
+      };
       await exportQuotationToCustomerExcel(
-        quotation,
+        excelQuote,
         showDiscount,
         companyProfile,
         customer,
@@ -827,23 +877,61 @@ export const QuotationPreviewModal: React.FC<QuotationPreviewModalProps> = ({
             </div>
           </div>
 
-          {/* 3. Subject Section: Highlighted Bar with Navy-Blue Label & Light Orange Background */}
-          <div className="my-1">
-            <div className="inline-flex items-center rounded-lg overflow-hidden border border-orange-200 bg-orange-50/80 shadow-2xs">
-              <span className="bg-[#002B55] text-white font-extrabold px-3 py-1 text-xs tracking-wider uppercase">
-                Sub:
-              </span>
-              <span className="px-3.5 py-1 font-bold text-[#002B55] text-xs sm:text-[13px] tracking-wide">
-                Offer for PPP
-              </span>
+          {/* 3. Subject Section: Highlighted Bar with Navy-Blue Label & Light Orange Background matching screenshot */}
+          <div className="my-2.5 space-y-1.5 text-xs text-[#102A50]">
+            {/* 1. Subject: Dark-blue SUB: label + light orange container with orange border */}
+            <div>
+              <div className="inline-flex items-center rounded-lg overflow-hidden border border-orange-200 bg-orange-50/80 shadow-2xs">
+                <span className="bg-[#002B55] text-white font-extrabold px-3 py-1 text-xs tracking-wider uppercase select-none shrink-0">
+                  SUB:
+                </span>
+                <input
+                  type="text"
+                  value={editableSubject}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setEditableSubject(val);
+                    onUpdateFields?.({ subject: val });
+                  }}
+                  placeholder="Offer for PPP"
+                  style={{ width: `${Math.max((editableSubject || "").length + 1, 14)}ch` }}
+                  className="bg-transparent px-3.5 py-1 font-bold text-[#002B55] text-xs sm:text-[13px] tracking-wide outline-none border-none max-w-full"
+                  title="Subject"
+                />
+              </div>
             </div>
-          </div>
 
-          <div className="space-y-1 text-xs text-[#102A50]">
-            <div className="font-semibold text-[#002B55]">Dear Sir/Madam,</div>
-            <p className="text-[#64748B] pl-4 text-[11px] leading-relaxed">
-              We take pleasure in submitting our competitive offer for your requirement.
-            </p>
+            {/* 2. Greeting: Bold text */}
+            <div className="pt-0.5">
+              <input
+                type="text"
+                value={editableGreeting}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setEditableGreeting(val);
+                  onUpdateFields?.({ greeting: val });
+                }}
+                placeholder="Dear Sir/Madam,"
+                className="w-full bg-transparent font-bold text-[#002B55] text-xs sm:text-[13px] outline-none border-none p-0"
+                title="Greeting"
+              />
+            </div>
+
+            {/* 3. Introduction: Normal paragraph text with left indentation and spacing */}
+            <div className="pl-4 sm:pl-5">
+              <textarea
+                rows={2}
+                value={editableIntroduction}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setEditableIntroduction(val);
+                  onUpdateFields?.({ introduction: val });
+                }}
+                placeholder="We take pleasure in submitting our competitive offer for your requirement."
+                className="w-full bg-transparent text-[#64748B] text-[11px] sm:text-xs leading-relaxed outline-none resize-none border-none p-0"
+                title="Introduction"
+              />
+            </div>
           </div>
 
           {/* 4. Product Table with Orange Header & Enterprise Theme */}

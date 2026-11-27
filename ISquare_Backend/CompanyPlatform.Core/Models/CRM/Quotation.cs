@@ -65,6 +65,14 @@ namespace CompanyPlatform.Core.Models.CRM
 
         public string? TermsAndConditions { get; set; }
 
+        [StringLength(255)]
+        public string? Subject { get; set; }
+
+        [StringLength(255)]
+        public string? Greeting { get; set; }
+
+        public string? Introduction { get; set; }
+
         public string? CreatedBy { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

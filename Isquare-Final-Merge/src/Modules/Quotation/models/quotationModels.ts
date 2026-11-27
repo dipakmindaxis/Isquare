@@ -23,6 +23,9 @@ export interface Quotation {
   warranty?: string | null;
   validUntil?: string | null;
   termsAndConditions?: string | null;
+  subject?: string | null;
+  greeting?: string | null;
+  introduction?: string | null;
   isActive: boolean;
   isDeleted: boolean;
   items?: QuotationItem[];

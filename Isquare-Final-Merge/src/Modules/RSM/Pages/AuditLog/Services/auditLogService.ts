@@ -13,6 +13,8 @@ export interface AuditLogItem {
   newValue?: string | null;
   userId: number;
   employeeName?: string;
+  createdByEmployeeName?: string;
+  previousActionByEmployeeName?: string;
   auditDate: string;
   isDeleted?: boolean;
 }

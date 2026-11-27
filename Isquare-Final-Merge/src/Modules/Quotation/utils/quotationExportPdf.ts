@@ -539,45 +539,34 @@ async function generateProgrammaticPdf(
     doc.text(contactEmail, PAGE_MARGIN + 19, curY);
   }
 
-  // 6. Subject Section: Highlighted Bar with Navy-Blue "Sub:" Label and Warm Background
-  const subY = infoTop + cardHeight + 3.5;
-  const barH = 5.5;
-  const badgeW = 12;
+  // 6. Subject, Greeting & Introduction (Clean text format without dark-blue/orange styling)
+  const subY = infoTop + cardHeight + 4;
+  const subjectText = (quotation.subject || "").trim() || "Offer for PPP";
+  const greetingText = (quotation.greeting || "").trim() || "Dear Sir/Madam,";
+  const introText =
+    (quotation.introduction || "").trim() ||
+    "We take pleasure in submitting our competitive offer for your requirement.";
 
-  doc.setFillColor(255, 247, 237); // #FFF7ED
-  doc.setDrawColor(254, 215, 170); // #FED7AA
-  doc.setLineWidth(0.2);
-  doc.roundedRect(PAGE_MARGIN, subY, 65, barH, 1.2, 1.2, "FD");
-
-  doc.setFillColor(0, 43, 85); // Navy #002B55
-  doc.roundedRect(PAGE_MARGIN, subY, badgeW, barH, 1.2, 1.2, "F");
-  doc.rect(PAGE_MARGIN + badgeW - 1.5, subY, 1.5, barH, "F");
-
+  // SUB: Offer for PPP
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(7.5);
-  doc.setTextColor(255, 255, 255);
-  doc.text("Sub:", PAGE_MARGIN + 2.5, subY + 3.8);
-
+  doc.setFontSize(8);
   doc.setTextColor(0, 43, 85);
-  doc.text("Offer for PPP", PAGE_MARGIN + badgeW + 3, subY + 3.8);
+  doc.text(`SUB: ${subjectText}`, PAGE_MARGIN, subY);
 
   // Greeting
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7.5);
   doc.setTextColor(0, 43, 85);
-  doc.text("Dear Sir/Madam,", PAGE_MARGIN, subY + barH + 4);
+  doc.text(greetingText, PAGE_MARGIN, subY + 4.5);
 
+  // Introduction
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7);
   doc.setTextColor(100, 116, 139);
-  doc.text(
-    "We take pleasure in submitting our competitive offer for your requirement.",
-    PAGE_MARGIN + 3.5,
-    subY + barH + 7.5
-  );
+  doc.text(introText, PAGE_MARGIN, subY + 8);
 
   // 7. Product Table with Orange Header (#FF7900) & Professional Theme
-  const tableStartY = subY + barH + 10.5;
+  const tableStartY = subY + 11.5;
   const headers = [
     "SR. NO.",
     "DESCRIPTION",

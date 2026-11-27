@@ -101,6 +101,9 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
       if ((initialQuotation as any)?.contactEmail !== undefined) setContactEmail((initialQuotation as any).contactEmail);
       if (initialQuotation.enquiryId !== undefined) setEnquiryId(initialQuotation.enquiryId);
       if (initialQuotation.enquiryRef !== undefined) setEnquiryRef(initialQuotation.enquiryRef || "");
+      if (initialQuotation.subject !== undefined && initialQuotation.subject !== null) setSubject(initialQuotation.subject);
+      if (initialQuotation.greeting !== undefined && initialQuotation.greeting !== null) setGreeting(initialQuotation.greeting);
+      if (initialQuotation.introduction !== undefined && initialQuotation.introduction !== null) setIntroduction(initialQuotation.introduction);
     }
   }, [initialQuotation]);
   const [quotationDate, setQuotationDate] = useState<string>(
@@ -446,6 +449,16 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
     initialQuotation?.termsAndConditions ||
       "1. Taxes extra as applicable.\n2. Prices firm for validity period.\n3. Goods once sold will not be taken back.\n4. Subject to Pune Jurisdiction."
   );
+  const [subject, setSubject] = useState<string>(
+    initialQuotation?.subject || "Offer for PPP"
+  );
+  const [greeting, setGreeting] = useState<string>(
+    initialQuotation?.greeting || "Dear Sir/Madam,"
+  );
+  const [introduction, setIntroduction] = useState<string>(
+    initialQuotation?.introduction ||
+      "We take pleasure in submitting our competitive offer for your requirement."
+  );
 
   // Fetch company profile & default terms on load
   useEffect(() => {
@@ -606,6 +619,9 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
         warranty: warranty,
         validUntil: validUntil,
         termsAndConditions: termsAndConditions,
+        subject: subject,
+        greeting: greeting,
+        introduction: introduction,
         isActive: true,
         isDeleted: false,
         items: items,
@@ -650,6 +666,9 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
     warranty: warranty,
     validUntil: validUntil,
     termsAndConditions: termsAndConditions,
+    subject: subject,
+    greeting: greeting,
+    introduction: introduction,
     isActive: true,
     isDeleted: false,
     items: items,
@@ -788,10 +807,13 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
                 Section 4
               </span>
               <h3 className="text-sm font-extrabold uppercase tracking-widest text-[#FF7900]">
-                Terms &amp; Delivery
+                Proposal Letter &amp; Terms
               </h3>
             </div>
             <QuotationTerms
+              subject={subject}
+              greeting={greeting}
+              introduction={introduction}
               deliveryPeriod={deliveryPeriod}
               paymentTermId={paymentTermId}
               paymentTermsList={paymentTerms}
@@ -801,6 +823,9 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
               termsAndConditions={termsAndConditions}
               onLoadDefaults={handleLoadDefaults}
               onChange={(f) => {
+                if (f.subject !== undefined) setSubject(f.subject);
+                if (f.greeting !== undefined) setGreeting(f.greeting);
+                if (f.introduction !== undefined) setIntroduction(f.introduction);
                 if (f.deliveryPeriod !== undefined) setDeliveryPeriod(f.deliveryPeriod);
                 if (f.paymentTermId !== undefined) setPaymentTermId(f.paymentTermId);
                 if (f.warranty !== undefined) setWarranty(f.warranty);
@@ -813,10 +838,10 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
 
           <section className="min-w-0 rounded-xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
             <div className="mb-5 flex items-center gap-2 border-b border-gray-200 pb-3">
-              <span className="rounded border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-[11px] font-extrabold uppercase tracking-widest text-[#154068]">
+              <span className="px-2.5 py-0.5 rounded-md text-[11px] font-extrabold uppercase tracking-widest bg-orange-50 text-[#FF7900] border border-[#FF7900]/20">
                 Section 5
               </span>
-              <h3 className="text-sm font-extrabold uppercase tracking-widest text-[#154068]">
+              <h3 className="text-sm font-extrabold uppercase tracking-widest text-[#FF7900]">
                 Proposal Summary
               </h3>
             </div>
@@ -851,6 +876,11 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
         quotation={currentPreviewQuotation}
         companyProfile={companyProfile}
         customer={selectedCustomer}
+        onUpdateFields={(f) => {
+          if (f.subject !== undefined) setSubject(f.subject);
+          if (f.greeting !== undefined) setGreeting(f.greeting);
+          if (f.introduction !== undefined) setIntroduction(f.introduction);
+        }}
       />
     </div>
   );

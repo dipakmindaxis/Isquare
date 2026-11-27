@@ -79,6 +79,9 @@ namespace CompanyPlatform.CRM.Services.Quotation
                 Warranty = quotation.Warranty,
                 ValidUntil = quotation.ValidUntil,
                 TermsAndConditions = quotation.TermsAndConditions,
+                Subject = !string.IsNullOrWhiteSpace(quotation.Subject) ? quotation.Subject : "Offer for PPP",
+                Greeting = !string.IsNullOrWhiteSpace(quotation.Greeting) ? quotation.Greeting : "Dear Sir/Madam,",
+                Introduction = !string.IsNullOrWhiteSpace(quotation.Introduction) ? quotation.Introduction : "We take pleasure in submitting our competitive offer for your requirement.",
                 IsActive = quotation.IsActive,
                 IsDeleted = quotation.IsDeleted
             };
@@ -149,6 +152,9 @@ namespace CompanyPlatform.CRM.Services.Quotation
                 Warranty = dto.Warranty,
                 ValidUntil = dto.ValidUntil,
                 TermsAndConditions = dto.TermsAndConditions,
+                Subject = !string.IsNullOrWhiteSpace(dto.Subject) ? dto.Subject : "Offer for PPP",
+                Greeting = !string.IsNullOrWhiteSpace(dto.Greeting) ? dto.Greeting : "Dear Sir/Madam,",
+                Introduction = !string.IsNullOrWhiteSpace(dto.Introduction) ? dto.Introduction : "We take pleasure in submitting our competitive offer for your requirement.",
 
                 IsActive = true,
                 IsDeleted = false,
@@ -197,6 +203,12 @@ namespace CompanyPlatform.CRM.Services.Quotation
             quotation.Warranty = dto.Warranty;
             quotation.ValidUntil = dto.ValidUntil;
             quotation.TermsAndConditions = dto.TermsAndConditions;
+            if (dto.Subject != null)
+                quotation.Subject = dto.Subject;
+            if (dto.Greeting != null)
+                quotation.Greeting = dto.Greeting;
+            if (dto.Introduction != null)
+                quotation.Introduction = dto.Introduction;
 
             quotation.IsActive = dto.IsActive;
             quotation.UpdatedAt = DateTime.UtcNow;

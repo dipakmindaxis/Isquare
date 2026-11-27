@@ -49,6 +49,7 @@ export const AuditLogPage: React.FC = () => {
 
   // Detail Modal state
   const [selectedAuditLog, setSelectedAuditLog] = useState<AuditLogItem | null>(null);
+  const [selectedSrNo, setSelectedSrNo] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
 
@@ -179,8 +180,9 @@ export const AuditLogPage: React.FC = () => {
   /**
    * View details click handler: opens modal and fetches full details by ID.
    */
-  const handleViewDetails = async (item: AuditLogItem) => {
+  const handleViewDetails = async (item: AuditLogItem, srNo?: number) => {
     setSelectedAuditLog(item);
+    setSelectedSrNo(srNo ?? null);
     setIsModalOpen(true);
     setIsLoadingDetail(true);
 
@@ -300,8 +302,10 @@ export const AuditLogPage: React.FC = () => {
           onClose={() => {
             setIsModalOpen(false);
             setSelectedAuditLog(null);
+            setSelectedSrNo(null);
           }}
           auditLog={selectedAuditLog}
+          srNo={selectedSrNo}
           isLoading={isLoadingDetail}
         />
       )}
