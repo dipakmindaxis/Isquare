@@ -320,6 +320,7 @@ export interface MatchedCustomerSummary {
 
 export interface CustomerDuplicateCheckPayload {
   gstin?: string;
+  mobile?: string;
   companyName?: string;
   customerName?: string;
   pincode?: string;
@@ -330,7 +331,7 @@ export interface CustomerDuplicateCheckResult {
   isDuplicate: boolean;
   isExactMatch: boolean;
   isPossibleMatch: boolean;
-  matchType: "ExactGstinMatch" | "PossibleNamePinMatch" | "None";
+  matchType: "ExactMobileMatch" | "ExactGstinMatch" | "PossibleNamePinMatch" | "None";
   message: string;
   matchedCustomers: MatchedCustomerSummary[];
 }

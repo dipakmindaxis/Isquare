@@ -41,8 +41,10 @@ export const PublicQuotationResponsePage: React.FC = () => {
   const [data, setData] = useState<PublicQuotationResponseDto | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [errorMsg, setErrorMsg] = useState<string>("");
+  const [isApiError, setIsApiError] = useState<boolean>(false);
   const [remarks, setRemarks] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [justSubmitted, setJustSubmitted] = useState<boolean>(false);
   const autoActionTriggeredRef = useRef<boolean>(false);
 
   const loadPublicQuotation = async () => {
@@ -53,13 +55,20 @@ export const PublicQuotationResponsePage: React.FC = () => {
     }
     setIsLoading(true);
     setErrorMsg("");
+    setIsApiError(false);
     try {
       const res = await quotationService.getPublicQuotation(publicResponseId);
       setData(res);
     } catch (err) {
+      const status = axios.isAxiosError(err) ? err.response?.status : undefined;
       const errData = axios.isAxiosError(err) ? err.response?.data : null;
+      const isNotFound = status === 404 || status === 400;
+      setIsApiError(!isNotFound);
       setErrorMsg(
-        getApiErrorMessage(errData) || "This quotation link is invalid or no longer available."
+        getApiErrorMessage(errData) ||
+          (isNotFound
+            ? "This quotation link is invalid or no longer available."
+            : "Unable to connect to the server to load this quotation. Please try again.")
       );
     } finally {
       setIsLoading(false);
@@ -80,6 +89,7 @@ export const PublicQuotationResponsePage: React.FC = () => {
         decision,
         customerRemarks: remarks.trim() || undefined,
       });
+      setJustSubmitted(true);
       await loadPublicQuotation();
     } catch (err) {
       const errData = axios.isAxiosError(err) ? err.response?.data : null;
@@ -119,14 +129,25 @@ export const PublicQuotationResponsePage: React.FC = () => {
   if (!data) {
     return (
       <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
-        <div className="bg-white max-w-md w-full rounded-2xl shadow-lg border border-slate-200 p-8 text-center space-y-3">
-          <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
+        <div className="bg-white max-w-md w-full rounded-none shadow-lg border border-gray-200 p-8 text-center space-y-3">
+          <div className="w-12 h-12 rounded-none bg-rose-50 text-rose-600 border border-rose-200 flex items-center justify-center mx-auto">
             <AlertTriangle size={24} />
           </div>
-          <h2 className="text-lg font-bold text-[#052B50]">Invalid Quotation Link</h2>
-          <p className="text-sm text-slate-600">
+          <h2 className="text-lg font-bold text-gray-900">
+            {isApiError ? "Unable to Load Quotation" : "Invalid Quotation Link"}
+          </h2>
+          <p className="text-sm text-gray-600">
             {errorMsg || "This quotation link is invalid or no longer available."}
           </p>
+          {isApiError && (
+            <button
+              type="button"
+              onClick={loadPublicQuotation}
+              className="mt-2 inline-flex items-center justify-center px-5 py-2 rounded-none bg-[#FF7900] hover:bg-[#e06800] text-white text-xs font-bold transition cursor-pointer"
+            >
+              Retry
+            </button>
+          )}
         </div>
       </div>
     );
@@ -138,70 +159,134 @@ export const PublicQuotationResponsePage: React.FC = () => {
   const canRespond = isPending && !data.isExpired && !data.isRevoked;
 
   if (isAccepted || isRejected) {
+    const isAlreadyRespondedWarning =
+      !justSubmitted &&
+      ((isAccepted && requestedAction === "Rejected") ||
+        (isRejected && requestedAction === "Accepted") ||
+        (isAccepted && requestedAction === "Accepted") ||
+        (isRejected && requestedAction === "Rejected"));
+
+    const headerTitle = isAlreadyRespondedWarning
+      ? isAccepted
+        ? "Quotation Already Accepted"
+        : "Quotation Already Rejected"
+      : isAccepted
+        ? "Quotation Accepted Successfully"
+        : "Quotation Rejected";
+
+    const headerSubtitle = isAlreadyRespondedWarning
+      ? isAccepted
+        ? requestedAction === "Rejected"
+          ? "This quotation has already been accepted and cannot be rejected. Please contact our support or sales team for assistance."
+          : "This quotation has already been accepted. Please contact our support or sales team if you need any changes."
+        : requestedAction === "Accepted"
+          ? "This quotation has already been rejected and cannot be accepted. Please contact our sales team for assistance."
+          : "This quotation has already been rejected. Please contact our sales team if you would like to request a revised quotation."
+      : isAccepted
+        ? "Thank you for confirming this quotation. Our sales team has been notified."
+        : "Your response has been recorded. Thank you for letting us know.";
+
     return (
       <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4 sm:p-6 text-[#172B4D]">
-        <div className="bg-white max-w-lg w-full rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+        <div className="bg-white max-w-lg w-full rounded-none shadow-lg border border-gray-200 overflow-hidden">
           <div
-            className={`px-6 py-8 text-center space-y-3 ${
-              isAccepted
-                ? "bg-emerald-50 border-b border-emerald-100"
-                : "bg-rose-50 border-b border-rose-100"
+            className={`px-6 py-8 text-center space-y-3 border-b ${
+              isAlreadyRespondedWarning
+                ? "bg-amber-50 border-amber-200"
+                : isAccepted
+                  ? "bg-emerald-50 border-emerald-200"
+                  : "bg-rose-50 border-rose-200"
             }`}
           >
             <div
-              className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto ${
-                isAccepted
-                  ? "bg-emerald-100 text-emerald-600"
-                  : "bg-rose-100 text-rose-600"
+              className={`w-14 h-14 rounded-none flex items-center justify-center mx-auto border ${
+                isAlreadyRespondedWarning
+                  ? "bg-amber-100 text-[#FF7900] border-amber-200"
+                  : isAccepted
+                    ? "bg-emerald-100 text-emerald-600 border-emerald-200"
+                    : "bg-rose-100 text-rose-600 border-rose-200"
               }`}
             >
-              {isAccepted ? <CheckCircle2 size={32} /> : <XCircle size={32} />}
+              {isAlreadyRespondedWarning ? (
+                <AlertTriangle size={30} />
+              ) : isAccepted ? (
+                <CheckCircle2 size={32} />
+              ) : (
+                <XCircle size={32} />
+              )}
             </div>
             <h1
               className={`text-xl sm:text-2xl font-bold ${
-                isAccepted ? "text-emerald-900" : "text-rose-900"
+                isAlreadyRespondedWarning
+                  ? "text-gray-900"
+                  : isAccepted
+                    ? "text-emerald-900"
+                    : "text-rose-900"
               }`}
             >
-              {isAccepted ? "Quotation Accepted Successfully" : "Quotation Rejected"}
+              {headerTitle}
             </h1>
-            <p className="text-sm text-slate-600">
-              {isAccepted
-                ? "Thank you for confirming this quotation. Our sales team has been notified."
-                : "Your response has been recorded. Thank you for letting us know."}
-            </p>
+            <p className="text-sm text-gray-600 leading-relaxed">{headerSubtitle}</p>
           </div>
 
           <div className="p-6 space-y-3 text-sm">
-            <div className="flex justify-between py-1.5 border-b border-slate-100">
-              <span className="text-slate-500">Company</span>
-              <span className="font-semibold text-[#052B50]">{data.companyName}</span>
+            <div className="flex justify-between py-2 border-b border-gray-100">
+              <span className="text-gray-500">Company</span>
+              <span className="font-semibold text-gray-900">{data.companyName}</span>
             </div>
-            <div className="flex justify-between py-1.5 border-b border-slate-100">
-              <span className="text-slate-500">Quotation #</span>
-              <span className="font-semibold text-[#052B50]">
+            <div className="flex justify-between py-2 border-b border-gray-100">
+              <span className="text-gray-500">Quotation #</span>
+              <span className="font-semibold text-gray-900">
                 {data.quotationNumber} (R{data.revisionNumber})
               </span>
             </div>
-            <div className="flex justify-between py-1.5 border-b border-slate-100">
-              <span className="text-slate-500">Customer</span>
-              <span className="font-semibold text-slate-700">{data.customerName}</span>
+            <div className="flex justify-between py-2 border-b border-gray-100">
+              <span className="text-gray-500">Customer</span>
+              <span className="font-semibold text-gray-800">{data.customerName}</span>
             </div>
-            <div className="flex justify-between py-1.5 border-b border-slate-100">
-              <span className="text-slate-500">Grand Total</span>
+            <div className="flex justify-between py-2 border-b border-gray-100">
+              <span className="text-gray-500">Status</span>
+              <span
+                className={`font-bold ${
+                  isAccepted ? "text-emerald-700" : "text-rose-700"
+                }`}
+              >
+                {isAccepted ? "Accepted" : "Rejected"}
+              </span>
+            </div>
+            <div className="flex justify-between py-2 border-b border-gray-100">
+              <span className="text-gray-500">Grand Total</span>
               <span className="font-bold text-[#FF7900]">{formatINR(data.grandTotal)}</span>
             </div>
-            <div className="flex justify-between py-1.5 border-b border-slate-100">
-              <span className="text-slate-500">Responded On</span>
-              <span className="font-medium text-slate-700">{formatDate(data.respondedAt)}</span>
+            <div className="flex justify-between py-2 border-b border-gray-100">
+              <span className="text-gray-500">Responded On</span>
+              <span className="font-medium text-gray-700">{formatDate(data.respondedAt)}</span>
             </div>
             {data.customerRemarks && (
               <div className="pt-2">
-                <p className="text-[11px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">
+                <p className="text-[11px] font-extrabold uppercase tracking-widest text-gray-400 mb-1">
                   Remarks
                 </p>
-                <p className="text-xs text-slate-700 bg-slate-50 border border-slate-200 rounded-xl p-3">
+                <p className="text-xs text-gray-700 bg-gray-50 border border-gray-200 rounded-none p-3">
                   {data.customerRemarks}
                 </p>
+              </div>
+            )}
+            {isAlreadyRespondedWarning && (data.companyEmail || data.companyPhone) && (
+              <div className="mt-3 p-3.5 bg-gray-50 border border-gray-200 rounded-none text-xs text-gray-700 space-y-1">
+                <p className="font-bold text-gray-900 uppercase tracking-wider text-[10px]">
+                  Need Help? Contact {isAccepted ? "Support / Sales Team" : "Sales Team"}
+                </p>
+                {data.companyEmail && (
+                  <p>
+                    Email: <span className="font-semibold">{data.companyEmail}</span>
+                  </p>
+                )}
+                {data.companyPhone && (
+                  <p>
+                    Phone: <span className="font-semibold">{data.companyPhone}</span>
+                  </p>
+                )}
               </div>
             )}
           </div>
@@ -214,14 +299,14 @@ export const PublicQuotationResponsePage: React.FC = () => {
     const isAcceptFlow = requestedAction === "Accepted";
     return (
       <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4 sm:p-6 text-[#172B4D]">
-        <div className="bg-white max-w-xl w-full rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
-          <div className="bg-[#052B50] text-white px-6 py-5 flex items-center justify-between gap-4">
+        <div className="bg-white max-w-xl w-full rounded-none shadow-lg border border-gray-200 overflow-hidden">
+          <div className="bg-[#FF7900] text-white px-6 py-5 flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <Building2 size={18} className="text-[#FF7900]" />
+              <Building2 size={18} className="text-white" />
               <span className="text-lg font-bold tracking-tight">{data.companyName}</span>
             </div>
             <div className="text-right">
-              <span className="inline-block px-2.5 py-0.5 rounded-full bg-[#FF7900] text-white text-[10px] font-bold uppercase tracking-wider">
+              <span className="inline-block px-2.5 py-0.5 rounded-none bg-white/20 text-white text-[10px] font-bold uppercase tracking-wider">
                 Commercial Quotation
               </span>
               <p className="text-sm font-bold mt-1">
@@ -232,21 +317,21 @@ export const PublicQuotationResponsePage: React.FC = () => {
 
           <div className="p-6 space-y-5">
             {errorMsg && (
-              <div className="rounded-xl p-3.5 bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
+              <div className="rounded-none p-3.5 bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
                 <AlertTriangle size={15} className="shrink-0" />
                 <span>{errorMsg}</span>
               </div>
             )}
 
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex items-center justify-between gap-4 text-xs">
+            <div className="bg-gray-50 border border-gray-200 rounded-none p-4 flex items-center justify-between gap-4 text-xs">
               <div>
-                <p className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
+                <p className="text-[10px] font-extrabold uppercase tracking-widest text-gray-500">
                   Prepared For
                 </p>
-                <p className="text-sm font-bold text-[#052B50] mt-0.5">{data.customerName}</p>
+                <p className="text-sm font-bold text-gray-900 mt-0.5">{data.customerName}</p>
               </div>
               <div className="text-right">
-                <p className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
+                <p className="text-[10px] font-extrabold uppercase tracking-widest text-gray-500">
                   Grand Total
                 </p>
                 <p className="text-base font-bold text-[#FF7900] mt-0.5">
@@ -256,7 +341,7 @@ export const PublicQuotationResponsePage: React.FC = () => {
             </div>
 
             <div
-              className={`rounded-xl p-4 border flex items-center gap-3 ${
+              className={`rounded-none p-4 border flex items-center gap-3 ${
                 isAcceptFlow
                   ? "bg-emerald-50 border-emerald-200 text-emerald-900"
                   : "bg-rose-50 border-rose-200 text-rose-900"
@@ -275,7 +360,7 @@ export const PublicQuotationResponsePage: React.FC = () => {
             </div>
 
             <div>
-              <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-widest block mb-1.5">
+              <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
                 {isAcceptFlow
                   ? "Remarks / Feedback (Optional)"
                   : "Rejection Remarks (Optional)"}
@@ -289,7 +374,7 @@ export const PublicQuotationResponsePage: React.FC = () => {
                     ? "Add any comments or instructions regarding this quotation..."
                     : "Optionally share the reason for rejecting this quotation..."
                 }
-                className="w-full text-sm px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 focus:border-[#FF7900]"
+                className="w-full text-sm px-3.5 py-2.5 bg-white border border-gray-300 rounded-none focus:outline-none focus:ring-1 focus:ring-[#FF7900] focus:border-[#FF7900]"
               />
             </div>
 
@@ -298,7 +383,7 @@ export const PublicQuotationResponsePage: React.FC = () => {
                 type="button"
                 disabled={isSubmitting}
                 onClick={() => handleDecision(requestedAction)}
-                className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-white text-sm font-bold shadow-xs transition cursor-pointer disabled:opacity-50 ${
+                className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-none text-white text-sm font-bold shadow-xs transition cursor-pointer disabled:opacity-50 ${
                   isAcceptFlow
                     ? "bg-emerald-600 hover:bg-emerald-700"
                     : "bg-rose-600 hover:bg-rose-700"
@@ -327,8 +412,8 @@ export const PublicQuotationResponsePage: React.FC = () => {
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Expired / Revoked Banner */}
         {!canRespond && (
-          <div className="rounded-2xl p-5 border shadow-xs flex items-start gap-3.5 bg-amber-50 border-amber-200 text-amber-900">
-            <ShieldAlert className="w-6 h-6 text-amber-600 shrink-0 mt-0.5" />
+          <div className="rounded-none p-5 border shadow-xs flex items-start gap-3.5 bg-amber-50 border-amber-200 text-amber-900">
+            <ShieldAlert className="w-6 h-6 text-[#FF7900] shrink-0 mt-0.5" />
             <div className="space-y-1">
               <h3 className="text-base font-bold">
                 {data.isRevoked ? "Quotation Link Revoked" : "Quotation Link Expired"}
@@ -343,27 +428,27 @@ export const PublicQuotationResponsePage: React.FC = () => {
         )}
 
         {errorMsg && (
-          <div className="rounded-xl p-4 bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-center gap-2.5">
+          <div className="rounded-none p-4 bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-center gap-2.5">
             <AlertTriangle size={16} className="shrink-0" />
             <span>{errorMsg}</span>
           </div>
         )}
 
         {/* Main Quotation Card */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="bg-white rounded-none shadow-sm border border-gray-200 overflow-hidden">
           {/* Brand Header */}
-          <div className="bg-[#052B50] text-white p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="bg-[#FF7900] text-white p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <Building2 size={20} className="text-[#FF7900]" />
+                <Building2 size={20} className="text-white" />
                 <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
                   {data.companyName}
                 </h1>
               </div>
               {data.companyAddress && (
-                <p className="text-xs text-slate-300 max-w-md">{data.companyAddress}</p>
+                <p className="text-xs text-white/90 max-w-md">{data.companyAddress}</p>
               )}
-              <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-300 pt-1">
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-white/90 pt-1">
                 {data.companyGstin && <span>GSTIN: {data.companyGstin}</span>}
                 {data.companyEmail && <span>Email: {data.companyEmail}</span>}
                 {data.companyPhone && <span>Phone: {data.companyPhone}</span>}
@@ -371,7 +456,7 @@ export const PublicQuotationResponsePage: React.FC = () => {
             </div>
 
             <div className="sm:text-right space-y-1">
-              <span className="inline-block px-3 py-1 rounded-full bg-[#FF7900] text-white text-[11px] font-bold uppercase tracking-wider">
+              <span className="inline-block px-3 py-1 rounded-none bg-white/20 text-white text-[11px] font-bold uppercase tracking-wider">
                 Commercial Quotation
               </span>
               <p className="text-lg font-bold">
@@ -382,7 +467,7 @@ export const PublicQuotationResponsePage: React.FC = () => {
 
           {/* Customer & Quotation Info */}
           <div className="p-6 sm:p-8 space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 border border-slate-200 rounded-xl p-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-gray-50 border border-gray-200 rounded-none p-4">
               <div className="space-y-1">
                 <p className="text-[11px] font-extrabold uppercase tracking-widest text-slate-500">
                   Prepared For
@@ -435,7 +520,7 @@ export const PublicQuotationResponsePage: React.FC = () => {
             </div>
 
             {/* Line Items Table */}
-            <div className="overflow-x-auto border border-slate-200 rounded-xl">
+            <div className="overflow-x-auto border border-gray-200 rounded-none">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="bg-slate-100 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[11px]">
@@ -488,18 +573,18 @@ export const PublicQuotationResponsePage: React.FC = () => {
             <div className="flex flex-col sm:flex-row justify-between gap-6">
               <div className="flex-1 space-y-2">
                 {data.termsAndConditions && (
-                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                  <div className="p-4 bg-gray-50 border border-gray-200 rounded-none space-y-1">
                     <p className="text-[11px] font-extrabold uppercase tracking-widest text-[#FF7900] flex items-center gap-1.5">
                       <FileText size={12} /> Terms & Conditions
                     </p>
-                    <p className="text-xs text-slate-600 whitespace-pre-line leading-relaxed">
+                    <p className="text-xs text-gray-600 whitespace-pre-line leading-relaxed">
                       {data.termsAndConditions}
                     </p>
                   </div>
                 )}
               </div>
 
-              <div className="w-full sm:w-80 bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2 text-xs">
+              <div className="w-full sm:w-80 bg-gray-50 border border-gray-200 rounded-none p-4 space-y-2 text-xs">
                 <div className="flex justify-between text-slate-600">
                   <span>Subtotal</span>
                   <span className="font-semibold">{formatINR(data.subtotal)}</span>
@@ -545,10 +630,10 @@ export const PublicQuotationResponsePage: React.FC = () => {
 
             {/* Customer Response Action Bar */}
             {canRespond && (
-              <div className="border-t border-slate-200 pt-6 space-y-4">
+              <div className="border-t border-gray-200 pt-6 space-y-4">
                 {requestedAction && (
                   <div
-                    className={`rounded-xl p-4 border flex items-center gap-3 ${
+                    className={`rounded-none p-4 border flex items-center gap-3 ${
                       requestedAction === "Accepted"
                         ? "bg-emerald-50 border-emerald-200 text-emerald-900"
                         : "bg-rose-50 border-rose-200 text-rose-900"
@@ -568,7 +653,7 @@ export const PublicQuotationResponsePage: React.FC = () => {
                 )}
 
                 <div>
-                  <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-widest block mb-1.5">
+                  <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1.5">
                     {requestedAction === "Rejected"
                       ? "Rejection Remarks (Optional)"
                       : "Remarks / Feedback (Optional)"}
@@ -582,7 +667,7 @@ export const PublicQuotationResponsePage: React.FC = () => {
                         ? "Optionally share the reason for rejecting this quotation..."
                         : "Add any comments or instructions regarding this quotation..."
                     }
-                    className="w-full text-sm px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 focus:border-[#FF7900]"
+                    className="w-full text-sm px-3.5 py-2.5 bg-white border border-gray-300 rounded-none focus:outline-none focus:ring-1 focus:ring-[#FF7900] focus:border-[#FF7900]"
                   />
                 </div>
 
@@ -592,7 +677,7 @@ export const PublicQuotationResponsePage: React.FC = () => {
                       type="button"
                       disabled={isSubmitting}
                       onClick={() => handleDecision("Rejected")}
-                      className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-bold shadow-xs transition cursor-pointer disabled:opacity-50"
+                      className="inline-flex items-center gap-2 px-6 py-2.5 rounded-none bg-rose-600 hover:bg-rose-700 text-white text-sm font-bold shadow-xs transition cursor-pointer disabled:opacity-50"
                     >
                       {isSubmitting ? (
                         <Loader2 size={16} className="animate-spin" />
@@ -610,7 +695,7 @@ export const PublicQuotationResponsePage: React.FC = () => {
                       type="button"
                       disabled={isSubmitting}
                       onClick={() => handleDecision("Accepted")}
-                      className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold shadow-xs transition cursor-pointer disabled:opacity-50"
+                      className="inline-flex items-center gap-2 px-6 py-2.5 rounded-none bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold shadow-xs transition cursor-pointer disabled:opacity-50"
                     >
                       {isSubmitting ? (
                         <Loader2 size={16} className="animate-spin" />

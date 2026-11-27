@@ -14,9 +14,8 @@ namespace CompanyPlatform.CRM.DTO
         [StringLength(30)]
         public string AddressType { get; set; } = string.Empty;
 
-        [Required]
         [StringLength(500)]
-        public string Address { get; set; } = string.Empty;
+        public string? Address { get; set; } = string.Empty;
 
         [StringLength(150)]
         public string? LocationName { get; set; }

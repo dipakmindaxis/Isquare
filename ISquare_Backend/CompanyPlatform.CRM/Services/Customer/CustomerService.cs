@@ -254,20 +254,20 @@ namespace CompanyPlatform.CRM.Services.Customer
             {
                 var companies = (await _repository.GetAll()).ToList();
 
-                // Exact GSTIN duplicate check: Prevent duplicate Customer Master records with the same GSTIN
-                if (!string.IsNullOrWhiteSpace(dto.GSTIN))
+                // Exact Mobile Number duplicate check: Prevent duplicate Customer Master records with the same Mobile Number
+                var normalizedMobile = NormalizeMobile(dto.Mobile);
+                if (!string.IsNullOrWhiteSpace(normalizedMobile))
                 {
-                    var normalizedGstin = NormalizeGstin(dto.GSTIN);
-                    var existingGstinCustomer = companies.FirstOrDefault(c =>
+                    var existingMobileCustomer = companies.FirstOrDefault(c =>
                         !c.IsDeleted &&
-                        !string.IsNullOrWhiteSpace(c.GSTIN) &&
-                        NormalizeGstin(c.GSTIN) == normalizedGstin);
+                        (NormalizeMobile(c.Mobile) == normalizedMobile ||
+                         NormalizeMobile(c.AlternateMobile) == normalizedMobile));
 
-                    if (existingGstinCustomer != null)
+                    if (existingMobileCustomer != null)
                     {
-                        _logger.LogWarning("Duplicate GSTIN detected on create: '{GSTIN}' matches Customer {CustomerCode} ({CustomerName})",
-                            dto.GSTIN, existingGstinCustomer.CompanyCode, existingGstinCustomer.CompanyName);
-                        throw new InvalidOperationException($"Cannot create duplicate customer. A customer with GSTIN '{dto.GSTIN.Trim()}' already exists ({existingGstinCustomer.CompanyCode} - {existingGstinCustomer.CompanyName}). Please add an address to the existing customer instead.");
+                        _logger.LogWarning("Duplicate Mobile detected on create: '{Mobile}' matches Customer {CustomerCode} ({CustomerName})",
+                            dto.Mobile, existingMobileCustomer.CompanyCode, existingMobileCustomer.CompanyName);
+                        throw new InvalidOperationException($"Cannot create duplicate customer. A customer with Mobile Number '{dto.Mobile!.Trim()}' already exists ({existingMobileCustomer.CompanyCode} - {existingMobileCustomer.CompanyName}). Please add an address to the existing customer instead.");
                     }
                 }
 
@@ -486,23 +486,23 @@ namespace CompanyPlatform.CRM.Services.Customer
             if (entity == null || entity.IsDeleted)
                 return false;
 
-            // Check duplicate GSTIN only if GSTIN was changed to a different value
-            if (!string.IsNullOrWhiteSpace(dto.GSTIN))
+            // Check duplicate Mobile Number only if Mobile was changed to a different value
+            var normalizedMobile = NormalizeMobile(dto.Mobile);
+            if (!string.IsNullOrWhiteSpace(normalizedMobile))
             {
-                var normalizedGstin = NormalizeGstin(dto.GSTIN);
-                var currentNormalized = NormalizeGstin(entity.GSTIN);
-                if (normalizedGstin != currentNormalized)
+                var currentNormalizedMobile = NormalizeMobile(entity.Mobile);
+                if (normalizedMobile != currentNormalizedMobile)
                 {
                     var allActiveCompanies = (await _repository.GetAll()).Where(c => !c.IsDeleted && c.CompanyId != id).ToList();
-                    var duplicateGstin = allActiveCompanies.FirstOrDefault(c =>
-                        !string.IsNullOrWhiteSpace(c.GSTIN) &&
-                        NormalizeGstin(c.GSTIN) == normalizedGstin);
+                    var duplicateMobile = allActiveCompanies.FirstOrDefault(c =>
+                        NormalizeMobile(c.Mobile) == normalizedMobile ||
+                        NormalizeMobile(c.AlternateMobile) == normalizedMobile);
 
-                    if (duplicateGstin != null)
+                    if (duplicateMobile != null)
                     {
-                        _logger.LogWarning("Duplicate GSTIN detected on update: '{GSTIN}' matches Customer {CustomerCode} ({CustomerName})",
-                            dto.GSTIN, duplicateGstin.CompanyCode, duplicateGstin.CompanyName);
-                        throw new InvalidOperationException($"Cannot update customer. Another customer with GSTIN '{dto.GSTIN.Trim()}' already exists ({duplicateGstin.CompanyCode} - {duplicateGstin.CompanyName}).");
+                        _logger.LogWarning("Duplicate Mobile detected on update: '{Mobile}' matches Customer {CustomerCode} ({CustomerName})",
+                            dto.Mobile, duplicateMobile.CompanyCode, duplicateMobile.CompanyName);
+                        throw new InvalidOperationException($"Cannot update customer. Another customer with Mobile Number '{dto.Mobile!.Trim()}' already exists ({duplicateMobile.CompanyCode} - {duplicateMobile.CompanyName}).");
                     }
                 }
             }
@@ -1059,6 +1059,15 @@ namespace CompanyPlatform.CRM.Services.Customer
             return UpdateCustomerAsync(id, updateDto);
         }
 
+        private static string NormalizeMobile(string? mobile)
+        {
+            if (string.IsNullOrWhiteSpace(mobile)) return string.Empty;
+            var digits = new string(mobile.Where(char.IsDigit).ToArray());
+            if (digits.Length >= 10)
+                return digits.Substring(digits.Length - 10);
+            return digits;
+        }
+
         private static string NormalizeGstin(string? gstin)
         {
             if (string.IsNullOrWhiteSpace(gstin)) return string.Empty;
@@ -1090,29 +1099,29 @@ namespace CompanyPlatform.CRM.Services.Customer
                 allCompanies = allCompanies.Where(c => c.CompanyId != dto.ExcludeCustomerId.Value).ToList();
             }
 
-            var normalizedGstin = NormalizeGstin(dto.GSTIN);
+            var normalizedMobile = NormalizeMobile(dto.Mobile);
 
-            // 1. Exact GSTIN Match Check (Hard Block)
-            if (!string.IsNullOrWhiteSpace(normalizedGstin))
+            // 1. Exact Mobile Number Match Check (Hard Block)
+            if (!string.IsNullOrWhiteSpace(normalizedMobile) && normalizedMobile.Length >= 10)
             {
-                var gstinMatches = allCompanies.Where(c =>
-                    !string.IsNullOrWhiteSpace(c.GSTIN) &&
-                    NormalizeGstin(c.GSTIN) == normalizedGstin
+                var mobileMatches = allCompanies.Where(c =>
+                    NormalizeMobile(c.Mobile) == normalizedMobile ||
+                    NormalizeMobile(c.AlternateMobile) == normalizedMobile
                 ).ToList();
 
-                if (gstinMatches.Any())
+                if (mobileMatches.Any())
                 {
                     result.IsDuplicate = true;
                     result.IsExactMatch = true;
                     result.IsPossibleMatch = false;
-                    result.MatchType = "ExactGstinMatch";
-                    result.Message = $"Customer with GSTIN '{normalizedGstin}' already exists.";
+                    result.MatchType = "ExactMobileMatch";
+                    result.Message = $"Customer with Mobile Number '{dto.Mobile!.Trim()}' already exists.";
 
                     var allAddresses = (await _addressRepository.GetAll()).Where(a => !a.IsDeleted).ToList();
                     var cities = (await _cityRepository.GetAll()).ToList();
                     var states = (await _stateRepository.GetAll()).ToList();
 
-                    result.MatchedCustomers = gstinMatches.Select(c =>
+                    result.MatchedCustomers = mobileMatches.Select(c =>
                     {
                         var custAddrs = allAddresses.Where(a => a.CompanyId == c.CompanyId).ToList();
                         var priAddr = custAddrs.FirstOrDefault(a => a.IsPrimary) ?? custAddrs.FirstOrDefault();

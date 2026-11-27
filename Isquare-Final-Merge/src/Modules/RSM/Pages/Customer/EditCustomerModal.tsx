@@ -9,6 +9,7 @@ import {
   Users,
   MapPin,
   Calendar,
+  AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { buttonStyles } from "../../../../Components/Common/buttonStyles";
@@ -102,7 +103,8 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
   const [salesCoordinators, setSalesCoordinators] = useState<SalesCoordinatorItem[]>([]);
   const [selectedCoordinatorIds, setSelectedCoordinatorIds] = useState<number[]>([]);
   const [customerOwnerValue, setCustomerOwnerValue] = useState<string>("");
-  const initialGstinRef = React.useRef<string>("");
+  const initialMobileRef = React.useRef<string>("");
+  const [duplicatePopupMsg, setDuplicatePopupMsg] = useState<string | null>(null);
   // isAddCoordinatorOpen removed
 
 
@@ -301,7 +303,7 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
 
           setCustomerOwnerValue(resolvedOwnerVal);
 
-          initialGstinRef.current = (customerRes.gstin || "").trim().toUpperCase();
+          initialMobileRef.current = (customerRes.mobile || "").replace(/\D+/g, "").slice(-10);
 
           const mergedAddresses =
             addressesRes && addressesRes.length > 0
@@ -395,18 +397,24 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
       toast.error("Customer Name is required.");
       return;
     }
+    if (!formData.mobile?.trim()) {
+      toast.error("Mobile Number is required.");
+      return;
+    }
 
-    // Only check duplicate GSTIN if GSTIN was changed by the user to a different value
-    const currentGstin = (formData.gstin || "").trim().toUpperCase();
-    if (currentGstin && currentGstin !== initialGstinRef.current) {
+    // Only check duplicate Mobile Number if Mobile was changed by the user to a different value
+    const currentMobile = (formData.mobile || "").trim();
+    const normCurrentMobile = currentMobile.replace(/\D+/g, "").slice(-10);
+    if (normCurrentMobile.length >= 10 && normCurrentMobile !== initialMobileRef.current) {
       try {
         const dupCheck = await checkCustomerDuplicate({
-          gstin: currentGstin,
+          mobile: currentMobile,
           excludeCustomerId: customerId,
         });
         if (dupCheck && dupCheck.isExactMatch) {
-          toast.error(
-            `Cannot update: GSTIN '${currentGstin}' is already registered with another customer (${dupCheck.matchedCustomers[0]?.customerCode || ""}).`
+          const matched = dupCheck.matchedCustomers?.[0];
+          setDuplicatePopupMsg(
+            `A company record already exists for "${matched?.companyName || matched?.customerName || "another customer"}". Please add a different company.`
           );
           return;
         }
@@ -418,15 +426,14 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
     if (formData.addresses && formData.addresses.length > 0) {
       for (let i = 0; i < formData.addresses.length; i++) {
         const addr = formData.addresses[i];
-        if (addr.address?.trim() || addr.locationName?.trim()) {
-          if (!addr.locationName?.trim()) {
-            toast.error(`Address #${i + 1}: Plant / Location Name is required.`);
-            return;
-          }
-          if (!addr.address?.trim()) {
-            toast.error(`Address #${i + 1}: Full Address is required.`);
-            return;
-          }
+        const hasContent = Boolean(
+          addr.address?.trim() ||
+          addr.locationName?.trim() ||
+          addr.plantCode?.trim() ||
+          addr.pincode?.trim() ||
+          (addr.addressId && addr.addressId > 0)
+        );
+        if (hasContent) {
           if (!addr.isBilling && !addr.isDelivery && !addr.isShipping) {
             toast.error(`Address #${i + 1}: Please select at least one Address Use (Billing or Delivery).`);
             return;
@@ -557,14 +564,22 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
         isActive: formData.isActive !== false,
         plantCode: primaryPlantCode || undefined,
         addresses: (formData.addresses || [])
-          .filter((addr) => Boolean(addr.address?.trim() || addr.locationName?.trim()))
+          .filter((addr) =>
+            Boolean(
+              addr.address?.trim() ||
+              addr.locationName?.trim() ||
+              addr.plantCode?.trim() ||
+              addr.pincode?.trim() ||
+              (addr.addressId && addr.addressId > 0)
+            )
+          )
           .map((addr) => ({
             addressId: addr.addressId && addr.addressId > 0 ? addr.addressId : undefined,
             companyId: customerId,
             locationName: addr.locationName?.trim() || null,
             plantCode: addr.plantCode?.trim() || null,
             addressType: addr.addressType?.trim() || "Plant / Factory",
-            address: addr.address.trim(),
+            address: addr.address?.trim() || "",
             countryId: addr.countryId ? Number(addr.countryId) : 1,
             stateId: addr.stateId ? Number(addr.stateId) : 1,
             cityId: addr.cityId ? Number(addr.cityId) : 1,
@@ -723,7 +738,7 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
 
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
-                      Mobile Number
+                      Mobile Number <span className="text-red-500 ml-1">*</span>
                     </label>
                     <input
                       type="tel"
@@ -731,6 +746,7 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
                       value={formData.mobile || ""}
                       onChange={handleInputChange}
                       placeholder="e.g. 9876543210"
+                      required
                       className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-orange-200 transition bg-white text-sm text-gray-700 placeholder:text-gray-400 min-h-[44px]"
                     />
                   </div>
@@ -1158,6 +1174,30 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
       </form>
 
 
+      {duplicatePopupMsg && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/45 p-4">
+          <div className="bg-white w-full max-w-md rounded-none shadow-2xl border border-gray-200 p-6">
+            <div className="flex items-start gap-4">
+              <div className="w-11 h-11 rounded-full bg-red-50 text-red-600 flex items-center justify-center shrink-0">
+                <AlertTriangle size={20} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="text-base font-bold text-gray-900">Duplicate Record</h4>
+                <p className="text-sm text-gray-600 mt-1 leading-relaxed">{duplicatePopupMsg}</p>
+              </div>
+            </div>
+            <div className="flex justify-end mt-6">
+              <button
+                type="button"
+                onClick={() => setDuplicatePopupMsg(null)}
+                className="px-5 py-2 rounded-none bg-red-600 hover:bg-red-700 text-white text-xs font-bold cursor-pointer"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

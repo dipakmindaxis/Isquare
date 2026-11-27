@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace CompanyPlatform.CRM.DTO.Enquiry
@@ -68,7 +68,6 @@ namespace CompanyPlatform.CRM.DTO.Enquiry
         public string? DepartmentMasterName { get; set; }
         public int? SalesTerritoryId { get; set; }
         public string? SalesTerritoryName { get; set; }
-        public string? ResponsiblePerson { get; set; }
 
         // Follow-up
         public DateTime? NextFollowUpDate { get; set; }
@@ -156,7 +155,6 @@ namespace CompanyPlatform.CRM.DTO.Enquiry
         public string? BDEUserName { get; set; }
         public int? DepartmentId { get; set; }
         public int? SalesTerritoryId { get; set; }
-        public string? ResponsiblePerson { get; set; }
 
         public DateTime? NextFollowUpDate { get; set; }
         public int? ActivityTypeId { get; set; }

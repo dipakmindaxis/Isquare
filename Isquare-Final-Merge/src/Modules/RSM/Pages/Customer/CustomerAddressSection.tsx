@@ -253,7 +253,7 @@ const CustomerAddressSection: React.FC<CustomerAddressSectionProps> = ({
                   {/* Plant / Location Name */}
                   <div>
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
-                      Plant / Location Name <span className="text-red-500">*</span>
+                      Plant / Location Name
                     </label>
                     {readOnly ? (
                       <p className="font-medium text-gray-900 py-1">{addr.locationName || "-"}</p>
@@ -312,7 +312,7 @@ const CustomerAddressSection: React.FC<CustomerAddressSectionProps> = ({
                   {/* Full Address / Street (Spans 2 columns) */}
                   <div className="md:col-span-2">
                     <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">
-                      Full Address / Street <span className="text-red-500">*</span>
+                      Full Address / Street
                     </label>
                     {readOnly ? (
                       <p className="font-medium text-gray-900 py-1">{addr.address || "-"}</p>

@@ -57,7 +57,6 @@ export interface EnquiryDto {
   departmentMasterName?: string;
   salesTerritoryId?: number;
   salesTerritoryName?: string;
-  responsiblePerson?: string;
 
   nextFollowUpDate?: string;
   activityTypeId?: number;

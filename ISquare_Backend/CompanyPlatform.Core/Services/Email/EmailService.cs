@@ -57,9 +57,17 @@ namespace CompanyPlatform.Core.Services.Email
 
 
         public Task SendEmailAsync(string toEmail, string subject, string body)
-            => SendEmailAsync(toEmail, subject, body, null);
+            => SendEmailAsync(toEmail, subject, body, null, null);
 
-        public async Task SendEmailAsync(string toEmail, string subject, string body, IEnumerable<EmailInlineImage>? inlineImages)
+        public Task SendEmailAsync(string toEmail, string subject, string body, IEnumerable<EmailInlineImage>? inlineImages)
+            => SendEmailAsync(toEmail, subject, body, inlineImages, null);
+
+        public async Task SendEmailAsync(
+            string toEmail,
+            string subject,
+            string body,
+            IEnumerable<EmailInlineImage>? inlineImages,
+            IEnumerable<EmailAttachment>? attachments)
         {
             _logger.LogInformation("SendEmailAsync triggered for {Email}", toEmail);
 
@@ -86,6 +94,18 @@ namespace CompanyPlatform.Core.Services.Email
                         img.Content,
                         ContentType.Parse(img.MimeType));
                     linked.ContentId = img.ContentId;
+                }
+            }
+
+            if (attachments != null)
+            {
+                foreach (var att in attachments)
+                {
+                    if (att.Content == null || att.Content.Length == 0) continue;
+                    builder.Attachments.Add(
+                        att.FileName,
+                        att.Content,
+                        ContentType.Parse(att.MimeType));
                 }
             }
 
