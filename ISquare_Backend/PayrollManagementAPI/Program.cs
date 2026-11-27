@@ -221,8 +221,10 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowReactApp", policy =>
     {
         policy.WithOrigins(
-            "http://localhost:5173", 
-            "http://localhost:5174")
+            "http://localhost:5173",
+            "http://localhost:5174",
+            "https://vishalkakde-001-site1.etempurl.com",
+            "http://vishalkakde-001-site1.etempurl.com")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();

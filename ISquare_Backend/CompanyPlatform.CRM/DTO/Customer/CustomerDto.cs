@@ -23,6 +23,7 @@ namespace CompanyPlatform.CRM.DTO.Customer
         public string? PlantCode { get; set; }
         public string? Email { get; set; }
         public string? AlternateEmail { get; set; }
+        [Required(ErrorMessage = "Mobile Number is required.")]
         public string? Mobile { get; set; }
         public string? AlternateMobile { get; set; }
 

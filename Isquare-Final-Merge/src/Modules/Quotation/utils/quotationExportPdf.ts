@@ -277,8 +277,35 @@ export async function exportQuotationToPdf(
     companyProfile,
     customer,
     effectiveShowDiscount,
-    options
+    options,
+    false
   );
+}
+
+/**
+ * Generates the exact same customer-facing Quotation PDF and returns its filename and base64 content
+ * so it can be attached to outgoing quotation emails.
+ */
+export async function generateQuotationPdfBase64(
+  quotation: Quotation,
+  companyProfile?: CompanyProfile | null,
+  customer?: Customer | null,
+  showDiscount?: boolean,
+  options?: ExportPdfOptions
+): Promise<{ fileName: string; base64: string }> {
+  const effectiveShowDiscount =
+    showDiscount !== undefined ? showDiscount : hasQuotationDiscount(quotation);
+
+  const result = await generateProgrammaticPdf(
+    quotation,
+    companyProfile,
+    customer,
+    effectiveShowDiscount,
+    options,
+    true
+  );
+
+  return result!;
 }
 
 /**
@@ -300,8 +327,9 @@ async function generateProgrammaticPdf(
   companyProfile?: CompanyProfile | null,
   customer?: Customer | null,
   showDiscount: boolean = true,
-  options?: ExportPdfOptions
-) {
+  options?: ExportPdfOptions,
+  returnBase64: boolean = false
+): Promise<{ fileName: string; base64: string } | void> {
   // 1. Resolve Master Products for fallback images & HSN
   let masterProducts: Product[] = options?.masterProducts || [];
   if (masterProducts.length === 0) {
@@ -892,6 +920,13 @@ async function generateProgrammaticPdf(
     doc.text(`Page ${page} of ${totalPages}`, rightX, pageHeight - 5, {
       align: "right",
     });
+  }
+
+  if (returnBase64) {
+    const dataUri = doc.output("datauristring");
+    const commaIdx = dataUri.indexOf(",");
+    const base64 = commaIdx >= 0 ? dataUri.slice(commaIdx + 1) : dataUri;
+    return { fileName: `${quotationNumber}.pdf`, base64 };
   }
 
   doc.save(`${quotationNumber}_CustomerQuotation.pdf`);

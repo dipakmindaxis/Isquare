@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -115,9 +115,6 @@ namespace CompanyPlatform.Core.Models.CRM
         public int? DepartmentId { get; set; }
 
         public int? SalesTerritoryId { get; set; }
-
-        [MaxLength(150)]
-        public string? ResponsiblePerson { get; set; }
 
         // --- 07. Follow-up / Sales Activity ---
         [Column(TypeName = "date")]

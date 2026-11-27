@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Mail, Send, X, Loader2, CheckCircle2, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
-import { quotationService, getApiErrorMessage } from "../services/quotationService";
+import { quotationService, companyProfileService, getApiErrorMessage } from "../services/quotationService";
 import type { Quotation, QuotationCustomerResponseDto } from "../models/quotationModels";
+import { buildQuotationEmailHtml } from "../utils/quotationEmailTemplate";
+import { generateQuotationPdfBase64 } from "../utils/quotationExportPdf";
+import { getCustomerById } from "../../RSM/Pages/Customer/Services/CustomerService";
 import axios from "axios";
 
 interface SendQuotationEmailModalProps {
@@ -53,10 +56,48 @@ export const SendQuotationEmailModal: React.FC<SendQuotationEmailModalProps> = (
 
     setIsSending(true);
     try {
+      let fullQuotation = quotation;
+      if (!fullQuotation.items || fullQuotation.items.length === 0) {
+        try {
+          const fetched = await quotationService.getById(quotation.quotationId);
+          if (fetched) fullQuotation = fetched;
+        } catch {
+          // fallback to passed quotation
+        }
+      }
+
+      const [profilesRes, customerRes] = await Promise.all([
+        companyProfileService.getAll().catch(() => []),
+        fullQuotation.customerId
+          ? getCustomerById(fullQuotation.customerId).catch(() => null)
+          : Promise.resolve(null),
+      ]);
+      const companyProfile =
+        profilesRes.find((p) => p.isDefault && p.isActive) ||
+        profilesRes.find((p) => p.isActive) ||
+        profilesRes[0] ||
+        null;
+
+      const [htmlBody, pdfAttachment] = await Promise.all([
+        buildQuotationEmailHtml(fullQuotation, {
+          companyProfile,
+          customer: customerRes,
+          customMessage: message.trim() || undefined,
+        }),
+        generateQuotationPdfBase64(fullQuotation, companyProfile, customerRes),
+      ]);
+
+      if (!pdfAttachment?.base64) {
+        throw new Error("Failed to generate Quotation PDF attachment.");
+      }
+
       const res = await quotationService.sendEmail(quotation.quotationId, {
         customerEmail: customerEmail.trim(),
         subject: subject.trim() || undefined,
         message: message.trim() || undefined,
+        htmlBody,
+        pdfBase64: pdfAttachment.base64,
+        pdfFileName: pdfAttachment.fileName,
       });
       toast.success(res.message || "Quotation email sent successfully.");
       setSentResult(res.data);
@@ -65,7 +106,8 @@ export const SendQuotationEmailModal: React.FC<SendQuotationEmailModalProps> = (
       }
     } catch (err) {
       const errData = axios.isAxiosError(err) ? err.response?.data : null;
-      toast.error(getApiErrorMessage(errData) || "Failed to send quotation email.");
+      const fallbackMsg = err instanceof Error ? err.message : "Failed to send quotation email.";
+      toast.error(getApiErrorMessage(errData) || fallbackMsg);
     } finally {
       setIsSending(false);
     }
@@ -75,7 +117,7 @@ export const SendQuotationEmailModal: React.FC<SendQuotationEmailModalProps> = (
     const url =
       sentResult?.publicUrl ||
       (sentResult?.publicResponseId
-        ? `${window.location.origin}/quotation-response/${sentResult.publicResponseId}`
+        ? `${window.location.origin}/frontend/quotation-response/${sentResult.publicResponseId}`
         : "");
     if (!url) return;
     navigator.clipboard.writeText(url);
@@ -85,14 +127,14 @@ export const SendQuotationEmailModal: React.FC<SendQuotationEmailModalProps> = (
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-      <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-gray-200 overflow-hidden animate-in fade-in duration-150">
-        <div className="flex items-center justify-between bg-[#052B50] text-white px-6 py-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+      <div className="bg-white w-full max-w-lg rounded-none shadow-2xl border border-gray-200 overflow-hidden animate-in fade-in duration-150">
+        <div className="flex items-center justify-between bg-[#FF7900] text-white px-6 py-4">
           <div className="flex items-center gap-2.5">
-            <Mail size={18} className="text-[#FF7900]" />
+            <Mail size={18} className="text-white" />
             <div>
               <h3 className="text-base font-bold text-white">Send Quotation Email</h3>
-              <p className="text-[11px] text-slate-300">
+              <p className="text-[11px] text-white/90">
                 {quotation.quotationNumber || `QT-${quotation.quotationId}`} (R{quotation.revisionNumber})
                 {customerName ? ` • ${customerName}` : ""}
               </p>
@@ -101,7 +143,7 @@ export const SendQuotationEmailModal: React.FC<SendQuotationEmailModalProps> = (
           <button
             type="button"
             onClick={onClose}
-            className="text-white/80 hover:text-white p-1.5 hover:bg-white/10 rounded-lg transition cursor-pointer"
+            className="text-white/85 hover:text-white p-1.5 hover:bg-white/15 rounded-none transition cursor-pointer"
           >
             <X size={18} />
           </button>
@@ -113,18 +155,18 @@ export const SendQuotationEmailModal: React.FC<SendQuotationEmailModalProps> = (
               <CheckCircle2 size={26} />
             </div>
             <div className="space-y-1">
-              <h4 className="text-base font-bold text-[#052B50]">
+              <h4 className="text-base font-bold text-gray-900">
                 Quotation Email Sent Successfully
               </h4>
-              <p className="text-xs text-slate-600">
-                Sent to <span className="font-semibold text-[#052B50]">{sentResult.customerEmail}</span>.
+              <p className="text-xs text-gray-600">
+                Sent to <span className="font-semibold text-gray-900">{sentResult.customerEmail}</span>.
                 Customer can preview and Accept or Reject directly via the secure link.
               </p>
             </div>
 
             {sentResult.publicResponseId && (
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-left space-y-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
+              <div className="p-3 bg-gray-50 border border-gray-200 rounded-none text-left space-y-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 block">
                   Public Customer Link
                 </span>
                 <div className="flex items-center gap-2">
@@ -133,14 +175,14 @@ export const SendQuotationEmailModal: React.FC<SendQuotationEmailModalProps> = (
                     readOnly
                     value={
                       sentResult.publicUrl ||
-                      `${window.location.origin}/quotation-response/${sentResult.publicResponseId}`
+                      `${window.location.origin}/frontend/quotation-response/${sentResult.publicResponseId}`
                     }
-                    className="w-full text-xs bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 font-mono"
+                    className="w-full text-xs bg-white border border-gray-200 rounded-none px-2.5 py-1.5 text-gray-700 font-mono"
                   />
                   <button
                     type="button"
                     onClick={handleCopyLink}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#052B50] hover:bg-[#073a6b] text-white text-xs font-semibold shrink-0 cursor-pointer"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-none bg-[#FF7900] hover:bg-[#e06800] text-white text-xs font-semibold shrink-0 cursor-pointer"
                   >
                     {copied ? <Check size={13} /> : <Copy size={13} />}
                     <span>{copied ? "Copied" : "Copy"}</span>
@@ -153,7 +195,7 @@ export const SendQuotationEmailModal: React.FC<SendQuotationEmailModalProps> = (
               <button
                 type="button"
                 onClick={onClose}
-                className="px-5 py-2 rounded-xl bg-[#FF7900] hover:bg-[#e06800] text-white text-xs font-bold transition cursor-pointer"
+                className="px-5 py-2 rounded-none bg-[#FF7900] hover:bg-[#e06800] text-white text-xs font-bold transition cursor-pointer"
               >
                 Done
               </button>
@@ -171,7 +213,7 @@ export const SendQuotationEmailModal: React.FC<SendQuotationEmailModalProps> = (
                 value={customerEmail}
                 onChange={(e) => setCustomerEmail(e.target.value)}
                 placeholder="customer@company.com"
-                className="w-full text-sm px-3.5 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 focus:border-[#FF7900]"
+                className="w-full text-sm px-3.5 py-2.5 bg-white border border-gray-300 rounded-none focus:outline-none focus:ring-1 focus:ring-[#FF7900] focus:border-[#FF7900]"
               />
             </div>
 
@@ -184,7 +226,7 @@ export const SendQuotationEmailModal: React.FC<SendQuotationEmailModalProps> = (
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
                 placeholder="Commercial Quotation..."
-                className="w-full text-sm px-3.5 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 focus:border-[#FF7900]"
+                className="w-full text-sm px-3.5 py-2.5 bg-white border border-gray-300 rounded-none focus:outline-none focus:ring-1 focus:ring-[#FF7900] focus:border-[#FF7900]"
               />
             </div>
 
@@ -197,23 +239,23 @@ export const SendQuotationEmailModal: React.FC<SendQuotationEmailModalProps> = (
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Optional note for the customer..."
-                className="w-full text-sm px-3.5 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7900]/20 focus:border-[#FF7900]"
+                className="w-full text-sm px-3.5 py-2.5 bg-white border border-gray-300 rounded-none focus:outline-none focus:ring-1 focus:ring-[#FF7900] focus:border-[#FF7900]"
               />
             </div>
 
-            <div className="flex justify-end gap-2.5 pt-2 border-t border-gray-100">
+            <div className="flex justify-end gap-2.5 pt-3 border-t border-gray-100">
               <button
                 type="button"
                 onClick={onClose}
                 disabled={isSending}
-                className="px-4 py-2 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition cursor-pointer"
+                className="px-4 py-2 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-none transition cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSending}
-                className="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-[#FF7900] hover:bg-[#e06800] text-white text-xs font-bold shadow-xs transition cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 px-5 py-2 rounded-none bg-[#FF7900] hover:bg-[#e06800] text-white text-xs font-bold shadow-xs transition cursor-pointer disabled:opacity-50"
               >
                 {isSending ? (
                   <>

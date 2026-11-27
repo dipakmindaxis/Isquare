@@ -14,5 +14,12 @@ namespace CompanyPlatform.CRM.DTO.Quotation
         public string? Message { get; set; }
 
         public int? ExpiryDays { get; set; }
+
+        public string? HtmlBody { get; set; }
+
+        public string? PdfBase64 { get; set; }
+
+        [StringLength(255)]
+        public string? PdfFileName { get; set; }
     }
 }

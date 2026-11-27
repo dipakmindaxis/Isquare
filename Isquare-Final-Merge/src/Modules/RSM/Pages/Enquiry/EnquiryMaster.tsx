@@ -15,6 +15,7 @@ import {
 import { RefreshCw, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { getEnquiries, deleteEnquiry } from "./Services/EnquiryService";
+import { getCustomers } from "../Customer/Services/CustomerService";
 import type { EnquiryDto } from "./Types/EnquiryTypes";
 import AddEnquiryModal from "./Components/AddEnquiryModal";
 
@@ -89,6 +90,7 @@ const actionButtonStyles = {
 
 const EnquiryMaster: React.FC = () => {
   const [enquiries, setEnquiries] = useState<EnquiryDto[]>([]);
+  const [companyNameMap, setCompanyNameMap] = useState<Record<number, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [filterText, setFilterText] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string>("All");
@@ -109,8 +111,18 @@ const EnquiryMaster: React.FC = () => {
   const fetchEnquiries = async () => {
     setIsLoading(true);
     try {
-      const data = await getEnquiries();
+      const [data, custList] = await Promise.all([
+        getEnquiries(),
+        getCustomers().catch(() => []),
+      ]);
       setEnquiries(Array.isArray(data) ? data : []);
+      const map: Record<number, string> = {};
+      (custList || []).forEach((c: any) => {
+        const cid = Number(c.customerId || c.companyId || 0);
+        const cName = (c.companyName || c.customerName || "").trim();
+        if (cid > 0 && cName) map[cid] = cName;
+      });
+      setCompanyNameMap(map);
     } catch (error) {
       toast.error("Failed to load enquiries.");
       setEnquiries([]);
@@ -119,6 +131,9 @@ const EnquiryMaster: React.FC = () => {
     }
   };
 
+  const getDisplayCompanyName = (row: EnquiryDto) =>
+    (row.customerId && companyNameMap[row.customerId]) || row.customerName || "-";
+
   useEffect(() => {
     fetchEnquiries();
   }, []);
@@ -126,8 +141,10 @@ const EnquiryMaster: React.FC = () => {
   const filteredEnquiries = useMemo(() => {
     return enquiries.filter((e) => {
       const search = filterText.toLowerCase();
+      const companyDisplay = (e.customerId && companyNameMap[e.customerId]) || e.customerName || "";
       const matchesSearch =
         (e.enquiryNumber || "").toLowerCase().includes(search) ||
+        companyDisplay.toLowerCase().includes(search) ||
         (e.customerName || "").toLowerCase().includes(search) ||
         (e.requirementSubject || "").toLowerCase().includes(search);
 
@@ -179,7 +196,7 @@ const EnquiryMaster: React.FC = () => {
     const dataToExport = filteredEnquiries.map((e) => ({
       "Enquiry No": e.enquiryNumber || "-",
       "Date": e.enquiryDate ? e.enquiryDate.substring(0, 10) : "-",
-      "Customer": e.customerName || "-",
+      "Company Name": getDisplayCompanyName(e),
       "Subject": e.requirementSubject || "-",
       "Value": e.expectedOrderValue || 0,
       "Status": e.enquiryStatusName || "-",
@@ -207,12 +224,12 @@ const EnquiryMaster: React.FC = () => {
       width: "110px",
     },
     {
-      name: "Customer",
-      selector: (row) => row.customerName || "-",
+      name: "Company Name",
+      selector: (row) => getDisplayCompanyName(row),
       cell: (row) => (
         <div className="py-2">
           <p className="font-semibold text-gray-900 leading-tight">
-            {row.customerName}
+            {getDisplayCompanyName(row)}
           </p>
           <p className="text-xs text-gray-500 mt-0.5">{row.requirementSubject}</p>
         </div>
@@ -408,7 +425,7 @@ const EnquiryMaster: React.FC = () => {
                   type="text"
                   value={filterText}
                   onChange={(e) => setFilterText(e.target.value)}
-                  placeholder="Search by number, customer, subject..."
+                  placeholder="Search by number, company, subject..."
                   className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#FF8500]/20 focus:border-[#FF8500]"
                 />
               </div>

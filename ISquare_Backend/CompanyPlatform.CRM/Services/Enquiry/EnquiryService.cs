@@ -1,3 +1,4 @@
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -192,7 +193,6 @@ namespace CompanyPlatform.CRM.Services.Enquiry
                     BDEUserName = dto.BDEUserName,
                     DepartmentId = dto.DepartmentId,
                     SalesTerritoryId = dto.SalesTerritoryId,
-                    ResponsiblePerson = dto.ResponsiblePerson,
                     NextFollowUpDate = dto.NextFollowUpDate,
                     ActivityTypeId = dto.ActivityTypeId,
                     NextAction = dto.NextAction,
@@ -271,7 +271,6 @@ namespace CompanyPlatform.CRM.Services.Enquiry
             entity.BDEUserName = dto.BDEUserName;
             entity.DepartmentId = dto.DepartmentId;
             entity.SalesTerritoryId = dto.SalesTerritoryId;
-            entity.ResponsiblePerson = dto.ResponsiblePerson;
             entity.NextFollowUpDate = dto.NextFollowUpDate;
             entity.ActivityTypeId = dto.ActivityTypeId;
             entity.NextAction = dto.NextAction;
@@ -391,7 +390,6 @@ namespace CompanyPlatform.CRM.Services.Enquiry
                     DepartmentMasterName = dep?.DepartmentName,
                     SalesTerritoryId = e.SalesTerritoryId,
                     SalesTerritoryName = ter?.SalesTerritoryName,
-                    ResponsiblePerson = e.ResponsiblePerson,
                     NextFollowUpDate = e.NextFollowUpDate,
                     ActivityTypeId = e.ActivityTypeId,
                    // ActivityTypeName = act?.ActivityName,

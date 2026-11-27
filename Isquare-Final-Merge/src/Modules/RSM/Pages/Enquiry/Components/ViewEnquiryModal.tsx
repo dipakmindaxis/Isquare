@@ -12,6 +12,7 @@ import {
 import { toast } from "sonner";
 import { getEnquiryById } from "../Services/EnquiryService";
 import { getEnquiryPriorities } from "../Services/EnquiryMasterDataService";
+import { getCustomerById } from "../../Customer/Services/CustomerService";
 import type { EnquiryDto, MasterItem } from "../Types/EnquiryTypes";
 //
 
@@ -41,6 +42,7 @@ const SectionHeader: React.FC<{ icon: React.ElementType; title: string }> = ({ i
 
 const ViewEnquiryModal: React.FC<ViewEnquiryModalProps> = ({ isOpen, enquiryId, onClose }) => {
   const [enquiry, setEnquiry] = useState<EnquiryDto | null>(null);
+  const [companyName, setCompanyName] = useState<string>("");
   const [priorities, setPriorities] = useState<MasterItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -56,9 +58,21 @@ const ViewEnquiryModal: React.FC<ViewEnquiryModalProps> = ({ isOpen, enquiryId, 
     if (isOpen && enquiryId) {
       const fetchEnquiry = async () => {
         setIsLoading(true);
+        setCompanyName("");
         try {
           const data = await getEnquiryById(enquiryId);
           setEnquiry(data);
+          if (data?.customerId) {
+            getCustomerById(data.customerId)
+              .then((cust) => {
+                setCompanyName(cust?.companyName || cust?.customerName || data.customerName || "");
+              })
+              .catch(() => {
+                setCompanyName(data.customerName || "");
+              });
+          } else {
+            setCompanyName(data?.customerName || "");
+          }
         } catch (error) {
           toast.error("Failed to load enquiry details.");
           onClose();
@@ -92,7 +106,7 @@ const ViewEnquiryModal: React.FC<ViewEnquiryModalProps> = ({ isOpen, enquiryId, 
                 </span>
               </div>
               <p className="text-[11px] sm:text-xs text-orange-100 opacity-90 mt-0.5 truncate">
-                Customer: {enquiry?.customerName || "-"} | Date: {enquiry?.enquiryDate?.substring(0, 10) || "-"}
+                Company: {companyName || enquiry?.customerName || "-"} | Date: {enquiry?.enquiryDate?.substring(0, 10) || "-"}
               </p>
             </div>
           </div>
@@ -117,7 +131,7 @@ const ViewEnquiryModal: React.FC<ViewEnquiryModalProps> = ({ isOpen, enquiryId, 
                   <DetailItem label="Enquiry Date" value={enquiry.enquiryDate?.substring(0, 10)} />
                   <DetailItem label="Enquiry Type" value={enquiry.enquiryTypeName} />
                   <DetailItem label="Enquiry Source" value={enquiry.enquirySourceName} />
-                  <DetailItem label="Customer Name" value={enquiry.customerName} />
+                  <DetailItem label="Company Name" value={companyName || enquiry.customerName} />
                   <DetailItem label="Customer Code" value={enquiry.customerCode} />
                 </div>
               </div>
@@ -181,7 +195,6 @@ const ViewEnquiryModal: React.FC<ViewEnquiryModalProps> = ({ isOpen, enquiryId, 
                   <DetailItem label="Assigned Director" value={(enquiry as any)?.directorName || enquiry.salesManagerName} />
                   <DetailItem label="Assigned Sales Executive" value={enquiry.bdeUserName} />
                   <DetailItem label="Department" value={enquiry.departmentMasterName} />
-                  <DetailItem label="Responsible Person" value={enquiry.responsiblePerson} />
                 </div>
               </div>
 

@@ -5,12 +5,12 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using CompanyPlatform.Core.Models.CRM;
 using CompanyPlatform.Core.Repository;
 using CompanyPlatform.Core.Services.Email;
 using CompanyPlatform.CRM.DTO.Quotation;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -20,7 +20,6 @@ using CompanyAddressEntity = CompanyPlatform.Core.Models.CRM.CompanyAddress;
 using CompanyEmailEntity = CompanyPlatform.Core.Models.CRM.CompanyEmail;
 using CompanyContactEntity = CompanyPlatform.Core.Models.CRM.CompanyContact;
 using CompanyProfileEntity = CompanyPlatform.Core.Models.CRM.CompanyProfile;
-using ProductEntity = CompanyPlatform.Core.Models.CRM.Product;
 
 namespace CompanyPlatform.CRM.Services.Quotation
 {
@@ -33,14 +32,12 @@ namespace CompanyPlatform.CRM.Services.Quotation
         private readonly IRepositories<CompanyEmailEntity> _companyEmailRepository;
         private readonly IRepositories<CompanyContactEntity> _companyContactRepository;
         private readonly IRepositories<CompanyProfileEntity> _companyProfileRepository;
-        private readonly IRepositories<ProductEntity> _productRepository;
         private readonly IQuotationService _quotationService;
         private readonly IQuotationItemService _quotationItemService;
         private readonly IQuotationChargeService _quotationChargeService;
         private readonly IEmailService _emailService;
         private readonly IConfiguration _configuration;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly ILogger<QuotationCustomerResponseService> _logger;
 
         public QuotationCustomerResponseService(
@@ -51,14 +48,12 @@ namespace CompanyPlatform.CRM.Services.Quotation
             IRepositories<CompanyEmailEntity> companyEmailRepository,
             IRepositories<CompanyContactEntity> companyContactRepository,
             IRepositories<CompanyProfileEntity> companyProfileRepository,
-            IRepositories<ProductEntity> productRepository,
             IQuotationService quotationService,
             IQuotationItemService quotationItemService,
             IQuotationChargeService quotationChargeService,
             IEmailService emailService,
             IConfiguration configuration,
             IHttpContextAccessor httpContextAccessor,
-            IWebHostEnvironment webHostEnvironment,
             ILogger<QuotationCustomerResponseService> logger)
         {
             _responseRepository = responseRepository;
@@ -68,14 +63,12 @@ namespace CompanyPlatform.CRM.Services.Quotation
             _companyEmailRepository = companyEmailRepository;
             _companyContactRepository = companyContactRepository;
             _companyProfileRepository = companyProfileRepository;
-            _productRepository = productRepository;
             _quotationService = quotationService;
             _quotationItemService = quotationItemService;
             _quotationChargeService = quotationChargeService;
             _emailService = emailService;
             _configuration = configuration;
             _httpContextAccessor = httpContextAccessor;
-            _webHostEnvironment = webHostEnvironment;
             _logger = logger;
         }
 
@@ -214,9 +207,6 @@ namespace CompanyPlatform.CRM.Services.Quotation
                 ?? profiles.FirstOrDefault(p => !p.IsDeleted && p.IsActive);
 
             var companyName = profile?.CompanyName ?? "iSquare";
-            var customerDisplayName = !string.IsNullOrWhiteSpace(customer?.CompanyName)
-                ? customer.CompanyName
-                : (!string.IsNullOrWhiteSpace(customer?.CustomerName) ? customer.CustomerName : "Valued Customer");
 
             var publicUrl = BuildPublicUrl(responseEntity.PublicResponseId);
             var acceptUrl = $"{publicUrl}?action=accept";
@@ -226,441 +216,82 @@ namespace CompanyPlatform.CRM.Services.Quotation
                 ? dto.Subject.Trim()
                 : $"Commercial Quotation {quotation.QuotationNumber} (Rev {quotation.RevisionNumber}) from {companyName}";
 
-            var items = (await _quotationItemService.GetByQuotationIdAsync(quotation.QuotationId))
-                .Where(i => !i.IsDeleted)
-                .OrderBy(i => i.DisplayOrder)
-                .ToList();
-            var charges = (await _quotationChargeService.GetByQuotationIdAsync(quotation.QuotationId))
-                .ToList();
-
-            var customerAddresses = customer != null
-                ? await _companyAddressRepository.FindByCondition(a => a.CompanyId == customer.CompanyId && !a.IsDeleted)
-                : Enumerable.Empty<CompanyAddressEntity>();
-            var primaryAddress = customerAddresses
-                .OrderByDescending(a => a.IsPrimary)
-                .ThenByDescending(a => a.IsBilling)
-                .FirstOrDefault();
-            var customerAddressText = primaryAddress != null
-                ? string.Join(", ", new[] { primaryAddress.Address, primaryAddress.Pincode }.Where(s => !string.IsNullOrWhiteSpace(s)))
-                : "N/A";
-
-            var companyAddressText = profile == null
-                ? string.Empty
-                : string.Join(", ", new[] { profile.Address, profile.City, profile.State, profile.PINCode, profile.Country }
-                    .Where(s => !string.IsNullOrWhiteSpace(s)));
-
-            var formattedSubtotal = quotation.Subtotal.ToString("N2", CultureInfo.InvariantCulture);
-            var formattedDiscount = quotation.DiscountAmount.ToString("N2", CultureInfo.InvariantCulture);
-            var formattedTaxable = quotation.TaxableAmount.ToString("N2", CultureInfo.InvariantCulture);
-            var formattedTax = quotation.TaxAmount.ToString("N2", CultureInfo.InvariantCulture);
-            var formattedTotal = quotation.GrandTotal.ToString("N2", CultureInfo.InvariantCulture);
-            var validUntilStr = quotation.ValidUntil.HasValue
-                ? quotation.ValidUntil.Value.ToString("dd MMM yyyy", CultureInfo.InvariantCulture)
-                : expiresAt.ToString("dd MMM yyyy", CultureInfo.InvariantCulture);
-            var quoteDateStr = quotation.QuotationDate.ToString("dd MMM yyyy", CultureInfo.InvariantCulture);
-
-            var productIds = items
-                .Where(i => i.ProductId.HasValue)
-                .Select(i => i.ProductId!.Value)
-                .Distinct()
-                .ToList();
-            var productMap = new Dictionary<int, ProductEntity>();
-            if (productIds.Count > 0)
+            if (string.IsNullOrWhiteSpace(dto?.HtmlBody))
             {
-                var products = await _productRepository.FindByCondition(p => productIds.Contains(p.ProductId));
-                foreach (var prod in products)
-                {
-                    productMap[prod.ProductId] = prod;
-                }
+                throw new ArgumentException("Quotation email HTML body is required.");
             }
 
             var inlineImages = new List<EmailInlineImage>();
+            var htmlBody = dto.HtmlBody
+                .Replace("{{ACCEPT_URL}}", WebUtility.HtmlEncode(acceptUrl))
+                .Replace("{{REJECT_URL}}", WebUtility.HtmlEncode(rejectUrl));
 
-            string GetMimeType(string filePath)
-            {
-                var ext = Path.GetExtension(filePath).ToLowerInvariant();
-                return ext switch
+            int imgCounter = 0;
+            htmlBody = Regex.Replace(
+                htmlBody,
+                @"src=""data:(image\/[a-zA-Z0-9+.-]+);base64,([^""]+)""",
+                match =>
                 {
-                    ".png" => "image/png",
-                    ".jpg" or ".jpeg" => "image/jpeg",
-                    ".gif" => "image/gif",
-                    ".webp" => "image/webp",
-                    _ => "image/png",
-                };
-            }
-
-            string? TryResolveLocalFile(string? pathCandidate)
-            {
-                if (string.IsNullOrWhiteSpace(pathCandidate))
-                    return null;
-
-                var webRoot = !string.IsNullOrWhiteSpace(_webHostEnvironment.WebRootPath)
-                    ? _webHostEnvironment.WebRootPath
-                    : Path.Combine(_webHostEnvironment.ContentRootPath, "wwwroot");
-
-                var cleaned = pathCandidate.Replace('\\', '/').Trim();
-                if (Uri.TryCreate(cleaned, UriKind.Absolute, out var absUri))
-                    cleaned = absUri.AbsolutePath;
-
-                cleaned = cleaned.TrimStart('/');
-                if (cleaned.StartsWith("api/", StringComparison.OrdinalIgnoreCase))
-                    cleaned = cleaned.Substring(4);
-
-                var candidate1 = Path.Combine(webRoot, cleaned.Replace('/', Path.DirectorySeparatorChar));
-                if (File.Exists(candidate1))
-                    return candidate1;
-
-                var fileName = Path.GetFileName(cleaned);
-                if (!string.IsNullOrWhiteSpace(fileName))
-                {
-                    var candidate2 = Path.Combine(webRoot, "Uploads", "products", fileName);
-                    if (File.Exists(candidate2))
-                        return candidate2;
-                }
-
-                return null;
-            }
-
-            bool TryAttachInlineImage(string contentId, string? pathCandidate)
-            {
-                var resolved = TryResolveLocalFile(pathCandidate);
-                if (string.IsNullOrEmpty(resolved))
-                    return false;
-
-                var bytes = File.ReadAllBytes(resolved);
-                if (bytes.Length == 0)
-                    return false;
-
-                inlineImages.Add(new EmailInlineImage(contentId, bytes, GetMimeType(resolved), Path.GetFileName(resolved)));
-                return true;
-            }
-
-            var itemsRowsHtml = new StringBuilder();
-            if (items.Count == 0)
-            {
-                itemsRowsHtml.Append(@"<tr><td colspan=""10"" style=""padding:24px 12px;text-align:center;color:#94a3b8;font-size:12px;"">No products added to this quotation.</td></tr>");
-            }
-            else
-            {
-                for (int idx = 0; idx < items.Count; idx++)
-                {
-                    var item = items[idx];
-                    ProductEntity? prod = null;
-                    if (item.ProductId.HasValue)
-                        productMap.TryGetValue(item.ProductId.Value, out prod);
-
-                    var hsnCode = !string.IsNullOrWhiteSpace(prod?.HsnCode) ? prod.HsnCode : "—";
-                    var rawImg = prod?.ProductImage;
-                    var productCid = $"product-{idx}";
-                    string? imgSrc = null;
-                    if (!string.IsNullOrWhiteSpace(rawImg))
+                    var mime = match.Groups[1].Value;
+                    var b64 = match.Groups[2].Value;
+                    try
                     {
-                        if (TryAttachInlineImage(productCid, rawImg))
+                        var bytes = Convert.FromBase64String(b64);
+                        if (bytes.Length > 0)
                         {
-                            imgSrc = $"cid:{productCid}";
-                        }
-                        else if (rawImg.StartsWith("http", StringComparison.OrdinalIgnoreCase) && !IsLocalhostUrl(rawImg))
-                        {
-                            imgSrc = rawImg;
+                            var cid = $"inline-img-{++imgCounter}";
+                            var ext = mime.Contains("jpeg") || mime.Contains("jpg") ? ".jpg" : ".png";
+                            inlineImages.Add(new EmailInlineImage(cid, bytes, mime, $"{cid}{ext}"));
+                            return $@"src=""cid:{cid}""";
                         }
                     }
-
-                    var imageCellHtml = !string.IsNullOrEmpty(imgSrc)
-                        ? $@"<img src=""{WebUtility.HtmlEncode(imgSrc)}"" alt=""{WebUtility.HtmlEncode(item.ItemName)}"" style=""max-height:54px;max-width:54px;display:block;margin:0 auto;border-radius:4px;"" />"
-                        : @"<div style=""width:48px;height:48px;margin:0 auto;border:1px solid #e2e8f0;background-color:#f8fafc;border-radius:6px;line-height:48px;font-size:9px;color:#94a3b8;text-align:center;"">No Image</div>";
-
-                    var specBulletsHtml = new StringBuilder();
-                    if (!string.IsNullOrWhiteSpace(item.Specification))
+                    catch
                     {
-                        var lines = item.Specification
-                            .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
-                            .Select(l => l.Trim())
-                            .Where(l => !string.IsNullOrEmpty(l));
-                        foreach (var line in lines)
-                        {
-                            specBulletsHtml.Append($@"<div style=""font-size:10px;color:#475569;margin-top:2px;line-height:1.35;""><span style=""color:#FF7900;font-weight:700;"">&#8226;</span>&nbsp;{WebUtility.HtmlEncode(line)}</div>");
-                        }
+                        // leave original src if invalid base64
                     }
+                    return match.Value;
+                },
+                RegexOptions.IgnoreCase);
 
-                    var titleText = WebUtility.HtmlEncode(item.ItemName) +
-                        (!string.IsNullOrWhiteSpace(item.Brand) ? $" ({WebUtility.HtmlEncode(item.Brand)})" : string.Empty);
-
-                    itemsRowsHtml.Append($@"
-                    <tr style=""background-color:#ffffff;"">
-                      <td style=""padding:10px 6px;border-bottom:1px solid #cbd5e1;border-right:1px solid #cbd5e1;text-align:center;font-size:11px;font-weight:600;color:#334155;vertical-align:middle;"">{idx + 1}</td>
-                      <td style=""padding:10px 8px;border-bottom:1px solid #cbd5e1;border-right:1px solid #cbd5e1;vertical-align:middle;"">
-                        <div style=""font-size:12px;font-weight:700;color:#00234a;line-height:1.3;"">{titleText}</div>
-                        {specBulletsHtml}
-                      </td>
-                      <td style=""padding:8px 6px;border-bottom:1px solid #cbd5e1;border-right:1px solid #cbd5e1;text-align:center;vertical-align:middle;"">{imageCellHtml}</td>
-                      <td style=""padding:10px 6px;border-bottom:1px solid #cbd5e1;border-right:1px solid #cbd5e1;text-align:center;font-size:11px;color:#334155;vertical-align:middle;"">{WebUtility.HtmlEncode(hsnCode)}</td>
-                      <td style=""padding:10px 6px;border-bottom:1px solid #cbd5e1;border-right:1px solid #cbd5e1;text-align:center;font-size:11px;font-weight:600;color:#2563eb;vertical-align:middle;"">{item.GSTRate:0.##}%</td>
-                      <td style=""padding:10px 6px;border-bottom:1px solid #cbd5e1;border-right:1px solid #cbd5e1;text-align:center;font-size:11px;font-weight:600;color:#1e293b;vertical-align:middle;"">{item.Quantity:0.###}</td>
-                      <td style=""padding:10px 6px;border-bottom:1px solid #cbd5e1;border-right:1px solid #cbd5e1;text-align:center;font-size:11px;color:#475569;vertical-align:middle;"">Nos</td>
-                      <td style=""padding:10px 6px;border-bottom:1px solid #cbd5e1;border-right:1px solid #cbd5e1;text-align:center;font-size:11px;color:#1e293b;vertical-align:middle;white-space:nowrap;"">&#8377;{item.Rate:N2}</td>
-                      <td style=""padding:10px 6px;border-bottom:1px solid #cbd5e1;border-right:1px solid #cbd5e1;text-align:center;font-size:11px;color:#334155;vertical-align:middle;"">{item.DiscountPercentage:0.##}%</td>
-                      <td style=""padding:10px 10px;border-bottom:1px solid #cbd5e1;text-align:right;font-size:12px;font-weight:700;color:#0f172a;vertical-align:middle;white-space:nowrap;"">&#8377;{item.LineTotal:N2}</td>
-                    </tr>");
-                }
-            }
-
-            foreach (var ch in charges)
+            if (string.IsNullOrWhiteSpace(dto?.PdfBase64))
             {
-                itemsRowsHtml.Append($@"
-                <tr style=""background-color:#f8fafc;"">
-                  <td style=""padding:8px 6px;border-bottom:1px solid #cbd5e1;border-right:1px solid #cbd5e1;text-align:center;font-size:11px;color:#64748b;"">+</td>
-                  <td colspan=""3"" style=""padding:8px 8px;border-bottom:1px solid #cbd5e1;border-right:1px solid #cbd5e1;font-size:11px;font-weight:700;color:#00234a;"">{WebUtility.HtmlEncode(ch.ChargeName)}</td>
-                  <td style=""padding:8px 6px;border-bottom:1px solid #cbd5e1;border-right:1px solid #cbd5e1;text-align:center;font-size:11px;font-weight:600;color:#2563eb;"">{ch.TaxRate:0.##}%</td>
-                  <td style=""padding:8px 6px;border-bottom:1px solid #cbd5e1;border-right:1px solid #cbd5e1;text-align:center;font-size:11px;color:#1e293b;"">1</td>
-                  <td style=""padding:8px 6px;border-bottom:1px solid #cbd5e1;border-right:1px solid #cbd5e1;text-align:center;font-size:11px;color:#475569;"">—</td>
-                  <td style=""padding:8px 6px;border-bottom:1px solid #cbd5e1;border-right:1px solid #cbd5e1;text-align:center;font-size:11px;color:#1e293b;white-space:nowrap;"">&#8377;{ch.ChargeAmount:N2}</td>
-                  <td style=""padding:8px 6px;border-bottom:1px solid #cbd5e1;border-right:1px solid #cbd5e1;text-align:center;font-size:11px;color:#334155;"">0%</td>
-                  <td style=""padding:8px 10px;border-bottom:1px solid #cbd5e1;text-align:right;font-size:12px;font-weight:700;color:#0f172a;white-space:nowrap;"">&#8377;{ch.TotalAmount:N2}</td>
-                </tr>");
+                throw new ArgumentException("Quotation PDF attachment is required.");
             }
 
-            var itemsLineSum = items.Sum(i => i.LineTotal);
-            var formattedItemsSubTotal = itemsLineSum.ToString("N2", CultureInfo.InvariantCulture);
-
-            var rawTerms = !string.IsNullOrWhiteSpace(quotation.TermsAndConditions)
-                ? quotation.TermsAndConditions
-                    .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
-                    .Select(l => System.Text.RegularExpressions.Regex.Replace(l.Trim(), @"^\d+[\.\)]\s*", string.Empty))
-                    .Where(l => !string.IsNullOrWhiteSpace(l))
-                    .ToList()
-                : new List<string>
+            var attachments = new List<EmailAttachment>();
+            try
+            {
+                var rawBase64 = dto.PdfBase64.Trim();
+                var commaIndex = rawBase64.IndexOf(',');
+                if (commaIndex >= 0)
                 {
-                    "Taxes extra as applicable.",
-                    "Prices firm for validity period.",
-                    "Goods once sold will not be taken back.",
-                    "Subject to Pune Jurisdiction."
-                };
+                    rawBase64 = rawBase64[(commaIndex + 1)..];
+                }
+                var pdfBytes = Convert.FromBase64String(rawBase64);
+                if (pdfBytes.Length == 0)
+                {
+                    throw new InvalidOperationException("Generated quotation PDF attachment is empty.");
+                }
 
-            var termsRowsHtml = new StringBuilder();
-            for (int tIdx = 0; tIdx < rawTerms.Count; tIdx++)
+                var safeNumber = string.IsNullOrWhiteSpace(quotation.QuotationNumber)
+                    ? $"QT-{quotation.QuotationId}"
+                    : quotation.QuotationNumber.Trim();
+                var fileName = !string.IsNullOrWhiteSpace(dto.PdfFileName)
+                    ? Path.GetFileName(dto.PdfFileName.Trim())
+                    : $"{safeNumber}.pdf";
+                if (!fileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
+                {
+                    fileName += ".pdf";
+                }
+                attachments.Add(new EmailAttachment(pdfBytes, fileName, "application/pdf"));
+            }
+            catch (Exception ex)
             {
-                termsRowsHtml.Append($@"
-                <tr>
-                  <td width=""26"" style=""padding:3px 8px 3px 0;vertical-align:middle;"">
-                    <div style=""width:18px;height:18px;line-height:18px;border-radius:50%;border:2px solid #FF7900;color:#FF7900;font-size:10px;font-weight:700;text-align:center;"">{tIdx + 1}</div>
-                  </td>
-                  <td style=""padding:3px 0;font-size:11px;color:#102A50;vertical-align:middle;line-height:1.4;"">{WebUtility.HtmlEncode(rawTerms[tIdx])}</td>
-                </tr>");
+                _logger.LogError(ex, "Failed to process PDF attachment for Quotation {QuotationId}.", quotationId);
+                throw new InvalidOperationException("Failed to attach quotation PDF to the email.", ex);
             }
 
-            var showCustomMsg = !string.IsNullOrWhiteSpace(dto?.Message) &&
-                !dto.Message.Contains("using the link below", StringComparison.OrdinalIgnoreCase);
-            var customMessageHtml = showCustomMsg
-                ? $@"<div style=""margin:0 0 14px;padding:10px 14px;background-color:#ffffff;border:1px solid #D6E0EC;border-radius:8px;color:#102A50;font-size:12px;line-height:1.5;"">{WebUtility.HtmlEncode(dto!.Message!.Trim()).Replace("\n", "<br/>")}</div>"
-                : string.Empty;
-
-            var hasLogoCid = TryAttachInlineImage("isquare-logo", "Templates/isquare-logo.png")
-                || TryAttachInlineImage("isquare-logo", profile?.LogoPath);
-            var logoUrl = !hasLogoCid && !string.IsNullOrWhiteSpace(profile?.LogoPath) && profile.LogoPath.StartsWith("http", StringComparison.OrdinalIgnoreCase) && !IsLocalhostUrl(profile.LogoPath)
-                ? profile.LogoPath
-                : string.Empty;
-            var brandLogoHtml = hasLogoCid
-                ? $@"<img src=""cid:isquare-logo"" alt=""{WebUtility.HtmlEncode(companyName)}"" style=""max-height:54px;max-width:210px;display:block;"" />"
-                : (!string.IsNullOrEmpty(logoUrl)
-                    ? $@"<img src=""{WebUtility.HtmlEncode(logoUrl)}"" alt=""{WebUtility.HtmlEncode(companyName)}"" style=""max-height:54px;max-width:210px;display:block;"" />"
-                    : $@"<div>
-                      <div style=""font-size:24px;font-weight:900;color:#00234a;letter-spacing:-0.02em;line-height:1;"">
-                        <span style=""color:#FF5500;"">i</span>SQUARE<sup style=""font-size:11px;color:#FF5500;"">&reg;</sup>
-                      </div>
-                      <div style=""font-size:9px;font-weight:800;letter-spacing:0.06em;color:#00234a;text-transform:uppercase;margin-top:2px;"">SAFETY EQUIPMENTS PVT. LTD.</div>
-                      <div style=""font-size:10px;color:#FF5500;font-style:italic;font-family:Georgia,serif;margin-top:1px;"">The complete safety solutions</div>
-                    </div>");
-
-            var hasStampCid = TryAttachInlineImage("isquare-stamp", "Templates/isquare-stamp.png");
-            var stampHtml = hasStampCid
-                ? @"<img src=""cid:isquare-stamp"" alt=""iSQUARE Company Stamp"" style=""width:84px;height:84px;display:block;"" />"
-                : @"<div style=""width:78px;height:78px;border:2px solid #334e86;border-radius:50%;text-align:center;color:#334e86;font-size:8px;font-weight:700;padding-top:20px;box-sizing:border-box;"">
-                      iSQUARE<br/><span style=""font-size:10px;letter-spacing:0.06em;"">PUNE</span><br/>&#9733;
-                    </div>";
-
-            var headerAddress = string.IsNullOrWhiteSpace(companyAddressText)
-                ? "GOYAL RESIDENCY B, SR NO. 434/4A, OFFICE, B1/13, Kasarwadi, Maharashtra 411034"
-                : companyAddressText;
-            var headerPhone = string.IsNullOrWhiteSpace(profile?.Phone) ? "+91 9028815632" : profile.Phone;
-            var headerEmail = string.IsNullOrWhiteSpace(profile?.Email) ? "sales@isquaresafety.com" : profile.Email;
-            var headerGstin = string.IsNullOrWhiteSpace(profile?.GSTIN) ? "27AARCP3435C1ZD" : profile.GSTIN;
-            var headerPan = string.IsNullOrWhiteSpace(profile?.PAN) ? "AARCP3435C" : profile.PAN;
-
-            var grandTotalRowHtml = quotation.GrandTotal != itemsLineSum
-                ? $@"
-                <tr style=""background-color:#F5F8FC;border-top:1px solid #D6E0EC;"">
-                  <td colspan=""9"" style=""padding:8px 10px;text-align:right;font-size:12px;font-weight:800;color:#002B55;border-right:1px solid #D6E0EC;text-transform:uppercase;"">GRAND TOTAL</td>
-                  <td style=""padding:8px 10px;text-align:right;font-size:13px;font-weight:800;color:#FF7900;white-space:nowrap;"">&#8377;{formattedTotal}</td>
-                </tr>"
-                : string.Empty;
-
-            var htmlBody = $@"
-<!DOCTYPE html>
-<html>
-<head><meta charset=""utf-8"" /><meta name=""viewport"" content=""width=device-width, initial-scale=1.0"" /></head>
-<body style=""margin:0;padding:0;background-color:#eef2f7;font-family:Arial,Helvetica,sans-serif;color:#102A50;"">
-  <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background-color:#eef2f7;padding:20px 10px;"">
-    <tr>
-      <td align=""center"">
-        <table role=""presentation"" width=""820"" cellpadding=""0"" cellspacing=""0"" style=""max-width:820px;width:100%;"">
-          <tr>
-            <td>
-              {customMessageHtml}
-
-              <!-- iSQUARE Official Quotation Sheet -->
-              <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""width:100%;background-color:#ffffff;border:1px solid #D6E0EC;border-radius:10px;padding:22px 24px;"">
-                <tr>
-                  <td>
-                    <!-- 1. Company Header -->
-                    <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""border-bottom:2px solid #FF7900;padding-bottom:12px;margin-bottom:14px;"">
-                      <tr>
-                        <td style=""vertical-align:middle;"">
-                          {brandLogoHtml}
-                        </td>
-                        <td style=""vertical-align:middle;text-align:right;font-size:10px;color:#64748B;line-height:1.45;"">
-                          <div style=""font-size:11px;font-weight:700;color:#102A50;"">{WebUtility.HtmlEncode(headerAddress)}</div>
-                          <div style=""margin-top:2px;"">
-                            <span style=""font-weight:600;color:#102A50;"">Contact:</span> {WebUtility.HtmlEncode(headerPhone)} &nbsp;|&nbsp;
-                            <span style=""font-weight:600;color:#102A50;"">Email:</span> {WebUtility.HtmlEncode(headerEmail)}
-                          </div>
-                          <div style=""font-family:'Courier New',monospace;margin-top:2px;"">
-                            <span style=""font-weight:600;color:#102A50;"">GSTIN:</span> {WebUtility.HtmlEncode(headerGstin)} &nbsp;|&nbsp;
-                            <span style=""font-weight:600;color:#102A50;"">PAN:</span> {WebUtility.HtmlEncode(headerPan)}
-                          </div>
-                        </td>
-                      </tr>
-                    </table>
-
-                    <!-- 2. Ref & Date Strip -->
-                    <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background-color:#F5F8FC;border:1px solid #D6E0EC;border-radius:8px;margin-bottom:12px;"">
-                      <tr>
-                        <td style=""padding:8px 14px;font-size:12px;"">
-                          <span style=""font-weight:700;color:#002B55;"">Ref.:</span>&nbsp;
-                          <span style=""font-weight:800;color:#FF7900;font-size:13px;"">{WebUtility.HtmlEncode(quotation.QuotationNumber)}</span>
-                        </td>
-                        <td style=""padding:8px 14px;text-align:right;font-size:12px;"">
-                          <span style=""color:#64748B;"">Date:</span>&nbsp;
-                          <span style=""font-weight:700;color:#002B55;"">{quoteDateStr}</span>
-                        </td>
-                      </tr>
-                    </table>
-
-                    <!-- 3. To Customer Block -->
-                    <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background-color:#F5F8FC;border:1px solid #D6E0EC;border-radius:10px;margin-bottom:14px;"">
-                      <tr>
-                        <td style=""padding:14px 16px;font-size:11px;color:#102A50;line-height:1.5;"">
-                          <div style=""font-weight:700;color:#64748B;font-size:11px;"">To,</div>
-                          <div style=""font-size:13px;font-weight:800;color:#002B55;text-transform:uppercase;margin-top:2px;"">{WebUtility.HtmlEncode(customerDisplayName)}</div>
-                          {(string.IsNullOrWhiteSpace(customerAddressText) || customerAddressText == "N/A" ? "" : $"<div style=\"color:#64748B;margin-top:2px;\">{WebUtility.HtmlEncode(customerAddressText)}</div>")}
-                          {(string.IsNullOrWhiteSpace(customer?.Mobile) ? "" : $"<div style=\"margin-top:4px;\"><span style=\"font-weight:700;color:#002B55;\">Mob. No.:</span>&nbsp;&nbsp;{WebUtility.HtmlEncode(customer.Mobile)}</div>")}
-                          <div><span style=""font-weight:700;color:#002B55;"">Email id:</span>&nbsp;&nbsp;{WebUtility.HtmlEncode(customerEmail)}</div>
-                        </td>
-                      </tr>
-                    </table>
-
-                    <!-- 4. Subject Pill & Salutation -->
-                    <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-bottom:10px;border:1px solid #fed7aa;border-radius:6px;overflow:hidden;border-collapse:separate;"">
-                      <tr>
-                        <td style=""background-color:#002B55;color:#ffffff;font-size:11px;font-weight:800;padding:5px 12px;letter-spacing:0.04em;"">Sub:</td>
-                        <td style=""background-color:#fff7ed;color:#002B55;font-size:12px;font-weight:700;padding:5px 16px;"">Offer for PPP</td>
-                      </tr>
-                    </table>
-
-                    <div style=""font-size:12px;font-weight:700;color:#002B55;margin-bottom:3px;"">Dear Sir/Madam,</div>
-                    <div style=""font-size:11px;color:#64748B;padding-left:14px;margin-bottom:14px;"">We take pleasure in submitting our competitive offer for your requirement.</div>
-
-                    <!-- 5. Orange-Header Product Table -->
-                    <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""width:100%;border:1px solid #D6E0EC;border-collapse:collapse;margin-bottom:16px;"">
-                      <thead>
-                        <tr style=""background-color:#FF7900;color:#ffffff;"">
-                          <th style=""padding:8px 6px;border-right:1px solid #fb923c;font-size:9px;font-weight:700;text-transform:uppercase;text-align:center;width:34px;"">SR.<br/>NO.</th>
-                          <th style=""padding:8px 8px;border-right:1px solid #fb923c;font-size:9px;font-weight:700;text-transform:uppercase;text-align:left;"">DESCRIPTION</th>
-                          <th style=""padding:8px 6px;border-right:1px solid #fb923c;font-size:9px;font-weight:700;text-transform:uppercase;text-align:center;width:62px;"">IMAGE</th>
-                          <th style=""padding:8px 6px;border-right:1px solid #fb923c;font-size:9px;font-weight:700;text-transform:uppercase;text-align:center;width:60px;"">HSN<br/>CODE</th>
-                          <th style=""padding:8px 6px;border-right:1px solid #fb923c;font-size:9px;font-weight:700;text-transform:uppercase;text-align:center;width:44px;"">GST<br/>(%)</th>
-                          <th style=""padding:8px 6px;border-right:1px solid #fb923c;font-size:9px;font-weight:700;text-transform:uppercase;text-align:center;width:36px;"">QTY</th>
-                          <th style=""padding:8px 6px;border-right:1px solid #fb923c;font-size:9px;font-weight:700;text-transform:uppercase;text-align:center;width:40px;"">UOM</th>
-                          <th style=""padding:8px 6px;border-right:1px solid #fb923c;font-size:9px;font-weight:700;text-transform:uppercase;text-align:center;width:78px;"">UNIT RATE<br/>(INR)</th>
-                          <th style=""padding:8px 6px;border-right:1px solid #fb923c;font-size:9px;font-weight:700;text-transform:uppercase;text-align:center;width:58px;"">DISCOUNT<br/>(%)</th>
-                          <th style=""padding:8px 10px;font-size:9px;font-weight:700;text-transform:uppercase;text-align:right;width:94px;"">TOTAL AMOUNT (INR)</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {itemsRowsHtml}
-                        <tr style=""background-color:#F5F8FC;border-top:2px solid #D6E0EC;"">
-                          <td colspan=""9"" style=""padding:9px 10px;text-align:right;font-size:12px;font-weight:800;color:#002B55;border-right:1px solid #D6E0EC;text-transform:uppercase;"">SUB TOTAL</td>
-                          <td style=""padding:9px 10px;text-align:right;font-size:13px;font-weight:800;color:#FF7900;white-space:nowrap;"">&#8377;{formattedItemsSubTotal}</td>
-                        </tr>
-                        {grandTotalRowHtml}
-                      </tbody>
-                    </table>
-
-                    <!-- 6. Commercial Terms -->
-                    <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin-bottom:16px;"">
-                      <tr>
-                        <td style=""padding-bottom:6px;"">
-                          <span style=""display:inline-block;width:16px;height:16px;line-height:16px;background-color:#FF7900;color:#ffffff;border-radius:4px;text-align:center;font-size:10px;font-weight:700;vertical-align:middle;"">&#9776;</span>
-                          <span style=""font-size:11px;font-weight:800;color:#002B55;text-transform:uppercase;letter-spacing:0.05em;vertical-align:middle;margin-left:6px;"">COMMERCIAL TERMS</span>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <table role=""presentation"" cellpadding=""0"" cellspacing=""0"">
-                            {termsRowsHtml}
-                          </table>
-                        </td>
-                      </tr>
-                    </table>
-
-                    <!-- 7. Closing & Stamp -->
-                    <div style=""font-size:11px;color:#102A50;line-height:1.55;margin-bottom:12px;"">
-                      <div style=""font-weight:600;"">Thanking you,</div>
-                      <div style=""font-weight:600;"">Yours faithfully,</div>
-                      <div style=""font-weight:700;color:#002B55;"">For {WebUtility.HtmlEncode(companyName)}</div>
-                      <div style=""margin-top:10px;margin-bottom:8px;"">
-                        {stampHtml}
-                      </div>
-                    </div>
-
-                    <!-- 8. Contact Note & Page Counter -->
-                    <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""border-top:1px solid #D6E0EC;padding-top:10px;"">
-                      <tr>
-                        <td align=""center"" style=""font-size:10px;color:#64748B;"">
-                          Note: If you need any clarification or further assistance please feel free to contact
-                          <div style=""font-size:11px;font-weight:700;color:#002B55;margin-top:2px;"">Mr. Irfan Attar</div>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td align=""right"" style=""font-size:10px;color:#64748B;padding-top:6px;"">Page 1 of 1</td>
-                      </tr>
-                    </table>
-
-                    <!-- 9. Accept / Reject Action Buttons -->
-                    <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:18px;border-top:1px solid #D6E0EC;padding-top:18px;"">
-                      <tr>
-                        <td align=""center"">
-                          <a href=""{WebUtility.HtmlEncode(acceptUrl)}"" style=""display:inline-block;background-color:#059669;color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;padding:11px 26px;border-radius:8px;margin:4px 6px;"">
-                            &#10003;&nbsp; Accept Quotation
-                          </a>
-                          <a href=""{WebUtility.HtmlEncode(rejectUrl)}"" style=""display:inline-block;background-color:#e11d48;color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;padding:11px 26px;border-radius:8px;margin:4px 6px;"">
-                            &#10005;&nbsp; Reject Quotation
-                          </a>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>";
-
-            await _emailService.SendEmailAsync(customerEmail, subject, htmlBody, inlineImages);
+            await _emailService.SendEmailAsync(customerEmail, subject, htmlBody, inlineImages, attachments);
 
             // Update quotation status to Sent if it is Draft, Approved, or Revised
             var currentStatus = (quotation.Status ?? string.Empty).Trim();

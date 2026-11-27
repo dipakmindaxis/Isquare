@@ -346,6 +346,9 @@ export interface SendQuotationEmailDto {
   subject?: string;
   message?: string;
   expiryDays?: number;
+  htmlBody?: string;
+  pdfBase64?: string;
+  pdfFileName?: string;
 }
 
 export interface QuotationCustomerDecisionDto {

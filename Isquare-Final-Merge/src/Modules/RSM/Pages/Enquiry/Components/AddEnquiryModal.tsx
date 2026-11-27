@@ -468,10 +468,14 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
     }
   };
 
-  const customerOptions = customers.map((c: any) => ({
-    value: c.customerId,
-    label: `${c.customerCode ? `${c.customerCode} — ` : ""}${c.customerName || ""}${c.gstin ? ` — ${c.gstin}` : ""}`
-  }));
+  const customerOptions = customers.map((c: any) => {
+    const companyDisplay = (c.companyName || c.customerName || "").trim();
+    const gst = c.gstin || c.gstNumber || "";
+    return {
+      value: c.customerId,
+      label: `${c.customerCode ? `${c.customerCode} — ` : ""}${companyDisplay}${gst ? ` — ${gst}` : ""}`
+    };
+  });
 
   const contactOptions = filteredContacts.map((c: any) => {
     const isCustPrimary = c.isPrimary || Number(c.contactId) === 0;
@@ -563,13 +567,13 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
                     </select>
                   </div>
                   <div className="md:col-span-4">
-                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Customer <span className="text-red-500">*</span></label>
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Company Name <span className="text-red-500">*</span></label>
                     <SearchableSelect
                       name="customerId"
                       value={formData.customerId || ""}
                       onChange={handleCustomerChange}
                       options={customerOptions}
-                      placeholder="Select Customer"
+                      placeholder="Select Company Name"
                       isClearable={false}
                       className="text-sm font-medium"
                     />
@@ -581,7 +585,7 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
                   <div className="mt-4 bg-blue-50/50 border border-blue-100 rounded-lg p-4 animate-in fade-in duration-300">
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-y-3 gap-x-4 text-xs">
                       <div><span className="text-gray-400 block uppercase text-[9px] font-bold tracking-wider">Code</span><span className="font-semibold text-gray-800">{selectedCustomerInfo.customerCode || "-"}</span></div>
-                      <div><span className="text-gray-400 block uppercase text-[9px] font-bold tracking-wider">Name</span><span className="font-semibold text-gray-800">{selectedCustomerInfo.customerName || "-"}</span></div>
+                      <div><span className="text-gray-400 block uppercase text-[9px] font-bold tracking-wider">Company Name</span><span className="font-semibold text-gray-800">{selectedCustomerInfo.companyName || selectedCustomerInfo.customerName || "-"}</span></div>
                       <div><span className="text-gray-400 block uppercase text-[9px] font-bold tracking-wider">GSTIN</span><span className="font-semibold text-gray-800">{selectedCustomerInfo.gstin || "-"}</span></div>
                       <div><span className="text-gray-400 block uppercase text-[9px] font-bold tracking-wider">PAN</span><span className="font-semibold text-gray-800">{selectedCustomerInfo.pan || "-"}</span></div>
                       <div><span className="text-gray-400 block uppercase text-[9px] font-bold tracking-wider">Industry</span><span className="font-semibold text-gray-800">{selectedCustomerInfo.industryName || "-"}</span></div>
@@ -930,10 +934,6 @@ const AddEnquiryModal: React.FC<AddEnquiryModalProps> = ({ isOpen, onClose, onSu
                         ))
                       )}
                     </select>
-                  </div>
-                  <div>
-                    <label className="text-[11px] font-extrabold text-gray-500 uppercase mb-1 tracking-widest block">Responsible Person</label>
-                    <input type="text" name="responsiblePerson" value={formData.responsiblePerson || ""} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition bg-white text-sm" />
                   </div>
                 </div>
                 <p className="text-[10px] text-gray-400 mt-2 italic">Assigned Director and Assigned Sales Executive default from Customer Master and can be selected manually.</p>
